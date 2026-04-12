@@ -1,0 +1,2815 @@
+openapi: 3.1.0
+info:
+  title: Cortex API
+  version: 1.0.0-draft
+  summary: Vendor-neutral APIs for parsing content, storing files, and operating knowledge pipelines. / 面向内容解析、文件存储与知识流水线的厂商中立 API。
+  description: |
+    Cortex exposes three core domains through a single contract:
+
+    1. Parse API: fetch a page from an arbitrary URL and normalize it into LLM-ready Markdown plus
+       canonical metadata and optional artifacts.
+    2. Storage API: upload and download arbitrary files via S3-compatible object storage while keeping
+       metadata in a relational database that stays portable across SQLite, PostgreSQL, and similar engines.
+    3. Cognee API: orchestrate Add, Cognify, Memify, and Search operations over datasets and knowledge graphs.
+
+    Design principles:
+    - Vendor-neutrality: S3-compatible object APIs, standard SQL metadata model, adapter-based vector/graph stores.
+    - AI-native: Markdown-first outputs, chunking hints, provenance, graph-aware retrieval, and long-running jobs.
+    - High availability: async job model, idempotent writes, retry-safe polling, webhook notifications.
+    - Maintainability: stable resource naming, explicit metadata envelopes, and uniform error semantics.
+    - Observability: W3C Trace Context + Baggage propagation, OTLP-native telemetry, and first-class Jaeger / Prometheus / Grafana integration.
+
+    Cortex 通过单一契约暴露三大核心域：
+
+    1. Parse API：从任意 URL、对象文件或外部 URI 获取内容，并归一为 LLM-ready Markdown、标准元数据和可选产物。
+    2. Storage API：基于 S3 兼容对象存储提供上传、下载和元数据治理。
+    3. Knowledge API：围绕数据集编排 Add、Cognify、Memify 和 Search。
+
+    设计原则：
+    - 厂商中立：S3 兼容对象接口、标准 SQL 元数据模型、向量库和图库适配器。
+    - AI 原生：Markdown 优先输出、chunking 提示、provenance、图感知检索和长任务模型。
+    - 高可用：异步作业、幂等写入、可重试轮询和 webhook 通知。
+    - 可维护：稳定资源命名、显式元数据封装和统一错误语义。
+    - 可观测：支持 W3C Trace Context 与 `baggage` 传播，遥测通过 OTLP 导出，并原生对接 Jaeger、Prometheus、Grafana。
+
+    Telemetry contract / 遥测契约：
+    - All operations accept `traceparent`, `tracestate`, and `baggage` headers when the caller participates in distributed tracing.
+    - Error payloads and major business responses surface `trace_id`, `span_id`, and `request_id` for correlation.
+    - `/metrics` exposes Prometheus-compatible metrics derived from OpenTelemetry instrumentation.
+    - 所有接口在调用方参与分布式追踪时都接受 `traceparent`、`tracestate`、`baggage` 请求头。
+    - 错误返回和关键业务返回都会暴露 `trace_id`、`span_id`、`request_id` 以便关联。
+    - `/metrics` 暴露由 OpenTelemetry 埋点生成的 Prometheus 兼容指标。
+
+    Authorization contract / 权限契约：
+    - Authentication is OAuth 2.0 / OIDC compatible; JWT access tokens are preferred, with opaque-token introspection as a fallback.
+    - Functional permissions are expressed through OAuth scopes such as `parse:write`, `storage:download`, and `knowledge:read`.
+    - Data permissions are evaluated separately against tenant boundary, role bindings, `access_level`, and resource policies.
+    - Authentication failures return `401`; authorization failures return `403` with decision context.
+    - 认证兼容 OAuth 2.0 / OIDC，优先使用 JWT access token，必要时兼容 opaque token introspection。
+    - 功能权限通过 OAuth scope 表达，例如 `parse:write`、`storage:download`、`knowledge:read`。
+    - 数据权限独立于 scope 求值，基于租户边界、角色绑定、`access_level` 和资源策略判断。
+    - 认证失败返回 `401`，授权失败返回 `403` 并给出决策上下文。
+servers:
+  - url: https://api.cortex.example.com
+    description: Production / 生产环境
+  - url: https://sandbox.cortex.example.com
+    description: Sandbox / 沙箱环境
+tags:
+  - name: Health
+    description: Runtime liveness and dependency readiness probes. / 运行存活与依赖就绪探针。
+  - name: Observability
+    description: OpenTelemetry-aligned telemetry and metrics endpoints. / 对齐 OpenTelemetry 的遥测与指标接口。
+  - name: Jobs
+    description: Generic long-running job inspection and control. / 通用长任务查询与控制。
+  - name: Parse
+    description: Engine-agnostic parsing, normalization, and persistence for URLs and files. / 面向 URL 和文件的引擎无关解析、标准化与持久化。
+  - name: Storage
+    description: Upload, complete, inspect, and download S3-backed objects. / 上传、完成、查询和下载 S3 后端对象。
+  - name: Knowledge
+    description: Dataset lifecycle plus Cognee-backed Add, Cognify, Memify, and Search operations. / 数据集生命周期与基于 Cognee 的 Add、Cognify、Memify、Search 操作。
+security:
+  - OAuth2: []
+paths:
+  /v1/health/live:
+    get:
+      tags:
+        - Health
+      summary: Liveness probe / 存活检查
+      operationId: getLiveness
+      security:
+        - OAuth2:
+            - health:read
+      responses:
+        '200':
+          description: Service is running. / 服务运行中。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: ok
+                service: cortex-api
+                mode: live
+                version: 1.0.0-draft
+                timestamp: '2026-04-12T10:00:00Z'
+                checks: []
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/health/ready:
+    get:
+      tags:
+        - Health
+      summary: Readiness probe / 就绪检查
+      operationId: getReadiness
+      security:
+        - OAuth2:
+            - health:read
+      responses:
+        '200':
+          description: All required dependencies are ready. / 所有关键依赖均已就绪。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: One or more critical dependencies are unavailable. / 一个或多个关键依赖不可用。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /metrics:
+    get:
+      tags:
+        - Observability
+      summary: Prometheus scrape endpoint / Prometheus 指标抓取端点
+      description: |
+        Exposes runtime and business metrics derived from OpenTelemetry instrumentation in a Prometheus-compatible
+        text format. Intended for internal scraping by Prometheus or the OpenTelemetry Collector. /
+        以 Prometheus 兼容文本格式暴露由 OpenTelemetry 埋点生成的运行时与业务指标，供 Prometheus
+        或 OpenTelemetry Collector 在内网侧抓取。
+      operationId: getMetrics
+      security: []
+      responses:
+        '200':
+          description: Metrics payload in Prometheus exposition format. / Prometheus 暴露格式的指标载荷。
+          content:
+            text/plain:
+              schema:
+                type: string
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/jobs/{jobId}:
+    get:
+      tags:
+        - Jobs
+      summary: Get job status / 获取任务状态
+      operationId: getJob
+      security:
+        - OAuth2:
+            - jobs:read
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: Job status. / 任务状态。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/jobs/{jobId}/events:
+    get:
+      tags:
+        - Jobs
+      summary: List job events / 获取任务事件列表
+      operationId: listJobEvents
+      security:
+        - OAuth2:
+            - jobs:read
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+        - name: limit
+          in: query
+          description: Maximum number of events to return. / 返回事件的最大数量。
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 100
+      responses:
+        '200':
+          description: Ordered event stream for the job. / 任务的有序事件流。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobEventList'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/jobs/{jobId}/cancel:
+    post:
+      tags:
+        - Jobs
+      summary: Cancel a queued or running job / 取消排队中或运行中的任务
+      operationId: cancelJob
+      security:
+        - OAuth2:
+            - jobs:cancel
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '202':
+          description: Cancellation accepted. / 已接受取消请求。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/parse/engines:
+    get:
+      tags:
+        - Parse
+      summary: List available parse engines / 获取可用解析引擎
+      description: |
+        Returns the registered parse engines, supported source types, capability flags, and deployment modes. /
+        返回当前已注册的解析引擎、支持的输入类型、能力标签和部署模式。
+      operationId: listParseEngines
+      security:
+        - OAuth2:
+            - parse:read
+      responses:
+        '200':
+          description: Parse engine registry returned successfully. / 已成功返回解析引擎注册表。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseEngineList'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/parse/profiles:
+    get:
+      tags:
+        - Parse
+      summary: List parser profiles / 获取解析配置模板
+      description: |
+        Returns reusable parser profiles that drive engine selection, fallback rules, and normalization defaults. /
+        返回可复用的解析模板，用于驱动引擎选择、回退策略和标准化默认值。
+      operationId: listParserProfiles
+      security:
+        - OAuth2:
+            - parse:read
+      responses:
+        '200':
+          description: Parser profiles returned successfully. / 已成功返回解析配置模板。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParserProfileList'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/parse/sync:
+    post:
+      tags:
+        - Parse
+      summary: Parse content synchronously / 同步解析内容
+      description: |
+        Use this endpoint for bounded, interactive parsing workloads across URLs, stored objects, or external file URIs.
+        The service may reject oversized or long-running jobs with `409` and require the asynchronous job endpoint instead. /
+        该接口用于 URL、对象存储文件或外部文件 URI 的受控同步解析请求。对于体积过大或执行时间过长的任务，
+        服务可能返回 `409`，要求改用异步作业接口。
+      operationId: parseContentSync
+      security:
+        - OAuth2:
+            - parse:write
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParseSyncRequest'
+      responses:
+        '200':
+          description: Parse completed within the sync timeout budget. / 已在同步超时预算内完成解析。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Request must be handled asynchronously. / 请求必须改为异步处理。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/parse/jobs:
+    post:
+      tags:
+        - Parse
+      summary: Submit an asynchronous parse job / 提交异步解析任务
+      description: |
+        Creates a parse job that can route across multiple parser engines by explicit engine choice, profile, or fallback policy. /
+        创建一个异步解析任务，可通过显式引擎选择、配置模板或回退策略在多个解析引擎之间路由。
+      operationId: createParseJob
+      security:
+        - OAuth2:
+            - parse:write
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParseJobRequest'
+      responses:
+        '202':
+          description: Parse job accepted. / 已接受解析任务。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobAccepted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/parse/jobs/{jobId}/result:
+    get:
+      tags:
+        - Parse
+      summary: Get a completed parse result / 获取已完成的解析结果
+      operationId: getParseResult
+      security:
+        - OAuth2:
+            - parse:read
+            - jobs:read
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: Completed parse result. / 已完成的解析结果。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseResult'
+        '202':
+          description: Job is still running. / 任务仍在运行中。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/storage/uploads:
+    post:
+      tags:
+        - Storage
+      summary: Initiate an upload session / 初始化上传会话
+      description: |
+        Creates metadata first, then returns pre-signed upload instructions for direct-to-object-store transfer.
+        Small files may use a single-part upload; large files should use multipart mode. /
+        先创建元数据，再返回直传对象存储的预签名上传指令。小文件可使用单段上传，大文件应使用 multipart 模式。
+      operationId: createUploadSession
+      security:
+        - OAuth2:
+            - storage:write
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StorageUploadCreateRequest'
+      responses:
+        '201':
+          description: Upload session created. / 上传会话已创建。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageUploadSession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/storage/uploads/{uploadId}/complete:
+    post:
+      tags:
+        - Storage
+      summary: Complete an upload session / 完成上传会话
+      operationId: completeUploadSession
+      security:
+        - OAuth2:
+            - storage:write
+      parameters:
+        - $ref: '#/components/parameters/UploadId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StorageUploadCompleteRequest'
+      responses:
+        '200':
+          description: Upload finalized and metadata committed. / 上传已完成且元数据已提交。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/storage/objects/{objectId}:
+    get:
+      tags:
+        - Storage
+      summary: Get object metadata / 获取对象元数据
+      operationId: getStorageObject
+      security:
+        - OAuth2:
+            - storage:read
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: Object metadata. / 对象元数据。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageObject'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/storage/objects/{objectId}/download-url:
+    get:
+      tags:
+        - Storage
+      summary: Create a download URL for an object / 为对象生成下载地址
+      operationId: createDownloadUrl
+      security:
+        - OAuth2:
+            - storage:download
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+        - name: ttl_seconds
+          in: query
+          description: Requested URL lifetime in seconds. / 请求的 URL 有效时长（秒）。
+          schema:
+            type: integer
+            minimum: 60
+            maximum: 86400
+            default: 900
+        - name: disposition
+          in: query
+          description: Content disposition for the download. / 下载的 Content-Disposition。
+          schema:
+            type: string
+            enum:
+              - attachment
+              - inline
+            default: attachment
+      responses:
+        '200':
+          description: Pre-signed download URL. / 预签名下载地址。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadUrlResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/knowledge/datasets:
+    post:
+      tags:
+        - Knowledge
+      summary: Create a knowledge dataset / 创建知识数据集
+      operationId: createKnowledgeDataset
+      security:
+        - OAuth2:
+            - knowledge:write
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KnowledgeDatasetCreateRequest'
+      responses:
+        '201':
+          description: Dataset created. / 数据集已创建。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KnowledgeDataset'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/knowledge/datasets/{datasetId}:
+    get:
+      tags:
+        - Knowledge
+      summary: Get dataset metadata and counters / 获取数据集元数据与计数器
+      operationId: getKnowledgeDataset
+      security:
+        - OAuth2:
+            - knowledge:read
+      parameters:
+        - $ref: '#/components/parameters/DatasetId'
+      responses:
+        '200':
+          description: Dataset state. / 数据集状态。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KnowledgeDataset'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/knowledge/add/jobs:
+    post:
+      tags:
+        - Knowledge
+      summary: Submit a Cognee Add job / 提交 Cognee Add 任务
+      description: |
+        Ingests raw text, documents, object references, or URIs into a dataset. This operation normalizes inputs
+        but does not build embeddings or graph structure yet. /
+        将原始文本、文档、对象引用或 URI 导入数据集。该操作会完成归一化，但此时尚不会构建 embedding 或图结构。
+      operationId: createAddJob
+      security:
+        - OAuth2:
+            - knowledge:write
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddJobRequest'
+      responses:
+        '202':
+          description: Add job accepted. / 已接受 Add 任务。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobAccepted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/knowledge/cognify/jobs:
+    post:
+      tags:
+        - Knowledge
+      summary: Submit a Cognify job / 提交 Cognify 任务
+      description: |
+        Builds chunks, summaries, embeddings, nodes, and edges for a dataset. This is a long-running background
+        operation by default. /
+        为数据集构建 chunk、summary、embedding、节点和边。该操作默认是长时间后台任务。
+      operationId: createCognifyJob
+      security:
+        - OAuth2:
+            - knowledge:write
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CognifyJobRequest'
+      responses:
+        '202':
+          description: Cognify job accepted. / 已接受 Cognify 任务。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobAccepted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/knowledge/memify/jobs:
+    post:
+      tags:
+        - Knowledge
+      summary: Submit a Memify job / 提交 Memify 任务
+      description: |
+        Enriches an existing graph with derived nodes or edges. Supports built-in pipelines such as coding rules,
+        triplet embeddings, session persistence, and entity consolidation. /
+        对已有图谱增加派生节点或边，支持 coding rules、triplet embeddings、session persistence、entity consolidation 等内建管线。
+      operationId: createMemifyJob
+      security:
+        - OAuth2:
+            - knowledge:write
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemifyJobRequest'
+      responses:
+        '202':
+          description: Memify job accepted. / 已接受 Memify 任务。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobAccepted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/knowledge/search:
+    post:
+      tags:
+        - Knowledge
+      summary: Search across datasets and knowledge graphs / 跨数据集与知识图谱搜索
+      operationId: searchKnowledge
+      security:
+        - OAuth2:
+            - knowledge:read
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Search results with answer, context, and provenance. / 返回包含答案、上下文和来源追溯的搜索结果。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+webhooks:
+  job.status.changed:
+    post:
+      summary: Job status webhook / 任务状态回调
+      description: Delivered when a job transitions state or completes with a result or failure. / 当任务状态变更或完成时投递。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobWebhookEvent'
+      responses:
+        '200':
+          description: Webhook accepted by the subscriber. / 回调接收方已接受 webhook。
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: |
+        OAuth 2.0 / OIDC-compatible access tokens for Cortex. Best practice is JWT access tokens with standard
+        scope claims and tenant-aware audience validation. /
+        用于 Cortex 的 OAuth 2.0 / OIDC 兼容访问令牌。最佳实践是使用带标准 scope 声明并按租户感知 audience 校验的 JWT access token。
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.cortex.example.com/oauth2/authorize
+          tokenUrl: https://auth.cortex.example.com/oauth2/token
+          scopes:
+            health:read: Read health and readiness status. / 读取健康和就绪状态。
+            jobs:read: Read job status and event streams. / 读取任务状态和事件流。
+            jobs:cancel: Cancel queued or running jobs. / 取消排队中或运行中的任务。
+            parse:read: Read parse registries and parse results. / 读取解析注册表和解析结果。
+            parse:write: Submit synchronous or asynchronous parse operations. / 提交同步或异步解析操作。
+            storage:read: Read object metadata. / 读取对象元数据。
+            storage:write: Create or finalize upload sessions. / 创建或完成上传会话。
+            storage:download: Generate download URLs after resource authorization. / 在资源授权后生成下载地址。
+            knowledge:read: Read datasets and execute knowledge search. / 读取数据集并执行知识搜索。
+            knowledge:write: Create datasets and submit Add/Cognify/Memify jobs. / 创建数据集并提交 Add/Cognify/Memify 任务。
+            observability:read: Read protected observability resources. / 读取受保护的观测资源。
+            admin:read: Read platform administration resources. / 读取平台管理资源。
+            admin:write: Change platform administration resources. / 修改平台管理资源。
+        clientCredentials:
+          tokenUrl: https://auth.cortex.example.com/oauth2/token
+          scopes:
+            health:read: Read health and readiness status. / 读取健康和就绪状态。
+            jobs:read: Read job status and event streams. / 读取任务状态和事件流。
+            jobs:cancel: Cancel queued or running jobs. / 取消排队中或运行中的任务。
+            parse:read: Read parse registries and parse results. / 读取解析注册表和解析结果。
+            parse:write: Submit synchronous or asynchronous parse operations. / 提交同步或异步解析操作。
+            storage:read: Read object metadata. / 读取对象元数据。
+            storage:write: Create or finalize upload sessions. / 创建或完成上传会话。
+            storage:download: Generate download URLs after resource authorization. / 在资源授权后生成下载地址。
+            knowledge:read: Read datasets and execute knowledge search. / 读取数据集并执行知识搜索。
+            knowledge:write: Create datasets and submit Add/Cognify/Memify jobs. / 创建数据集并提交 Add/Cognify/Memify 任务。
+            observability:read: Read protected observability resources. / 读取受保护的观测资源。
+            admin:read: Read platform administration resources. / 读取平台管理资源。
+            admin:write: Change platform administration resources. / 修改平台管理资源。
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    JobId:
+      name: jobId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Stable job identifier, typically a UUID or ULID generated by the service. / 稳定的任务标识，通常由服务生成 UUID 或 ULID。
+    UploadId:
+      name: uploadId
+      in: path
+      required: true
+      schema:
+        type: string
+    ObjectId:
+      name: objectId
+      in: path
+      required: true
+      schema:
+        type: string
+    DatasetId:
+      name: datasetId
+      in: path
+      required: true
+      schema:
+        type: string
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: |
+        Optional idempotency key for safely retrying create operations. The server should scope keys by tenant,
+        endpoint family, and authenticated principal. /
+        可选的幂等键，用于安全重试创建类操作。服务端应按租户、接口族和认证主体进行作用域隔离。
+      schema:
+        type: string
+        maxLength: 255
+    TraceparentHeader:
+      name: traceparent
+      in: header
+      required: false
+      description: W3C Trace Context header for distributed tracing. / 用于分布式追踪的 W3C Trace Context 头。
+      schema:
+        type: string
+    TracestateHeader:
+      name: tracestate
+      in: header
+      required: false
+      description: Optional W3C tracestate header carrying vendor-specific trace state. / 可选的 W3C tracestate 头，用于承载供应商特定追踪状态。
+      schema:
+        type: string
+    BaggageHeader:
+      name: baggage
+      in: header
+      required: false
+      description: W3C Baggage header for propagating release, experiment, or tenant context. / 用于传播发布、实验或租户上下文的 W3C Baggage 头。
+      schema:
+        type: string
+    RequestIdHeader:
+      name: X-Request-Id
+      in: header
+      required: false
+      description: Optional caller-supplied request identifier for log and trace correlation. / 调用方可选传入的请求标识，用于日志和链路关联。
+      schema:
+        type: string
+
+  headers:
+    Traceparent:
+      description: Current request traceparent value generated or echoed by the service. / 服务生成或回传的当前请求 traceparent。
+      schema:
+        type: string
+    XTraceId:
+      description: Canonical trace identifier for jumping to Jaeger or Grafana. / 用于跳转 Jaeger 或 Grafana 的标准 trace 标识。
+      schema:
+        type: string
+    XRequestId:
+      description: Canonical request identifier for logs, events, and audit records. / 用于日志、事件和审计记录的请求标识。
+      schema:
+        type: string
+    XDecisionId:
+      description: Authorization decision identifier for audit and support investigations. / 用于审计与问题排查的授权决策标识。
+      schema:
+        type: string
+
+  responses:
+    BadRequest:
+      description: Invalid request. / 无效请求。
+      headers:
+        traceparent:
+          $ref: '#/components/headers/Traceparent'
+        X-Trace-Id:
+          $ref: '#/components/headers/XTraceId'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Unauthorized:
+      description: Authentication required or token invalid. / 需要认证或令牌无效。
+      headers:
+        traceparent:
+          $ref: '#/components/headers/Traceparent'
+        X-Trace-Id:
+          $ref: '#/components/headers/XTraceId'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Forbidden:
+      description: Authenticated caller lacks required functional or data permissions. / 调用方已通过认证，但缺少所需功能权限或数据权限。
+      headers:
+        traceparent:
+          $ref: '#/components/headers/Traceparent'
+        X-Trace-Id:
+          $ref: '#/components/headers/XTraceId'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        X-Decision-Id:
+          $ref: '#/components/headers/XDecisionId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    NotFound:
+      description: Resource not found. / 资源不存在。
+      headers:
+        traceparent:
+          $ref: '#/components/headers/Traceparent'
+        X-Trace-Id:
+          $ref: '#/components/headers/XTraceId'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Conflict:
+      description: Resource state conflict. / 资源状态冲突。
+      headers:
+        traceparent:
+          $ref: '#/components/headers/Traceparent'
+        X-Trace-Id:
+          $ref: '#/components/headers/XTraceId'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    ErrorResponse:
+      description: Generic error. / 通用错误。
+      headers:
+        traceparent:
+          $ref: '#/components/headers/Traceparent'
+        X-Trace-Id:
+          $ref: '#/components/headers/XTraceId'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+  schemas:
+    ProblemDetails:
+      type: object
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          example: https://api.cortex.example.com/errors/validation
+        title:
+          type: string
+          example: Validation failed
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        error_code:
+          type: string
+          example: invalid_request
+        retryable:
+          type: boolean
+        trace_id:
+          type: string
+        span_id:
+          type: string
+        request_id:
+          type: string
+        decision_id:
+          type: string
+        reason_code:
+          type: string
+          example: insufficient_scope
+        required_scopes:
+          type: array
+          items:
+            type: string
+        required_permissions:
+          type: array
+          items:
+            type: string
+        field_errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldError'
+
+    FieldError:
+      type: object
+      required:
+        - field
+        - message
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - service
+        - mode
+        - version
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+            - degraded
+            - failed
+        service:
+          type: string
+        mode:
+          type: string
+          enum:
+            - live
+            - ready
+        version:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        checks:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyCheck'
+
+    DependencyCheck:
+      type: object
+      required:
+        - name
+        - status
+      properties:
+        name:
+          type: string
+          example: relational-db
+        status:
+          type: string
+          enum:
+            - ok
+            - degraded
+            - failed
+        latency_ms:
+          type: integer
+          minimum: 0
+        detail:
+          type: string
+
+    AuditFields:
+      type: object
+      required:
+        - created_at
+        - updated_at
+      properties:
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+        updated_by:
+          type: string
+
+    AccessPolicy:
+      type: object
+      properties:
+        access_level:
+          type: string
+          enum:
+            - tenant_private
+            - tenant_shared
+            - restricted
+            - confidential
+        owner_actor_id:
+          type: string
+        classification_labels:
+          type: array
+          items:
+            type: string
+        allowed_role_keys:
+          type: array
+          items:
+            type: string
+        denied_role_keys:
+          type: array
+          items:
+            type: string
+        purpose_tags:
+          type: array
+          items:
+            type: string
+        constraints:
+          type: object
+          additionalProperties: true
+
+    CallerIdentity:
+      type: object
+      properties:
+        actor_id:
+          type: string
+        subject:
+          type: string
+        actor_type:
+          type: string
+          enum:
+            - user
+            - service
+            - webhook
+            - system
+        tenant_id:
+          type: string
+        client_id:
+          type: string
+        scopes:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            type: string
+        entitlements:
+          type: array
+          items:
+            type: string
+
+    AuthorizationDecision:
+      type: object
+      properties:
+        decision_id:
+          type: string
+        effect:
+          type: string
+          enum:
+            - allow
+            - deny
+        reason_code:
+          type: string
+        required_scopes:
+          type: array
+          items:
+            type: string
+        resource_type:
+          type: string
+        resource_id:
+          type: string
+        evaluated_policy_ids:
+          type: array
+          items:
+            type: string
+
+    TelemetryContext:
+      type: object
+      properties:
+        trace_id:
+          type: string
+        span_id:
+          type: string
+        traceparent:
+          type: string
+        tracestate:
+          type: string
+        baggage:
+          type: object
+          additionalProperties:
+            type: string
+        request_id:
+          type: string
+        deployment:
+          $ref: '#/components/schemas/DeploymentContext'
+        experiment:
+          $ref: '#/components/schemas/ExperimentContext'
+
+    DeploymentContext:
+      type: object
+      properties:
+        service_name:
+          type: string
+          example: cortex-api
+        service_version:
+          type: string
+          example: 1.0.0
+        service_instance_id:
+          type: string
+        deployment_environment_name:
+          type: string
+          example: production
+        deployment_ring:
+          type: string
+          enum:
+            - blue
+            - green
+            - canary
+            - stable
+        release_channel:
+          type: string
+          example: experiment
+
+    ExperimentContext:
+      type: object
+      properties:
+        experiment_id:
+          type: string
+        variant:
+          type: string
+        feature_flags:
+          type: array
+          items:
+            type: string
+
+    JobAccepted:
+      type: object
+      required:
+        - job_id
+        - job_type
+        - status
+        - submitted_at
+        - poll_url
+      properties:
+        job_id:
+          type: string
+        job_type:
+          type: string
+          enum:
+            - parse
+            - knowledge_add
+            - knowledge_cognify
+            - knowledge_memify
+        status:
+          type: string
+          enum:
+            - queued
+        submitted_at:
+          type: string
+          format: date-time
+        poll_url:
+          type: string
+          format: uri-reference
+        result_url:
+          type: string
+          format: uri-reference
+        cancel_url:
+          type: string
+          format: uri-reference
+        telemetry:
+          $ref: '#/components/schemas/TelemetryContext'
+
+    JobStatus:
+      type: object
+      required:
+        - job_id
+        - job_type
+        - operation_name
+        - status
+        - submitted_at
+      properties:
+        job_id:
+          type: string
+        job_type:
+          type: string
+        operation_name:
+          type: string
+          example: parse_url
+        status:
+          type: string
+          enum:
+            - queued
+            - running
+            - succeeded
+            - failed
+            - cancelled
+        progress_percent:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+        queue_name:
+          type: string
+        target_type:
+          type: string
+          example: document
+        target_id:
+          type: string
+        correlation_id:
+          type: string
+        submitted_at:
+          type: string
+          format: date-time
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        error:
+          $ref: '#/components/schemas/JobError'
+        metrics:
+          $ref: '#/components/schemas/JobMetrics'
+        telemetry:
+          $ref: '#/components/schemas/TelemetryContext'
+
+    JobError:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        retryable:
+          type: boolean
+
+    JobMetrics:
+      type: object
+      properties:
+        queued_ms:
+          type: integer
+          minimum: 0
+        run_ms:
+          type: integer
+          minimum: 0
+        total_ms:
+          type: integer
+          minimum: 0
+
+    JobEventList:
+      type: object
+      required:
+        - job_id
+        - events
+      properties:
+        job_id:
+          type: string
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobEvent'
+
+    JobEvent:
+      type: object
+      required:
+        - sequence
+        - level
+        - event_type
+        - event_at
+      properties:
+        sequence:
+          type: integer
+          minimum: 1
+        level:
+          type: string
+          enum:
+            - debug
+            - info
+            - warn
+            - error
+        event_type:
+          type: string
+          example: parse.render.completed
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        event_at:
+          type: string
+          format: date-time
+        telemetry:
+          $ref: '#/components/schemas/TelemetryContext'
+
+    JobWebhookEvent:
+      type: object
+      required:
+        - event_id
+        - event_type
+        - delivered_at
+        - job
+      properties:
+        event_id:
+          type: string
+        event_type:
+          type: string
+          enum:
+            - job.queued
+            - job.running
+            - job.succeeded
+            - job.failed
+            - job.cancelled
+        delivered_at:
+          type: string
+          format: date-time
+        job:
+          $ref: '#/components/schemas/JobStatus'
+        result:
+          type: object
+          additionalProperties: true
+
+    WebhookConfig:
+      type: object
+      required:
+        - callback_url
+      properties:
+        callback_url:
+          type: string
+          format: uri
+        signing_secret_ref:
+          type: string
+          description: Reference to a secret managed outside the API payload. / 指向 API 载荷之外托管密钥的引用。
+        include_event_history:
+          type: boolean
+          default: false
+
+    ParseSyncRequest:
+      type: object
+      required:
+        - source
+      properties:
+        source:
+          $ref: '#/components/schemas/ParseSource'
+        parser:
+          $ref: '#/components/schemas/ParserSelection'
+        crawl:
+          $ref: '#/components/schemas/CrawlOptions'
+        normalization:
+          $ref: '#/components/schemas/ParseNormalizationOptions'
+        output:
+          $ref: '#/components/schemas/ParseOutputOptions'
+        persistence:
+          $ref: '#/components/schemas/ParsePersistenceOptions'
+        timeout_seconds:
+          type: integer
+          minimum: 1
+          maximum: 300
+          default: 45
+
+    ParseJobRequest:
+      allOf:
+        - $ref: '#/components/schemas/ParseSyncRequest'
+        - type: object
+          properties:
+            priority:
+              type: integer
+              minimum: 1
+              maximum: 10
+              default: 5
+            webhook:
+              $ref: '#/components/schemas/WebhookConfig'
+
+    ParseSource:
+      type: object
+      required:
+        - input_kind
+      properties:
+        input_kind:
+          type: string
+          enum:
+            - url
+            - object
+            - uri
+        url:
+          type: string
+          format: uri
+        object_id:
+          type: string
+        uri:
+          type: string
+          format: uri
+        filename:
+          type: string
+        canonical_url:
+          type: string
+          format: uri
+        referrer:
+          type: string
+          format: uri
+        expected_content_type:
+          type: string
+          example: text/html
+
+    ParserSelection:
+      type: object
+      properties:
+        profile_ref:
+          type: string
+          description: Reusable parser profile reference / 可复用的解析模板引用。
+        preferred_engine_key:
+          type: string
+          description: Preferred engine key such as `crawl4ai`, `jina_reader`, `llamaparse`, `markitdown`, or `docling`. / 首选解析引擎标识。
+        allowed_engines:
+          type: array
+          items:
+            type: string
+        engine_template_ref:
+          type: string
+          description: Optional engine-specific template override / 可选的引擎级模板覆盖。
+        engine_options:
+          type: object
+          additionalProperties: true
+          description: Engine-specific options passed through the adapter layer / 透传给解析器适配层的引擎特定参数。
+        fallback_policy:
+          $ref: '#/components/schemas/FallbackPolicy'
+
+    FallbackPolicy:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          default: true
+        mode:
+          type: string
+          enum:
+            - none
+            - ordered
+            - capability_based
+            - quality_based
+          default: ordered
+        on_error:
+          type: string
+          enum:
+            - try_next
+            - fail_fast
+          default: try_next
+        max_engine_attempts:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 3
+
+    CrawlOptions:
+      type: object
+      properties:
+        respect_robots_txt:
+          type: boolean
+          default: true
+        browser_profile:
+          $ref: '#/components/schemas/BrowserProfile'
+        content_selector:
+          type: string
+          example: article, main
+        excluded_selectors:
+          type: array
+          items:
+            type: string
+        wait_for:
+          type: string
+          description: CSS or JS wait expression, such as `css:.main-loaded` or `js:() => window.ready === true`. / CSS 或 JS 等待表达式。
+        js_code:
+          type: array
+          description: JavaScript steps executed after the page becomes ready. / 页面就绪后执行的 JavaScript 步骤。
+          items:
+            type: string
+        remove_overlay_elements:
+          type: boolean
+          default: true
+        cache_mode:
+          type: string
+          enum:
+            - bypass
+            - enabled
+            - read_only
+            - write_only
+          default: bypass
+        timeout_ms:
+          type: integer
+          minimum: 1000
+          maximum: 600000
+          default: 60000
+        capture:
+          $ref: '#/components/schemas/CaptureOptions'
+        retry_policy:
+          $ref: '#/components/schemas/RetryPolicy'
+
+    BrowserProfile:
+      type: object
+      properties:
+        browser_type:
+          type: string
+          enum:
+            - chromium
+            - firefox
+            - webkit
+          default: chromium
+        headless:
+          type: boolean
+          default: true
+        locale:
+          type: string
+          example: en-US
+        timezone_id:
+          type: string
+          example: Asia/Shanghai
+        viewport_width:
+          type: integer
+          minimum: 320
+          default: 1280
+        viewport_height:
+          type: integer
+          minimum: 200
+          default: 900
+        user_agent:
+          type: string
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        proxy_ref:
+          type: string
+          description: Reference to a configured proxy profile, not raw credentials. / 已配置代理模板的引用，而不是明文凭据。
+        enable_stealth:
+          type: boolean
+          default: false
+        use_undetected_browser:
+          type: boolean
+          default: false
+        use_persistent_context:
+          type: boolean
+          default: false
+        session_id:
+          type: string
+        storage_state_ref:
+          type: string
+          description: Reference to exported cookies/localStorage state for authenticated or stateful browsing. / 已导出 cookies 或 localStorage 状态的引用。
+
+    CaptureOptions:
+      type: object
+      properties:
+        return_markdown:
+          type: boolean
+          default: true
+        return_clean_html:
+          type: boolean
+          default: false
+        capture_pdf:
+          type: boolean
+          default: false
+        capture_screenshot:
+          type: boolean
+          default: false
+        force_viewport_screenshot:
+          type: boolean
+          default: false
+        scan_full_page:
+          type: boolean
+          default: false
+        fetch_ssl_certificate:
+          type: boolean
+          default: false
+        capture_network_log:
+          type: boolean
+          default: false
+        capture_console_log:
+          type: boolean
+          default: false
+        flatten_shadow_dom:
+          type: boolean
+          default: false
+
+    RetryPolicy:
+      type: object
+      properties:
+        max_attempts:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 3
+        initial_backoff_ms:
+          type: integer
+          minimum: 0
+          default: 500
+        max_backoff_ms:
+          type: integer
+          minimum: 0
+          default: 5000
+
+    ParseNormalizationOptions:
+      type: object
+      properties:
+        schema_version:
+          type: string
+          default: cortex.parse.v1
+        normalize_markdown:
+          type: boolean
+          default: true
+        normalize_metadata:
+          type: boolean
+          default: true
+        metadata_schema_ref:
+          type: string
+        infer_title:
+          type: boolean
+          default: true
+        infer_language:
+          type: boolean
+          default: true
+        include_page_metadata:
+          type: boolean
+          default: true
+        preserve_source_blocks:
+          type: boolean
+          default: false
+        deduplicate_whitespace:
+          type: boolean
+          default: true
+
+    ParseOutputOptions:
+      type: object
+      properties:
+        llm_ready_mode:
+          type: string
+          enum:
+            - markdown
+            - fit_markdown
+          default: markdown
+        metadata_fields:
+          type: array
+          items:
+            type: string
+            enum:
+              - title
+              - author
+              - publish_date
+              - language
+              - category_tags
+              - summary
+              - keywords
+              - description
+        include_links:
+          type: boolean
+          default: true
+        include_media:
+          type: boolean
+          default: true
+        classify_tags:
+          type: boolean
+          default: true
+        return_page_metadata:
+          type: boolean
+          default: false
+        return_engine_payload_summary:
+          type: boolean
+          default: true
+        chunking:
+          $ref: '#/components/schemas/ChunkingOptions'
+
+    ChunkingOptions:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          default: true
+        strategy:
+          type: string
+          enum:
+            - none
+            - heading
+            - semantic
+            - fixed_tokens
+          default: semantic
+        target_tokens:
+          type: integer
+          minimum: 64
+          maximum: 4096
+          default: 512
+        overlap_tokens:
+          type: integer
+          minimum: 0
+          maximum: 1024
+          default: 64
+        max_chunks:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          default: 256
+
+    ParsePersistenceOptions:
+      type: object
+      properties:
+        persist_document:
+          type: boolean
+          default: true
+        persist_artifacts:
+          type: boolean
+          default: true
+        storage_policy:
+          type: string
+          enum:
+            - metadata_only
+            - markdown_only
+            - full_artifacts
+          default: full_artifacts
+        dataset_id:
+          type: string
+        object_prefix:
+          type: string
+          example: parsed/2026/04/12/
+        access_policy:
+          $ref: '#/components/schemas/AccessPolicy'
+
+    ParseResult:
+      type: object
+      required:
+        - document
+        - diagnostics
+      properties:
+        job_id:
+          type: string
+        document:
+          $ref: '#/components/schemas/ParsedDocument'
+        artifacts:
+          $ref: '#/components/schemas/ParseArtifacts'
+        diagnostics:
+          $ref: '#/components/schemas/ParseDiagnostics'
+        telemetry:
+          $ref: '#/components/schemas/TelemetryContext'
+
+    ParsedDocument:
+      type: object
+      required:
+        - document_id
+        - source_type
+        - source_format
+        - markdown
+        - audit
+      properties:
+        document_id:
+          type: string
+        source_type:
+          type: string
+          enum:
+            - url
+            - object
+            - uri
+        source_url:
+          type: string
+          format: uri
+        source_object_id:
+          type: string
+        source_uri:
+          type: string
+          format: uri
+        canonical_url:
+          type: string
+          format: uri
+        title:
+          type: string
+        language_code:
+          type: string
+          example: zh-CN
+        source_format:
+          type: string
+          example: text/html
+        detected_mime_type:
+          type: string
+        category_tags:
+          type: array
+          items:
+            type: string
+        labels:
+          type: array
+          items:
+            type: string
+        access_policy:
+          $ref: '#/components/schemas/AccessPolicy'
+        markdown:
+          type: string
+        markdown_sha256:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+        normalized_metadata:
+          $ref: '#/components/schemas/StandardMetadata'
+        metadata:
+          type: object
+          additionalProperties: true
+        parser:
+          $ref: '#/components/schemas/AppliedParseEngine'
+        provenance:
+          $ref: '#/components/schemas/DocumentProvenance'
+        audit:
+          $ref: '#/components/schemas/AuditFields'
+
+    StandardMetadata:
+      type: object
+      properties:
+        title:
+          type: string
+        author:
+          type: string
+        publish_date:
+          type: string
+          format: date-time
+        language:
+          type: string
+        description:
+          type: string
+        summary:
+          type: string
+        keywords:
+          type: array
+          items:
+            type: string
+        category_tags:
+          type: array
+          items:
+            type: string
+
+    AppliedParseEngine:
+      type: object
+      properties:
+        engine_key:
+          type: string
+        display_name:
+          type: string
+        engine_family:
+          type: string
+        engine_version:
+          type: string
+        profile_ref:
+          type: string
+        template_ref:
+          type: string
+        fallback_used:
+          type: boolean
+
+    DocumentProvenance:
+      type: object
+      properties:
+        input_kind:
+          type: string
+        fetched_at:
+          type: string
+          format: date-time
+        final_url:
+          type: string
+          format: uri
+        http_status:
+          type: integer
+          minimum: 100
+          maximum: 599
+        content_length_bytes:
+          type: integer
+          minimum: 0
+        parser_version:
+          type: string
+        content_hash_sha256:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+
+    ParseArtifacts:
+      type: object
+      properties:
+        markdown_object:
+          $ref: '#/components/schemas/StorageObjectRef'
+        raw_html_object:
+          $ref: '#/components/schemas/StorageObjectRef'
+        screenshot_object:
+          $ref: '#/components/schemas/StorageObjectRef'
+        pdf_object:
+          $ref: '#/components/schemas/StorageObjectRef'
+        ssl_certificate:
+          $ref: '#/components/schemas/SslCertificateSummary'
+
+    ParseEngineDescriptor:
+      type: object
+      required:
+        - engine_key
+        - display_name
+        - engine_family
+        - deployment_mode
+        - status
+      properties:
+        engine_key:
+          type: string
+        display_name:
+          type: string
+        engine_family:
+          type: string
+        deployment_mode:
+          type: string
+          enum:
+            - local
+            - remote
+            - hybrid
+        status:
+          type: string
+          enum:
+            - active
+            - disabled
+            - deprecated
+        supported_source_types:
+          type: array
+          items:
+            type: string
+        supported_formats:
+          type: array
+          items:
+            type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+
+    ParseEngineList:
+      type: object
+      required:
+        - engines
+      properties:
+        engines:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParseEngineDescriptor'
+
+    ParserProfile:
+      type: object
+      required:
+        - profile_ref
+        - display_name
+      properties:
+        profile_ref:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+        routing_mode:
+          type: string
+        preferred_engine_key:
+          type: string
+        allowed_engines:
+          type: array
+          items:
+            type: string
+        normalization_defaults:
+          $ref: '#/components/schemas/ParseNormalizationOptions'
+        fallback_policy:
+          $ref: '#/components/schemas/FallbackPolicy'
+
+    ParserProfileList:
+      type: object
+      required:
+        - profiles
+      properties:
+        profiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParserProfile'
+
+    StorageObjectRef:
+      type: object
+      required:
+        - object_id
+        - object_key
+      properties:
+        object_id:
+          type: string
+        version_id:
+          type: string
+        bucket:
+          type: string
+        object_key:
+          type: string
+
+    SslCertificateSummary:
+      type: object
+      properties:
+        issuer_common_name:
+          type: string
+        valid_from:
+          type: string
+          format: date-time
+        valid_until:
+          type: string
+          format: date-time
+        fingerprint:
+          type: string
+
+    ParseEngineAttempt:
+      type: object
+      properties:
+        attempt_no:
+          type: integer
+          minimum: 1
+        engine_key:
+          type: string
+        status:
+          type: string
+          enum:
+            - succeeded
+            - failed
+            - skipped
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        error_code:
+          type: string
+        warning:
+          type: string
+        diagnostics:
+          type: object
+          additionalProperties: true
+
+    ParseDiagnostics:
+      type: object
+      required:
+        - timings_ms
+      properties:
+        selected_engine_key:
+          type: string
+        fallback_used:
+          type: boolean
+        engine_attempts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParseEngineAttempt'
+        warnings:
+          type: array
+          items:
+            type: string
+        link_counts:
+          type: object
+          properties:
+            internal:
+              type: integer
+              minimum: 0
+            external:
+              type: integer
+              minimum: 0
+        media_counts:
+          type: object
+          properties:
+            images:
+              type: integer
+              minimum: 0
+            videos:
+              type: integer
+              minimum: 0
+            documents:
+              type: integer
+              minimum: 0
+        anti_bot_strategy:
+          type: string
+          enum:
+            - none
+            - stealth
+            - undetected
+            - stealth_plus_undetected
+        used_proxy:
+          type: boolean
+        timings_ms:
+          type: object
+          properties:
+            fetch:
+              type: integer
+              minimum: 0
+            render:
+              type: integer
+              minimum: 0
+            normalize:
+              type: integer
+              minimum: 0
+            total:
+              type: integer
+              minimum: 0
+        telemetry:
+          $ref: '#/components/schemas/TelemetryContext'
+
+    StorageUploadCreateRequest:
+      type: object
+      required:
+        - filename
+        - content_type
+        - size_bytes
+      properties:
+        filename:
+          type: string
+        content_type:
+          type: string
+        size_bytes:
+          type: integer
+          minimum: 0
+        checksum_sha256:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+        access_policy:
+          $ref: '#/components/schemas/AccessPolicy'
+        tags:
+          type: array
+          items:
+            type: string
+        upload_mode:
+          type: string
+          enum:
+            - single_part
+            - multipart
+          default: single_part
+        part_size_bytes:
+          type: integer
+          minimum: 5242880
+          default: 8388608
+        bucket_ref:
+          type: string
+        object_prefix:
+          type: string
+
+    StorageUploadSession:
+      type: object
+      required:
+        - upload_id
+        - object_id
+        - upload_mode
+        - status
+        - expires_at
+      properties:
+        upload_id:
+          type: string
+        object_id:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending_upload
+        upload_mode:
+          type: string
+          enum:
+            - single_part
+            - multipart
+        bucket:
+          type: string
+        object_key:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        part_size_bytes:
+          type: integer
+        single_part:
+          $ref: '#/components/schemas/PresignedRequestDescriptor'
+        multipart_parts:
+          type: array
+          items:
+            $ref: '#/components/schemas/MultipartPartUpload'
+
+    PresignedRequestDescriptor:
+      type: object
+      required:
+        - method
+        - url
+      properties:
+        method:
+          type: string
+          example: PUT
+        url:
+          type: string
+          format: uri
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+
+    MultipartPartUpload:
+      type: object
+      required:
+        - part_number
+        - method
+        - url
+      properties:
+        part_number:
+          type: integer
+          minimum: 1
+        method:
+          type: string
+          example: PUT
+        url:
+          type: string
+          format: uri
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+
+    StorageUploadCompleteRequest:
+      type: object
+      properties:
+        parts:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompletedUploadPart'
+        checksum_sha256:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+
+    CompletedUploadPart:
+      type: object
+      required:
+        - part_number
+        - etag
+      properties:
+        part_number:
+          type: integer
+          minimum: 1
+        etag:
+          type: string
+
+    StorageObject:
+      type: object
+      required:
+        - object_id
+        - filename
+        - content_type
+        - size_bytes
+        - status
+        - audit
+      properties:
+        object_id:
+          type: string
+        current_version_id:
+          type: string
+        bucket:
+          type: string
+        object_key:
+          type: string
+        filename:
+          type: string
+        content_type:
+          type: string
+        size_bytes:
+          type: integer
+          minimum: 0
+        checksum_sha256:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+        etag:
+          type: string
+        storage_class:
+          type: string
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        source_uri:
+          type: string
+          format: uri
+        access_policy:
+          $ref: '#/components/schemas/AccessPolicy'
+        status:
+          type: string
+          enum:
+            - available
+            - archived
+            - deleted
+        audit:
+          $ref: '#/components/schemas/AuditFields'
+
+    DownloadUrlResponse:
+      type: object
+      required:
+        - object_id
+        - method
+        - url
+        - expires_at
+      properties:
+        object_id:
+          type: string
+        method:
+          type: string
+          example: GET
+        url:
+          type: string
+          format: uri
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        expires_at:
+          type: string
+          format: date-time
+
+    KnowledgeDatasetCreateRequest:
+      type: object
+      required:
+        - dataset_key
+        - display_name
+      properties:
+        dataset_key:
+          type: string
+          pattern: '^[a-z0-9][a-z0-9_-]{1,126}$'
+        display_name:
+          type: string
+        description:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        retention_class:
+          type: string
+          enum:
+            - standard
+            - durable
+            - temporary
+          default: standard
+        metadata:
+          type: object
+          additionalProperties: true
+        access_policy:
+          $ref: '#/components/schemas/AccessPolicy'
+
+    KnowledgeDataset:
+      type: object
+      required:
+        - dataset_id
+        - dataset_key
+        - display_name
+        - status
+        - audit
+      properties:
+        dataset_id:
+          type: string
+        dataset_key:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum:
+            - active
+            - archived
+            - deleting
+        tags:
+          type: array
+          items:
+            type: string
+        retention_class:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        access_policy:
+          $ref: '#/components/schemas/AccessPolicy'
+        counters:
+          $ref: '#/components/schemas/DatasetCounters'
+        audit:
+          $ref: '#/components/schemas/AuditFields'
+
+    DatasetCounters:
+      type: object
+      properties:
+        objects:
+          type: integer
+          minimum: 0
+        documents:
+          type: integer
+          minimum: 0
+        chunks:
+          type: integer
+          minimum: 0
+        graph_nodes:
+          type: integer
+          minimum: 0
+        graph_edges:
+          type: integer
+          minimum: 0
+
+    AddJobRequest:
+      type: object
+      required:
+        - inputs
+      anyOf:
+        - required:
+            - dataset_id
+        - required:
+            - dataset_key
+      properties:
+        dataset_id:
+          type: string
+        dataset_key:
+          type: string
+        inputs:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/KnowledgeInput'
+        options:
+          $ref: '#/components/schemas/AddOptions'
+        webhook:
+          $ref: '#/components/schemas/WebhookConfig'
+
+    KnowledgeInput:
+      type: object
+      required:
+        - input_type
+      properties:
+        input_type:
+          type: string
+          enum:
+            - object_id
+            - document_id
+            - text
+            - uri
+        object_id:
+          type: string
+        document_id:
+          type: string
+        text:
+          type: string
+        uri:
+          type: string
+        label:
+          type: string
+        node_set:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+          additionalProperties: true
+
+    AddOptions:
+      type: object
+      properties:
+        normalize_text:
+          type: boolean
+          default: true
+        structured_ingest:
+          type: boolean
+          default: true
+        incremental:
+          type: boolean
+          default: true
+        persist_source_copy:
+          type: boolean
+          default: true
+
+    CognifyJobRequest:
+      type: object
+      anyOf:
+        - required:
+            - dataset_id
+        - required:
+            - dataset_key
+      properties:
+        dataset_id:
+          type: string
+        dataset_key:
+          type: string
+        incremental_loading:
+          type: boolean
+          default: true
+        graph_prompt_profile:
+          type: string
+          enum:
+            - default
+            - simple
+            - strict
+            - guided
+          default: default
+        chunking:
+          $ref: '#/components/schemas/ChunkingOptions'
+        webhook:
+          $ref: '#/components/schemas/WebhookConfig'
+
+    MemifyJobRequest:
+      type: object
+      anyOf:
+        - required:
+            - dataset_id
+        - required:
+            - dataset_key
+      properties:
+        dataset_id:
+          type: string
+        dataset_key:
+          type: string
+        pipeline:
+          type: string
+          enum:
+            - coding_rules
+            - triplet_embeddings
+            - session_persistence
+            - entity_consolidation
+            - custom
+          default: coding_rules
+        node_type:
+          type: string
+        node_names:
+          type: array
+          items:
+            type: string
+        session_ids:
+          type: array
+          items:
+            type: string
+        custom_extraction_profile:
+          type: string
+        custom_enrichment_profile:
+          type: string
+        webhook:
+          $ref: '#/components/schemas/WebhookConfig'
+
+    SearchRequest:
+      type: object
+      required:
+        - query_text
+      properties:
+        dataset_ids:
+          type: array
+          items:
+            type: string
+        dataset_keys:
+          type: array
+          items:
+            type: string
+        query_text:
+          type: string
+        search_type:
+          type: string
+          enum:
+            - GRAPH_COMPLETION
+            - RAG_COMPLETION
+            - CHUNKS
+            - SUMMARIES
+            - GRAPH_SUMMARY_COMPLETION
+            - GRAPH_COMPLETION_COT
+            - GRAPH_COMPLETION_CONTEXT_EXTENSION
+            - TRIPLET_COMPLETION
+            - CHUNKS_LEXICAL
+            - CODING_RULES
+            - TEMPORAL
+            - CYPHER
+            - NATURAL_LANGUAGE
+          default: GRAPH_COMPLETION
+        top_k:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 10
+        session_id:
+          type: string
+        filters:
+          $ref: '#/components/schemas/SearchFilters'
+        only_context:
+          type: boolean
+          default: false
+        include_provenance:
+          type: boolean
+          default: true
+        include_graph_paths:
+          type: boolean
+          default: false
+        timeout_seconds:
+          type: integer
+          minimum: 1
+          maximum: 300
+          default: 30
+
+    SearchFilters:
+      type: object
+      properties:
+        document_ids:
+          type: array
+          items:
+            type: string
+        object_ids:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        node_sets:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+          additionalProperties: true
+
+    SearchResponse:
+      type: object
+      required:
+        - request_id
+        - search_type
+        - context_items
+        - latency_ms
+        - created_at
+      properties:
+        request_id:
+          type: string
+        dataset_scope:
+          type: array
+          items:
+            type: string
+        search_type:
+          type: string
+        answer:
+          type: string
+        context_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchHit'
+        graph_paths:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphPath'
+        latency_ms:
+          type: integer
+          minimum: 0
+        created_at:
+          type: string
+          format: date-time
+        telemetry:
+          $ref: '#/components/schemas/TelemetryContext'
+
+    SearchHit:
+      type: object
+      required:
+        - rank
+        - hit_type
+        - score
+      properties:
+        rank:
+          type: integer
+          minimum: 1
+        hit_type:
+          type: string
+          enum:
+            - chunk
+            - summary
+            - graph_node
+            - graph_edge
+            - triplet
+            - rule
+            - cypher_row
+        source_id:
+          type: string
+        document_id:
+          type: string
+        object_id:
+          type: string
+        title:
+          type: string
+        snippet:
+          type: string
+        score:
+          type: number
+          format: float
+        citation:
+          $ref: '#/components/schemas/Citation'
+        metadata:
+          type: object
+          additionalProperties: true
+
+    Citation:
+      type: object
+      properties:
+        source_url:
+          type: string
+          format: uri
+        document_id:
+          type: string
+        chunk_id:
+          type: string
+        start_offset:
+          type: integer
+          minimum: 0
+        end_offset:
+          type: integer
+          minimum: 0
+
+    GraphPath:
+      type: object
+      properties:
+        nodes:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        edges:
+          type: array
+          items:
+            type: object
+            additionalProperties: true

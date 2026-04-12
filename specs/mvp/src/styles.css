@@ -1,0 +1,292 @@
+﻿@import "tailwindcss";
+
+@source "./";
+@source "../../ordix-prototype.jsx";
+
+:root {
+  color-scheme: light;
+  font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Helvetica Neue", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #f0f2f5;
+  color: #0f172a;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
+}
+
+.doc-markdown {
+  color: #1e293b;
+}
+
+.doc-markdown h1,
+.doc-markdown h2,
+.doc-markdown h3,
+.doc-markdown h4,
+.doc-markdown h5,
+.doc-markdown h6 {
+  margin-top: 1.8em;
+  margin-bottom: 0.65em;
+  line-height: 1.25;
+  color: #0f172a;
+}
+
+.doc-markdown h1 {
+  margin-top: 0;
+  font-size: 2rem;
+}
+
+.doc-markdown h2 {
+  font-size: 1.55rem;
+}
+
+.doc-markdown h3 {
+  font-size: 1.2rem;
+}
+
+.doc-markdown p,
+.doc-markdown ul,
+.doc-markdown ol,
+.doc-markdown blockquote {
+  margin: 1em 0;
+  line-height: 1.85;
+}
+
+.doc-markdown ul,
+.doc-markdown ol {
+  padding-left: 1.5rem;
+}
+
+.doc-markdown li {
+  margin: 0.4rem 0;
+}
+
+.doc-markdown hr {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+}
+
+.doc-markdown a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.doc-markdown a:hover {
+  text-decoration: underline;
+}
+
+.doc-markdown blockquote {
+  border-left: 4px solid #cbd5e1;
+  padding: 0.15rem 0 0.15rem 1rem;
+  color: #475569;
+  background: #f8fafc;
+  border-radius: 0 1rem 1rem 0;
+}
+
+.doc-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+.doc-markdown th,
+.doc-markdown td {
+  border: 1px solid #e2e8f0;
+  padding: 0.85rem 1rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.doc-markdown th {
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+.doc-markdown img {
+  max-width: 100%;
+  border-radius: 1rem;
+}
+
+.doc-markdown pre,
+.doc-code,
+.mermaid-error__source {
+  font-family: "Cascadia Code", "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.doc-code {
+  margin: 0;
+  white-space: pre;
+}
+
+.mermaid-diagram,
+.mermaid-loading,
+.mermaid-error {
+  margin: 1.5rem 0;
+  border: 1px solid #dbe4f0;
+  border-radius: 1.25rem;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  overflow-x: auto;
+}
+
+.mermaid-diagram {
+  padding: 1rem;
+}
+
+.mermaid-diagram svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.mermaid-loading {
+  padding: 1.2rem 1.4rem;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.mermaid-error {
+  padding: 1.2rem 1.4rem;
+}
+
+.mermaid-error__title,
+.openapi-error__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #9f1239;
+}
+
+.mermaid-error__message,
+.openapi-error__message {
+  margin: 0.6rem 0 0;
+  color: #7f1d1d;
+  line-height: 1.7;
+}
+
+.mermaid-error__source {
+  margin: 1rem 0 0;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: #0f172a;
+  color: #e2e8f0;
+  white-space: pre-wrap;
+}
+
+.openapi-shell,
+.openapi-error {
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.75rem;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+}
+
+.openapi-shell__hint {
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+  padding: 0.95rem 1.15rem;
+  color: #475569;
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.openapi-error {
+  padding: 1.4rem 1.6rem;
+}
+
+.swagger-editor-frame {
+  display: block;
+  width: 100%;
+  min-height: 78vh;
+  border: 0;
+  background: #ffffff;
+}
+
+.openapi-shell .swagger-ui {
+  font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Helvetica Neue", Arial, sans-serif;
+}
+
+.openapi-shell .swagger-ui .topbar {
+  display: none;
+}
+
+.openapi-shell .swagger-ui .scheme-container {
+  margin: 0;
+  padding: 1rem 1.5rem;
+  box-shadow: none;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.openapi-shell .swagger-ui .information-container,
+.openapi-shell .swagger-ui .wrapper {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.openapi-shell .swagger-ui .info {
+  margin: 1.5rem 0;
+}
+
+.animate-in {
+  animation-duration: 200ms;
+  animation-fill-mode: both;
+  animation-timing-function: ease-out;
+}
+
+.fade-in {
+  animation-name: ordix-fade-in;
+}
+
+.slide-in-from-top-2 {
+  animation-name: ordix-slide-fade-in;
+}
+
+.duration-200 {
+  animation-duration: 200ms;
+}
+
+@keyframes ordix-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ordix-slide-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

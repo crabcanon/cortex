@@ -1,0 +1,120 @@
+# otel-collector.yaml
+# 适用场景：Cortex API、Parse Workers、Knowledge Workers 统一遥测接入
+# 设计目标：
+# 1. 应用侧统一通过 OTLP 上报，Collector 负责治理与分发。
+# 2. Trace 原生进入 Jaeger，Metrics 原生暴露给 Prometheus/Grafana。
+# 3. 默认配置适合生产基线；debug exporter 仅保留为本地排障备用。
+
+receivers:
+  # 接收来自各组件 OTLP SDK 的信号 (Python FastAPI / Workers)
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  # 内存限制保护，防止 Collector 在高负载下崩溃
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 1024
+    spike_limit_mib: 256
+
+  # 资源属性补全，避免各语言 SDK 配置不一致
+  resource/cortex:
+    attributes:
+      - key: service.namespace
+        value: cortex
+        action: upsert
+      - key: deployment.environment.name
+        value: ${env:CORTEX_DEPLOYMENT_ENV}
+        action: upsert
+      - key: cortex.platform
+        value: v1.0
+        action: upsert
+      - key: cortex.region
+        value: ${env:CORTEX_REGION}
+        action: upsert
+      - key: cortex.cluster
+        value: ${env:CORTEX_CLUSTER}
+        action: upsert
+
+  # 敏感字段清洗，避免令牌、Cookie、SQL 正文等泄露到遥测后端
+  attributes/redact_sensitive:
+    actions:
+      - key: http.request.header.authorization
+        action: delete
+      - key: http.request.header.cookie
+        action: delete
+      - key: http.response.header.set-cookie
+        action: delete
+      - key: db.statement
+        action: delete
+      - key: db.query.text
+        action: delete
+
+  # 基础批处理，提升传输效率
+  batch:
+    timeout: 5s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+
+exporters:
+  # 导出 Trace 到 Jaeger OTLP 接口。
+  # 注意：目标必须是开启 OTLP 的 Jaeger Collector / all-in-one。
+  otlp/jaeger:
+    endpoint: jaeger-all-in-one:4317
+    tls:
+      insecure: true
+    sending_queue:
+      enabled: true
+      num_consumers: 4
+      queue_size: 10000
+    retry_on_failure:
+      enabled: true
+      initial_interval: 1s
+      max_interval: 10s
+      max_elapsed_time: 300s
+
+  # 导出 Metrics 供 Prometheus 抓取
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    enable_open_metrics: true
+    send_timestamps: true
+    metric_expiration: 10m
+    resource_to_telemetry_conversion:
+      enabled: true # 将资源属性转化为 Prometheus labels
+
+  # 仅用于本地排障；需要时再临时挂入 logs pipeline
+  # 如需生产日志采集，可替换为 OTLP / Loki / 其他兼容日志后端 exporter
+  debug:
+    verbosity: normal
+
+extensions:
+  # 健康检查端点
+  health_check:
+    endpoint: 0.0.0.0:13133
+  # 自省端点，查看 Collector 自身性能
+  pprof:
+    endpoint: 0.0.0.0:1777
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+service:
+  telemetry:
+    logs:
+      level: info
+  extensions: [health_check, pprof, zpages]
+  pipelines:
+    # 链路追踪流水线
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource/cortex, attributes/redact_sensitive, batch]
+      exporters: [otlp/jaeger]
+
+    # 指标流水线
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resource/cortex, batch]
+      exporters: [prometheus]

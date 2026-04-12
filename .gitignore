@@ -3,11 +3,20 @@
 Thumbs.db
 .idea/
 .vscode/
+.spyderproject
+.spyproject
+.ropeproject
+.cursorignore
+.cursorindexingignore
 
 # Logs / temp
 *.log
 *.tmp
 *.temp
+pip-log.txt
+pip-delete-this-directory.txt
+celerybeat-schedule
+celerybeat.pid
 
 # Node.js
 **/node_modules/
@@ -16,30 +25,96 @@ Thumbs.db
 **/.vite-temp/
 coverage/
 
-# Python
+# Python bytecode / extensions
 __pycache__/
 *.py[cod]
+*.py[codz]
+*$py.class
 *.pyo
 *.pyd
+*.so
+*.sage.py
+
+# Python packaging / build
+.Python
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.manifest
+*.spec
+
+# Python env / tooling
 .python-version
 .venv/
+.venv
 venv/
 env/
 ENV/
+env.bak/
+venv.bak/
+.tox/
+.nox/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .hypothesis/
-.tox/
-.nox/
+.pyre/
+.pytype/
+.dmypy.json
+dmypy.json
+.pdm-python
+.pdm-build/
+.pixi/
+__pypackages__/
+.pybuilder/
+target/
+cython_debug/
+
+# Python reports / local data
 .coverage
 .coverage.*
 htmlcov/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py.cover
+cover/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+instance/
+.webassets-cache
+.scrapy
+.ipynb_checkpoints
+profile_default/
+ipython_config.py
+docs/_build/
+/site
+marimo/_static/
+marimo/_lsp/
+__marimo__/
+.abstra/
 
 # Environment / secrets
 .env
 .env.*
+.envrc
 *.local
+.pypirc
 
 # Local scratch
 .tmp-remote/

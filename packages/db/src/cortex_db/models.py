@@ -64,6 +64,96 @@ class PermissionModel(Base):
     created_at: Mapped[datetime] = created_at_column()
 
 
+class RoleModel(Base):
+    __tablename__ = "roles"
+    __table_args__ = (UniqueConstraint("tenant_id", "role_key"),)
+
+    role_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.tenant_id"), nullable=False)
+    role_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    display_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scope_level: Mapped[str] = mapped_column(String(32), nullable=False)
+    is_builtin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    metadata_json: Mapped[str] = json_text_column()
+    created_by: Mapped[str | None] = mapped_column(ForeignKey("actors.actor_id"), nullable=True)
+    created_at: Mapped[datetime] = created_at_column()
+    updated_at: Mapped[datetime] = updated_at_column()
+
+
+class RolePermissionModel(Base):
+    __tablename__ = "role_permissions"
+
+    role_id: Mapped[str] = mapped_column(
+        ForeignKey("roles.role_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    permission_key: Mapped[str] = mapped_column(
+        ForeignKey("permissions.permission_key"),
+        primary_key=True,
+    )
+    effect: Mapped[str] = mapped_column(String(16), nullable=False, default="allow")
+
+
+class ActorRoleBindingModel(Base):
+    __tablename__ = "actor_role_bindings"
+    __table_args__ = (
+        UniqueConstraint(
+            "tenant_id",
+            "actor_id",
+            "role_id",
+            "binding_scope",
+            "resource_type",
+            "resource_id",
+        ),
+        Index(
+            "idx_actor_role_bindings_actor_tenant",
+            "actor_id",
+            "tenant_id",
+            "binding_scope",
+        ),
+    )
+
+    binding_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.tenant_id"), nullable=False)
+    actor_id: Mapped[str] = mapped_column(ForeignKey("actors.actor_id"), nullable=False)
+    role_id: Mapped[str] = mapped_column(
+        ForeignKey("roles.role_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    binding_scope: Mapped[str] = mapped_column(String(32), nullable=False, default="tenant")
+    resource_type: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    resource_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    expires_at: Mapped[datetime | None] = nullable_timestamp_column()
+    metadata_json: Mapped[str] = json_text_column()
+    created_by: Mapped[str | None] = mapped_column(ForeignKey("actors.actor_id"), nullable=True)
+    created_at: Mapped[datetime] = created_at_column()
+    updated_at: Mapped[datetime] = updated_at_column()
+
+
+class AuthorizationPolicyModel(Base):
+    __tablename__ = "authorization_policies"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "policy_key"),
+        Index("idx_authorization_policies_tenant_status", "tenant_id", "status", "priority"),
+    )
+
+    policy_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.tenant_id"), nullable=False)
+    policy_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    effect: Mapped[str] = mapped_column(String(16), nullable=False)
+    priority: Mapped[int] = mapped_column(Integer, nullable=False, default=100)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    subject_selector_json: Mapped[str] = json_text_column()
+    resource_selector_json: Mapped[str] = json_text_column()
+    condition_json: Mapped[str] = json_text_column()
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    metadata_json: Mapped[str] = json_text_column()
+    created_by: Mapped[str | None] = mapped_column(ForeignKey("actors.actor_id"), nullable=True)
+    created_at: Mapped[datetime] = created_at_column()
+    updated_at: Mapped[datetime] = updated_at_column()
+
+
 class StorageBucketModel(Base):
     __tablename__ = "storage_buckets"
     __table_args__ = (UniqueConstraint("tenant_id", "bucket_name"),)
@@ -197,6 +287,24 @@ class JobModel(Base):
     started_at: Mapped[datetime | None] = nullable_timestamp_column()
     heartbeat_at: Mapped[datetime | None] = nullable_timestamp_column()
     completed_at: Mapped[datetime | None] = nullable_timestamp_column()
+
+
+class JobEventModel(Base):
+    __tablename__ = "job_events"
+    __table_args__ = (Index("idx_job_events_job_event_at", "job_id", "event_at"),)
+
+    job_id: Mapped[str] = mapped_column(
+        ForeignKey("jobs.job_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    sequence_no: Mapped[int] = mapped_column(Integer, primary_key=True)
+    level: Mapped[str] = mapped_column(String(16), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(128), nullable=False)
+    trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    span_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    details_json: Mapped[str] = json_text_column()
+    event_at: Mapped[datetime] = created_at_column()
 
 
 class AuthorizationDecisionModel(Base):

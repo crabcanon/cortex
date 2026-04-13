@@ -42,6 +42,26 @@ class AuthSettings(_BaseEnvSettings):
     mode: str = Field(default="dev", alias="CORTEX_AUTH_MODE")
     oidc_issuer: str = Field(default="https://auth.cortex.local", alias="CORTEX_OIDC_ISSUER")
     oidc_audience: str = Field(default="cortex-api", alias="CORTEX_OIDC_AUDIENCE")
+    jwt_algorithm: str = Field(default="HS256", alias="CORTEX_AUTH_JWT_ALGORITHM")
+    jwt_shared_secret: str = Field(
+        default="cortex-dev-shared-secret",
+        alias="CORTEX_AUTH_JWT_SHARED_SECRET",
+    )
+    jwks_url: str | None = Field(default=None, alias="CORTEX_AUTH_JWKS_URL")
+    introspection_url: str | None = Field(default=None, alias="CORTEX_AUTH_INTROSPECTION_URL")
+    introspection_client_id: str | None = Field(
+        default=None,
+        alias="CORTEX_AUTH_INTROSPECTION_CLIENT_ID",
+    )
+    introspection_client_secret: str | None = Field(
+        default=None,
+        alias="CORTEX_AUTH_INTROSPECTION_CLIENT_SECRET",
+    )
+    clock_skew_seconds: int = Field(default=30, alias="CORTEX_AUTH_CLOCK_SKEW_SECONDS")
+    auto_provision_principals: bool = Field(
+        default=True,
+        alias="CORTEX_AUTH_AUTO_PROVISION_PRINCIPALS",
+    )
 
 
 class ParseSettings(_BaseEnvSettings):

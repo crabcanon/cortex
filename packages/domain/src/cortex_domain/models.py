@@ -88,10 +88,97 @@ class JobRecord:
     status: JobStatus
     operation_name: str
     submitted_at: datetime
+    priority: int = 5
+    idempotency_key: str | None = None
+    target_type: str | None = None
+    target_id: str | None = None
     started_at: datetime | None = None
+    heartbeat_at: datetime | None = None
     finished_at: datetime | None = None
     request_id: str | None = None
     trace_id: str | None = None
+    span_id: str | None = None
+    request_payload: dict[str, Any] = field(default_factory=dict)
+    result_payload: dict[str, Any] = field(default_factory=dict)
+    telemetry_context: dict[str, Any] = field(default_factory=dict)
+    deployment_context: dict[str, Any] = field(default_factory=dict)
+    experiment_context: dict[str, Any] = field(default_factory=dict)
+    error_code: str | None = None
+    error_message: str | None = None
+    submitted_by: str | None = None
+
+
+@dataclass(slots=True)
+class JobEventRecord:
+    job_id: str
+    sequence_no: int
+    level: str
+    event_type: str
+    event_at: datetime
+    message: str | None = None
+    details: dict[str, Any] = field(default_factory=dict)
+    trace_id: str | None = None
+    span_id: str | None = None
+
+
+@dataclass(slots=True)
+class PermissionRecord:
+    permission_key: str
+    permission_kind: str
+    resource_type: str
+    action_name: str
+    description: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(slots=True)
+class RoleRecord:
+    role_id: str
+    tenant_id: str
+    role_key: str
+    display_name: str
+    scope_level: str
+    is_builtin: bool = False
+    description: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    created_by: str | None = None
+
+
+@dataclass(slots=True)
+class RolePermissionRecord:
+    role_id: str
+    permission_key: str
+    effect: DecisionEffect = DecisionEffect.ALLOW
+
+
+@dataclass(slots=True)
+class ActorRoleBindingRecord:
+    binding_id: str
+    tenant_id: str
+    actor_id: str
+    role_id: str
+    binding_scope: str = "tenant"
+    resource_type: str | None = None
+    resource_id: str | None = None
+    expires_at: datetime | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    created_by: str | None = None
+
+
+@dataclass(slots=True)
+class AuthorizationPolicyRecord:
+    policy_id: str
+    tenant_id: str
+    policy_key: str
+    effect: DecisionEffect
+    priority: int = 100
+    status: str = "active"
+    subject_selector: dict[str, Any] = field(default_factory=dict)
+    resource_selector: dict[str, Any] = field(default_factory=dict)
+    condition: dict[str, Any] = field(default_factory=dict)
+    description: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    created_by: str | None = None
 
 
 @dataclass(slots=True)
@@ -104,5 +191,7 @@ class AuthorizationDecisionRecord:
     reason_code: str
     resource_type: str | None = None
     resource_id: str | None = None
+    policy_id: str | None = None
     trace_id: str | None = None
     request_id: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)

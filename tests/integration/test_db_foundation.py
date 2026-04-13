@@ -10,14 +10,20 @@ from cortex_db.cli import main as db_migrate_main
 from cortex_domain import (
     AccessLevel,
     ActorRecord,
+    ActorRoleBindingRecord,
     AuthorizationDecisionRecord,
+    AuthorizationPolicyRecord,
     DatasetRecord,
     DecisionEffect,
     DocumentRecord,
+    JobEventRecord,
     JobRecord,
     JobStatus,
     JobType,
     ObjectRecord,
+    PermissionRecord,
+    RolePermissionRecord,
+    RoleRecord,
     SourceType,
     StorageBucketRecord,
     TenantRecord,
@@ -94,11 +100,48 @@ async def test_unit_of_work_and_repositories_round_trip() -> None:
                     display_name="Alice",
                 )
             )
-            await uow.permissions.add(
-                permission_key="storage:download",
-                permission_kind="functional",
-                resource_type="object",
-                action_name="download",
+            permission = await uow.permissions.add(
+                PermissionRecord(
+                    permission_key="storage:download",
+                    permission_kind="functional",
+                    resource_type="object",
+                    action_name="download",
+                )
+            )
+            role = await uow.roles.add(
+                RoleRecord(
+                    role_id="role_001",
+                    tenant_id=tenant.tenant_id,
+                    role_key="storage_reader",
+                    display_name="Storage Reader",
+                    scope_level="tenant",
+                )
+            )
+            role_permission = await uow.role_permissions.add(
+                RolePermissionRecord(
+                    role_id=role.role_id,
+                    permission_key=permission.permission_key,
+                    effect=DecisionEffect.ALLOW,
+                )
+            )
+            binding = await uow.actor_role_bindings.add(
+                ActorRoleBindingRecord(
+                    binding_id="bind_001",
+                    tenant_id=tenant.tenant_id,
+                    actor_id=actor.actor_id,
+                    role_id=role.role_id,
+                )
+            )
+            policy = await uow.authorization_policies.add(
+                AuthorizationPolicyRecord(
+                    policy_id="policy_001",
+                    tenant_id=tenant.tenant_id,
+                    policy_key="allow-shared-download",
+                    effect=DecisionEffect.ALLOW,
+                    subject_selector={"actor_ids": [actor.actor_id]},
+                    resource_selector={"resource_types": ["object"]},
+                    condition={"attributes": {"classification": "internal"}},
+                )
             )
             bucket = await uow.buckets.add(
                 StorageBucketRecord(
@@ -156,6 +199,18 @@ async def test_unit_of_work_and_repositories_round_trip() -> None:
                     trace_id="trace_001",
                 )
             )
+            job_event = await uow.job_events.add(
+                JobEventRecord(
+                    job_id=job.job_id,
+                    sequence_no=1,
+                    level="info",
+                    event_type="job.running",
+                    event_at=datetime.now(UTC),
+                    message="Job started.",
+                    trace_id="trace_001",
+                    span_id="span_001",
+                )
+            )
             decision = await uow.authorization_decisions.add(
                 AuthorizationDecisionRecord(
                     decision_id="dec_001",
@@ -175,6 +230,10 @@ async def test_unit_of_work_and_repositories_round_trip() -> None:
             assert document.title == "Sample"
             assert dataset.dataset_key == "default"
             assert job.trace_id == "trace_001"
+            assert role_permission.permission_key == "storage:download"
+            assert binding.binding_scope == "tenant"
+            assert policy.policy_key == "allow-shared-download"
+            assert job_event.event_type == "job.running"
             assert decision.reason_code == "role_binding_match"
 
         async with CortexUnitOfWork(session_factory) as uow:
@@ -189,6 +248,18 @@ async def test_unit_of_work_and_repositories_round_trip() -> None:
             loaded_document = await uow.documents.get("doc_001")
             loaded_dataset = await uow.datasets.get_by_key("tenant_001", "default")
             loaded_job = await uow.jobs.get("job_001")
+            loaded_permission = await uow.permissions.get("storage:download")
+            loaded_roles = await uow.roles.list_for_tenant("tenant_001")
+            loaded_bindings = await uow.actor_role_bindings.list_for_actor(
+                "actor_001",
+                tenant_id="tenant_001",
+                resource_type="object",
+                resource_id="obj_001",
+                now=datetime.now(UTC),
+            )
+            loaded_role_permissions = await uow.role_permissions.list_for_role_ids(["role_001"])
+            loaded_policies = await uow.authorization_policies.list_for_tenant("tenant_001")
+            loaded_job_events = await uow.job_events.list_for_job("job_001")
             loaded_decisions = await uow.authorization_decisions.list_for_actor("actor_001")
 
             assert loaded_tenant is not None
@@ -205,6 +276,17 @@ async def test_unit_of_work_and_repositories_round_trip() -> None:
             assert loaded_dataset.access_level is AccessLevel.RESTRICTED
             assert loaded_job is not None
             assert loaded_job.status is JobStatus.RUNNING
+            assert loaded_permission is not None
+            assert loaded_permission.permission_kind == "functional"
+            assert len(loaded_roles) == 1
+            assert len(loaded_bindings) == 1
+            assert loaded_bindings[0].role_id == "role_001"
+            assert len(loaded_role_permissions) == 1
+            assert loaded_role_permissions[0].effect is DecisionEffect.ALLOW
+            assert len(loaded_policies) == 1
+            assert loaded_policies[0].condition["attributes"]["classification"] == "internal"
+            assert len(loaded_job_events) == 1
+            assert loaded_job_events[0].span_id == "span_001"
             assert len(loaded_decisions) == 1
             assert loaded_decisions[0].effect is DecisionEffect.ALLOW
     finally:

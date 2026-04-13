@@ -3,10 +3,31 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
+from cortex_auth import AuthorizationService
+from cortex_common import load_settings
+from cortex_db import create_database_engine, create_session_factory
+from cortex_observability import configure_telemetry, install_logging_correlation
 from fastapi import FastAPI
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    """Reserve startup/shutdown integration points for future tasks."""
-    yield
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Bootstrap runtime settings, telemetry, persistence, and auth services."""
+    settings = load_settings()
+    telemetry = configure_telemetry("cortex-api", settings.telemetry)
+    engine = create_database_engine(settings.database.dsn)
+    session_factory = create_session_factory(engine)
+    auth_service = AuthorizationService(settings.auth)
+    logger = install_logging_correlation()
+
+    app.state.settings = settings
+    app.state.telemetry = telemetry
+    app.state.db_engine = engine
+    app.state.session_factory = session_factory
+    app.state.auth_service = auth_service
+    app.state.logger = logger
+
+    try:
+        yield
+    finally:
+        await engine.dispose()

@@ -3,33 +3,44 @@
 from collections.abc import Sequence
 from typing import Any
 
-from cortex_common import PaginationWindow, json_dumps, json_loads
+from cortex_common import PaginationWindow, json_dumps, json_loads, utc_now
 from cortex_domain import (
     AccessLevel,
     ActorRecord,
+    ActorRoleBindingRecord,
     AuthorizationDecisionRecord,
+    AuthorizationPolicyRecord,
     DatasetRecord,
     DecisionEffect,
     DocumentRecord,
+    JobEventRecord,
     JobRecord,
     JobStatus,
     JobType,
     ObjectRecord,
+    PermissionRecord,
+    RolePermissionRecord,
+    RoleRecord,
     SourceType,
     StorageBucketRecord,
     TenantRecord,
 )
-from sqlalchemy import desc, select
+from sqlalchemy import desc, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import (
     ActorModel,
+    ActorRoleBindingModel,
     AuthorizationDecisionModel,
+    AuthorizationPolicyModel,
     DatasetModel,
     DocumentModel,
+    JobEventModel,
     JobModel,
     ObjectModel,
     PermissionModel,
+    RoleModel,
+    RolePermissionModel,
     StorageBucketModel,
     TenantModel,
 )
@@ -62,6 +73,71 @@ def _actor_from_model(model: ActorModel) -> ActorRecord:
         actor_ref=model.actor_ref,
         display_name=model.display_name,
         metadata=_json_dict(model.metadata_json),
+    )
+
+
+def _permission_from_model(model: PermissionModel) -> PermissionRecord:
+    return PermissionRecord(
+        permission_key=model.permission_key,
+        permission_kind=model.permission_kind,
+        resource_type=model.resource_type,
+        action_name=model.action_name,
+        description=model.description,
+        metadata=_json_dict(model.metadata_json),
+    )
+
+
+def _role_from_model(model: RoleModel) -> RoleRecord:
+    return RoleRecord(
+        role_id=model.role_id,
+        tenant_id=model.tenant_id,
+        role_key=model.role_key,
+        display_name=model.display_name,
+        scope_level=model.scope_level,
+        is_builtin=model.is_builtin,
+        description=model.description,
+        metadata=_json_dict(model.metadata_json),
+        created_by=model.created_by,
+    )
+
+
+def _role_permission_from_model(model: RolePermissionModel) -> RolePermissionRecord:
+    return RolePermissionRecord(
+        role_id=model.role_id,
+        permission_key=model.permission_key,
+        effect=DecisionEffect(model.effect),
+    )
+
+
+def _binding_from_model(model: ActorRoleBindingModel) -> ActorRoleBindingRecord:
+    return ActorRoleBindingRecord(
+        binding_id=model.binding_id,
+        tenant_id=model.tenant_id,
+        actor_id=model.actor_id,
+        role_id=model.role_id,
+        binding_scope=model.binding_scope,
+        resource_type=model.resource_type,
+        resource_id=model.resource_id,
+        expires_at=model.expires_at,
+        metadata=_json_dict(model.metadata_json),
+        created_by=model.created_by,
+    )
+
+
+def _policy_from_model(model: AuthorizationPolicyModel) -> AuthorizationPolicyRecord:
+    return AuthorizationPolicyRecord(
+        policy_id=model.policy_id,
+        tenant_id=model.tenant_id,
+        policy_key=model.policy_key,
+        effect=DecisionEffect(model.effect),
+        priority=model.priority,
+        status=model.status,
+        subject_selector=_json_dict(model.subject_selector_json),
+        resource_selector=_json_dict(model.resource_selector_json),
+        condition=_json_dict(model.condition_json),
+        description=model.description,
+        metadata=_json_dict(model.metadata_json),
+        created_by=model.created_by,
     )
 
 
@@ -130,10 +206,38 @@ def _job_from_model(model: JobModel) -> JobRecord:
         status=JobStatus(model.status),
         operation_name=model.operation_name,
         submitted_at=model.submitted_at,
+        priority=model.priority,
+        idempotency_key=model.idempotency_key,
+        target_type=model.target_type,
+        target_id=model.target_id,
         started_at=model.started_at,
+        heartbeat_at=model.heartbeat_at,
         finished_at=model.completed_at,
         request_id=model.correlation_id,
         trace_id=model.trace_id,
+        span_id=model.span_id,
+        request_payload=_json_dict(model.request_json),
+        result_payload=_json_dict(model.result_json),
+        telemetry_context=_json_dict(model.telemetry_context_json),
+        deployment_context=_json_dict(model.deployment_context_json),
+        experiment_context=_json_dict(model.experiment_context_json),
+        error_code=model.error_code,
+        error_message=model.error_message,
+        submitted_by=model.submitted_by,
+    )
+
+
+def _job_event_from_model(model: JobEventModel) -> JobEventRecord:
+    return JobEventRecord(
+        job_id=model.job_id,
+        sequence_no=model.sequence_no,
+        level=model.level,
+        event_type=model.event_type,
+        event_at=model.event_at,
+        message=model.message,
+        details=_json_dict(model.details_json),
+        trace_id=model.trace_id,
+        span_id=model.span_id,
     )
 
 
@@ -147,8 +251,10 @@ def _decision_from_model(model: AuthorizationDecisionModel) -> AuthorizationDeci
         reason_code=model.reason_code,
         resource_type=model.resource_type,
         resource_id=model.resource_id,
+        policy_id=model.policy_id,
         trace_id=model.trace_id,
         request_id=model.request_id,
+        metadata=_json_dict(model.metadata_json),
     )
 
 
@@ -225,27 +331,192 @@ class PermissionRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def add(
-        self,
-        *,
-        permission_key: str,
-        permission_kind: str,
-        resource_type: str,
-        action_name: str,
-        description: str | None = None,
-        metadata: dict[str, Any] | None = None,
-    ) -> str:
+    async def add(self, record: PermissionRecord) -> PermissionRecord:
         model = PermissionModel(
-            permission_key=permission_key,
-            permission_kind=permission_kind,
-            resource_type=resource_type,
-            action_name=action_name,
-            description=description,
-            metadata_json=_json_object(metadata),
+            permission_key=record.permission_key,
+            permission_kind=record.permission_kind,
+            resource_type=record.resource_type,
+            action_name=record.action_name,
+            description=record.description,
+            metadata_json=_json_object(record.metadata),
         )
         self._session.add(model)
         await self._session.flush()
-        return model.permission_key
+        await self._session.refresh(model)
+        return _permission_from_model(model)
+
+    async def get(self, permission_key: str) -> PermissionRecord | None:
+        model = await self._session.get(PermissionModel, permission_key)
+        return None if model is None else _permission_from_model(model)
+
+    async def list_by_keys(self, permission_keys: Sequence[str]) -> list[PermissionRecord]:
+        keys = list(dict.fromkeys(permission_keys))
+        if not keys:
+            return []
+        result = await self._session.execute(
+            select(PermissionModel).where(PermissionModel.permission_key.in_(keys))
+        )
+        return [_permission_from_model(model) for model in result.scalars().all()]
+
+
+class RoleRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: RoleRecord) -> RoleRecord:
+        model = RoleModel(
+            role_id=record.role_id,
+            tenant_id=record.tenant_id,
+            role_key=record.role_key,
+            display_name=record.display_name,
+            scope_level=record.scope_level,
+            is_builtin=record.is_builtin,
+            description=record.description,
+            metadata_json=_json_object(record.metadata),
+            created_by=record.created_by,
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _role_from_model(model)
+
+    async def get(self, role_id: str) -> RoleRecord | None:
+        model = await self._session.get(RoleModel, role_id)
+        return None if model is None else _role_from_model(model)
+
+    async def list_for_tenant(self, tenant_id: str) -> list[RoleRecord]:
+        result = await self._session.execute(
+            select(RoleModel)
+            .where(RoleModel.tenant_id == tenant_id)
+            .order_by(RoleModel.role_key.asc())
+        )
+        return [_role_from_model(model) for model in result.scalars().all()]
+
+
+class RolePermissionRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: RolePermissionRecord) -> RolePermissionRecord:
+        model = RolePermissionModel(
+            role_id=record.role_id,
+            permission_key=record.permission_key,
+            effect=record.effect.value,
+        )
+        self._session.add(model)
+        await self._session.flush()
+        return _role_permission_from_model(model)
+
+    async def list_for_role_ids(self, role_ids: Sequence[str]) -> list[RolePermissionRecord]:
+        ids = list(dict.fromkeys(role_ids))
+        if not ids:
+            return []
+        result = await self._session.execute(
+            select(RolePermissionModel).where(RolePermissionModel.role_id.in_(ids))
+        )
+        return [_role_permission_from_model(model) for model in result.scalars().all()]
+
+
+class ActorRoleBindingRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: ActorRoleBindingRecord) -> ActorRoleBindingRecord:
+        model = ActorRoleBindingModel(
+            binding_id=record.binding_id,
+            tenant_id=record.tenant_id,
+            actor_id=record.actor_id,
+            role_id=record.role_id,
+            binding_scope=record.binding_scope,
+            resource_type=record.resource_type,
+            resource_id=record.resource_id,
+            expires_at=record.expires_at,
+            metadata_json=_json_object(record.metadata),
+            created_by=record.created_by,
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _binding_from_model(model)
+
+    async def list_for_actor(
+        self,
+        actor_id: str,
+        *,
+        tenant_id: str,
+        resource_type: str | None = None,
+        resource_id: str | None = None,
+        now: Any | None = None,
+    ) -> list[ActorRoleBindingRecord]:
+        effective_now = now or utc_now()
+        query = select(ActorRoleBindingModel).where(
+            ActorRoleBindingModel.actor_id == actor_id,
+            ActorRoleBindingModel.tenant_id == tenant_id,
+            or_(
+                ActorRoleBindingModel.expires_at.is_(None),
+                ActorRoleBindingModel.expires_at > effective_now,
+            ),
+        )
+        if resource_type is not None:
+            query = query.where(
+                or_(
+                    ActorRoleBindingModel.resource_type.is_(None),
+                    ActorRoleBindingModel.resource_type == resource_type,
+                )
+            )
+        if resource_id is not None:
+            query = query.where(
+                or_(
+                    ActorRoleBindingModel.resource_id.is_(None),
+                    ActorRoleBindingModel.resource_id == resource_id,
+                )
+            )
+        result = await self._session.execute(query.order_by(ActorRoleBindingModel.created_at.asc()))
+        return [_binding_from_model(model) for model in result.scalars().all()]
+
+
+class AuthorizationPolicyRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: AuthorizationPolicyRecord) -> AuthorizationPolicyRecord:
+        model = AuthorizationPolicyModel(
+            policy_id=record.policy_id,
+            tenant_id=record.tenant_id,
+            policy_key=record.policy_key,
+            effect=record.effect.value,
+            priority=record.priority,
+            status=record.status,
+            subject_selector_json=_json_object(record.subject_selector),
+            resource_selector_json=_json_object(record.resource_selector),
+            condition_json=_json_object(record.condition),
+            description=record.description,
+            metadata_json=_json_object(record.metadata),
+            created_by=record.created_by,
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _policy_from_model(model)
+
+    async def list_for_tenant(
+        self,
+        tenant_id: str,
+        *,
+        status: str = "active",
+    ) -> list[AuthorizationPolicyRecord]:
+        result = await self._session.execute(
+            select(AuthorizationPolicyModel)
+            .where(
+                AuthorizationPolicyModel.tenant_id == tenant_id,
+                AuthorizationPolicyModel.status == status,
+            )
+            .order_by(
+                AuthorizationPolicyModel.priority.asc(),
+                AuthorizationPolicyModel.created_at.asc(),
+            )
+        )
+        return [_policy_from_model(model) for model in result.scalars().all()]
 
 
 class StorageBucketRepository:
@@ -418,11 +689,25 @@ class JobRepository:
             job_type=record.job_type.value,
             status=record.status.value,
             operation_name=record.operation_name,
+            priority=record.priority,
+            idempotency_key=record.idempotency_key,
+            target_type=record.target_type,
+            target_id=record.target_id,
             submitted_at=record.submitted_at,
             started_at=record.started_at,
+            heartbeat_at=record.heartbeat_at,
             completed_at=record.finished_at,
+            span_id=record.span_id,
             correlation_id=record.request_id,
             trace_id=record.trace_id,
+            request_json=_json_object(record.request_payload),
+            result_json=_json_object(record.result_payload),
+            telemetry_context_json=_json_object(record.telemetry_context),
+            deployment_context_json=_json_object(record.deployment_context),
+            experiment_context_json=_json_object(record.experiment_context),
+            error_code=record.error_code,
+            error_message=record.error_message,
+            submitted_by=record.submitted_by,
         )
         self._session.add(model)
         await self._session.flush()
@@ -450,6 +735,74 @@ class JobRepository:
         model = result.scalar_one_or_none()
         return None if model is None else _job_from_model(model)
 
+    async def update_status(
+        self,
+        job_id: str,
+        *,
+        status: JobStatus,
+        started_at: Any | None = None,
+        heartbeat_at: Any | None = None,
+        finished_at: Any | None = None,
+        error_code: str | None = None,
+        error_message: str | None = None,
+        result_payload: dict[str, Any] | None = None,
+    ) -> JobRecord | None:
+        model = await self._session.get(JobModel, job_id)
+        if model is None:
+            return None
+        model.status = status.value
+        if started_at is not None:
+            model.started_at = started_at
+        if heartbeat_at is not None:
+            model.heartbeat_at = heartbeat_at
+        if finished_at is not None:
+            model.completed_at = finished_at
+        if error_code is not None:
+            model.error_code = error_code
+        if error_message is not None:
+            model.error_message = error_message
+        if result_payload is not None:
+            model.result_json = _json_object(result_payload)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _job_from_model(model)
+
+
+class JobEventRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: JobEventRecord) -> JobEventRecord:
+        model = JobEventModel(
+            job_id=record.job_id,
+            sequence_no=record.sequence_no,
+            level=record.level,
+            event_type=record.event_type,
+            trace_id=record.trace_id,
+            span_id=record.span_id,
+            message=record.message,
+            details_json=_json_object(record.details),
+            event_at=record.event_at,
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _job_event_from_model(model)
+
+    async def list_for_job(
+        self,
+        job_id: str,
+        *,
+        limit: int = 100,
+    ) -> list[JobEventRecord]:
+        result = await self._session.execute(
+            select(JobEventModel)
+            .where(JobEventModel.job_id == job_id)
+            .order_by(JobEventModel.sequence_no.asc())
+            .limit(limit)
+        )
+        return [_job_event_from_model(model) for model in result.scalars().all()]
+
 
 class AuthorizationDecisionRepository:
     def __init__(self, session: AsyncSession) -> None:
@@ -467,6 +820,8 @@ class AuthorizationDecisionRepository:
             reason_code=record.reason_code,
             trace_id=record.trace_id,
             request_id=record.request_id,
+            policy_id=record.policy_id,
+            metadata_json=_json_object(record.metadata),
         )
         self._session.add(model)
         await self._session.flush()

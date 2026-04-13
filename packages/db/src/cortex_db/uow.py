@@ -5,12 +5,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .engine import SessionFactory
 from .repositories import (
     ActorRepository,
+    ActorRoleBindingRepository,
     AuthorizationDecisionRepository,
+    AuthorizationPolicyRepository,
     DatasetRepository,
     DocumentRepository,
+    JobEventRepository,
     JobRepository,
     ObjectRepository,
     PermissionRepository,
+    RolePermissionRepository,
+    RoleRepository,
     StorageBucketRepository,
     TenantRepository,
 )
@@ -67,6 +72,22 @@ class CortexUnitOfWork:
         return PermissionRepository(self._require_session())
 
     @property
+    def roles(self) -> RoleRepository:
+        return RoleRepository(self._require_session())
+
+    @property
+    def role_permissions(self) -> RolePermissionRepository:
+        return RolePermissionRepository(self._require_session())
+
+    @property
+    def actor_role_bindings(self) -> ActorRoleBindingRepository:
+        return ActorRoleBindingRepository(self._require_session())
+
+    @property
+    def authorization_policies(self) -> AuthorizationPolicyRepository:
+        return AuthorizationPolicyRepository(self._require_session())
+
+    @property
     def buckets(self) -> StorageBucketRepository:
         return StorageBucketRepository(self._require_session())
 
@@ -85,6 +106,10 @@ class CortexUnitOfWork:
     @property
     def jobs(self) -> JobRepository:
         return JobRepository(self._require_session())
+
+    @property
+    def job_events(self) -> JobEventRepository:
+        return JobEventRepository(self._require_session())
 
     @property
     def authorization_decisions(self) -> AuthorizationDecisionRepository:

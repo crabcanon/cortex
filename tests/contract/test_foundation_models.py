@@ -58,7 +58,7 @@ def test_pagination_and_contract_models() -> None:
         job_id="job_123",
         job_type=JobType.PARSE,
         status=JobStatus.QUEUED,
-        submitted_at="2026-04-12T13:00:00Z",
+        submitted_at=datetime(2026, 4, 12, 13, 0, tzinfo=UTC),
         poll_url="/v1/jobs/job_123",
     )
     envelope = PaginationEnvelope[JobAccepted](items=[accepted], offset=0, limit=50, total=1)

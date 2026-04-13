@@ -4,6 +4,11 @@ version = "0.1.0"
 description = "FastAPI control plane for Cortex."
 requires-python = ">=3.12,<3.14"
 dependencies = [
+  "cortex-auth",
+  "cortex-common",
+  "cortex-contracts",
+  "cortex-db",
+  "cortex-observability",
   "fastapi>=0.115,<1",
   "uvicorn>=0.35,<0.36",
 ]

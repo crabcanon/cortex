@@ -50,18 +50,18 @@
 
 | Task ID | Added At | Priority | Area | Task | Depends On | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| CTX-20260412-014 | 2026-04-12 21:11:20 +08:00 | P0 | auth | 实现 access token 解析、caller identity 装配、基础 JWT / introspection 适配接口 | CTX-20260412-007, CTX-20260412-010 | planned |
-| CTX-20260412-015 | 2026-04-12 21:11:20 +08:00 | P0 | auth | 实现 scope / permission 校验器与功能权限依赖注入 | CTX-20260412-014 | planned |
-| CTX-20260412-016 | 2026-04-12 21:11:20 +08:00 | P0 | auth | 实现资源级 RBAC + ABAC evaluator，支持 `access_level` 与 `access_policy_json` | CTX-20260412-012, CTX-20260412-015 | planned |
-| CTX-20260412-017 | 2026-04-12 21:11:20 +08:00 | P1 | auth | 实现授权决策审计写入与 `decision_id` 关联 | CTX-20260412-016 | planned |
+| CTX-20260412-014 | 2026-04-12 21:11:20 +08:00 | P0 | auth | 实现 access token 解析、caller identity 装配、基础 JWT / introspection 适配接口 | CTX-20260412-007, CTX-20260412-010 | done |
+| CTX-20260412-015 | 2026-04-12 21:11:20 +08:00 | P0 | auth | 实现 scope / permission 校验器与功能权限依赖注入 | CTX-20260412-014 | done |
+| CTX-20260412-016 | 2026-04-12 21:11:20 +08:00 | P0 | auth | 实现资源级 RBAC + ABAC evaluator，支持 `access_level` 与 `access_policy_json` | CTX-20260412-012, CTX-20260412-015 | done |
+| CTX-20260412-017 | 2026-04-12 21:11:20 +08:00 | P1 | auth | 实现授权决策审计写入与 `decision_id` 关联 | CTX-20260412-016 | done |
 
 #### Phase E. API Bootstrap
 
 | Task ID | Added At | Priority | Area | Task | Depends On | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| CTX-20260412-018 | 2026-04-12 21:11:20 +08:00 | P0 | api | 搭建 `apps/api`：FastAPI app、lifespan、settings 装配、中间件、异常处理 | CTX-20260412-006, CTX-20260412-009, CTX-20260412-014 | planned |
-| CTX-20260412-019 | 2026-04-12 21:11:20 +08:00 | P0 | api | 实现 `/v1/health/live`、`/v1/health/ready` | CTX-20260412-018 | planned |
-| CTX-20260412-020 | 2026-04-12 21:11:20 +08:00 | P0 | api | 实现 Job 查询/取消接口骨架与统一 ProblemDetails 输出 | CTX-20260412-018, CTX-20260412-012 | planned |
+| CTX-20260412-018 | 2026-04-12 21:11:20 +08:00 | P0 | api | 搭建 `apps/api`：FastAPI app、lifespan、settings 装配、中间件、异常处理 | CTX-20260412-006, CTX-20260412-009, CTX-20260412-014 | done |
+| CTX-20260412-019 | 2026-04-12 21:11:20 +08:00 | P0 | api | 实现 `/v1/health/live`、`/v1/health/ready` | CTX-20260412-018 | done |
+| CTX-20260412-020 | 2026-04-12 21:11:20 +08:00 | P0 | api | 实现 Job 查询/取消接口骨架与统一 ProblemDetails 输出 | CTX-20260412-018, CTX-20260412-012 | done |
 
 #### Phase F. Storage
 
@@ -121,3 +121,13 @@
 | CTX-20260412-047 | 2026-04-12 21:11:20 +08:00 | P1 | testing | 增加端到端主链路测试：upload -> parse -> add -> search | CTX-20260412-046 | planned |
 | CTX-20260412-048 | 2026-04-12 21:11:20 +08:00 | P0 | ci | 建立 CI pipeline：`uv sync`、lint、types、tests、OpenAPI/YAML 校验 | CTX-20260412-004, CTX-20260412-045 | planned |
 | CTX-20260412-049 | 2026-04-12 21:11:20 +08:00 | P1 | devops | 补充本地 compose / runbook，覆盖 DB、S3、queue、OTel Collector、Jaeger、Prometheus、Grafana | CTX-20260412-005, CTX-20260412-048 | planned |
+
+### Batch 2026-04-13 08:45:00 +08:00 | Phase D/E Continuation
+
+目标：继续推进 Auth & Governance 与 API Bootstrap，先补齐权限治理持久层，再落地认证鉴权、健康检查、Job 查询/取消与事件读取接口。
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260413-001 | 2026-04-13 08:45:00 +08:00 | P0 | auth-db | 对齐 `cortex-init.sql` 中已有的权限治理表结构（`roles`、`role_permissions`、`actor_role_bindings`、`authorization_policies`、`job_events`）对应的 ORM 与 repository，补齐 Phase D/E 所需持久层能力 | CTX-20260412-011, CTX-20260412-012 | done |
+| CTX-20260413-002 | 2026-04-13 08:45:00 +08:00 | P0 | auth | 实现 caller context、token validator chain、scope guard、RBAC/ABAC evaluator 与授权决策审计，收敛 `CTX-20260412-014 ~ CTX-20260412-017` | CTX-20260413-001 | done |
+| CTX-20260413-003 | 2026-04-13 08:45:00 +08:00 | P0 | api | 实现 FastAPI middleware、exception handlers、`/v1/health/*`、`/v1/jobs/{jobId}`、`/v1/jobs/{jobId}/events`、`/v1/jobs/{jobId}/cancel` 及配套测试 | CTX-20260413-002 | done |

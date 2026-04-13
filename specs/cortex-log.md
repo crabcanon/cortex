@@ -111,3 +111,43 @@
 - Cause: 第三轮目标是把控制面数据库底座搭稳，为后续鉴权、Storage、Parse 持久化和 Job/API 查询提供统一事务边界。
 - Action: 新增 `cortex_db.base`、`engine`、`models`、`repositories`、`uow`、`cli`、Alembic `env.py` 与 baseline revision，并补充 `tests/integration/test_db_foundation.py` 覆盖迁移和 CRUD round-trip。
 - Prevention: 进入鉴权阶段前保持“先利用现有 repository / UoW 组合资源上下文，再实现 JWT、scope、RBAC/ABAC evaluator 与决策审计”的顺序，避免 API 层直接越过数据边界访问底层表结构。
+
+### 2026-04-13 08:45:00 +08:00 | Phase D/E Started
+
+- Stage: `CTX-20260413-001 ~ CTX-20260413-003`
+- Event: 开始推进 Auth & Governance 与 API Bootstrap，目标是先打通权限治理底座，再落地 health 与 jobs 基础 REST API。
+- Cause: `storage`、`parse`、`knowledge` 三条链路后续都依赖统一的认证鉴权、ProblemDetails 错误模型与 Job 控制接口。
+- Action: 在编码前先补充 `cortex-tasks.md` 新批次任务，把权限持久层对齐、授权服务与 API bootstrap 拆解到 task 粒度。
+- Prevention: 后续每一轮继续按“先补 tasks/log，再编码，再测试校验，再回写日志”的顺序执行，避免实现进度与设计台账脱节。
+
+### 2026-04-13 08:49:00 +08:00 | Auth Governance Persistence Gap
+
+- Stage: `CTX-20260413-001`
+- Event: 在对齐 `cortex-init.sql`、`cortex-schema.md` 与当前 ORM 时发现，迁移脚本已经创建 `roles`、`role_permissions`、`actor_role_bindings`、`authorization_policies` 与 `job_events`，但 `packages/db` 尚未提供对应 SQLAlchemy model / repository。
+- Cause: Phase C 首轮实现优先覆盖了租户、对象、文档、数据集、Job 与决策审计最小闭环，未把权限治理与 Job 事件表完整映射到 Python 持久层。
+- Action: 将该缺口提升为本轮显式任务 `CTX-20260413-001`，优先补齐 ORM、repository、domain model 与测试，再继续实现 RBAC/ABAC evaluator 和 Job API。
+- Prevention: 后续新增 schema / init.sql 表时，同步检查 ORM、repository、contract test 与 migration 覆盖，避免出现“数据库已建表、代码层不可达”的隐性缺口。
+
+### 2026-04-13 09:03:00 +08:00 | uv Managed Python Access Recurrence
+
+- Stage: `CTX-20260413-001 ~ CTX-20260413-003`
+- Event: 本轮执行 `uv sync --all-packages` 时再次触发对 `C:\Users\hy\AppData\Roaming\uv\python` 的访问拒绝，和前序 bootstrap 阶段是同类问题。
+- Cause: 直接运行 `uv` 时仍会优先探测全局 managed Python 路径；如果没有显式设置 `UV_PYTHON_INSTALL_DIR`，就会绕开仓库内 `.uv-python` 目录。
+- Action: 按此前日志方案，显式设置 `UV_PYTHON_INSTALL_DIR=.uv-python` 后重新执行 `uv sync` 与全量检查；同时继续通过 `scripts/dev/check.ps1` 统一封装该环境变量。
+- Prevention: 后续所有仓库内 `uv` 命令默认都通过 `scripts/dev/check.ps1` 或显式设置 `UV_PYTHON_INSTALL_DIR` 执行，避免再次回退到用户目录。
+
+### 2026-04-13 09:09:00 +08:00 | Domain/Contract Enum Boundary
+
+- Stage: `CTX-20260413-002 ~ CTX-20260413-003`
+- Event: `pyright` 在 Job API DTO 映射阶段报告 `cortex_domain` 与 `cortex_contracts` 的 `JobType` / `JobStatus` 枚举类型不兼容。
+- Cause: 领域层和契约层虽然复用了相同的字面量值，但出于分层隔离分别定义了独立枚举；API service 直接把领域枚举塞进契约 DTO 时触发类型边界错误。
+- Action: 在 `apps/api/src/cortex_api/services/jobs.py` 增加显式值映射，把 `domain` 枚举转换为 `contracts` 枚举后再输出；同时保留两层的独立性，避免把契约类型反向渗透到领域层。
+- Prevention: 后续 API adapter / service 层一律承担“domain -> contract”的显式映射职责，不在 DTO 构造处偷懒复用跨层枚举实例。
+
+### 2026-04-13 09:12:00 +08:00 | Phase D/E Completed
+
+- Stage: `CTX-20260412-014 ~ CTX-20260412-020`, `CTX-20260413-001 ~ CTX-20260413-003`
+- Event: 认证鉴权与 API bootstrap 本轮已完成：补齐权限治理 ORM/repository、实现 dev/JWT/introspection token validator chain、scope guard、RBAC/ABAC evaluator、授权决策审计、ProblemDetails 异常处理、中间件、`/v1/health/*` 与 `/v1/jobs/*` 基础接口，并通过 lint、type-check、pytest。
+- Cause: 这是 Storage/Parse/Knowledge 三条业务链路继续落地前必须先收敛的控制面底座。
+- Action: 新增/更新 `cortex_auth`、`cortex_contracts`、`cortex_domain`、`cortex_db`、`apps/api` 相关实现，并补充 `tests/integration/test_api_auth_jobs.py` 与扩展版 `tests/integration/test_db_foundation.py`。
+- Prevention: 下一阶段进入 Storage 时优先复用当前 `AuthorizationService`、`ProblemDetails`、request/trace middleware 与 Job DTO，不再重复发明一套控制面基础设施。

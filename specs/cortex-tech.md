@@ -121,6 +121,359 @@ flowchart LR
 - 外挂向量库适配器
 - 外挂图库适配器
 
+### 4.4 基于 `uv` 的 Workspace 模型
+
+编码阶段建议把 Cortex 组织为一个 `uv workspace` 单仓工程，而不是单一巨型包。原因是：
+
+- API、Parse Worker、Knowledge Worker 的运行时边界天然不同。
+- Parse 引擎依赖差异很大，需要按部署角色裁剪安装集。
+- `uv` workspace 允许多个成员共享一个 `uv.lock`，同时保持每个成员独立 `pyproject.toml`。
+- 后续即使替换某个子模块的构建后端，也不会影响整个仓库的依赖解算与运行方式。
+
+根工作区建议只承担三件事：
+
+1. 统一 Python 版本与依赖锁定。
+2. 统一 lint / test / type-check / docs 工具链。
+3. 聚合 workspace member，不承载业务运行时代码。
+
+推荐的根级 `pyproject.toml` 模型如下：
+
+```toml
+[project]
+name = "cortex-workspace"
+version = "0.1.0"
+requires-python = ">=3.12,<3.14"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3,<9",
+  "pytest-asyncio>=0.25,<0.26",
+  "httpx>=0.28,<0.29",
+  "respx>=0.22,<0.23",
+]
+lint = [
+  "ruff>=0.11,<0.12",
+]
+types = [
+  "pyright>=1.1.390",
+]
+docs = [
+  "mkdocs-material>=9.6,<10",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = [
+  "apps/api",
+  "workers/parse-worker",
+  "workers/knowledge-worker",
+  "packages/common",
+  "packages/contracts",
+  "packages/domain",
+  "packages/db",
+  "packages/auth",
+  "packages/storage",
+  "packages/parse",
+  "packages/knowledge",
+  "packages/observability",
+]
+```
+
+这个模型的关键点：
+
+- 根项目不打包，只做 workspace 与工具链聚合。
+- 每个 workspace member 独立声明自己的运行依赖。
+- 整个仓库共享一个 `uv.lock`，保证 API、Worker、测试环境解算一致。
+- 纯 Python 成员默认使用 `uv_build`；若未来某个成员需要原生扩展，再单独切换该成员的 build backend。
+
+### 4.5 推荐目录结构
+
+```text
+cortex/
+  pyproject.toml
+  uv.lock
+  .python-version
+  README.md
+  otel-collector.yaml
+  specs/
+    cortex-api.yaml
+    cortex-dfd.md
+    cortex-init.sql
+    cortex-prd.md
+    cortex-schema.md
+    cortex-tech.md
+    cortex-tasks.md
+  apps/
+    api/
+      pyproject.toml
+      src/cortex_api/
+        main.py
+        lifespan.py
+        dependencies/
+        middleware/
+        routers/
+        services/
+  workers/
+    parse-worker/
+      pyproject.toml
+      src/cortex_worker_parse/
+        main.py
+        bootstrap.py
+        handlers/
+    knowledge-worker/
+      pyproject.toml
+      src/cortex_worker_knowledge/
+        main.py
+        bootstrap.py
+        handlers/
+  packages/
+    common/
+      pyproject.toml
+      src/cortex_common/
+    contracts/
+      pyproject.toml
+      src/cortex_contracts/
+    domain/
+      pyproject.toml
+      src/cortex_domain/
+    db/
+      pyproject.toml
+      alembic.ini
+      migrations/
+      src/cortex_db/
+    auth/
+      pyproject.toml
+      src/cortex_auth/
+    storage/
+      pyproject.toml
+      src/cortex_storage/
+    parse/
+      pyproject.toml
+      src/cortex_parse/
+        adapters/
+        normalization/
+        profiles/
+    knowledge/
+      pyproject.toml
+      src/cortex_knowledge/
+    observability/
+      pyproject.toml
+      src/cortex_observability/
+  tests/
+    contract/
+    integration/
+    e2e/
+  scripts/
+    dev/
+    ci/
+```
+
+约束如下：
+
+- 一律使用 `src/` 布局，避免本地路径污染导入结果。
+- `apps/` 与 `workers/` 只放进程入口、依赖装配与路由，不直接承载核心领域逻辑。
+- `packages/` 承载可复用模块，是长期演进的主战场。
+- `tests/contract`、`tests/integration`、`tests/e2e` 放在根目录，方便跨成员联调。
+
+### 4.6 包职责与依赖方向
+
+| 成员 | import root | 核心职责 | 允许直接依赖 |
+| --- | --- | --- | --- |
+| `packages/common` | `cortex_common` | settings、ID、时钟、异常、JSON/URI 工具、幂等与通用 helper | 无 |
+| `packages/contracts` | `cortex_contracts` | 与 OpenAPI 对齐的 Pydantic DTO、枚举、ProblemDetails、事件载荷 | `cortex_common` |
+| `packages/domain` | `cortex_domain` | 领域实体、值对象、服务协议、状态机、业务规则 | `cortex_common` |
+| `packages/db` | `cortex_db` | SQLAlchemy metadata、session、repository、迁移、持久化模型 | `cortex_common`, `cortex_domain` |
+| `packages/auth` | `cortex_auth` | token 校验、caller context、scope 判定、RBAC/ABAC、授权审计 | `cortex_common`, `cortex_contracts`, `cortex_db` |
+| `packages/storage` | `cortex_storage` | S3 客户端抽象、upload/download、checksum、multipart、object metadata 服务 | `cortex_common`, `cortex_contracts`, `cortex_db` |
+| `packages/parse` | `cortex_parse` | router、engine registry、profile loader、adapter、normalizer、artifact persistence | `cortex_common`, `cortex_contracts`, `cortex_domain`, `cortex_db`, `cortex_storage`, `cortex_observability` |
+| `packages/knowledge` | `cortex_knowledge` | dataset service、Cognee orchestration、search service、graph/vector adapter | `cortex_common`, `cortex_contracts`, `cortex_domain`, `cortex_db`, `cortex_storage`, `cortex_observability` |
+| `packages/observability` | `cortex_observability` | OTel bootstrap、metric helper、logger correlation、trace propagation | `cortex_common` |
+| `apps/api` | `cortex_api` | FastAPI app、routers、dependency injection、middleware、lifespan | 上述所有业务包 |
+| `workers/parse-worker` | `cortex_worker_parse` | Parse job 消费、Worker bootstrap、错误恢复、重试语义 | `cortex_parse`, `cortex_storage`, `cortex_db`, `cortex_observability`, `cortex_common` |
+| `workers/knowledge-worker` | `cortex_worker_knowledge` | Add/Cognify/Memify/Search 后台任务执行 | `cortex_knowledge`, `cortex_db`, `cortex_storage`, `cortex_observability`, `cortex_common` |
+
+必须遵守的依赖规则：
+
+- `domain` 不依赖 `FastAPI`、`SQLAlchemy`、`boto3`、`cognee` 等外部框架。
+- `contracts` 不依赖 ORM 模型，只表达接口契约。
+- `apps/api` 和 `workers/*` 不直接拼接 SQL，也不直接操作底层引擎 SDK，必须通过 package service / repository / adapter 调用。
+- 引擎特定实现只能存在于 `cortex_parse.adapters.*`，不能渗透到 API 层。
+
+### 4.7 Parse 引擎代码模型
+
+`packages/parse` 内部建议再做一层清晰分层：
+
+```text
+src/cortex_parse/
+  models/
+  router/
+  registry/
+  profiles/
+  adapters/
+    crawl4ai.py
+    jina_reader.py
+    llamaparse.py
+    markitdown.py
+    docling.py
+  normalization/
+    markdown.py
+    metadata.py
+    provenance.py
+  services/
+  persistence/
+```
+
+其中：
+
+- `models/`：`ParseRequest`、`ParsedDocument`、`EngineAttempt`、`ParseDiagnostics`
+- `router/`：引擎选择、fallback、质量阈值判定
+- `registry/`：引擎注册与能力标签
+- `profiles/`：YAML / DB profile 装载与校验
+- `adapters/`：每个解析引擎的协议实现
+- `normalization/`：Markdown、元数据、分类标签、时间字段标准化
+- `persistence/`：document、artifact、attempt 的持久化
+
+引擎依赖不建议全部写死在 API 包中，推荐由 `cortex_parse` 通过 extras 控制：
+
+- `parse[crawl4ai]`
+- `parse[jina]`
+- `parse[llamaparse]`
+- `parse[markitdown]`
+- `parse[docling]`
+
+这样 Parse Worker 可按部署角色裁剪安装集：
+
+- 仅网页抓取节点安装 `crawl4ai`
+- 仅本地文档节点安装 `markitdown` / `docling`
+- 混合节点再叠加云端引擎适配器
+
+### 4.8 配置与环境模型
+
+配置分三层，不把策略硬编码在 Python 里：
+
+1. **Root Tooling Config**
+   - 根级 `pyproject.toml`
+   - `uv.lock`
+   - lint / test / type-check 配置
+2. **Runtime Settings**
+   - `cortex_common.settings`
+   - 使用 `pydantic-settings` 从环境变量、secret file、默认值加载
+3. **Business Policy Config**
+   - `packages/parse/profiles/*.yaml`
+   - `packages/parse/engines/*.yaml`
+   - `packages/auth/policies/*.yaml` 或 DB policy
+
+建议的 settings 切分：
+
+- `AppSettings`
+- `DatabaseSettings`
+- `S3Settings`
+- `QueueSettings`
+- `AuthSettings`
+- `ParseSettings`
+- `CogneeSettings`
+- `TelemetrySettings`
+
+建议的配置优先级：
+
+```text
+Environment Variables
+  > Secret Files / Mounted Secrets
+  > Runtime YAML / DB Policy
+  > Code Defaults
+```
+
+其中：
+
+- 凭据一律来自环境变量或 secret mount，不进入 Git。
+- Parse profile 和权限策略优先以 YAML 启动，再逐步迁移为 DB 可运营配置。
+- `otel-collector.yaml` 保持仓库内可见，用作默认开发和部署基线。
+
+### 4.9 数据访问与迁移模型
+
+数据库访问建议统一由 `cortex_db` 承担，避免 API、Worker 和业务包各自维护连接方式。
+
+推荐做法：
+
+- 使用 `SQLAlchemy 2.x` async engine + async session。
+- 所有 repository 接口在 `domain` 或 `db` 中声明，应用层只依赖接口。
+- 迁移目录统一放在 `packages/db/migrations/versions/`。
+- `cortex-init.sql` 作为初始 schema 基线来源，随后转入迁移脚本维护。
+- SQLite 与 PostgreSQL 共用同一套 ORM model，但避免使用厂商私有字段类型与 SQL 方言特性。
+
+建议的持久化分工：
+
+- `objects` / `object_versions` -> `cortex_storage`
+- `documents` / `document_artifacts` / `parse_run_attempts` -> `cortex_parse`
+- `datasets` / `knowledge_runs` / `search_*` -> `cortex_knowledge`
+- `permissions` / `roles` / `authorization_*` -> `cortex_auth`
+
+### 4.10 入口进程与命令模型
+
+每个运行成员都应通过自己的 `project.scripts` 暴露稳定入口，避免手写脆弱命令。
+
+推荐脚本名：
+
+- `cortex-api`
+- `cortex-parse-worker`
+- `cortex-knowledge-worker`
+- `cortex-db-migrate`
+
+推荐开发命令：
+
+```bash
+uv sync
+uv run --package cortex-api cortex-api
+uv run --package cortex-worker-parse cortex-parse-worker
+uv run --package cortex-worker-knowledge cortex-knowledge-worker
+uv run --package cortex-db cortex-db-migrate upgrade head
+uv run --group lint ruff check .
+uv run --group types pyright
+uv run --group dev --group test pytest
+```
+
+开发流程应固定为：
+
+1. 更新 `specs/cortex-tasks.md`
+2. `uv sync`
+3. 编码
+4. 运行 lint / types / tests
+5. 更新任务状态与文档
+
+### 4.11 测试与质量门禁模型
+
+测试建议分四层：
+
+1. **Unit Tests**
+   - 每个 package 内部逻辑、normalizer、policy evaluator、repository mapper
+2. **Contract Tests**
+   - 校验 `cortex_contracts` 与 `cortex-api.yaml` 的字段一致性
+3. **Integration Tests**
+   - FastAPI + DB + S3 mock / localstack / MinIO + queue + worker
+4. **E2E Tests**
+   - 从 upload / parse / add / search 走一条完整主链路
+
+质量门禁建议最少包括：
+
+- `ruff check`
+- `pyright`
+- `pytest`
+- OpenAPI schema 校验
+- 关键配置文件校验：`otel-collector.yaml`、parse profile YAML、policy YAML
+
+### 4.12 为什么采用这套代码模型
+
+这套代码模型服务于 Cortex 的几个核心目标：
+
+- **可扩展**：新增引擎、新增 Worker、新增适配器不需要重写 API 主体。
+- **可部署**：不同节点可按角色裁剪依赖，不必把所有引擎都打进一个镜像。
+- **可维护**：接口契约、领域逻辑、基础设施实现分层清晰。
+- **可迁移**：DB、S3、PDP、解析引擎、向量库都通过适配层进入。
+- **适合 `uv`**：shared lockfile + workspace member + 依赖分组，正好匹配多包单仓工程。
+
 ## 5. Parse 平台化设计
 
 ### 5.1 从单一解析器到多引擎平台

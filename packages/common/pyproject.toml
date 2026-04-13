@@ -1,0 +1,13 @@
+[project]
+name = "cortex-common"
+version = "0.1.0"
+description = "Shared utilities for Cortex."
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "pydantic>=2.12,<3",
+  "pydantic-settings>=2.10,<3",
+]
+
+[build-system]
+requires = ["uv_build>=0.10.4,<0.11.0"]
+build-backend = "uv_build"

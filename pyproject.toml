@@ -1,0 +1,81 @@
+[project]
+name = "cortex-workspace"
+version = "0.1.0"
+description = "Vendor-neutral parsing, storage, and knowledge APIs."
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "ipython>=8.32,<9",
+  "python-dotenv>=1.1,<2",
+]
+lint = [
+  "ruff>=0.11,<0.12",
+]
+types = [
+  "pyright>=1.1.390,<2",
+]
+test = [
+  "httpx>=0.28,<0.29",
+  "pytest>=8.3,<9",
+  "pytest-asyncio>=0.25,<0.26",
+  "respx>=0.22,<0.23",
+]
+docs = [
+  "mkdocs-material>=9.6,<10",
+]
+
+[tool.uv]
+package = false
+default-groups = ["dev", "lint", "types", "test"]
+
+[tool.uv.workspace]
+members = [
+  "apps/api",
+  "workers/parse-worker",
+  "workers/knowledge-worker",
+  "packages/common",
+  "packages/contracts",
+  "packages/domain",
+  "packages/db",
+  "packages/auth",
+  "packages/storage",
+  "packages/parse",
+  "packages/knowledge",
+  "packages/observability",
+]
+
+[tool.uv.sources]
+cortex-api = { workspace = true }
+cortex-worker-parse = { workspace = true }
+cortex-worker-knowledge = { workspace = true }
+cortex-common = { workspace = true }
+cortex-contracts = { workspace = true }
+cortex-domain = { workspace = true }
+cortex-db = { workspace = true }
+cortex-auth = { workspace = true }
+cortex-storage = { workspace = true }
+cortex-parse = { workspace = true }
+cortex-knowledge = { workspace = true }
+cortex-observability = { workspace = true }
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "UP"]
+
+[tool.pyright]
+include = ["apps", "packages", "workers", "tests"]
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
+venvPath = "."
+venv = ".venv"
+
+[tool.pytest.ini_options]
+addopts = "-q -p no:cacheprovider -p no:tmpdir"
+asyncio_mode = "auto"
+testpaths = ["tests"]

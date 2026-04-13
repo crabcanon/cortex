@@ -1,0 +1,13 @@
+[project]
+name = "cortex-worker-parse"
+version = "0.1.0"
+description = "Parse worker for Cortex."
+requires-python = ">=3.12,<3.14"
+dependencies = []
+
+[project.scripts]
+cortex-parse-worker = "cortex_worker_parse.main:main"
+
+[build-system]
+requires = ["uv_build>=0.10.4,<0.11.0"]
+build-backend = "uv_build"

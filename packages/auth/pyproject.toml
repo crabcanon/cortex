@@ -1,0 +1,10 @@
+[project]
+name = "cortex-auth"
+version = "0.1.0"
+description = "Authorization and identity services for Cortex."
+requires-python = ">=3.12,<3.14"
+dependencies = []
+
+[build-system]
+requires = ["uv_build>=0.10.4,<0.11.0"]
+build-backend = "uv_build"

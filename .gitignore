@@ -58,8 +58,11 @@ MANIFEST
 
 # Python env / tooling
 .python-version
+!.python-version
 .venv/
 .venv
+.uv-cache/
+.uv-python/
 venv/
 env/
 ENV/
@@ -68,6 +71,11 @@ venv.bak/
 .tox/
 .nox/
 .pytest_cache/
+pytest-cache-files-*
+.pytest-tmp/
+.tmp-pytest*/
+pytest_tmp_data/
+runtime-test-data/
 .mypy_cache/
 .ruff_cache/
 .hypothesis/
@@ -112,6 +120,7 @@ __marimo__/
 # Environment / secrets
 .env
 .env.*
+!.env.example
 .envrc
 *.local
 .pypirc

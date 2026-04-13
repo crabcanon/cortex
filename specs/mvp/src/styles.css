@@ -1,7 +1,7 @@
 ﻿@import "tailwindcss";
 
 @source "./";
-@source "../../ordix-prototype.jsx";
+@source "../../cortex-prototype.jsx";
 
 :root {
   color-scheme: light;

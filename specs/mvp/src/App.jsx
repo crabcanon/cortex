@@ -17,28 +17,28 @@ import {
 } from 'lucide-react';
 import MermaidDiagram from './components/MermaidDiagram';
 
-const PrototypeApp = React.lazy(() => import('@prototype'));
+// const PrototypeApp = React.lazy(() => import('@prototype'));
 const OpenApiRenderer = React.lazy(() => import('./components/OpenApiRenderer'));
-const DOCUMENT_LOADERS = import.meta.glob('../../ordix-*.{md,sql,yaml}', {
+const DOCUMENT_LOADERS = import.meta.glob('../../cortex-*.{md,sql,yaml}', {
   query: '?raw',
   import: 'default'
 });
 
 const SPEC_CATALOG = [
-  {
-    id: 'prototype',
-    title: '交互原型',
-    fileName: 'ordix-prototype.jsx',
-    kind: 'prototype',
-    group: '核心体验',
-    icon: AppWindow,
-    summary: '直接运行原型组件，查看工作台交互与页面布局。'
-  },
+  // {
+  //   id: 'prototype',
+  //   title: '交互原型',
+  //   fileName: 'cortex-prototype.jsx',
+  //   kind: 'prototype',
+  //   group: '核心体验',
+  //   icon: AppWindow,
+  //   summary: '直接运行原型组件，查看工作台交互与页面布局。'
+  // },
   {
     id: 'prd',
     title: '需求文档',
-    fileName: 'ordix-prd.md',
-    path: '../../ordix-prd.md',
+    fileName: 'cortex-prd.md',
+    path: '../../cortex-prd.md',
     kind: 'markdown',
     group: '业务规格',
     icon: BookOpenText,
@@ -47,8 +47,8 @@ const SPEC_CATALOG = [
   {
     id: 'dfd',
     title: '数据流样例',
-    fileName: 'ordix-dfd.md',
-    path: '../../ordix-dfd.md',
+    fileName: 'cortex-dfd.md',
+    path: '../../cortex-dfd.md',
     kind: 'markdown',
     group: '业务规格',
     icon: Workflow,
@@ -57,8 +57,8 @@ const SPEC_CATALOG = [
   {
     id: 'schema',
     title: 'Schema 设计',
-    fileName: 'ordix-schema.md',
-    path: '../../ordix-schema.md',
+    fileName: 'cortex-schema.md',
+    path: '../../cortex-schema.md',
     kind: 'markdown',
     group: '系统设计',
     icon: Database,
@@ -67,8 +67,8 @@ const SPEC_CATALOG = [
   {
     id: 'sql',
     title: '标准 SQL DDL',
-    fileName: 'ordix-init.sql',
-    path: '../../ordix-init.sql',
+    fileName: 'cortex-init.sql',
+    path: '../../cortex-init.sql',
     kind: 'code',
     language: 'sql',
     group: '工程产物',
@@ -78,8 +78,8 @@ const SPEC_CATALOG = [
   {
     id: 'api',
     title: 'OpenAPI 文档',
-    fileName: 'ordix-api.yaml',
-    path: '../../ordix-api.yaml',
+    fileName: 'cortex-api.yaml',
+    path: '../../cortex-api.yaml',
     kind: 'openapi',
     language: 'yaml',
     group: '工程产物',
@@ -89,12 +89,32 @@ const SPEC_CATALOG = [
   {
     id: 'tech',
     title: '技术说明',
-    fileName: 'ordix-tech.md',
-    path: '../../ordix-tech.md',
+    fileName: 'cortex-tech.md',
+    path: '../../cortex-tech.md',
     kind: 'markdown',
     group: '工程产物',
     icon: FileText,
     summary: '可用于补充术语表、字段字典与实现说明。'
+  },
+  {
+    id: 'task',
+    title: '任务计划',
+    fileName: 'cortex-tasks.md',
+    path: '../../cortex-tasks.md',
+    kind: 'markdown',
+    group: '工程产物',
+    icon: FileText,
+    summary: '用于规划和执行详细的开发计划。'
+  },
+  {
+    id: 'log',
+    title: '任务日志',
+    fileName: 'cortex-log.md',
+    path: '../../cortex-log.md',
+    kind: 'markdown',
+    group: '工程产物',
+    icon: FileText,
+    summary: '用于记录任务执行过程的日志、问题和解决方案。'
   }
 ];
 
@@ -516,7 +536,7 @@ function DocsWorkspace({
               <Menu className="h-4.5 w-4.5" />
             </button>
             <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Ordix Specs</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">cortex Specs</div>
               <div className="text-sm font-medium text-slate-700">文档浏览模式</div>
             </div>
           </div>

@@ -5,14 +5,17 @@ from __future__ import annotations
 import httpx
 import pytest
 import respx
+from cortex_common import ConfigError
 from cortex_contracts import ParseInputKind, ParseSource, ParseSyncRequest
 from cortex_parse import EngineExecutionContext
 from cortex_parse.adapters import (
     DoclingParseEngine,
     JinaReaderParseEngine,
+    LlamaParseEngine,
     MarkItDownParseEngine,
 )
 from cortex_parse.adapters import docling as docling_adapter
+from cortex_parse.adapters import llama_parse as llama_parse_adapter
 from cortex_parse.adapters import markitdown as markitdown_adapter
 
 
@@ -174,3 +177,99 @@ async def test_docling_adapter_uses_optional_converter(monkeypatch: pytest.Monke
     assert result.markdown == "# Docling Title\n\nStructured content."
     assert result.title == "slides.pptx"
     assert result.parser_version == "2.0.test"
+
+
+class _FakeLlamaDocument:
+    def __init__(self, text: str, metadata: dict[str, object]) -> None:
+        self.text = text
+        self.metadata = metadata
+
+
+class _FakeLlamaParse:
+    last_options: dict[str, object] | None = None
+    last_source: str | None = None
+
+    def __init__(self, **kwargs: object) -> None:
+        type(self).last_options = kwargs
+
+    async def aload_data(self, source_ref: str) -> list[_FakeLlamaDocument]:
+        type(self).last_source = source_ref
+        return [
+            _FakeLlamaDocument(
+                "# LlamaParse Title\n\nPage one.",
+                {"title": "LlamaParse Title", "page_label": "1"},
+            ),
+            _FakeLlamaDocument("Page two.", {"page_label": "2"}),
+        ]
+
+
+@pytest.mark.asyncio
+async def test_llama_parse_adapter_maps_async_documents(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(llama_parse_adapter, "_load_llama_parse_cls", lambda: _FakeLlamaParse)
+    monkeypatch.setattr(llama_parse_adapter, "_llama_parse_version", lambda: "0.7.test")
+
+    engine = LlamaParseEngine()
+    result = await engine.execute(
+        EngineExecutionContext(
+            request=ParseSyncRequest(
+                source=ParseSource(
+                    input_kind=ParseInputKind.URI,
+                    uri="file:///tmp/whitepaper.pdf",
+                    filename="whitepaper.pdf",
+                    expected_content_type="application/pdf",
+                )
+            ),
+            source=ParseSource(
+                input_kind=ParseInputKind.URI,
+                uri="file:///tmp/whitepaper.pdf",
+                filename="whitepaper.pdf",
+                expected_content_type="application/pdf",
+            ),
+            engine_options={
+                "llama_parse": {
+                    "api_key": "llx-test",
+                    "language": "en",
+                    "premium_mode": True,
+                }
+            },
+        )
+    )
+
+    assert engine.descriptor.status.value == "active"
+    assert _FakeLlamaParse.last_source == "file:///tmp/whitepaper.pdf"
+    assert _FakeLlamaParse.last_options == {
+        "api_key": "llx-test",
+        "language": "en",
+        "premium_mode": True,
+        "result_type": "markdown",
+        "verbose": False,
+    }
+    assert result.markdown == "# LlamaParse Title\n\nPage one.\n\nPage two."
+    assert result.title == "LlamaParse Title"
+    assert result.metadata["document_count"] == 2
+    assert result.raw_metadata["documents"][0]["page_label"] == "1"
+    assert result.parser_version == "0.7.test"
+
+
+@pytest.mark.asyncio
+async def test_llama_parse_requires_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(llama_parse_adapter, "_load_llama_parse_cls", lambda: _FakeLlamaParse)
+    monkeypatch.delenv("LLAMA_CLOUD_API_KEY", raising=False)
+
+    with pytest.raises(ConfigError):
+        await LlamaParseEngine().execute(
+            EngineExecutionContext(
+                request=ParseSyncRequest(
+                    source=ParseSource(
+                        input_kind=ParseInputKind.URI,
+                        uri="file:///tmp/whitepaper.pdf",
+                    )
+                ),
+                source=ParseSource(
+                    input_kind=ParseInputKind.URI,
+                    uri="file:///tmp/whitepaper.pdf",
+                ),
+            )
+        )

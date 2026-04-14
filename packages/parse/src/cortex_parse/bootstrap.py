@@ -9,6 +9,7 @@ from .adapters import (
     Crawl4AIParseEngine,
     DoclingParseEngine,
     JinaReaderParseEngine,
+    LlamaParseEngine,
     MarkItDownParseEngine,
 )
 from .profile_loader import ParseProfileLoader
@@ -22,6 +23,7 @@ def build_parse_service(settings: ParseSettings) -> ParseService:
     for engine in (
         Crawl4AIParseEngine(),
         JinaReaderParseEngine(),
+        LlamaParseEngine(),
         MarkItDownParseEngine(),
         DoclingParseEngine(),
     ):

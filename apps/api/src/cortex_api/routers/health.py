@@ -21,7 +21,12 @@ from ..services.health import build_liveness, build_readiness
 router = APIRouter(prefix="/v1/health", tags=["Health"])
 
 
-@router.get("/live", response_model=HealthResponse, summary="Liveness probe")
+@router.get(
+    "/live",
+    response_model=HealthResponse,
+    operation_id="getLiveness",
+    summary="Liveness probe",
+)
 async def get_liveness(
     request: Request,
     response: Response,
@@ -30,6 +35,7 @@ async def get_liveness(
     settings: Annotated[CortexSettings, Depends(get_settings)],
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
 ) -> HealthResponse:
+    del response
     await auth_service.authorize(
         uow=uow,
         caller=caller,
@@ -39,7 +45,13 @@ async def get_liveness(
     return await build_liveness(settings)
 
 
-@router.get("/ready", response_model=HealthResponse, summary="Readiness probe")
+@router.get(
+    "/ready",
+    response_model=HealthResponse,
+    operation_id="getReadiness",
+    summary="Readiness probe",
+    responses={503: {"model": HealthResponse}},
+)
 async def get_readiness(
     request: Request,
     response: Response,

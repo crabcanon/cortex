@@ -7,6 +7,8 @@ from cortex_contracts import DependencyCheck, HealthResponse
 from cortex_db import SessionFactory
 from sqlalchemy import text
 
+from .metrics import API_VERSION
+
 
 async def build_liveness(settings: CortexSettings) -> HealthResponse:
     checks = [
@@ -26,7 +28,7 @@ async def build_liveness(settings: CortexSettings) -> HealthResponse:
         status=status,
         service="cortex-api",
         mode="live",
-        version="0.1.0",
+        version=API_VERSION,
         timestamp=utc_now(),
         checks=checks,
     )
@@ -99,7 +101,7 @@ async def build_readiness(
         status=overall_status,
         service="cortex-api",
         mode="ready",
-        version="0.1.0",
+        version=API_VERSION,
         timestamp=utc_now(),
         checks=checks,
     )

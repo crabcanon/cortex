@@ -68,7 +68,8 @@ async def _authorize_parse_job(
 @router.get(
     "/engines",
     response_model=ParseEngineList,
-    summary="List parse engines / list parse engines",
+    operation_id="listParseEngines",
+    summary="List available parse engines",
 )
 async def list_parse_engines(
     request: Request,
@@ -89,7 +90,8 @@ async def list_parse_engines(
 @router.get(
     "/profiles",
     response_model=ParserProfileList,
-    summary="List parser profiles / list parser profiles",
+    operation_id="listParserProfiles",
+    summary="List parser profiles",
 )
 async def list_parser_profiles(
     request: Request,
@@ -110,7 +112,8 @@ async def list_parser_profiles(
 @router.post(
     "/sync",
     response_model=ParseResult,
-    summary="Parse content synchronously / parse content synchronously",
+    operation_id="parseContentSync",
+    summary="Parse content synchronously",
 )
 async def parse_content_sync(
     request: Request,
@@ -135,7 +138,8 @@ async def parse_content_sync(
     "/jobs",
     response_model=JobAccepted,
     status_code=status.HTTP_202_ACCEPTED,
-    summary="Submit an async parse job / submit async parse job",
+    operation_id="createParseJob",
+    summary="Submit an asynchronous parse job",
 )
 async def create_parse_job(
     request: Request,
@@ -162,14 +166,16 @@ async def create_parse_job(
 
 
 @router.get(
-    "/jobs/{job_id}/result",
+    "/jobs/{jobId}/result",
     response_model=ParseResult | JobStatusDetail,
-    summary="Get parse job result / get parse job result",
+    operation_id="getParseResult",
+    summary="Get a completed parse result",
+    responses={202: {"model": JobStatusDetail}},
 )
 async def get_parse_job_result(
     request: Request,
     response: Response,
-    job_id: str,
+    jobId: str,
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     parse_job_service: Annotated[ParseJobControlService, Depends(get_parse_job_service)],
@@ -177,12 +183,12 @@ async def get_parse_job_result(
 ) -> ParseResult | JobStatusDetail:
     job = await _authorize_parse_job(
         request=request,
-        job_id=job_id,
+        job_id=jobId,
         caller=caller,
         auth_service=auth_service,
         uow=uow,
     )
-    result = await parse_job_service.get_completed_result(uow=uow, job_id=job_id)
+    result = await parse_job_service.get_completed_result(uow=uow, job_id=jobId)
     if result is None:
         response.status_code = status.HTTP_202_ACCEPTED
         return job

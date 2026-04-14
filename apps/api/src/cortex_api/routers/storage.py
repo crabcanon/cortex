@@ -26,7 +26,8 @@ router = APIRouter(prefix="/v1/storage", tags=["Storage"])
     "/uploads",
     response_model=StorageUploadSession,
     status_code=status.HTTP_201_CREATED,
-    summary="Initiate an upload session / initialize upload session",
+    operation_id="createUploadSession",
+    summary="Initiate an upload session",
 )
 async def create_upload_session(
     request: Request,
@@ -48,20 +49,21 @@ async def create_upload_session(
 
 
 @router.post(
-    "/uploads/{upload_id}/complete",
+    "/uploads/{uploadId}/complete",
     response_model=StorageObject,
-    summary="Complete an upload session / complete upload session",
+    operation_id="completeUploadSession",
+    summary="Complete an upload session",
 )
 async def complete_upload_session(
     request: Request,
-    upload_id: str,
+    uploadId: str,
     payload: StorageUploadCompleteRequest,
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     storage_service: Annotated[StorageService, Depends(get_storage_service)],
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
 ) -> StorageObject:
-    record = await get_object_record(uow, upload_id)
+    record = await get_object_record(uow, uploadId)
     await auth_service.authorize(
         uow=uow,
         caller=caller,
@@ -71,25 +73,26 @@ async def complete_upload_session(
     )
     return await storage_service.complete_upload_session(
         uow=uow,
-        upload_id=upload_id,
+        upload_id=uploadId,
         request=payload,
     )
 
 
 @router.get(
-    "/objects/{object_id}",
+    "/objects/{objectId}",
     response_model=StorageObject,
-    summary="Get object metadata / get object metadata",
+    operation_id="getStorageObject",
+    summary="Get object metadata",
 )
 async def get_storage_object(
     request: Request,
-    object_id: str,
+    objectId: str,
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     storage_service: Annotated[StorageService, Depends(get_storage_service)],
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
 ) -> StorageObject:
-    record = await get_object_record(uow, object_id)
+    record = await get_object_record(uow, objectId)
     await auth_service.authorize(
         uow=uow,
         caller=caller,
@@ -97,17 +100,18 @@ async def get_storage_object(
         request_id=getattr(request.state, "request_id", None),
         resource=build_resource_context(storage_service, record),
     )
-    return await storage_service.get_object(uow=uow, object_id=object_id)
+    return await storage_service.get_object(uow=uow, object_id=objectId)
 
 
 @router.get(
-    "/objects/{object_id}/download-url",
+    "/objects/{objectId}/download-url",
     response_model=DownloadUrlResponse,
-    summary="Create a download URL for an object / create download url",
+    operation_id="createDownloadUrl",
+    summary="Create a download URL for an object",
 )
 async def create_download_url(
     request: Request,
-    object_id: str,
+    objectId: str,
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     storage_service: Annotated[StorageService, Depends(get_storage_service)],
@@ -115,7 +119,7 @@ async def create_download_url(
     ttl_seconds: Annotated[int, Query(ge=60, le=86400)] = 900,
     disposition: Annotated[DownloadDisposition, Query()] = DownloadDisposition.ATTACHMENT,
 ) -> DownloadUrlResponse:
-    record = await get_object_record(uow, object_id)
+    record = await get_object_record(uow, objectId)
     await auth_service.authorize(
         uow=uow,
         caller=caller,
@@ -125,7 +129,7 @@ async def create_download_url(
     )
     return await storage_service.create_download_url(
         uow=uow,
-        object_id=object_id,
+        object_id=objectId,
         ttl_seconds=ttl_seconds,
         disposition=disposition,
     )

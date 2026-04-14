@@ -149,7 +149,8 @@ async def _authorized_search_scope(
     "/datasets",
     response_model=KnowledgeDataset,
     status_code=status.HTTP_201_CREATED,
-    summary="Create a knowledge dataset / create knowledge dataset",
+    operation_id="createKnowledgeDataset",
+    summary="Create a knowledge dataset",
 )
 async def create_knowledge_dataset(
     request: Request,
@@ -171,19 +172,20 @@ async def create_knowledge_dataset(
 
 
 @router.get(
-    "/datasets/{dataset_id}",
+    "/datasets/{datasetId}",
     response_model=KnowledgeDataset,
-    summary="Get knowledge dataset / get knowledge dataset",
+    operation_id="getKnowledgeDataset",
+    summary="Get dataset metadata and counters",
 )
 async def get_knowledge_dataset(
     request: Request,
-    dataset_id: str,
+    datasetId: str,
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     knowledge_service: Annotated[KnowledgeDatasetService, Depends(get_knowledge_service)],
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
 ) -> KnowledgeDataset:
-    record = await get_dataset_record(knowledge_service, uow, dataset_id)
+    record = await get_dataset_record(knowledge_service, uow, datasetId)
     await _authorize_dataset(
         request=request,
         caller=caller,
@@ -193,14 +195,15 @@ async def get_knowledge_dataset(
         dataset=record,
         permission_key="knowledge:read",
     )
-    return await knowledge_service.get_dataset(uow=uow, dataset_id=dataset_id)
+    return await knowledge_service.get_dataset(uow=uow, dataset_id=datasetId)
 
 
 @router.post(
     "/add/jobs",
     response_model=JobAccepted,
     status_code=status.HTTP_202_ACCEPTED,
-    summary="Submit a Cognee Add job / submit a Cognee Add job",
+    operation_id="createAddJob",
+    summary="Submit a Cognee Add job",
 )
 async def create_add_job(
     request: Request,
@@ -248,7 +251,8 @@ async def create_add_job(
     "/cognify/jobs",
     response_model=JobAccepted,
     status_code=status.HTTP_202_ACCEPTED,
-    summary="Submit a Cognify job / submit a Cognify job",
+    operation_id="createCognifyJob",
+    summary="Submit a Cognify job",
 )
 async def create_cognify_job(
     request: Request,
@@ -296,7 +300,8 @@ async def create_cognify_job(
     "/memify/jobs",
     response_model=JobAccepted,
     status_code=status.HTTP_202_ACCEPTED,
-    summary="Submit a Memify job / submit a Memify job",
+    operation_id="createMemifyJob",
+    summary="Submit a Memify job",
 )
 async def create_memify_job(
     request: Request,
@@ -343,10 +348,8 @@ async def create_memify_job(
 @router.post(
     "/search",
     response_model=SearchResponse,
-    summary=(
-        "Search across datasets and knowledge graphs / "
-        "search across datasets and knowledge graphs"
-    ),
+    operation_id="searchKnowledge",
+    summary="Search across datasets and knowledge graphs",
 )
 async def search_knowledge(
     request: Request,

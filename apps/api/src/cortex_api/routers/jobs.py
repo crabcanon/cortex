@@ -45,16 +45,21 @@ async def _authorize_job(
     return job
 
 
-@router.get("/{job_id}", response_model=JobStatusDetail, summary="Get job status")
+@router.get(
+    "/{jobId}",
+    response_model=JobStatusDetail,
+    operation_id="getJob",
+    summary="Get job status",
+)
 async def get_job(
     request: Request,
-    job_id: str,
+    jobId: str,
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
 ) -> JobStatusDetail:
     return await _authorize_job(
-        job_id=job_id,
+        job_id=jobId,
         permission_key="jobs:read",
         caller=caller,
         auth_service=auth_service,
@@ -63,45 +68,51 @@ async def get_job(
     )
 
 
-@router.get("/{job_id}/events", response_model=list[JobEvent], summary="List job events")
+@router.get(
+    "/{jobId}/events",
+    response_model=list[JobEvent],
+    operation_id="listJobEvents",
+    summary="List job events",
+)
 async def get_job_events(
     request: Request,
-    job_id: str,
+    jobId: str,
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
     limit: int = Query(default=100, ge=1, le=500),
 ) -> list[JobEvent]:
     await _authorize_job(
-        job_id=job_id,
+        job_id=jobId,
         permission_key="jobs:read",
         caller=caller,
         auth_service=auth_service,
         uow=uow,
         request_id=getattr(request.state, "request_id", None),
     )
-    return await list_job_events(uow, job_id, limit=limit)
+    return await list_job_events(uow, jobId, limit=limit)
 
 
 @router.post(
-    "/{job_id}/cancel",
+    "/{jobId}/cancel",
     response_model=JobStatusDetail,
     status_code=202,
-    summary="Cancel a job",
+    operation_id="cancelJob",
+    summary="Cancel a queued or running job",
 )
 async def post_job_cancel(
     request: Request,
-    job_id: str,
+    jobId: str,
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
 ) -> JobStatusDetail:
     await _authorize_job(
-        job_id=job_id,
+        job_id=jobId,
         permission_key="jobs:cancel",
         caller=caller,
         auth_service=auth_service,
         uow=uow,
         request_id=getattr(request.state, "request_id", None),
     )
-    return await cancel_job(uow, job_id)
+    return await cancel_job(uow, jobId)

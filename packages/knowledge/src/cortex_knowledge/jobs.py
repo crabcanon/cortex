@@ -11,6 +11,7 @@ from cortex_contracts import (
     CognifyJobRequest,
     JobAccepted,
     MemifyJobRequest,
+    TelemetryContext,
 )
 from cortex_contracts import (
     JobStatus as ContractJobStatus,
@@ -419,8 +420,11 @@ class KnowledgeJobControlService:
             submitted_at=job.submitted_at,
             poll_url=f"/v1/jobs/{job.job_id}",
             cancel_url=f"/v1/jobs/{job.job_id}/cancel",
-            request_id=job.request_id,
-            trace_id=job.trace_id,
+            telemetry=TelemetryContext(
+                trace_id=job.trace_id,
+                span_id=job.span_id,
+                request_id=job.request_id,
+            ),
         )
 
     @staticmethod

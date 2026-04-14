@@ -29,6 +29,7 @@ from cortex_contracts import (
     StorageUploadCreateRequest,
     StorageUploadSession,
     UploadMode,
+    UploadSessionStatus,
 )
 from cortex_db import CortexUnitOfWork
 from cortex_domain import (
@@ -234,6 +235,7 @@ class StorageService:
             return StorageUploadSession(
                 upload_id=object_id,
                 object_id=object_id,
+                status=UploadSessionStatus.PENDING_UPLOAD,
                 upload_mode=upload_mode,
                 bucket=bucket.bucket_name,
                 object_key=object_key,

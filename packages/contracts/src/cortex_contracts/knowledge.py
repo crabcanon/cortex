@@ -81,7 +81,7 @@ class AddOptions(BaseModel):
 class AddJobRequest(BaseModel):
     dataset_id: str | None = None
     dataset_key: str | None = None
-    inputs: list[KnowledgeInput] = Field(default_factory=list, min_length=1)
+    inputs: list[KnowledgeInput] = Field(min_length=1)
     options: AddOptions = Field(default_factory=AddOptions)
     webhook: WebhookConfig | None = None
 
@@ -176,8 +176,8 @@ class GraphPath(BaseModel):
 class SearchResponse(BaseModel):
     request_id: str
     search_type: SearchType
-    context_items: list[SearchHit] = Field(default_factory=list)
-    latency_ms: int = Field(default=0, ge=0)
+    context_items: list[SearchHit]
+    latency_ms: int = Field(ge=0)
     created_at: datetime
     dataset_scope: list[str] = Field(default_factory=list)
     answer: str | None = None

@@ -42,7 +42,7 @@ class StorageUploadCreateRequest(BaseModel):
 class StorageUploadSession(BaseModel):
     upload_id: str
     object_id: str
-    status: UploadSessionStatus = UploadSessionStatus.PENDING_UPLOAD
+    status: UploadSessionStatus
     upload_mode: UploadMode
     bucket: str | None = None
     object_key: str | None = None
@@ -83,7 +83,7 @@ class StorageObject(BaseModel):
 
 class DownloadUrlResponse(BaseModel):
     object_id: str
-    method: str = "GET"
+    method: str
     url: str
     headers: dict[str, str] = Field(default_factory=dict)
     expires_at: datetime

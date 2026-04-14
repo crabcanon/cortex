@@ -11,7 +11,7 @@ from cortex_common import (
     normalize_idempotency_key,
     utc_now,
 )
-from cortex_contracts import JobAccepted, ParseJobRequest, ParseResult
+from cortex_contracts import JobAccepted, ParseJobRequest, ParseResult, TelemetryContext
 from cortex_contracts import JobStatus as ContractJobStatus
 from cortex_contracts import JobType as ContractJobType
 from cortex_db import CortexUnitOfWork
@@ -328,8 +328,11 @@ class ParseJobControlService:
             poll_url=f"/v1/jobs/{job.job_id}",
             result_url=f"/v1/parse/jobs/{job.job_id}/result",
             cancel_url=f"/v1/jobs/{job.job_id}/cancel",
-            request_id=job.request_id,
-            trace_id=job.trace_id,
+            telemetry=TelemetryContext(
+                trace_id=job.trace_id,
+                span_id=job.span_id,
+                request_id=job.request_id,
+            ),
         )
 
     @staticmethod

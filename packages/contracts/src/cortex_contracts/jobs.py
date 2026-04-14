@@ -29,13 +29,12 @@ class JobMetrics(BaseModel):
 class JobAccepted(BaseModel):
     job_id: str
     job_type: JobType
-    status: JobStatus = Field(default=JobStatus.QUEUED)
+    status: JobStatus
     submitted_at: datetime
     poll_url: str
     result_url: str | None = None
     cancel_url: str | None = None
-    request_id: str | None = None
-    trace_id: str | None = None
+    telemetry: TelemetryContext | None = None
 
 
 class JobStatusDetail(BaseModel):

@@ -1,6 +1,14 @@
 """Domain models for Cortex."""
 
-from .enums import AccessLevel, DecisionEffect, JobStatus, JobType, SourceType
+from .enums import (
+    AccessLevel,
+    DecisionEffect,
+    JobStatus,
+    JobType,
+    ObjectStatus,
+    SourceType,
+    UploadMode,
+)
 from .models import (
     ActorRecord,
     ActorRoleBindingRecord,
@@ -11,6 +19,7 @@ from .models import (
     JobEventRecord,
     JobRecord,
     ObjectRecord,
+    ObjectVersionRecord,
     PermissionRecord,
     RolePermissionRecord,
     RoleRecord,
@@ -32,10 +41,13 @@ __all__ = [
     "JobStatus",
     "JobType",
     "ObjectRecord",
+    "ObjectStatus",
+    "ObjectVersionRecord",
     "PermissionRecord",
     "RolePermissionRecord",
     "RoleRecord",
     "SourceType",
     "StorageBucketRecord",
     "TenantRecord",
+    "UploadMode",
 ]

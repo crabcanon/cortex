@@ -199,6 +199,27 @@ class ObjectModel(Base):
     updated_at: Mapped[datetime] = updated_at_column()
 
 
+class ObjectVersionModel(Base):
+    __tablename__ = "object_versions"
+    __table_args__ = (
+        UniqueConstraint("object_id", "version_no"),
+        Index("idx_object_versions_latest", "object_id", "is_latest", "version_no"),
+    )
+
+    object_version_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    object_id: Mapped[str] = mapped_column(
+        ForeignKey("objects.object_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    version_no: Mapped[int] = mapped_column(Integer, nullable=False)
+    provider_version_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    checksum_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    etag: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    is_latest: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = created_at_column()
+
+
 class DocumentModel(Base):
     __tablename__ = "documents"
     __table_args__ = (

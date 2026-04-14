@@ -7,7 +7,24 @@ import pytest
 from cortex_common import PaginationWindow, ValidationError, json_dumps, json_loads, load_settings
 from cortex_common.idempotency import normalize_idempotency_key
 from cortex_common.ids import new_prefixed_id
-from cortex_contracts import JobAccepted, JobStatus, JobType, PaginationEnvelope, ProblemDetails
+from cortex_contracts import (
+    AccessLevel as ContractAccessLevel,
+)
+from cortex_contracts import (
+    AccessPolicy as ContractAccessPolicy,
+)
+from cortex_contracts import (
+    AuditFields,
+    JobAccepted,
+    JobStatus,
+    JobType,
+    PaginationEnvelope,
+    ProblemDetails,
+    StorageObject,
+    StorageObjectStatus,
+    StorageUploadCreateRequest,
+    UploadMode,
+)
 from cortex_domain import (
     AccessLevel,
     DatasetRecord,
@@ -132,3 +149,34 @@ def test_telemetry_bootstrap_trace_context_and_metric_reuse() -> None:
 
 def test_decision_effect_enum_stability() -> None:
     assert DecisionEffect.ALLOW == "allow"
+
+
+def test_storage_contract_models_capture_upload_and_object_metadata() -> None:
+    create_request = StorageUploadCreateRequest(
+        filename="sample.pdf",
+        content_type="application/pdf",
+        size_bytes=1024,
+        metadata={"source": "user"},
+        tags=["finance"],
+        upload_mode=UploadMode.SINGLE_PART,
+        access_policy=ContractAccessPolicy(access_level=ContractAccessLevel.RESTRICTED),
+    )
+    storage_object = StorageObject(
+        object_id="obj_123",
+        filename="sample.pdf",
+        content_type="application/pdf",
+        size_bytes=1024,
+        status=StorageObjectStatus.AVAILABLE,
+        metadata={"source": "user"},
+        tags=["finance"],
+        access_policy=ContractAccessPolicy(access_level=ContractAccessLevel.RESTRICTED),
+        audit=AuditFields(
+            created_at=datetime(2026, 4, 13, 10, 0, tzinfo=UTC),
+            updated_at=datetime(2026, 4, 13, 10, 0, tzinfo=UTC),
+        ),
+    )
+
+    assert create_request.access_policy is not None
+    assert create_request.access_policy.access_level is ContractAccessLevel.RESTRICTED
+    assert storage_object.status is StorageObjectStatus.AVAILABLE
+    assert storage_object.tags == ["finance"]

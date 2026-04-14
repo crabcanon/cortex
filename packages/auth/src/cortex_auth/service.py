@@ -277,7 +277,36 @@ class AuthorizationService:
                 permission_key=permission_key,
             )
 
-        allow_roles = {str(value) for value in policy.get("allow_roles", [])}
+        owner_actor_id = policy.get("owner_actor_id")
+        if owner_actor_id and actor_id == str(owner_actor_id):
+            return AuthorizationDecision(
+                effect=DecisionEffect.ALLOW,
+                reason_code="resource_policy_owner",
+                permission_key=permission_key,
+            )
+
+        deny_roles = {
+            str(value)
+            for value in [
+                *policy.get("deny_roles", []),
+                *policy.get("denied_role_keys", []),
+            ]
+        }
+        if deny_roles and caller.roles.intersection(deny_roles):
+            return AuthorizationDecision(
+                effect=DecisionEffect.DENY,
+                reason_code="resource_policy_denied",
+                permission_key=permission_key,
+                required_permissions=(permission_key,),
+            )
+
+        allow_roles = {
+            str(value)
+            for value in [
+                *policy.get("allow_roles", []),
+                *policy.get("allowed_role_keys", []),
+            ]
+        }
         if allow_roles and caller.roles.intersection(allow_roles):
             return AuthorizationDecision(
                 effect=DecisionEffect.ALLOW,

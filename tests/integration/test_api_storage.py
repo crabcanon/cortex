@@ -1,0 +1,279 @@
+"""Integration tests for storage endpoints."""
+
+import base64
+import json
+import time
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any
+
+import pytest
+from cortex_api.main import create_app
+from cortex_common import load_settings
+from cortex_contracts import X_REQUEST_ID_HEADER, MultipartPartUpload, PresignedRequestDescriptor
+from cortex_db.cli import main as db_migrate_main
+from cortex_storage import StorageService
+from fastapi.testclient import TestClient
+
+
+def _case_db_path(name: str) -> Path:
+    root = Path("runtime-test-data")
+    root.mkdir(parents=True, exist_ok=True)
+    case_dir = root / f"{name}-{time.time_ns()}"
+    case_dir.mkdir(parents=True, exist_ok=True)
+    return case_dir / "cortex.db"
+
+
+def _sync_sqlite_url(db_path: Path) -> str:
+    return f"sqlite:///{db_path.as_posix()}"
+
+
+def _async_sqlite_url(db_path: Path) -> str:
+    return f"sqlite+aiosqlite:///{db_path.as_posix()}"
+
+
+def _dev_bearer_token(
+    *,
+    tenant_id: str,
+    actor_id: str,
+    scopes: list[str],
+    roles: list[str] | None = None,
+) -> str:
+    claims = {
+        "sub": actor_id,
+        "tenant_id": tenant_id,
+        "actor_id": actor_id,
+        "actor_ref": f"{actor_id}@example.com",
+        "scope": " ".join(scopes),
+        "roles": roles or [],
+    }
+    encoded = (
+        base64.urlsafe_b64encode(json.dumps(claims, separators=(",", ":")).encode("utf-8"))
+        .decode("ascii")
+        .rstrip("=")
+    )
+    return f"Bearer dev:{encoded}"
+
+
+class FakeObjectStoreClient:
+    def __init__(self) -> None:
+        self.buckets: set[str] = set()
+
+    def ensure_bucket(self, bucket_name: str) -> None:
+        self.buckets.add(bucket_name)
+
+    def create_single_part_upload(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+        content_type: str,
+        expires_in: int,
+    ) -> PresignedRequestDescriptor:
+        return PresignedRequestDescriptor(
+            method="PUT",
+            url=f"https://storage.test/{bucket_name}/{object_key}?expires={expires_in}",
+            headers={"Content-Type": content_type},
+        )
+
+    def create_multipart_upload(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+        content_type: str,
+        metadata: dict[str, str],
+    ) -> str:
+        self.buckets.add(bucket_name)
+        return "provider-upload-001"
+
+    def create_multipart_part_upload(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+        provider_upload_id: str,
+        part_number: int,
+        expires_in: int,
+    ) -> MultipartPartUpload:
+        return MultipartPartUpload(
+            part_number=part_number,
+            method="PUT",
+            url=(
+                f"https://storage.test/{bucket_name}/{object_key}"
+                f"?uploadId={provider_upload_id}&partNumber={part_number}&expires={expires_in}"
+            ),
+            headers={},
+        )
+
+    def complete_multipart_upload(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+        provider_upload_id: str,
+        parts: Sequence[dict[str, Any]],
+    ) -> dict[str, Any]:
+        return {
+            "ETag": f"etag-{provider_upload_id}-{len(parts)}",
+            "VersionId": "version-001",
+        }
+
+    def create_download_request(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+        disposition: str,
+        expires_in: int,
+    ) -> PresignedRequestDescriptor:
+        return PresignedRequestDescriptor(
+            method="GET",
+            url=(
+                f"https://storage.test/{bucket_name}/{object_key}"
+                f"?disposition={disposition}&expires={expires_in}"
+            ),
+            headers={},
+        )
+
+
+@contextmanager
+def _build_client(monkeypatch: pytest.MonkeyPatch, db_path: Path) -> Iterator[TestClient]:
+    monkeypatch.setenv("CORTEX_DB_DSN", _async_sqlite_url(db_path))
+    monkeypatch.setenv("CORTEX_AUTH_MODE", "dev")
+    monkeypatch.setenv("CORTEX_OTEL_ENABLED", "false")
+    load_settings.cache_clear()
+    app = create_app()
+    with TestClient(app) as client:
+        app.state.storage_service = StorageService(
+            app.state.settings.s3,
+            object_store=FakeObjectStoreClient(),
+        )
+        yield client
+    load_settings.cache_clear()
+
+
+def test_storage_single_part_round_trip(monkeypatch: pytest.MonkeyPatch) -> None:
+    db_path = _case_db_path("api-storage-single")
+    db_migrate_main(["upgrade", "head", "--db-url", _sync_sqlite_url(db_path)])
+    headers = {
+        "Authorization": _dev_bearer_token(
+            tenant_id="tenant_storage",
+            actor_id="alice",
+            scopes=["storage:write", "storage:read", "storage:download"],
+        )
+    }
+
+    with _build_client(monkeypatch, db_path) as client:
+        create_response = client.post(
+            "/v1/storage/uploads",
+            headers=headers,
+            json={
+                "filename": "sample.md",
+                "content_type": "text/markdown",
+                "size_bytes": 1024,
+                "metadata": {"source": "user"},
+                "tags": ["docs"],
+                "access_policy": {"access_level": "tenant_private"},
+            },
+        )
+        upload_id = create_response.json()["upload_id"]
+        object_id = create_response.json()["object_id"]
+        complete_response = client.post(
+            f"/v1/storage/uploads/{upload_id}/complete",
+            headers=headers,
+            json={},
+        )
+        object_response = client.get(f"/v1/storage/objects/{object_id}", headers=headers)
+        download_response = client.get(
+            f"/v1/storage/objects/{object_id}/download-url",
+            headers=headers,
+            params={"ttl_seconds": 300, "disposition": "attachment"},
+        )
+
+    assert create_response.status_code == 201
+    assert create_response.json()["upload_mode"] == "single_part"
+    assert create_response.json()["single_part"]["method"] == "PUT"
+    assert complete_response.status_code == 200
+    assert complete_response.json()["status"] == "available"
+    assert complete_response.json()["current_version_id"].startswith("objver_")
+    assert object_response.status_code == 200
+    assert object_response.json()["metadata"]["source"] == "user"
+    assert object_response.json()["tags"] == ["docs"]
+    assert download_response.status_code == 200
+    assert download_response.json()["method"] == "GET"
+    assert X_REQUEST_ID_HEADER in download_response.headers
+
+
+def test_large_upload_uses_multipart(monkeypatch: pytest.MonkeyPatch) -> None:
+    db_path = _case_db_path("api-storage-multipart")
+    db_migrate_main(["upgrade", "head", "--db-url", _sync_sqlite_url(db_path)])
+    headers = {
+        "Authorization": _dev_bearer_token(
+            tenant_id="tenant_storage",
+            actor_id="alice",
+            scopes=["storage:write"],
+        )
+    }
+
+    with _build_client(monkeypatch, db_path) as client:
+        response = client.post(
+            "/v1/storage/uploads",
+            headers=headers,
+            json={
+                "filename": "archive.bin",
+                "content_type": "application/octet-stream",
+                "size_bytes": 20_000_000,
+                "metadata": {"source": "batch"},
+            },
+        )
+
+    assert response.status_code == 201
+    assert response.json()["upload_mode"] == "multipart"
+    assert len(response.json()["multipart_parts"]) == 3
+
+
+def test_download_without_scope_returns_forbidden(monkeypatch: pytest.MonkeyPatch) -> None:
+    db_path = _case_db_path("api-storage-forbidden")
+    db_migrate_main(["upgrade", "head", "--db-url", _sync_sqlite_url(db_path)])
+    full_headers = {
+        "Authorization": _dev_bearer_token(
+            tenant_id="tenant_storage",
+            actor_id="alice",
+            scopes=["storage:write", "storage:read", "storage:download"],
+        )
+    }
+    limited_headers = {
+        "Authorization": _dev_bearer_token(
+            tenant_id="tenant_storage",
+            actor_id="alice",
+            scopes=["storage:read"],
+        )
+    }
+
+    with _build_client(monkeypatch, db_path) as client:
+        create_response = client.post(
+            "/v1/storage/uploads",
+            headers=full_headers,
+            json={
+                "filename": "secret.txt",
+                "content_type": "text/plain",
+                "size_bytes": 128,
+                "access_policy": {"access_level": "tenant_private"},
+            },
+        )
+        object_id = create_response.json()["object_id"]
+        client.post(
+            f"/v1/storage/uploads/{object_id}/complete",
+            headers=full_headers,
+            json={},
+        )
+        response = client.get(
+            f"/v1/storage/objects/{object_id}/download-url",
+            headers=limited_headers,
+        )
+
+    assert response.status_code == 403
+    assert response.json()["reason_code"] == "insufficient_scope"
+    assert response.json()["required_scopes"] == ["storage:download"]

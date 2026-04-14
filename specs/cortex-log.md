@@ -151,3 +151,43 @@
 - Cause: 这是 Storage/Parse/Knowledge 三条业务链路继续落地前必须先收敛的控制面底座。
 - Action: 新增/更新 `cortex_auth`、`cortex_contracts`、`cortex_domain`、`cortex_db`、`apps/api` 相关实现，并补充 `tests/integration/test_api_auth_jobs.py` 与扩展版 `tests/integration/test_db_foundation.py`。
 - Prevention: 下一阶段进入 Storage 时优先复用当前 `AuthorizationService`、`ProblemDetails`、request/trace middleware 与 Job DTO，不再重复发明一套控制面基础设施。
+
+### 2026-04-13 10:05:00 +08:00 | Phase F Started
+
+- Stage: `CTX-20260412-021 ~ CTX-20260412-024`, `CTX-20260413-004 ~ CTX-20260413-007`
+- Event: Started the Storage phase continuation, with the first focus on persistent upload-session representation, S3 abstraction, and API parity with `specs/cortex-api.yaml`.
+- Cause: Storage is the next dependency for Parse and Knowledge, and it needs to reuse the existing auth, telemetry, and ProblemDetails control-plane foundation rather than inventing a parallel path.
+- Action: Added a new task batch for Storage decomposition before coding and began reconciling `cortex-init.sql`, `cortex-api.yaml`, and the current `domain/contracts/db` surface.
+- Prevention: Keep the implementation ordered as persistence -> storage package -> API routes -> tests -> full verification so later Parse work can build on a stable object lifecycle.
+
+### 2026-04-13 10:11:00 +08:00 | Upload Session Persistence Gap
+
+- Stage: `CTX-20260413-004 ~ CTX-20260413-006`
+- Event: While implementing the Storage phase, `specs/cortex-api.yaml` required a durable upload-session lifecycle, but the current schema had no dedicated `upload_sessions` table.
+- Cause: The initial schema modeled `objects` and `object_versions`, but left upload-session persistence implicit even though the API needs resumable completion by `uploadId`.
+- Action: Bound `upload_id` to `object_id`, persisted pending session state under reserved object metadata (`__upload__`), and kept committed history in `object_versions`, which avoided in-memory session state and vendor-specific provider fields.
+- Prevention: Until a dedicated upload-session table is introduced, any code that looks up a pending upload must keep using the stable `upload_id == object_id` rule and reserved storage metadata keys for transient provider refs.
+
+### 2026-04-13 10:22:00 +08:00 | Storage Router Encoding And Annotation Cleanup
+
+- Stage: `CTX-20260413-006`
+- Event: The first storage router draft picked up mojibake in summary strings and failed lint with Ruff `B008` because one FastAPI query parameter still used a call-form default.
+- Cause: Bilingual route text was copied through the terminal with encoding noise, and the query metadata was declared as `Query(...)` directly in the default position.
+- Action: Rewrote the storage router with ASCII-safe summaries in code, moved the canonical bilingual wording back to `specs/cortex-api.yaml`, and switched query metadata to `Annotated[..., Query(...)]` form.
+- Prevention: Keep code-side route summaries shell-safe and let the spec remain the bilingual source of truth; for FastAPI params, prefer `Annotated` metadata to avoid repeating the same `B008` issue.
+
+### 2026-04-13 10:31:00 +08:00 | Storage Facade Protocol Boundary
+
+- Stage: `CTX-20260413-005`, `CTX-20260413-007`
+- Event: Pyright rejected the storage integration tests because `StorageService` accepted a concrete boto3-backed client type, which made the fake object-store test double fail structural checks.
+- Cause: The provider seam was initially typed as a concrete class rather than a protocol, even though the design goal is vendor-neutrality and easy substitution.
+- Action: Introduced `ObjectStoreClientProtocol`, updated `BucketResolver` and `StorageService` to depend on that protocol, and aligned the fake client method signatures to the protocol contract.
+- Prevention: All future provider adapters should be typed as protocols or abstract contracts so local tests, alternate clouds, and future parsers/search stores can be swapped without concrete SDK coupling.
+
+### 2026-04-13 10:38:00 +08:00 | Phase F Completed
+
+- Stage: `CTX-20260412-021 ~ CTX-20260412-024`, `CTX-20260413-004 ~ CTX-20260413-007`
+- Event: The Storage phase is now in place: object/version persistence, vendor-neutral S3 facade, upload-init and upload-complete lifecycle, download URL signing, FastAPI storage routes, and contract/integration coverage all landed and passed full validation.
+- Cause: Parse and Knowledge both depend on a stable object lifecycle, so Storage had to be finished before the next parser foundation stage could move safely.
+- Action: Implemented `cortex_storage`, expanded domain/contracts/DB models, wired `/v1/storage/*` endpoints into the API control plane, and reran the full repository check suite.
+- Prevention: The next phase can now reuse the object/version model, bucket resolution, auth/resource checks, and direct-to-storage upload pattern instead of rebuilding storage concerns inside Parse.

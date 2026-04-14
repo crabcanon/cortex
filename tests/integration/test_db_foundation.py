@@ -21,6 +21,8 @@ from cortex_domain import (
     JobStatus,
     JobType,
     ObjectRecord,
+    ObjectStatus,
+    ObjectVersionRecord,
     PermissionRecord,
     RolePermissionRecord,
     RoleRecord,
@@ -63,6 +65,7 @@ def test_baseline_migration_creates_expected_tables() -> None:
         "permissions",
         "storage_buckets",
         "objects",
+        "object_versions",
         "documents",
         "datasets",
         "jobs",
@@ -161,6 +164,17 @@ async def test_unit_of_work_and_repositories_round_trip() -> None:
                     content_type="text/markdown",
                     size_bytes=128,
                     access_level=AccessLevel.TENANT_SHARED,
+                    status=ObjectStatus.AVAILABLE,
+                )
+            )
+            object_version = await uow.object_versions.add(
+                ObjectVersionRecord(
+                    object_version_id="objver_001",
+                    object_id=stored_object.object_id,
+                    version_no=1,
+                    size_bytes=stored_object.size_bytes,
+                    checksum_sha256="a" * 64,
+                    etag="etag-001",
                 )
             )
             document = await uow.documents.add(
@@ -227,6 +241,7 @@ async def test_unit_of_work_and_repositories_round_trip() -> None:
             )
 
             assert stored_object.object_key == "docs/sample.md"
+            assert object_version.object_id == "obj_001"
             assert document.title == "Sample"
             assert dataset.dataset_key == "default"
             assert job.trace_id == "trace_001"
@@ -246,6 +261,7 @@ async def test_unit_of_work_and_repositories_round_trip() -> None:
             loaded_bucket = await uow.buckets.get_default("tenant_001")
             loaded_object = await uow.objects.get("obj_001")
             loaded_document = await uow.documents.get("doc_001")
+            loaded_object_version = await uow.object_versions.get_latest("obj_001")
             loaded_dataset = await uow.datasets.get_by_key("tenant_001", "default")
             loaded_job = await uow.jobs.get("job_001")
             loaded_permission = await uow.permissions.get("storage:download")
@@ -270,6 +286,8 @@ async def test_unit_of_work_and_repositories_round_trip() -> None:
             assert loaded_bucket.bucket_name == "cortex-alpha"
             assert loaded_object is not None
             assert loaded_object.access_level is AccessLevel.TENANT_SHARED
+            assert loaded_object_version is not None
+            assert loaded_object_version.version_no == 1
             assert loaded_document is not None
             assert loaded_document.audit["profile"] == "auto_default"
             assert loaded_dataset is not None

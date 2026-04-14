@@ -9,6 +9,7 @@ from .lifespan import lifespan
 from .middleware.request_context import request_context_middleware
 from .routers.health import router as health_router
 from .routers.jobs import router as jobs_router
+from .routers.storage import router as storage_router
 
 
 def create_app() -> FastAPI:
@@ -25,6 +26,7 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
     app.include_router(health_router)
     app.include_router(jobs_router)
+    app.include_router(storage_router)
     return app
 
 

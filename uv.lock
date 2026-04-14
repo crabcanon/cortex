@@ -240,6 +240,7 @@ dependencies = [
     { name = "cortex-contracts" },
     { name = "cortex-db" },
     { name = "cortex-observability" },
+    { name = "cortex-storage" },
     { name = "fastapi" },
     { name = "uvicorn" },
 ]
@@ -251,6 +252,7 @@ requires-dist = [
     { name = "cortex-contracts", editable = "packages/contracts" },
     { name = "cortex-db", editable = "packages/db" },
     { name = "cortex-observability", editable = "packages/observability" },
+    { name = "cortex-storage", editable = "packages/storage" },
     { name = "fastapi", specifier = ">=0.115,<1" },
     { name = "uvicorn", specifier = ">=0.35,<0.36" },
 ]
@@ -369,10 +371,22 @@ version = "0.1.0"
 source = { editable = "packages/storage" }
 dependencies = [
     { name = "boto3" },
+    { name = "cortex-common" },
+    { name = "cortex-contracts" },
+    { name = "cortex-db" },
+    { name = "cortex-domain" },
+    { name = "cortex-observability" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "boto3", specifier = ">=1.39,<2" }]
+requires-dist = [
+    { name = "boto3", specifier = ">=1.39,<2" },
+    { name = "cortex-common", editable = "packages/common" },
+    { name = "cortex-contracts", editable = "packages/contracts" },
+    { name = "cortex-db", editable = "packages/db" },
+    { name = "cortex-domain", editable = "packages/domain" },
+    { name = "cortex-observability", editable = "packages/observability" },
+]
 
 [[package]]
 name = "cortex-worker-knowledge"

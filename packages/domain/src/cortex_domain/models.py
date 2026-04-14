@@ -4,7 +4,14 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
-from .enums import AccessLevel, DecisionEffect, JobStatus, JobType, SourceType
+from .enums import (
+    AccessLevel,
+    DecisionEffect,
+    JobStatus,
+    JobType,
+    ObjectStatus,
+    SourceType,
+)
 
 
 @dataclass(slots=True)
@@ -47,9 +54,32 @@ class ObjectRecord:
     filename: str
     content_type: str
     size_bytes: int
+    checksum_sha256: str | None = None
+    etag: str | None = None
+    storage_class: str | None = None
+    source_uri: str | None = None
     access_level: AccessLevel = AccessLevel.TENANT_PRIVATE
     access_policy: dict[str, Any] = field(default_factory=dict)
+    status: ObjectStatus = ObjectStatus.AVAILABLE
     metadata: dict[str, Any] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
+    upload_state: dict[str, Any] = field(default_factory=dict)
+    created_by: str | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+@dataclass(slots=True)
+class ObjectVersionRecord:
+    object_version_id: str
+    object_id: str
+    version_no: int
+    size_bytes: int
+    provider_version_ref: str | None = None
+    checksum_sha256: str | None = None
+    etag: str | None = None
+    is_latest: bool = True
+    created_at: datetime | None = None
 
 
 @dataclass(slots=True)

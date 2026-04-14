@@ -18,6 +18,8 @@ from cortex_domain import (
     JobStatus,
     JobType,
     ObjectRecord,
+    ObjectStatus,
+    ObjectVersionRecord,
     PermissionRecord,
     RolePermissionRecord,
     RoleRecord,
@@ -25,7 +27,7 @@ from cortex_domain import (
     StorageBucketRecord,
     TenantRecord,
 )
-from sqlalchemy import desc, or_, select
+from sqlalchemy import desc, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import (
@@ -38,12 +40,16 @@ from .models import (
     JobEventModel,
     JobModel,
     ObjectModel,
+    ObjectVersionModel,
     PermissionModel,
     RoleModel,
     RolePermissionModel,
     StorageBucketModel,
     TenantModel,
 )
+
+_OBJECT_TAGS_KEY = "__tags__"
+_OBJECT_UPLOAD_STATE_KEY = "__upload__"
 
 
 def _json_object(value: dict[str, Any] | None) -> str:
@@ -154,7 +160,29 @@ def _bucket_from_model(model: StorageBucketModel) -> StorageBucketRecord:
     )
 
 
+def _serialize_object_metadata(record: ObjectRecord) -> str:
+    payload: dict[str, Any] = dict(record.metadata)
+    if record.tags:
+        payload[_OBJECT_TAGS_KEY] = list(record.tags)
+    if record.upload_state:
+        payload[_OBJECT_UPLOAD_STATE_KEY] = dict(record.upload_state)
+    return _json_object(payload)
+
+
+def _deserialize_object_payload(
+    model: ObjectModel,
+) -> tuple[dict[str, Any], list[str], dict[str, Any]]:
+    payload = _json_dict(model.metadata_json)
+    raw_tags = payload.pop(_OBJECT_TAGS_KEY, [])
+    tags = [str(value) for value in raw_tags] if isinstance(raw_tags, list) else []
+    upload_state = payload.pop(_OBJECT_UPLOAD_STATE_KEY, {})
+    if not isinstance(upload_state, dict):
+        upload_state = {}
+    return payload, tags, upload_state
+
+
 def _object_from_model(model: ObjectModel) -> ObjectRecord:
+    metadata, tags, upload_state = _deserialize_object_payload(model)
     return ObjectRecord(
         object_id=model.object_id,
         tenant_id=model.tenant_id,
@@ -163,9 +191,33 @@ def _object_from_model(model: ObjectModel) -> ObjectRecord:
         filename=model.filename,
         content_type=model.content_type,
         size_bytes=model.size_bytes,
+        checksum_sha256=model.checksum_sha256,
+        etag=model.etag,
+        storage_class=model.storage_class,
+        source_uri=model.source_uri,
         access_level=AccessLevel(model.access_level),
         access_policy=_json_dict(model.access_policy_json),
-        metadata=_json_dict(model.metadata_json),
+        status=ObjectStatus(model.status),
+        metadata=metadata,
+        tags=tags,
+        upload_state=upload_state,
+        created_by=model.created_by,
+        created_at=model.created_at,
+        updated_at=model.updated_at,
+    )
+
+
+def _object_version_from_model(model: ObjectVersionModel) -> ObjectVersionRecord:
+    return ObjectVersionRecord(
+        object_version_id=model.object_version_id,
+        object_id=model.object_id,
+        version_no=model.version_no,
+        provider_version_ref=model.provider_version_ref,
+        size_bytes=model.size_bytes,
+        checksum_sha256=model.checksum_sha256,
+        etag=model.etag,
+        is_latest=model.is_latest,
+        created_at=model.created_at,
     )
 
 
@@ -543,6 +595,16 @@ class StorageBucketRepository:
         model = await self._session.get(StorageBucketModel, bucket_id)
         return None if model is None else _bucket_from_model(model)
 
+    async def get_by_name(self, tenant_id: str, bucket_name: str) -> StorageBucketRecord | None:
+        result = await self._session.execute(
+            select(StorageBucketModel).where(
+                StorageBucketModel.tenant_id == tenant_id,
+                StorageBucketModel.bucket_name == bucket_name,
+            )
+        )
+        model = result.scalar_one_or_none()
+        return None if model is None else _bucket_from_model(model)
+
     async def get_default(self, tenant_id: str) -> StorageBucketRecord | None:
         result = await self._session.execute(
             select(StorageBucketModel).where(
@@ -567,10 +629,15 @@ class ObjectRepository:
             filename=record.filename,
             content_type=record.content_type,
             size_bytes=record.size_bytes,
+            checksum_sha256=record.checksum_sha256,
+            etag=record.etag,
+            storage_class=record.storage_class,
+            source_uri=record.source_uri,
             access_level=record.access_level.value,
             access_policy_json=_json_object(record.access_policy),
-            metadata_json=_json_object(record.metadata),
-            status="available",
+            metadata_json=_serialize_object_metadata(record),
+            status=record.status.value,
+            created_by=record.created_by,
         )
         self._session.add(model)
         await self._session.flush()
@@ -580,6 +647,28 @@ class ObjectRepository:
     async def get(self, object_id: str) -> ObjectRecord | None:
         model = await self._session.get(ObjectModel, object_id)
         return None if model is None else _object_from_model(model)
+
+    async def update(self, record: ObjectRecord) -> ObjectRecord | None:
+        model = await self._session.get(ObjectModel, record.object_id)
+        if model is None:
+            return None
+        model.bucket_id = record.bucket_id
+        model.object_key = record.object_key
+        model.filename = record.filename
+        model.content_type = record.content_type
+        model.size_bytes = record.size_bytes
+        model.checksum_sha256 = record.checksum_sha256
+        model.etag = record.etag
+        model.storage_class = record.storage_class
+        model.source_uri = record.source_uri
+        model.access_level = record.access_level.value
+        model.access_policy_json = _json_object(record.access_policy)
+        model.status = record.status.value
+        model.metadata_json = _serialize_object_metadata(record)
+        model.created_by = record.created_by
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _object_from_model(model)
 
     async def list_for_tenant(
         self,
@@ -595,6 +684,51 @@ class ObjectRepository:
             .limit(window.limit)
         )
         return [_object_from_model(model) for model in result.scalars().all()]
+
+
+class ObjectVersionRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: ObjectVersionRecord) -> ObjectVersionRecord:
+        if record.is_latest:
+            await self._session.execute(
+                update(ObjectVersionModel)
+                .where(ObjectVersionModel.object_id == record.object_id)
+                .values(is_latest=False)
+            )
+        model = ObjectVersionModel(
+            object_version_id=record.object_version_id,
+            object_id=record.object_id,
+            version_no=record.version_no,
+            provider_version_ref=record.provider_version_ref,
+            size_bytes=record.size_bytes,
+            checksum_sha256=record.checksum_sha256,
+            etag=record.etag,
+            is_latest=record.is_latest,
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _object_version_from_model(model)
+
+    async def get_latest(self, object_id: str) -> ObjectVersionRecord | None:
+        result = await self._session.execute(
+            select(ObjectVersionModel)
+            .where(ObjectVersionModel.object_id == object_id)
+            .order_by(ObjectVersionModel.version_no.desc())
+            .limit(1)
+        )
+        model = result.scalar_one_or_none()
+        return None if model is None else _object_version_from_model(model)
+
+    async def list_for_object(self, object_id: str) -> list[ObjectVersionRecord]:
+        result = await self._session.execute(
+            select(ObjectVersionModel)
+            .where(ObjectVersionModel.object_id == object_id)
+            .order_by(ObjectVersionModel.version_no.asc())
+        )
+        return [_object_version_from_model(model) for model in result.scalars().all()]
 
 
 class DocumentRepository:

@@ -10,6 +10,18 @@ class AccessLevel(StrEnum):
     CONFIDENTIAL = "confidential"
 
 
+class ObjectStatus(StrEnum):
+    PENDING_UPLOAD = "pending_upload"
+    AVAILABLE = "available"
+    ARCHIVED = "archived"
+    DELETED = "deleted"
+
+
+class UploadMode(StrEnum):
+    SINGLE_PART = "single_part"
+    MULTIPART = "multipart"
+
+
 class SourceType(StrEnum):
     URL = "url"
     OBJECT = "object"

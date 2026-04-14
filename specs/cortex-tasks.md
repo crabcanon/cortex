@@ -1,4 +1,4 @@
-# Cortex Development Tasks
+﻿# Cortex Development Tasks
 
 ## 1. 维护规则
 
@@ -67,10 +67,10 @@
 
 | Task ID | Added At | Priority | Area | Task | Depends On | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| CTX-20260412-021 | 2026-04-12 21:11:20 +08:00 | P0 | storage | 实现 `cortex_storage`：S3 client facade、bucket resolver、checksum 服务 | CTX-20260412-006, CTX-20260412-010, CTX-20260412-009 | planned |
-| CTX-20260412-022 | 2026-04-12 21:11:20 +08:00 | P0 | storage | 实现上传初始化 API 与 multipart / single-part 选择逻辑 | CTX-20260412-021, CTX-20260412-018 | planned |
-| CTX-20260412-023 | 2026-04-12 21:11:20 +08:00 | P0 | storage | 实现上传完成 API、对象元数据持久化与版本记录 | CTX-20260412-022, CTX-20260412-012 | planned |
-| CTX-20260412-024 | 2026-04-12 21:11:20 +08:00 | P0 | storage | 实现下载 URL 生成、TTL 控制与资源级授权校验 | CTX-20260412-016, CTX-20260412-023 | planned |
+| CTX-20260412-021 | 2026-04-12 21:11:20 +08:00 | P0 | storage | 实现 `cortex_storage`：S3 client facade、bucket resolver、checksum 服务 | CTX-20260412-006, CTX-20260412-010, CTX-20260412-009 | done |
+| CTX-20260412-022 | 2026-04-12 21:11:20 +08:00 | P0 | storage | 实现上传初始化 API 与 multipart / single-part 选择逻辑 | CTX-20260412-021, CTX-20260412-018 | done |
+| CTX-20260412-023 | 2026-04-12 21:11:20 +08:00 | P0 | storage | 实现上传完成 API、对象元数据持久化与版本记录 | CTX-20260412-022, CTX-20260412-012 | done |
+| CTX-20260412-024 | 2026-04-12 21:11:20 +08:00 | P0 | storage | 实现下载 URL 生成、TTL 控制与资源级授权校验 | CTX-20260412-016, CTX-20260412-023 | done |
 
 #### Phase G. Parse Foundation
 
@@ -131,3 +131,15 @@
 | CTX-20260413-001 | 2026-04-13 08:45:00 +08:00 | P0 | auth-db | 对齐 `cortex-init.sql` 中已有的权限治理表结构（`roles`、`role_permissions`、`actor_role_bindings`、`authorization_policies`、`job_events`）对应的 ORM 与 repository，补齐 Phase D/E 所需持久层能力 | CTX-20260412-011, CTX-20260412-012 | done |
 | CTX-20260413-002 | 2026-04-13 08:45:00 +08:00 | P0 | auth | 实现 caller context、token validator chain、scope guard、RBAC/ABAC evaluator 与授权决策审计，收敛 `CTX-20260412-014 ~ CTX-20260412-017` | CTX-20260413-001 | done |
 | CTX-20260413-003 | 2026-04-13 08:45:00 +08:00 | P0 | api | 实现 FastAPI middleware、exception handlers、`/v1/health/*`、`/v1/jobs/{jobId}`、`/v1/jobs/{jobId}/events`、`/v1/jobs/{jobId}/cancel` 及配套测试 | CTX-20260413-002 | done |
+
+### Batch 2026-04-13 10:05:00 +08:00 | Phase F Storage Continuation
+
+Goal: deliver the Storage phase end to end on top of the existing auth/API foundation, including object/version persistence, vendor-neutral S3 facade, upload session lifecycle, download signing, and matching FastAPI routes/tests.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260413-004 | 2026-04-13 10:05:00 +08:00 | P0 | storage-db | Align `objects` / `object_versions` domain, ORM, repository, and contract models so upload sessions and committed object versions can be represented without provider-specific fields leaking into the API | CTX-20260412-021, CTX-20260412-023 | done |
+| CTX-20260413-005 | 2026-04-13 10:05:00 +08:00 | P0 | storage | Implement `cortex_storage` core services: checksum helper, bucket resolver, S3 presign facade, upload-init strategy, upload-complete flow, and download URL signing | CTX-20260413-004 | done |
+| CTX-20260413-006 | 2026-04-13 10:05:00 +08:00 | P0 | api | Expose `/v1/storage/uploads`, `/v1/storage/uploads/{uploadId}/complete`, `/v1/storage/objects/{objectId}`, and `/v1/storage/objects/{objectId}/download-url` with functional + resource authorization and ProblemDetails parity | CTX-20260413-005 | done |
+| CTX-20260413-007 | 2026-04-13 10:05:00 +08:00 | P0 | testing | Add contract/integration coverage for storage DTOs, repository round-trips, upload session lifecycle, and download URL generation; finish with full lint/type/test validation and task/log closure | CTX-20260413-006 | done |
+

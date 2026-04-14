@@ -32,6 +32,21 @@ class S3Settings(_BaseEnvSettings):
     bucket: str = Field(default="cortex-local", alias="CORTEX_S3_BUCKET")
     access_key: str = Field(default="minioadmin", alias="CORTEX_S3_ACCESS_KEY")
     secret_key: str = Field(default="minioadmin", alias="CORTEX_S3_SECRET_KEY")
+    force_path_style: bool = Field(default=True, alias="CORTEX_S3_FORCE_PATH_STYLE")
+    auto_create_bucket: bool = Field(default=True, alias="CORTEX_S3_AUTO_CREATE_BUCKET")
+    upload_url_ttl_seconds: int = Field(default=3600, alias="CORTEX_S3_UPLOAD_URL_TTL_SECONDS")
+    download_max_ttl_seconds: int = Field(
+        default=86400,
+        alias="CORTEX_S3_DOWNLOAD_MAX_TTL_SECONDS",
+    )
+    multipart_threshold_bytes: int = Field(
+        default=16_777_216,
+        alias="CORTEX_S3_MULTIPART_THRESHOLD_BYTES",
+    )
+    default_part_size_bytes: int = Field(
+        default=8_388_608,
+        alias="CORTEX_S3_DEFAULT_PART_SIZE_BYTES",
+    )
 
 
 class QueueSettings(_BaseEnvSettings):

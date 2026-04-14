@@ -5,6 +5,11 @@ description = "Storage services for Cortex."
 requires-python = ">=3.12,<3.14"
 dependencies = [
   "boto3>=1.39,<2",
+  "cortex-common",
+  "cortex-contracts",
+  "cortex-db",
+  "cortex-domain",
+  "cortex-observability",
 ]
 
 [build-system]

@@ -7,6 +7,7 @@ from cortex_auth import AuthorizationService
 from cortex_common import load_settings
 from cortex_db import create_database_engine, create_session_factory
 from cortex_observability import configure_telemetry, install_logging_correlation
+from cortex_storage import StorageService
 from fastapi import FastAPI
 
 
@@ -18,6 +19,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     engine = create_database_engine(settings.database.dsn)
     session_factory = create_session_factory(engine)
     auth_service = AuthorizationService(settings.auth)
+    storage_service = StorageService(settings.s3)
     logger = install_logging_correlation()
 
     app.state.settings = settings
@@ -25,6 +27,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.db_engine = engine
     app.state.session_factory = session_factory
     app.state.auth_service = auth_service
+    app.state.storage_service = storage_service
     app.state.logger = logger
 
     try:

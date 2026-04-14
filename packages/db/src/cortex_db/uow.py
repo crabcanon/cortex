@@ -13,6 +13,7 @@ from .repositories import (
     JobEventRepository,
     JobRepository,
     ObjectRepository,
+    ObjectVersionRepository,
     PermissionRepository,
     RolePermissionRepository,
     RoleRepository,
@@ -94,6 +95,10 @@ class CortexUnitOfWork:
     @property
     def objects(self) -> ObjectRepository:
         return ObjectRepository(self._require_session())
+
+    @property
+    def object_versions(self) -> ObjectVersionRepository:
+        return ObjectVersionRepository(self._require_session())
 
     @property
     def documents(self) -> DocumentRepository:

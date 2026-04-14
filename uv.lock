@@ -364,6 +364,26 @@ requires-dist = [
 name = "cortex-parse"
 version = "0.1.0"
 source = { editable = "packages/parse" }
+dependencies = [
+    { name = "cortex-common" },
+    { name = "cortex-contracts" },
+    { name = "cortex-db" },
+    { name = "cortex-domain" },
+    { name = "cortex-observability" },
+    { name = "cortex-storage" },
+    { name = "pyyaml" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "cortex-common", editable = "packages/common" },
+    { name = "cortex-contracts", editable = "packages/contracts" },
+    { name = "cortex-db", editable = "packages/db" },
+    { name = "cortex-domain", editable = "packages/domain" },
+    { name = "cortex-observability", editable = "packages/observability" },
+    { name = "cortex-storage", editable = "packages/storage" },
+    { name = "pyyaml", specifier = ">=6.0,<7" },
+]
 
 [[package]]
 name = "cortex-storage"

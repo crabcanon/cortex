@@ -1,0 +1,22 @@
+profile_ref: auto_default
+display_name: Auto Default
+description: Default ordered-fallback profile for general URL and URI parsing.
+routing_mode: ordered_fallback
+preferred_engine_key:
+allowed_engines: []
+normalization_defaults:
+  schema_version: cortex.parse.v1
+  normalize_markdown: true
+  normalize_metadata: true
+  infer_title: true
+  infer_language: true
+  include_page_metadata: true
+  preserve_source_blocks: false
+  deduplicate_whitespace: true
+fallback_policy:
+  enabled: true
+  mode: ordered
+  on_error: try_next
+  max_engine_attempts: 3
+source_constraints: {}
+engine_overrides: {}

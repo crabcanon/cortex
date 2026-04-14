@@ -229,3 +229,15 @@ Goal: tighten runtime API parity with `specs/cortex-api.yaml` by filling the dec
 | CTX-20260414-029 | 2026-04-14 22:16:28 +08:00 | P0 | testing | Add OpenAPI contract tests that load `specs/cortex-api.yaml`, compare runtime paths/operations and selected schema metadata, and cover the new `/metrics` endpoint behavior | CTX-20260412-045, CTX-20260414-028 | done |
 | CTX-20260414-030 | 2026-04-14 22:16:28 +08:00 | P0 | validation | Run focused and full validation for the OpenAPI parity slice, fix contract drift discovered during the check, and update task/log history with any failures and mitigations | CTX-20260414-029 | done |
 
+### Batch 2026-04-14 22:41:12 +08:00 | Phase K Docker Integration Continuation
+
+Goal: add a vendor-neutral local dependency stack plus docker-backed integration coverage for PostgreSQL, MinIO, and the DB-backed worker flows so the current REST contract is validated against real infrastructure boundaries, not only SQLite and in-memory fakes.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260414-031 | 2026-04-14 22:41:12 +08:00 | P0 | devops | Add a local Docker Compose stack and operator runbook for PostgreSQL, MinIO, Redis, OTel Collector, Jaeger, Prometheus, and Grafana so Cortex can be validated against the documented portable infrastructure baseline | CTX-20260412-049, CTX-20260414-030 | done |
+| CTX-20260414-032 | 2026-04-14 22:41:12 +08:00 | P0 | testing | Add docker-backed PostgreSQL integration coverage for baseline migration and repository/unit-of-work behavior, using isolated temporary databases to keep tests repeatable | CTX-20260412-046, CTX-20260414-031 | blocked |
+| CTX-20260414-033 | 2026-04-14 22:41:12 +08:00 | P0 | testing | Add docker-backed MinIO storage integration coverage that exercises presigned upload/download behavior through the real S3-compatible client implementation | CTX-20260412-046, CTX-20260414-031 | blocked |
+| CTX-20260414-034 | 2026-04-14 22:41:12 +08:00 | P0 | testing | Add docker-backed Parse and Knowledge worker integration coverage on PostgreSQL so queued job execution is validated against the real SQL backend used as the portable queue boundary | CTX-20260412-046, CTX-20260414-032 | blocked |
+| CTX-20260414-035 | 2026-04-14 22:41:12 +08:00 | P0 | validation | Run focused docker-backed validation plus the repository-wide lint/type/test suite, then update task/log history with any environment or contract issues uncovered during the stack-backed run | CTX-20260414-033, CTX-20260414-034 | blocked |
+

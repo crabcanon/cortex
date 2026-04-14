@@ -407,3 +407,35 @@
 - Cause: The project needed a stronger contract boundary before moving deeper into later delivery phases such as broader integration, end-to-end workflows, and CI automation.
 - Action: Added the observability router and Prometheus payload helper, aligned FastAPI route paths/operation IDs/summaries/version metadata, introduced contract coverage for paths and schemas, fixed the schema drifts revealed by the new tests, and reran `scripts/dev/check.ps1` successfully with `44 passed`.
 - Prevention: Keep the new OpenAPI contract tests in the default validation path and update them alongside any future REST contract change so runtime behavior and `cortex-api.yaml` continue to move in lockstep.
+
+### 2026-04-14 22:41:12 +08:00 | Docker Integration Continuation Started
+
+- Stage: `CTX-20260412-046`, `CTX-20260412-049`, `CTX-20260414-031 ~ CTX-20260414-035`
+- Event: Started the next Phase K slice, focusing on a local Docker dependency stack plus docker-backed integration coverage for PostgreSQL, MinIO, and the DB-backed Parse/Knowledge worker flows.
+- Cause: The current test suite already validates the control plane heavily with SQLite and fake providers, but the next confidence gap is the real infrastructure boundary described in the specs: PostgreSQL for portable SQL execution and MinIO for S3-compatible storage behavior.
+- Action: Added a dedicated task batch before coding and scoped the work to local compose orchestration, docker-backed integration helpers, and focused validation outside the default lightweight repository test path.
+- Prevention: Keep stack-backed tests opt-in but first-class, so day-to-day validation stays fast while real dependency coverage remains easy to run before larger delivery milestones and CI expansion.
+
+### 2026-04-14 22:50:30 +08:00 | Local Stack Definition Added
+
+- Stage: `CTX-20260414-031`
+- Event: Added a local compose stack, Prometheus scrape config, Grafana datasource provisioning, stack lifecycle PowerShell helpers, and a dedicated docker-backed integration test module for PostgreSQL + MinIO + worker flows.
+- Cause: The repository already had OTLP and observability specs, but no runnable local infrastructure bundle or real dependency tests to exercise those boundaries.
+- Action: Added `compose.local.yaml`, `scripts/dev/stack.ps1`, `scripts/dev/check-runtime-stack.ps1`, local Prometheus/Grafana config, updated `tests/integration/README.md`, registered a `runtime_stack` pytest marker, and added `tests/integration/test_runtime_stack.py`.
+- Prevention: Keep heavy integration tests behind a stable marker and helper scripts so the stack can be invoked consistently without slowing the default inner loop.
+
+### 2026-04-14 22:54:40 +08:00 | Docker Daemon Access Blocked
+
+- Stage: `CTX-20260414-032 ~ CTX-20260414-035`
+- Event: `docker compose -f compose.local.yaml config` succeeded, but both `scripts/dev/stack.ps1 ps` and direct Docker commands failed to reach the daemon with `open //./pipe/docker_engine` while `com.docker.service` was stopped; an attempted `Start-Service com.docker.service` also failed because the service could not be opened from this session.
+- Cause: The local Docker Desktop client binaries are present, but the Windows Docker service is not available to the current process context, so containers cannot be started from the workspace shell.
+- Action: Kept the compose and runtime-test assets in place, verified the stack file renders correctly, ran static lint/type validation plus the default repository suite, and marked the docker-backed execution tasks as `blocked` pending a working daemon.
+- Prevention: Before rerunning the runtime-stack slice, confirm Docker Desktop is fully started and the current shell can reach the daemon; once `docker compose ps` succeeds, rerun `powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 up` followed by `scripts\dev\check-runtime-stack.ps1`.
+
+### 2026-04-14 22:56:10 +08:00 | Docker Integration Slice Partially Validated
+
+- Stage: `CTX-20260414-031 ~ CTX-20260414-035`
+- Event: The code path for the local stack slice passed repository validation, and the new runtime-stack test module was successfully linted, type-checked, and skipped by default in the full suite, but the real docker-backed execution remains blocked by the daemon issue above.
+- Cause: Static and default test validation can proceed without containers, while the actual PostgreSQL/MinIO execution path requires a reachable Docker runtime.
+- Action: Ran Ruff and Pyright on `tests/integration/test_runtime_stack.py`, verified `docker compose config`, and reran `scripts/dev/check.ps1` successfully with `44 passed, 1 skipped`.
+- Prevention: Keep the runtime-stack tests opt-in until CI or the local environment can guarantee Docker availability, then promote the blocked tasks to done after one successful end-to-end stack-backed run.

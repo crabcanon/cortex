@@ -87,7 +87,7 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | CTX-20260412-029 | 2026-04-12 21:11:20 +08:00 | P0 | parse-adapter | 实现 Crawl4AI adapter，覆盖 profile、advanced features 与 artifact 输出 | CTX-20260412-026 | in_progress |
 | CTX-20260412-030 | 2026-04-12 21:11:20 +08:00 | P1 | parse-adapter | 实现 Jina Reader adapter，覆盖 markdown / metadata 快速提取 | CTX-20260412-026 | done |
-| CTX-20260412-031 | 2026-04-12 21:11:20 +08:00 | P1 | parse-adapter | 实现 LlamaParse adapter，覆盖高保真文档解析输出映射 | CTX-20260412-026 | planned |
+| CTX-20260412-031 | 2026-04-12 21:11:20 +08:00 | P1 | parse-adapter | 实现 LlamaParse adapter，覆盖高保真文档解析输出映射 | CTX-20260412-026 | done |
 | CTX-20260412-032 | 2026-04-12 21:11:20 +08:00 | P1 | parse-adapter | 实现 MarkItDown adapter，作为本地轻量文件 fallback | CTX-20260412-026 | done |
 | CTX-20260412-033 | 2026-04-12 21:11:20 +08:00 | P1 | parse-adapter | 实现 Docling adapter，覆盖结构化文档与 OCR 场景 | CTX-20260412-026 | done |
 
@@ -185,4 +185,13 @@ Goal: harden the DB-backed Parse Worker queue boundary with retry attempts, hear
 | CTX-20260414-013 | 2026-04-14 20:25:08 +08:00 | P0 | parse-worker | Enforce parse worker execution timeouts and retry-or-fail transitions with job events and queryable metadata | CTX-20260414-012 | done |
 | CTX-20260414-014 | 2026-04-14 20:25:08 +08:00 | P1 | parse-adapter | Begin the remaining adapter backlog after worker hardening by adding vendor-neutral optional adapter scaffolding for Jina Reader, MarkItDown, and Docling | CTX-20260414-013 | done |
 | CTX-20260414-015 | 2026-04-14 20:25:08 +08:00 | P0 | testing | Add focused reliability tests for retry, heartbeat, stale lease, and timeout behavior, then run full repository validation and close the batch | CTX-20260414-012, CTX-20260414-013 | done |
+
+### Batch 2026-04-14 21:04:41 +08:00 | Phase H LlamaParse Adapter Continuation
+
+Goal: complete the remaining high-fidelity document parser slot with an optional LlamaParse adapter, preserving the existing vendor-neutral engine protocol and configuration-template approach.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260414-016 | 2026-04-14 21:04:41 +08:00 | P1 | parse-adapter | Implement an optional LlamaParse adapter with API-key/env validation, high-fidelity Markdown mapping, source metadata normalization, and bootstrap registration when available | CTX-20260412-031, CTX-20260414-014 | done |
+| CTX-20260414-017 | 2026-04-14 21:04:41 +08:00 | P1 | testing | Add focused LlamaParse adapter tests using a fake parser implementation, then run focused and full repository validation | CTX-20260414-016 | done |
 

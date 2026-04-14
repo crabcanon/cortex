@@ -295,3 +295,19 @@
 - Cause: Async Parse needed failure handling before broader adapter diversity increased error and timeout scenarios; the adapter backlog also needed a vendor-neutral optional-dependency pattern beyond Crawl4AI.
 - Action: Extended job repository operations, added queue state management in `ParseJobControlService`, hardened `ParseWorker.run_once`, added adapter implementations and tests, and verified retry, timeout, stale lease recovery, and adapter conversion behavior.
 - Prevention: LlamaParse remains the main parse adapter gap; before adding it, reuse the same optional-adapter pattern and add API-key/config validation tests so cloud-only parser behavior does not leak provider-specific assumptions into the core contracts.
+
+### 2026-04-14 21:04:41 +08:00 | LlamaParse Adapter Started
+
+- Stage: `CTX-20260412-031`, `CTX-20260414-016 ~ CTX-20260414-017`
+- Event: Started the LlamaParse adapter continuation to fill the remaining high-fidelity document parsing slot in Phase H.
+- Cause: Crawl4AI, Jina Reader, MarkItDown, and Docling are now covered; LlamaParse remains the last planned parser engine before the implementation can move cleanly into Knowledge/Cognee work.
+- Action: Added a focused task batch and selected the same optional-dependency adapter pattern used by MarkItDown and Docling, with explicit API-key validation for the remote parser boundary.
+- Prevention: Keep LlamaParse-specific API keys and parser kwargs inside `engine_options` / environment handling, never in core request contracts or domain persistence fields.
+
+### 2026-04-14 21:07:55 +08:00 | LlamaParse Adapter Completed
+
+- Stage: `CTX-20260412-031`, `CTX-20260414-016 ~ CTX-20260414-017`
+- Event: The optional LlamaParse adapter is complete and registered through the parse bootstrap when the provider SDK is installed.
+- Cause: Phase H still had one planned high-fidelity remote document parser, and completing it removes the last adapter backlog item except for deeper Crawl4AI artifact storage enhancement.
+- Action: Added `LlamaParseEngine`, API-key/env validation, async/sync loader compatibility, multi-document Markdown merge, metadata/title normalization, focused fake-parser tests, and a full repository validation run.
+- Prevention: Any future provider-specific LlamaParse options should stay in `engine_options.llama_parse` and continue to be covered with fake SDK tests before live-provider tests are introduced.

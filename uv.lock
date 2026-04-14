@@ -240,6 +240,7 @@ dependencies = [
     { name = "cortex-contracts" },
     { name = "cortex-db" },
     { name = "cortex-observability" },
+    { name = "cortex-parse" },
     { name = "cortex-storage" },
     { name = "fastapi" },
     { name = "uvicorn" },
@@ -252,6 +253,7 @@ requires-dist = [
     { name = "cortex-contracts", editable = "packages/contracts" },
     { name = "cortex-db", editable = "packages/db" },
     { name = "cortex-observability", editable = "packages/observability" },
+    { name = "cortex-parse", editable = "packages/parse" },
     { name = "cortex-storage", editable = "packages/storage" },
     { name = "fastapi", specifier = ">=0.115,<1" },
     { name = "uvicorn", specifier = ">=0.35,<0.36" },
@@ -371,6 +373,7 @@ dependencies = [
     { name = "cortex-domain" },
     { name = "cortex-observability" },
     { name = "cortex-storage" },
+    { name = "httpx" },
     { name = "pyyaml" },
 ]
 
@@ -382,6 +385,7 @@ requires-dist = [
     { name = "cortex-domain", editable = "packages/domain" },
     { name = "cortex-observability", editable = "packages/observability" },
     { name = "cortex-storage", editable = "packages/storage" },
+    { name = "httpx", specifier = ">=0.28,<0.29" },
     { name = "pyyaml", specifier = ">=6.0,<7" },
 ]
 
@@ -417,6 +421,22 @@ source = { editable = "workers/knowledge-worker" }
 name = "cortex-worker-parse"
 version = "0.1.0"
 source = { editable = "workers/parse-worker" }
+dependencies = [
+    { name = "cortex-common" },
+    { name = "cortex-contracts" },
+    { name = "cortex-db" },
+    { name = "cortex-domain" },
+    { name = "cortex-parse" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "cortex-common", editable = "packages/common" },
+    { name = "cortex-contracts", editable = "packages/contracts" },
+    { name = "cortex-db", editable = "packages/db" },
+    { name = "cortex-domain", editable = "packages/domain" },
+    { name = "cortex-parse", editable = "packages/parse" },
+]
 
 [[package]]
 name = "cortex-workspace"

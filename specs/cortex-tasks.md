@@ -116,7 +116,7 @@
 | Task ID | Added At | Priority | Area | Task | Depends On | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | CTX-20260412-044 | 2026-04-12 21:11:20 +08:00 | P0 | testing | 为 `common`、`auth`、`storage`、`parse`、`knowledge` 增加单元测试 | CTX-20260412-021, CTX-20260412-042 | planned |
-| CTX-20260412-045 | 2026-04-12 21:11:20 +08:00 | P0 | testing | 增加 OpenAPI contract tests，校验 DTO 与 `cortex-api.yaml` 一致 | CTX-20260412-007, CTX-20260412-034, CTX-20260412-038 | planned |
+| CTX-20260412-045 | 2026-04-12 21:11:20 +08:00 | P0 | testing | 增加 OpenAPI contract tests，校验 DTO 与 `cortex-api.yaml` 一致 | CTX-20260412-007, CTX-20260412-034, CTX-20260412-038 | done |
 | CTX-20260412-046 | 2026-04-12 21:11:20 +08:00 | P0 | testing | 增加集成测试：SQLite/PostgreSQL、S3 兼容存储、队列、Worker | CTX-20260412-036, CTX-20260412-043 | planned |
 | CTX-20260412-047 | 2026-04-12 21:11:20 +08:00 | P1 | testing | 增加端到端主链路测试：upload -> parse -> add -> search | CTX-20260412-046 | planned |
 | CTX-20260412-048 | 2026-04-12 21:11:20 +08:00 | P0 | ci | 建立 CI pipeline：`uv sync`、lint、types、tests、OpenAPI/YAML 校验 | CTX-20260412-004, CTX-20260412-045 | planned |
@@ -217,4 +217,15 @@ Goal: extend the knowledge foundation into queued Add/Cognify/Memify execution p
 | CTX-20260414-024 | 2026-04-14 21:49:29 +08:00 | P0 | knowledge-api | Expose `/v1/knowledge/add/jobs`, `/v1/knowledge/cognify/jobs`, `/v1/knowledge/memify/jobs`, and `/v1/knowledge/search` with functional and dataset-level authorization | CTX-20260414-022, CTX-20260414-023 | done |
 | CTX-20260414-025 | 2026-04-14 21:49:29 +08:00 | P0 | knowledge-worker | Replace the placeholder knowledge worker with a `run_once` execution loop for Add/Cognify/Memify jobs, including status transitions, knowledge run updates, and job events | CTX-20260412-043, CTX-20260414-022 | done |
 | CTX-20260414-026 | 2026-04-14 21:49:29 +08:00 | P0 | testing | Add focused contract/integration coverage for knowledge job submission, worker execution, search, and persisted run/search audit trails, then rerun full repository validation and update task/log history | CTX-20260414-024, CTX-20260414-025 | done |
+
+### Batch 2026-04-14 22:16:28 +08:00 | Phase K OpenAPI Contract Continuation
+
+Goal: tighten runtime API parity with `specs/cortex-api.yaml` by filling the declared observability endpoint, aligning route metadata/path parameters with the published contract, and adding automated OpenAPI contract checks.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260414-027 | 2026-04-14 22:16:28 +08:00 | P0 | observability-api | Expose `/metrics` as a Prometheus-compatible plaintext endpoint and register the Observability surface in the FastAPI app so the runtime covers the documented telemetry contract baseline | CTX-20260412-018, CTX-20260412-019 | done |
+| CTX-20260414-028 | 2026-04-14 22:16:28 +08:00 | P0 | api-contract | Align implemented route paths, path-parameter naming, operation IDs, summaries, and top-level OpenAPI metadata with the published `cortex-api.yaml` contract for the currently supported REST surface | CTX-20260414-027, CTX-20260412-034, CTX-20260412-024, CTX-20260414-024 | done |
+| CTX-20260414-029 | 2026-04-14 22:16:28 +08:00 | P0 | testing | Add OpenAPI contract tests that load `specs/cortex-api.yaml`, compare runtime paths/operations and selected schema metadata, and cover the new `/metrics` endpoint behavior | CTX-20260412-045, CTX-20260414-028 | done |
+| CTX-20260414-030 | 2026-04-14 22:16:28 +08:00 | P0 | validation | Run focused and full validation for the OpenAPI parity slice, fix contract drift discovered during the check, and update task/log history with any failures and mitigations | CTX-20260414-029 | done |
 

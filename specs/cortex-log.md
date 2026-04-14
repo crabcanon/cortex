@@ -367,3 +367,43 @@
 - Cause: The project needed the actual execution backbone behind the Knowledge APIs so datasets can move from control-plane metadata into ingest, graph enrichment, and retrieval flows.
 - Action: Expanded contracts/domain/ORM/UoW layers for `knowledge_runs` and search audit entities, implemented knowledge job control and execution/search services, exposed `/v1/knowledge/add/jobs`, `/v1/knowledge/cognify/jobs`, `/v1/knowledge/memify/jobs`, and `/v1/knowledge/search`, replaced the worker placeholder with a real poll/execute/heartbeat loop, added contract/integration coverage, and reran `scripts/dev/check.ps1` successfully.
 - Prevention: The next Knowledge slice can build on this worker/job/search substrate for richer retry policy, deeper runtime adapters, and broader end-to-end flows without changing the REST contract or persistence model.
+
+### 2026-04-14 22:16:28 +08:00 | OpenAPI Contract Continuation Started
+
+- Stage: `CTX-20260412-045`, `CTX-20260414-027 ~ CTX-20260414-030`
+- Event: Started the OpenAPI parity continuation, focusing on the missing `/metrics` endpoint, runtime route metadata drift, and automated contract tests against `specs/cortex-api.yaml`.
+- Cause: The implemented REST surface had already covered most business flows, but the published API contract still had parity gaps in observability coverage, path-parameter naming, operation metadata, and DTO schema shape verification.
+- Action: Added a dedicated Phase K batch to `specs/cortex-tasks.md` before coding and scoped the work to observability routing, OpenAPI metadata alignment, schema contract testing, and full validation closure.
+- Prevention: Keep every new API slice tied to a task batch plus contract tests so runtime drift is detected before more routes or workers are added.
+
+### 2026-04-14 22:22:10 +08:00 | Recurrent UV Managed Python Access Failure
+
+- Stage: `CTX-20260414-029 ~ CTX-20260414-030`
+- Event: A direct `uv run --all-packages ...` validation command failed again with `Failed to read Python installation directory: C:\Users\hy\AppData\Roaming\uv\python` and `os error 5`.
+- Cause: This is a recurrence of the earlier managed-Python discovery problem recorded on `2026-04-12 21:38:00 +08:00` and `2026-04-13 09:03:00 +08:00`; on this Windows environment, ad hoc `uv run` still sometimes probes the user-scoped managed Python directory before stabilizing on the workspace environment.
+- Action: Switched the focused lint/type/test commands to the repository-local `.venv\\Scripts\\ruff.exe`, `.venv\\Scripts\\pyright.exe`, and `.venv\\Scripts\\pytest.exe` entrypoints, then kept the final all-in-one verification on `scripts/dev/check.ps1`.
+- Prevention: For manual focused checks in this repository, prefer the workspace `.venv` executables over ad hoc `uv run`; reserve `scripts/dev/check.ps1` for the final repository-wide validation pass.
+
+### 2026-04-14 22:29:40 +08:00 | OpenAPI Schema Drift Exposed By Contract Tests
+
+- Stage: `CTX-20260412-045`, `CTX-20260414-028 ~ CTX-20260414-030`
+- Event: The first OpenAPI contract test pass surfaced several DTO/schema mismatches: `JobAccepted` returned top-level `request_id` and `trace_id` while the spec required nested `telemetry`, `StorageUploadSession.status` and `DownloadUrlResponse.method` were optional in generated schemas, `AddJobRequest.inputs` was not required, and `SearchResponse.context_items` plus `latency_ms` were modeled as optional defaults.
+- Cause: Earlier feature slices optimized for runtime flow delivery and Pydantic convenience defaults, but those defaults made fields optional in generated JSON Schema even where `cortex-api.yaml` marked them as required.
+- Action: Aligned the contract models with the published schema, updated Parse/Knowledge job acceptance payloads to emit `TelemetryContext`, and kept the runtime response shapes synchronized with the spec instead of weakening the contract test.
+- Prevention: When introducing or revising contract DTOs, check whether a default value changes required-field semantics in the generated schema; if the OpenAPI document declares a field as required, avoid defaulting it in the Pydantic model unless the spec is updated in the same slice.
+
+### 2026-04-14 22:34:55 +08:00 | OpenAPI Contract Test Resolver Gap
+
+- Stage: `CTX-20260414-029`
+- Event: The first schema-signature comparison treated documented `allOf` and `$ref` combinations as empty objects, which produced false negatives on composed schemas such as `ParseJobRequest`.
+- Cause: The initial test helper compared only the top-level keys in each schema object and did not resolve OpenAPI composition primitives before extracting required fields and property names.
+- Action: Added a small documented-schema resolver in `tests/contract/test_openapi_contract.py` that resolves local component `$ref` values and merges `allOf` object definitions before comparing signatures.
+- Prevention: Future contract tests should normalize composed OpenAPI schemas before asserting parity so the test remains resilient as the spec uses more reuse and composition.
+
+### 2026-04-14 22:38:00 +08:00 | OpenAPI Contract Continuation Completed
+
+- Stage: `CTX-20260412-045`, `CTX-20260414-027 ~ CTX-20260414-030`
+- Event: The OpenAPI parity slice is complete: `/metrics` is implemented, runtime route metadata now matches the published path and operation contract, selected DTO schemas are checked against `specs/cortex-api.yaml`, and both focused and full validation passed.
+- Cause: The project needed a stronger contract boundary before moving deeper into later delivery phases such as broader integration, end-to-end workflows, and CI automation.
+- Action: Added the observability router and Prometheus payload helper, aligned FastAPI route paths/operation IDs/summaries/version metadata, introduced contract coverage for paths and schemas, fixed the schema drifts revealed by the new tests, and reran `scripts/dev/check.ps1` successfully with `44 passed`.
+- Prevention: Keep the new OpenAPI contract tests in the default validation path and update them alongside any future REST contract change so runtime behavior and `cortex-api.yaml` continue to move in lockstep.

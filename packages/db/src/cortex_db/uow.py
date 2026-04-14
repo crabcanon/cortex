@@ -9,11 +9,18 @@ from .repositories import (
     AuthorizationDecisionRepository,
     AuthorizationPolicyRepository,
     DatasetRepository,
+    DocumentArtifactRepository,
+    DocumentChunkRepository,
     DocumentRepository,
+    DocumentTagRepository,
     JobEventRepository,
     JobRepository,
     ObjectRepository,
     ObjectVersionRepository,
+    ParserEngineRepository,
+    ParserProfileRepository,
+    ParseRunAttemptRepository,
+    ParseRunRepository,
     PermissionRepository,
     RolePermissionRepository,
     RoleRepository,
@@ -93,6 +100,14 @@ class CortexUnitOfWork:
         return StorageBucketRepository(self._require_session())
 
     @property
+    def parser_engines(self) -> ParserEngineRepository:
+        return ParserEngineRepository(self._require_session())
+
+    @property
+    def parser_profiles(self) -> ParserProfileRepository:
+        return ParserProfileRepository(self._require_session())
+
+    @property
     def objects(self) -> ObjectRepository:
         return ObjectRepository(self._require_session())
 
@@ -105,6 +120,18 @@ class CortexUnitOfWork:
         return DocumentRepository(self._require_session())
 
     @property
+    def document_artifacts(self) -> DocumentArtifactRepository:
+        return DocumentArtifactRepository(self._require_session())
+
+    @property
+    def document_tags(self) -> DocumentTagRepository:
+        return DocumentTagRepository(self._require_session())
+
+    @property
+    def document_chunks(self) -> DocumentChunkRepository:
+        return DocumentChunkRepository(self._require_session())
+
+    @property
     def datasets(self) -> DatasetRepository:
         return DatasetRepository(self._require_session())
 
@@ -115,6 +142,14 @@ class CortexUnitOfWork:
     @property
     def job_events(self) -> JobEventRepository:
         return JobEventRepository(self._require_session())
+
+    @property
+    def parse_runs(self) -> ParseRunRepository:
+        return ParseRunRepository(self._require_session())
+
+    @property
+    def parse_run_attempts(self) -> ParseRunAttemptRepository:
+        return ParseRunAttemptRepository(self._require_session())
 
     @property
     def authorization_decisions(self) -> AuthorizationDecisionRepository:

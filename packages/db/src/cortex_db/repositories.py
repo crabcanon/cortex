@@ -12,7 +12,10 @@ from cortex_domain import (
     AuthorizationPolicyRecord,
     DatasetRecord,
     DecisionEffect,
+    DocumentArtifactRecord,
+    DocumentChunkRecord,
     DocumentRecord,
+    DocumentTagRecord,
     JobEventRecord,
     JobRecord,
     JobStatus,
@@ -20,6 +23,13 @@ from cortex_domain import (
     ObjectRecord,
     ObjectStatus,
     ObjectVersionRecord,
+    ParseAttemptStatus,
+    ParseEngineDeploymentMode,
+    ParseEngineRecord,
+    ParseEngineStatus,
+    ParserProfileRecord,
+    ParseRunAttemptRecord,
+    ParseRunRecord,
     PermissionRecord,
     RolePermissionRecord,
     RoleRecord,
@@ -36,11 +46,18 @@ from .models import (
     AuthorizationDecisionModel,
     AuthorizationPolicyModel,
     DatasetModel,
+    DocumentArtifactModel,
+    DocumentChunkModel,
     DocumentModel,
+    DocumentTagModel,
     JobEventModel,
     JobModel,
     ObjectModel,
     ObjectVersionModel,
+    ParserEngineModel,
+    ParserProfileModel,
+    ParseRunAttemptModel,
+    ParseRunModel,
     PermissionModel,
     RoleModel,
     RolePermissionModel,
@@ -59,6 +76,11 @@ def _json_object(value: dict[str, Any] | None) -> str:
 def _json_dict(value: str) -> dict[str, Any]:
     payload = json_loads(value)
     return payload if isinstance(payload, dict) else {}
+
+
+def _json_list(value: str) -> list[Any]:
+    payload = json_loads(value)
+    return payload if isinstance(payload, list) else []
 
 
 def _tenant_from_model(model: TenantModel) -> TenantRecord:
@@ -160,6 +182,43 @@ def _bucket_from_model(model: StorageBucketModel) -> StorageBucketRecord:
     )
 
 
+def _parse_engine_from_model(model: ParserEngineModel) -> ParseEngineRecord:
+    return ParseEngineRecord(
+        engine_id=model.engine_id,
+        engine_key=model.engine_key,
+        display_name=model.display_name,
+        engine_family=model.engine_family,
+        deployment_mode=ParseEngineDeploymentMode(model.deployment_mode),
+        status=ParseEngineStatus(model.status),
+        supported_source_types=[
+            str(value) for value in _json_list(model.supported_source_types_json)
+        ],
+        supported_formats=[str(value) for value in _json_list(model.supported_formats_json)],
+        capability_flags=[str(value) for value in _json_list(model.capability_flags_json)],
+        config_schema=_json_dict(model.config_schema_json),
+        metadata=_json_dict(model.metadata_json),
+    )
+
+
+def _parser_profile_from_model(model: ParserProfileModel) -> ParserProfileRecord:
+    return ParserProfileRecord(
+        profile_id=model.profile_id,
+        tenant_id=model.tenant_id,
+        profile_key=model.profile_key,
+        display_name=model.display_name,
+        description=model.description,
+        routing_mode=model.routing_mode,
+        preferred_engine_id=model.preferred_engine_id,
+        allowed_engines=[str(value) for value in _json_list(model.allowed_engines_json)],
+        source_constraints=_json_dict(model.source_constraints_json),
+        normalization=_json_dict(model.normalization_json),
+        fallback_policy=_json_dict(model.fallback_policy_json),
+        engine_overrides=_json_dict(model.engine_overrides_json),
+        metadata=_json_dict(model.metadata_json),
+        created_by=model.created_by,
+    )
+
+
 def _serialize_object_metadata(record: ObjectRecord) -> str:
     payload: dict[str, Any] = dict(record.metadata)
     if record.tags:
@@ -230,10 +289,53 @@ def _document_from_model(model: DocumentModel) -> DocumentRecord:
         title=model.title,
         source_uri=model.source_uri,
         canonical_url=model.canonical_url,
+        source_object_id=model.source_object_id,
+        language_code=model.language_code,
+        detected_mime_type=model.detected_mime_type,
+        content_hash_sha256=model.content_hash_sha256,
         access_level=AccessLevel(model.access_level),
         access_policy=_json_dict(model.access_policy_json),
+        status=model.status,
         metadata=_json_dict(model.metadata_json),
         audit=_json_dict(model.audit_json),
+        published_at=model.published_at,
+        created_by=model.created_by,
+        created_at=model.created_at,
+        updated_at=model.updated_at,
+    )
+
+
+def _document_artifact_from_model(model: DocumentArtifactModel) -> DocumentArtifactRecord:
+    return DocumentArtifactRecord(
+        document_id=model.document_id,
+        artifact_type=model.artifact_type,
+        object_id=model.object_id,
+        artifact_ref=model.artifact_ref,
+        metadata=_json_dict(model.metadata_json),
+        created_at=model.created_at,
+    )
+
+
+def _document_tag_from_model(model: DocumentTagModel) -> DocumentTagRecord:
+    return DocumentTagRecord(
+        document_id=model.document_id,
+        tag=model.tag,
+        created_at=model.created_at,
+    )
+
+
+def _document_chunk_from_model(model: DocumentChunkModel) -> DocumentChunkRecord:
+    return DocumentChunkRecord(
+        chunk_id=model.chunk_id,
+        document_id=model.document_id,
+        chunk_index=model.chunk_index,
+        chunk_text=model.chunk_text,
+        heading_path=model.heading_path,
+        token_count=model.token_count,
+        char_count=model.char_count,
+        checksum_sha256=model.checksum_sha256,
+        metadata=_json_dict(model.metadata_json),
+        created_at=model.created_at,
     )
 
 
@@ -290,6 +392,48 @@ def _job_event_from_model(model: JobEventModel) -> JobEventRecord:
         details=_json_dict(model.details_json),
         trace_id=model.trace_id,
         span_id=model.span_id,
+    )
+
+
+def _parse_run_from_model(model: ParseRunModel) -> ParseRunRecord:
+    return ParseRunRecord(
+        parse_run_id=model.parse_run_id,
+        job_id=model.job_id,
+        source_kind=SourceType(model.source_kind),
+        parser_profile_id=model.parser_profile_id,
+        selected_engine_id=model.selected_engine_id,
+        trace_id=model.trace_id,
+        document_id=model.document_id,
+        source_url=model.source_url,
+        source_ref=model.source_ref,
+        selection_policy=_json_dict(model.selection_policy_json),
+        crawl_profile=_json_dict(model.crawl_profile_json),
+        normalization=_json_dict(model.normalization_json),
+        output_profile=_json_dict(model.output_profile_json),
+        fallback_chain=[str(value) for value in _json_list(model.fallback_chain_json)],
+        diagnostics=_json_dict(model.diagnostics_json),
+        telemetry_context=_json_dict(model.telemetry_context_json),
+        deployment_context=_json_dict(model.deployment_context_json),
+        experiment_context=_json_dict(model.experiment_context_json),
+        created_at=model.created_at,
+    )
+
+
+def _parse_run_attempt_from_model(model: ParseRunAttemptModel) -> ParseRunAttemptRecord:
+    return ParseRunAttemptRecord(
+        parse_run_id=model.parse_run_id,
+        attempt_no=model.attempt_no,
+        engine_id=model.engine_id,
+        status=ParseAttemptStatus(model.status),
+        trace_id=model.trace_id,
+        span_id=model.span_id,
+        engine_request=_json_dict(model.engine_request_json),
+        engine_result=_json_dict(model.engine_result_json),
+        diagnostics=_json_dict(model.diagnostics_json),
+        started_at=model.started_at,
+        completed_at=model.completed_at,
+        error_code=model.error_code,
+        error_message=model.error_message,
     )
 
 
@@ -616,6 +760,98 @@ class StorageBucketRepository:
         return None if model is None else _bucket_from_model(model)
 
 
+class ParserEngineRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: ParseEngineRecord) -> ParseEngineRecord:
+        model = ParserEngineModel(
+            engine_id=record.engine_id,
+            engine_key=record.engine_key,
+            display_name=record.display_name,
+            engine_family=record.engine_family,
+            deployment_mode=record.deployment_mode.value,
+            status=record.status.value,
+            supported_source_types_json=json_dumps(record.supported_source_types),
+            supported_formats_json=json_dumps(record.supported_formats),
+            capability_flags_json=json_dumps(record.capability_flags),
+            config_schema_json=_json_object(record.config_schema),
+            metadata_json=_json_object(record.metadata),
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _parse_engine_from_model(model)
+
+    async def get(self, engine_id: str) -> ParseEngineRecord | None:
+        model = await self._session.get(ParserEngineModel, engine_id)
+        return None if model is None else _parse_engine_from_model(model)
+
+    async def get_by_key(self, engine_key: str) -> ParseEngineRecord | None:
+        result = await self._session.execute(
+            select(ParserEngineModel).where(ParserEngineModel.engine_key == engine_key)
+        )
+        model = result.scalar_one_or_none()
+        return None if model is None else _parse_engine_from_model(model)
+
+    async def list_active(self) -> list[ParseEngineRecord]:
+        result = await self._session.execute(
+            select(ParserEngineModel)
+            .where(ParserEngineModel.status == ParseEngineStatus.ACTIVE.value)
+            .order_by(ParserEngineModel.engine_key.asc())
+        )
+        return [_parse_engine_from_model(model) for model in result.scalars().all()]
+
+
+class ParserProfileRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: ParserProfileRecord) -> ParserProfileRecord:
+        model = ParserProfileModel(
+            profile_id=record.profile_id,
+            tenant_id=record.tenant_id,
+            profile_key=record.profile_key,
+            display_name=record.display_name,
+            description=record.description,
+            routing_mode=record.routing_mode,
+            preferred_engine_id=record.preferred_engine_id,
+            allowed_engines_json=json_dumps(record.allowed_engines),
+            source_constraints_json=_json_object(record.source_constraints),
+            normalization_json=_json_object(record.normalization),
+            fallback_policy_json=_json_object(record.fallback_policy),
+            engine_overrides_json=_json_object(record.engine_overrides),
+            metadata_json=_json_object(record.metadata),
+            created_by=record.created_by,
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _parser_profile_from_model(model)
+
+    async def get(self, profile_id: str) -> ParserProfileRecord | None:
+        model = await self._session.get(ParserProfileModel, profile_id)
+        return None if model is None else _parser_profile_from_model(model)
+
+    async def get_by_key(self, tenant_id: str, profile_key: str) -> ParserProfileRecord | None:
+        result = await self._session.execute(
+            select(ParserProfileModel).where(
+                ParserProfileModel.tenant_id == tenant_id,
+                ParserProfileModel.profile_key == profile_key,
+            )
+        )
+        model = result.scalar_one_or_none()
+        return None if model is None else _parser_profile_from_model(model)
+
+    async def list_for_tenant(self, tenant_id: str) -> list[ParserProfileRecord]:
+        result = await self._session.execute(
+            select(ParserProfileModel)
+            .where(ParserProfileModel.tenant_id == tenant_id)
+            .order_by(ParserProfileModel.profile_key.asc())
+        )
+        return [_parser_profile_from_model(model) for model in result.scalars().all()]
+
+
 class ObjectRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -742,13 +978,19 @@ class DocumentRepository:
             source_type=record.source_type.value,
             source_uri=record.source_uri,
             canonical_url=record.canonical_url,
+            source_object_id=record.source_object_id,
             title=record.title,
+            language_code=record.language_code,
             source_format=record.source_format,
+            detected_mime_type=record.detected_mime_type,
+            content_hash_sha256=record.content_hash_sha256,
             access_level=record.access_level.value,
             access_policy_json=_json_object(record.access_policy),
             metadata_json=_json_object(record.metadata),
             audit_json=_json_object(record.audit),
-            status="parsed",
+            status=record.status,
+            published_at=record.published_at,
+            created_by=record.created_by,
         )
         self._session.add(model)
         await self._session.flush()
@@ -773,6 +1015,88 @@ class DocumentRepository:
             .limit(window.limit)
         )
         return [_document_from_model(model) for model in result.scalars().all()]
+
+
+class DocumentArtifactRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: DocumentArtifactRecord) -> DocumentArtifactRecord:
+        model = DocumentArtifactModel(
+            document_id=record.document_id,
+            artifact_type=record.artifact_type,
+            object_id=record.object_id,
+            artifact_ref=record.artifact_ref,
+            metadata_json=_json_object(record.metadata),
+            created_at=record.created_at or utc_now(),
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _document_artifact_from_model(model)
+
+    async def list_for_document(self, document_id: str) -> list[DocumentArtifactRecord]:
+        result = await self._session.execute(
+            select(DocumentArtifactModel)
+            .where(DocumentArtifactModel.document_id == document_id)
+            .order_by(DocumentArtifactModel.artifact_type.asc())
+        )
+        return [_document_artifact_from_model(model) for model in result.scalars().all()]
+
+
+class DocumentTagRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: DocumentTagRecord) -> DocumentTagRecord:
+        model = DocumentTagModel(
+            document_id=record.document_id,
+            tag=record.tag,
+            created_at=record.created_at or utc_now(),
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _document_tag_from_model(model)
+
+    async def list_for_document(self, document_id: str) -> list[DocumentTagRecord]:
+        result = await self._session.execute(
+            select(DocumentTagModel)
+            .where(DocumentTagModel.document_id == document_id)
+            .order_by(DocumentTagModel.tag.asc())
+        )
+        return [_document_tag_from_model(model) for model in result.scalars().all()]
+
+
+class DocumentChunkRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: DocumentChunkRecord) -> DocumentChunkRecord:
+        model = DocumentChunkModel(
+            chunk_id=record.chunk_id,
+            document_id=record.document_id,
+            chunk_index=record.chunk_index,
+            heading_path=record.heading_path,
+            token_count=record.token_count,
+            char_count=record.char_count,
+            checksum_sha256=record.checksum_sha256,
+            chunk_text=record.chunk_text,
+            metadata_json=_json_object(record.metadata),
+            created_at=record.created_at or utc_now(),
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _document_chunk_from_model(model)
+
+    async def list_for_document(self, document_id: str) -> list[DocumentChunkRecord]:
+        result = await self._session.execute(
+            select(DocumentChunkModel)
+            .where(DocumentChunkModel.document_id == document_id)
+            .order_by(DocumentChunkModel.chunk_index.asc())
+        )
+        return [_document_chunk_from_model(model) for model in result.scalars().all()]
 
 
 class DatasetRepository:
@@ -936,6 +1260,83 @@ class JobEventRepository:
             .limit(limit)
         )
         return [_job_event_from_model(model) for model in result.scalars().all()]
+
+
+class ParseRunRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: ParseRunRecord) -> ParseRunRecord:
+        model = ParseRunModel(
+            parse_run_id=record.parse_run_id,
+            job_id=record.job_id,
+            source_kind=record.source_kind.value,
+            parser_profile_id=record.parser_profile_id,
+            selected_engine_id=record.selected_engine_id,
+            trace_id=record.trace_id,
+            document_id=record.document_id,
+            source_url=record.source_url,
+            source_ref=record.source_ref,
+            selection_policy_json=_json_object(record.selection_policy),
+            crawl_profile_json=_json_object(record.crawl_profile),
+            normalization_json=_json_object(record.normalization),
+            output_profile_json=_json_object(record.output_profile),
+            fallback_chain_json=json_dumps(record.fallback_chain),
+            diagnostics_json=_json_object(record.diagnostics),
+            telemetry_context_json=_json_object(record.telemetry_context),
+            deployment_context_json=_json_object(record.deployment_context),
+            experiment_context_json=_json_object(record.experiment_context),
+            created_at=record.created_at or utc_now(),
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _parse_run_from_model(model)
+
+    async def get(self, parse_run_id: str) -> ParseRunRecord | None:
+        model = await self._session.get(ParseRunModel, parse_run_id)
+        return None if model is None else _parse_run_from_model(model)
+
+    async def get_by_job(self, job_id: str) -> ParseRunRecord | None:
+        result = await self._session.execute(
+            select(ParseRunModel).where(ParseRunModel.job_id == job_id)
+        )
+        model = result.scalar_one_or_none()
+        return None if model is None else _parse_run_from_model(model)
+
+
+class ParseRunAttemptRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: ParseRunAttemptRecord) -> ParseRunAttemptRecord:
+        model = ParseRunAttemptModel(
+            parse_run_id=record.parse_run_id,
+            attempt_no=record.attempt_no,
+            engine_id=record.engine_id,
+            status=record.status.value,
+            trace_id=record.trace_id,
+            span_id=record.span_id,
+            engine_request_json=_json_object(record.engine_request),
+            engine_result_json=_json_object(record.engine_result),
+            diagnostics_json=_json_object(record.diagnostics),
+            started_at=record.started_at,
+            completed_at=record.completed_at,
+            error_code=record.error_code,
+            error_message=record.error_message,
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _parse_run_attempt_from_model(model)
+
+    async def list_for_run(self, parse_run_id: str) -> list[ParseRunAttemptRecord]:
+        result = await self._session.execute(
+            select(ParseRunAttemptModel)
+            .where(ParseRunAttemptModel.parse_run_id == parse_run_id)
+            .order_by(ParseRunAttemptModel.attempt_no.asc())
+        )
+        return [_parse_run_attempt_from_model(model) for model in result.scalars().all()]
 
 
 class AuthorizationDecisionRepository:

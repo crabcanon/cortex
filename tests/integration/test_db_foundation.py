@@ -15,7 +15,10 @@ from cortex_domain import (
     AuthorizationPolicyRecord,
     DatasetRecord,
     DecisionEffect,
+    DocumentArtifactRecord,
+    DocumentChunkRecord,
     DocumentRecord,
+    DocumentTagRecord,
     JobEventRecord,
     JobRecord,
     JobStatus,
@@ -23,6 +26,13 @@ from cortex_domain import (
     ObjectRecord,
     ObjectStatus,
     ObjectVersionRecord,
+    ParseAttemptStatus,
+    ParseEngineDeploymentMode,
+    ParseEngineRecord,
+    ParseEngineStatus,
+    ParserProfileRecord,
+    ParseRunAttemptRecord,
+    ParseRunRecord,
     PermissionRecord,
     RolePermissionRecord,
     RoleRecord,
@@ -66,11 +76,17 @@ def test_baseline_migration_creates_expected_tables() -> None:
         "storage_buckets",
         "objects",
         "object_versions",
+        "parser_engines",
+        "parser_profiles",
         "documents",
+        "document_artifacts",
+        "document_tags",
+        "document_chunks",
         "datasets",
         "jobs",
         "authorization_decisions",
         "parse_runs",
+        "parse_run_attempts",
         "knowledge_runs",
         "search_requests",
     }.issubset(tables)
@@ -154,6 +170,31 @@ async def test_unit_of_work_and_repositories_round_trip() -> None:
                     is_default=True,
                 )
             )
+            parser_engine = await uow.parser_engines.add(
+                ParseEngineRecord(
+                    engine_id="pengine_001",
+                    engine_key="crawl4ai",
+                    display_name="Crawl4AI",
+                    engine_family="web_interactive",
+                    deployment_mode=ParseEngineDeploymentMode.LOCAL,
+                    status=ParseEngineStatus.ACTIVE,
+                    supported_source_types=["url"],
+                    capability_flags=["interactive_web"],
+                )
+            )
+            parser_profile = await uow.parser_profiles.add(
+                ParserProfileRecord(
+                    profile_id="pprofile_001",
+                    tenant_id=tenant.tenant_id,
+                    profile_key="auto_default",
+                    display_name="Auto Default",
+                    routing_mode="ordered_fallback",
+                    preferred_engine_id=parser_engine.engine_id,
+                    allowed_engines=["crawl4ai"],
+                    normalization={"schema_version": "cortex.parse.v1"},
+                    fallback_policy={"mode": "ordered"},
+                )
+            )
             stored_object = await uow.objects.add(
                 ObjectRecord(
                     object_id="obj_001",
@@ -186,9 +227,40 @@ async def test_unit_of_work_and_repositories_round_trip() -> None:
                     title="Sample",
                     source_uri="https://example.com/sample",
                     canonical_url="https://example.com/sample",
+                    source_object_id=stored_object.object_id,
+                    language_code="en",
+                    detected_mime_type="text/html",
+                    content_hash_sha256="b" * 64,
                     access_level=AccessLevel.TENANT_PRIVATE,
                     metadata={"title": "Sample"},
                     audit={"profile": "auto_default"},
+                )
+            )
+            artifact = await uow.document_artifacts.add(
+                DocumentArtifactRecord(
+                    document_id=document.document_id,
+                    artifact_type="markdown",
+                    object_id=stored_object.object_id,
+                    artifact_ref=stored_object.object_key,
+                    metadata={"role": "normalized"},
+                )
+            )
+            document_tag = await uow.document_tags.add(
+                DocumentTagRecord(
+                    document_id=document.document_id,
+                    tag="docs",
+                )
+            )
+            chunk = await uow.document_chunks.add(
+                DocumentChunkRecord(
+                    chunk_id="chunk_001",
+                    document_id=document.document_id,
+                    chunk_index=0,
+                    chunk_text="# Sample",
+                    heading_path="Sample",
+                    token_count=2,
+                    char_count=8,
+                    checksum_sha256="c" * 64,
                 )
             )
             dataset = await uow.datasets.add(
@@ -211,6 +283,40 @@ async def test_unit_of_work_and_repositories_round_trip() -> None:
                     started_at=datetime.now(UTC),
                     request_id="req_001",
                     trace_id="trace_001",
+                )
+            )
+            parse_run = await uow.parse_runs.add(
+                ParseRunRecord(
+                    parse_run_id="prun_001",
+                    job_id=job.job_id,
+                    source_kind=SourceType.URL,
+                    parser_profile_id=parser_profile.profile_id,
+                    selected_engine_id=parser_engine.engine_id,
+                    trace_id="trace_001",
+                    document_id=document.document_id,
+                    source_url=document.source_uri,
+                    source_ref=document.source_uri,
+                    selection_policy={"preferred_engine_key": "crawl4ai"},
+                    crawl_profile={"timeout_ms": 60000},
+                    normalization={"schema_version": "cortex.parse.v1"},
+                    output_profile={"llm_ready_mode": "markdown"},
+                    fallback_chain=["crawl4ai"],
+                    diagnostics={"selected_engine_key": "crawl4ai"},
+                )
+            )
+            parse_run_attempt = await uow.parse_run_attempts.add(
+                ParseRunAttemptRecord(
+                    parse_run_id=parse_run.parse_run_id,
+                    attempt_no=1,
+                    engine_id=parser_engine.engine_id,
+                    status=ParseAttemptStatus.SUCCEEDED,
+                    trace_id="trace_001",
+                    span_id="span_002",
+                    engine_request={"source": "https://example.com/sample"},
+                    engine_result={"title": "Sample"},
+                    diagnostics={"duration_ms": 42},
+                    started_at=datetime.now(UTC),
+                    completed_at=datetime.now(UTC),
                 )
             )
             job_event = await uow.job_events.add(
@@ -242,9 +348,16 @@ async def test_unit_of_work_and_repositories_round_trip() -> None:
 
             assert stored_object.object_key == "docs/sample.md"
             assert object_version.object_id == "obj_001"
+            assert parser_engine.engine_key == "crawl4ai"
+            assert parser_profile.profile_key == "auto_default"
             assert document.title == "Sample"
+            assert artifact.artifact_type == "markdown"
+            assert document_tag.tag == "docs"
+            assert chunk.chunk_index == 0
             assert dataset.dataset_key == "default"
             assert job.trace_id == "trace_001"
+            assert parse_run.document_id == "doc_001"
+            assert parse_run_attempt.status is ParseAttemptStatus.SUCCEEDED
             assert role_permission.permission_key == "storage:download"
             assert binding.binding_scope == "tenant"
             assert policy.policy_key == "allow-shared-download"
@@ -259,11 +372,21 @@ async def test_unit_of_work_and_repositories_round_trip() -> None:
                 actor_ref="alice@example.com",
             )
             loaded_bucket = await uow.buckets.get_default("tenant_001")
+            loaded_parser_engine = await uow.parser_engines.get_by_key("crawl4ai")
+            loaded_parser_profile = await uow.parser_profiles.get_by_key(
+                "tenant_001",
+                "auto_default",
+            )
             loaded_object = await uow.objects.get("obj_001")
             loaded_document = await uow.documents.get("doc_001")
+            loaded_artifacts = await uow.document_artifacts.list_for_document("doc_001")
+            loaded_tags = await uow.document_tags.list_for_document("doc_001")
+            loaded_chunks = await uow.document_chunks.list_for_document("doc_001")
             loaded_object_version = await uow.object_versions.get_latest("obj_001")
             loaded_dataset = await uow.datasets.get_by_key("tenant_001", "default")
             loaded_job = await uow.jobs.get("job_001")
+            loaded_parse_run = await uow.parse_runs.get_by_job("job_001")
+            loaded_parse_attempts = await uow.parse_run_attempts.list_for_run("prun_001")
             loaded_permission = await uow.permissions.get("storage:download")
             loaded_roles = await uow.roles.list_for_tenant("tenant_001")
             loaded_bindings = await uow.actor_role_bindings.list_for_actor(
@@ -284,16 +407,30 @@ async def test_unit_of_work_and_repositories_round_trip() -> None:
             assert loaded_actor.display_name == "Alice"
             assert loaded_bucket is not None
             assert loaded_bucket.bucket_name == "cortex-alpha"
+            assert loaded_parser_engine is not None
+            assert loaded_parser_engine.deployment_mode is ParseEngineDeploymentMode.LOCAL
+            assert loaded_parser_profile is not None
+            assert loaded_parser_profile.preferred_engine_id == "pengine_001"
             assert loaded_object is not None
             assert loaded_object.access_level is AccessLevel.TENANT_SHARED
             assert loaded_object_version is not None
             assert loaded_object_version.version_no == 1
             assert loaded_document is not None
             assert loaded_document.audit["profile"] == "auto_default"
+            assert len(loaded_artifacts) == 1
+            assert loaded_artifacts[0].object_id == "obj_001"
+            assert len(loaded_tags) == 1
+            assert loaded_tags[0].tag == "docs"
+            assert len(loaded_chunks) == 1
+            assert loaded_chunks[0].heading_path == "Sample"
             assert loaded_dataset is not None
             assert loaded_dataset.access_level is AccessLevel.RESTRICTED
             assert loaded_job is not None
             assert loaded_job.status is JobStatus.RUNNING
+            assert loaded_parse_run is not None
+            assert loaded_parse_run.selected_engine_id == "pengine_001"
+            assert len(loaded_parse_attempts) == 1
+            assert loaded_parse_attempts[0].engine_result["title"] == "Sample"
             assert loaded_permission is not None
             assert loaded_permission.permission_kind == "functional"
             assert len(loaded_roles) == 1

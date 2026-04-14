@@ -10,6 +10,9 @@ from .enums import (
     JobStatus,
     JobType,
     ObjectStatus,
+    ParseAttemptStatus,
+    ParseEngineDeploymentMode,
+    ParseEngineStatus,
     SourceType,
 )
 
@@ -83,6 +86,39 @@ class ObjectVersionRecord:
 
 
 @dataclass(slots=True)
+class ParseEngineRecord:
+    engine_id: str
+    engine_key: str
+    display_name: str
+    engine_family: str
+    deployment_mode: ParseEngineDeploymentMode
+    status: ParseEngineStatus
+    supported_source_types: list[str] = field(default_factory=list)
+    supported_formats: list[str] = field(default_factory=list)
+    capability_flags: list[str] = field(default_factory=list)
+    config_schema: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(slots=True)
+class ParserProfileRecord:
+    profile_id: str
+    tenant_id: str
+    profile_key: str
+    display_name: str
+    description: str | None = None
+    routing_mode: str = "ordered_fallback"
+    preferred_engine_id: str | None = None
+    allowed_engines: list[str] = field(default_factory=list)
+    source_constraints: dict[str, Any] = field(default_factory=dict)
+    normalization: dict[str, Any] = field(default_factory=dict)
+    fallback_policy: dict[str, Any] = field(default_factory=dict)
+    engine_overrides: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    created_by: str | None = None
+
+
+@dataclass(slots=True)
 class DocumentRecord:
     document_id: str
     tenant_id: str
@@ -91,11 +127,51 @@ class DocumentRecord:
     title: str | None = None
     source_uri: str | None = None
     canonical_url: str | None = None
+    source_object_id: str | None = None
+    language_code: str | None = None
+    detected_mime_type: str | None = None
+    content_hash_sha256: str | None = None
     markdown: str | None = None
     access_level: AccessLevel = AccessLevel.TENANT_PRIVATE
     access_policy: dict[str, Any] = field(default_factory=dict)
+    status: str = "parsed"
     metadata: dict[str, Any] = field(default_factory=dict)
     audit: dict[str, Any] = field(default_factory=dict)
+    published_at: datetime | None = None
+    created_by: str | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+@dataclass(slots=True)
+class DocumentArtifactRecord:
+    document_id: str
+    artifact_type: str
+    object_id: str | None = None
+    artifact_ref: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    created_at: datetime | None = None
+
+
+@dataclass(slots=True)
+class DocumentTagRecord:
+    document_id: str
+    tag: str
+    created_at: datetime | None = None
+
+
+@dataclass(slots=True)
+class DocumentChunkRecord:
+    chunk_id: str
+    document_id: str
+    chunk_index: int
+    chunk_text: str
+    heading_path: str | None = None
+    token_count: int = 0
+    char_count: int = 0
+    checksum_sha256: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    created_at: datetime | None = None
 
 
 @dataclass(slots=True)
@@ -149,6 +225,46 @@ class JobEventRecord:
     details: dict[str, Any] = field(default_factory=dict)
     trace_id: str | None = None
     span_id: str | None = None
+
+
+@dataclass(slots=True)
+class ParseRunRecord:
+    parse_run_id: str
+    job_id: str
+    source_kind: SourceType
+    parser_profile_id: str | None = None
+    selected_engine_id: str | None = None
+    trace_id: str | None = None
+    document_id: str | None = None
+    source_url: str | None = None
+    source_ref: str | None = None
+    selection_policy: dict[str, Any] = field(default_factory=dict)
+    crawl_profile: dict[str, Any] = field(default_factory=dict)
+    normalization: dict[str, Any] = field(default_factory=dict)
+    output_profile: dict[str, Any] = field(default_factory=dict)
+    fallback_chain: list[str] = field(default_factory=list)
+    diagnostics: dict[str, Any] = field(default_factory=dict)
+    telemetry_context: dict[str, Any] = field(default_factory=dict)
+    deployment_context: dict[str, Any] = field(default_factory=dict)
+    experiment_context: dict[str, Any] = field(default_factory=dict)
+    created_at: datetime | None = None
+
+
+@dataclass(slots=True)
+class ParseRunAttemptRecord:
+    parse_run_id: str
+    attempt_no: int
+    engine_id: str
+    status: ParseAttemptStatus
+    trace_id: str | None = None
+    span_id: str | None = None
+    engine_request: dict[str, Any] = field(default_factory=dict)
+    engine_result: dict[str, Any] = field(default_factory=dict)
+    diagnostics: dict[str, Any] = field(default_factory=dict)
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    error_code: str | None = None
+    error_message: str | None = None
 
 
 @dataclass(slots=True)

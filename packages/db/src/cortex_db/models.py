@@ -220,6 +220,71 @@ class ObjectVersionModel(Base):
     created_at: Mapped[datetime] = created_at_column()
 
 
+class ParserEngineModel(Base):
+    __tablename__ = "parser_engines"
+
+    engine_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    engine_key: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
+    display_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    engine_family: Mapped[str] = mapped_column(String(64), nullable=False)
+    deployment_mode: Mapped[str] = mapped_column(String(32), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    supported_source_types_json: Mapped[str] = json_text_column(default="[]")
+    supported_formats_json: Mapped[str] = json_text_column(default="[]")
+    capability_flags_json: Mapped[str] = json_text_column(default="[]")
+    config_schema_json: Mapped[str] = json_text_column()
+    metadata_json: Mapped[str] = json_text_column()
+    created_at: Mapped[datetime] = created_at_column()
+    updated_at: Mapped[datetime] = updated_at_column()
+
+
+class ParserProfileModel(Base):
+    __tablename__ = "parser_profiles"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "profile_key"),
+        Index("idx_parser_profiles_tenant_key", "tenant_id", "profile_key"),
+    )
+
+    profile_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.tenant_id"), nullable=False)
+    profile_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    display_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    routing_mode: Mapped[str] = mapped_column(String(32), nullable=False)
+    preferred_engine_id: Mapped[str | None] = mapped_column(
+        ForeignKey("parser_engines.engine_id"),
+        nullable=True,
+    )
+    allowed_engines_json: Mapped[str] = json_text_column(default="[]")
+    source_constraints_json: Mapped[str] = json_text_column()
+    normalization_json: Mapped[str] = json_text_column()
+    fallback_policy_json: Mapped[str] = json_text_column()
+    engine_overrides_json: Mapped[str] = json_text_column()
+    metadata_json: Mapped[str] = json_text_column()
+    created_by: Mapped[str | None] = mapped_column(ForeignKey("actors.actor_id"), nullable=True)
+    created_at: Mapped[datetime] = created_at_column()
+    updated_at: Mapped[datetime] = updated_at_column()
+
+
+class CrawlSessionModel(Base):
+    __tablename__ = "crawl_sessions"
+    __table_args__ = (UniqueConstraint("tenant_id", "session_key"),)
+
+    session_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.tenant_id"), nullable=False)
+    session_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    storage_state_object_id: Mapped[str | None] = mapped_column(
+        ForeignKey("objects.object_id"),
+        nullable=True,
+    )
+    browser_profile_json: Mapped[str] = json_text_column()
+    expires_at: Mapped[datetime | None] = nullable_timestamp_column()
+    last_used_at: Mapped[datetime | None] = nullable_timestamp_column()
+    created_by: Mapped[str | None] = mapped_column(ForeignKey("actors.actor_id"), nullable=True)
+    created_at: Mapped[datetime] = created_at_column()
+    updated_at: Mapped[datetime] = updated_at_column()
+
+
 class DocumentModel(Base):
     __tablename__ = "documents"
     __table_args__ = (
@@ -251,6 +316,53 @@ class DocumentModel(Base):
     created_by: Mapped[str | None] = mapped_column(ForeignKey("actors.actor_id"), nullable=True)
     created_at: Mapped[datetime] = created_at_column()
     updated_at: Mapped[datetime] = updated_at_column()
+
+
+class DocumentArtifactModel(Base):
+    __tablename__ = "document_artifacts"
+
+    document_id: Mapped[str] = mapped_column(
+        ForeignKey("documents.document_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    artifact_type: Mapped[str] = mapped_column(String(64), primary_key=True)
+    object_id: Mapped[str | None] = mapped_column(ForeignKey("objects.object_id"), nullable=True)
+    artifact_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    metadata_json: Mapped[str] = json_text_column()
+    created_at: Mapped[datetime] = created_at_column()
+
+
+class DocumentTagModel(Base):
+    __tablename__ = "document_tags"
+
+    document_id: Mapped[str] = mapped_column(
+        ForeignKey("documents.document_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    tag: Mapped[str] = mapped_column(String(128), primary_key=True)
+    created_at: Mapped[datetime] = created_at_column()
+
+
+class DocumentChunkModel(Base):
+    __tablename__ = "document_chunks"
+    __table_args__ = (
+        UniqueConstraint("document_id", "chunk_index"),
+        Index("idx_document_chunks_document", "document_id", "chunk_index"),
+    )
+
+    chunk_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    document_id: Mapped[str] = mapped_column(
+        ForeignKey("documents.document_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    heading_path: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    token_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    char_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    checksum_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    chunk_text: Mapped[str] = mapped_column(Text, nullable=False)
+    metadata_json: Mapped[str] = json_text_column()
+    created_at: Mapped[datetime] = created_at_column()
 
 
 class DatasetModel(Base):
@@ -326,6 +438,69 @@ class JobEventModel(Base):
     message: Mapped[str | None] = mapped_column(Text, nullable=True)
     details_json: Mapped[str] = json_text_column()
     event_at: Mapped[datetime] = created_at_column()
+
+
+class ParseRunModel(Base):
+    __tablename__ = "parse_runs"
+    __table_args__ = (
+        UniqueConstraint("job_id"),
+        Index("idx_parse_runs_profile_engine", "parser_profile_id", "selected_engine_id"),
+        Index("idx_parse_runs_trace_id", "trace_id", "created_at"),
+    )
+
+    parse_run_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    job_id: Mapped[str] = mapped_column(
+        ForeignKey("jobs.job_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    source_kind: Mapped[str] = mapped_column(String(32), nullable=False)
+    parser_profile_id: Mapped[str | None] = mapped_column(
+        ForeignKey("parser_profiles.profile_id"),
+        nullable=True,
+    )
+    selected_engine_id: Mapped[str | None] = mapped_column(
+        ForeignKey("parser_engines.engine_id"),
+        nullable=True,
+    )
+    trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    document_id: Mapped[str | None] = mapped_column(
+        ForeignKey("documents.document_id"),
+        nullable=True,
+    )
+    source_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    source_ref: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    selection_policy_json: Mapped[str] = json_text_column()
+    crawl_profile_json: Mapped[str] = json_text_column()
+    normalization_json: Mapped[str] = json_text_column()
+    output_profile_json: Mapped[str] = json_text_column()
+    fallback_chain_json: Mapped[str] = json_text_column(default="[]")
+    diagnostics_json: Mapped[str] = json_text_column()
+    telemetry_context_json: Mapped[str] = json_text_column()
+    deployment_context_json: Mapped[str] = json_text_column()
+    experiment_context_json: Mapped[str] = json_text_column()
+    created_at: Mapped[datetime] = created_at_column()
+
+
+class ParseRunAttemptModel(Base):
+    __tablename__ = "parse_run_attempts"
+    __table_args__ = (Index("idx_parse_run_attempts_engine", "engine_id", "status"),)
+
+    parse_run_id: Mapped[str] = mapped_column(
+        ForeignKey("parse_runs.parse_run_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    attempt_no: Mapped[int] = mapped_column(Integer, primary_key=True)
+    engine_id: Mapped[str] = mapped_column(ForeignKey("parser_engines.engine_id"), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    span_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    engine_request_json: Mapped[str] = json_text_column()
+    engine_result_json: Mapped[str] = json_text_column()
+    diagnostics_json: Mapped[str] = json_text_column()
+    started_at: Mapped[datetime | None] = nullable_timestamp_column()
+    completed_at: Mapped[datetime | None] = nullable_timestamp_column()
+    error_code: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class AuthorizationDecisionModel(Base):

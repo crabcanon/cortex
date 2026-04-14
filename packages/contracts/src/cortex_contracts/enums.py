@@ -35,6 +35,60 @@ class DownloadDisposition(StrEnum):
     INLINE = "inline"
 
 
+class ParseInputKind(StrEnum):
+    URL = "url"
+    OBJECT = "object"
+    URI = "uri"
+
+
+class ParseEngineDeploymentMode(StrEnum):
+    LOCAL = "local"
+    REMOTE = "remote"
+    HYBRID = "hybrid"
+
+
+class ParseEngineStatus(StrEnum):
+    ACTIVE = "active"
+    DISABLED = "disabled"
+    DEPRECATED = "deprecated"
+
+
+class ParseAttemptStatus(StrEnum):
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+
+
+class FallbackMode(StrEnum):
+    NONE = "none"
+    ORDERED = "ordered"
+    CAPABILITY_BASED = "capability_based"
+    QUALITY_BASED = "quality_based"
+
+
+class FallbackOnError(StrEnum):
+    TRY_NEXT = "try_next"
+    FAIL_FAST = "fail_fast"
+
+
+class ParseLlmReadyMode(StrEnum):
+    MARKDOWN = "markdown"
+    FIT_MARKDOWN = "fit_markdown"
+
+
+class ChunkingStrategy(StrEnum):
+    NONE = "none"
+    HEADING = "heading"
+    SEMANTIC = "semantic"
+    FIXED_TOKENS = "fixed_tokens"
+
+
+class ParseStoragePolicy(StrEnum):
+    METADATA_ONLY = "metadata_only"
+    MARKDOWN_ONLY = "markdown_only"
+    FULL_ARTIFACTS = "full_artifacts"
+
+
 class JobType(StrEnum):
     PARSE = "parse"
     KNOWLEDGE_ADD = "knowledge_add"

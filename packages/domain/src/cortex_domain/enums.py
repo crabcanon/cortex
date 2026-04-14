@@ -22,6 +22,24 @@ class UploadMode(StrEnum):
     MULTIPART = "multipart"
 
 
+class ParseEngineDeploymentMode(StrEnum):
+    LOCAL = "local"
+    REMOTE = "remote"
+    HYBRID = "hybrid"
+
+
+class ParseEngineStatus(StrEnum):
+    ACTIVE = "active"
+    DISABLED = "disabled"
+    DEPRECATED = "deprecated"
+
+
+class ParseAttemptStatus(StrEnum):
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+
+
 class SourceType(StrEnum):
     URL = "url"
     OBJECT = "object"

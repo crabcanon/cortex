@@ -15,10 +15,24 @@ from cortex_contracts import (
 )
 from cortex_contracts import (
     AuditFields,
+    FallbackMode,
     JobAccepted,
     JobStatus,
     JobType,
     PaginationEnvelope,
+    ParseAttemptStatus,
+    ParsedDocument,
+    ParseDiagnostics,
+    ParseEngineAttempt,
+    ParseEngineDeploymentMode,
+    ParseEngineDescriptor,
+    ParseEngineStatus,
+    ParseInputKind,
+    ParseResult,
+    ParserProfile,
+    ParseSource,
+    ParseSyncRequest,
+    ParseTimingSummary,
     ProblemDetails,
     StorageObject,
     StorageObjectStatus,
@@ -180,3 +194,63 @@ def test_storage_contract_models_capture_upload_and_object_metadata() -> None:
     assert create_request.access_policy.access_level is ContractAccessLevel.RESTRICTED
     assert storage_object.status is StorageObjectStatus.AVAILABLE
     assert storage_object.tags == ["finance"]
+
+
+def test_parse_contract_models_capture_request_and_result_shapes() -> None:
+    request = ParseSyncRequest(
+        source=ParseSource(
+            input_kind=ParseInputKind.URL,
+            url="https://example.com/docs",
+        )
+    )
+    engine = ParseEngineDescriptor(
+        engine_key="crawl4ai",
+        display_name="Crawl4AI",
+        engine_family="web_interactive",
+        deployment_mode=ParseEngineDeploymentMode.LOCAL,
+        status=ParseEngineStatus.ACTIVE,
+        supported_source_types=["url"],
+        capabilities=["interactive_web"],
+    )
+    profile = ParserProfile(
+        profile_ref="auto_default",
+        display_name="Auto Default",
+        preferred_engine_key="crawl4ai",
+    )
+    result = ParseResult(
+        job_id="job_123",
+        document=ParsedDocument(
+            document_id="doc_123",
+            source_type=ParseInputKind.URL,
+            source_format="text/html",
+            markdown="# Example",
+            audit=AuditFields(
+                created_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
+                updated_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
+            ),
+        ),
+        diagnostics=ParseDiagnostics(
+            selected_engine_key="crawl4ai",
+            fallback_used=True,
+            engine_attempts=[
+                ParseEngineAttempt(
+                    attempt_no=1,
+                    engine_key="jina_reader",
+                    status=ParseAttemptStatus.FAILED,
+                ),
+                ParseEngineAttempt(
+                    attempt_no=2,
+                    engine_key="crawl4ai",
+                    status=ParseAttemptStatus.SUCCEEDED,
+                ),
+            ],
+            timings_ms=ParseTimingSummary(total=120),
+        ),
+    )
+
+    assert request.source.input_kind is ParseInputKind.URL
+    assert engine.deployment_mode is ParseEngineDeploymentMode.LOCAL
+    assert profile.profile_ref == "auto_default"
+    assert result.diagnostics.engine_attempts[0].status is ParseAttemptStatus.FAILED
+    assert result.diagnostics.fallback_used is True
+    assert FallbackMode.ORDERED == "ordered"

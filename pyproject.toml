@@ -79,3 +79,6 @@ venv = ".venv"
 addopts = "-q -p no:cacheprovider -p no:tmpdir"
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+  "runtime_stack: requires the local Docker dependency stack",
+]

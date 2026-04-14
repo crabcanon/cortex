@@ -311,3 +311,59 @@
 - Cause: Phase H still had one planned high-fidelity remote document parser, and completing it removes the last adapter backlog item except for deeper Crawl4AI artifact storage enhancement.
 - Action: Added `LlamaParseEngine`, API-key/env validation, async/sync loader compatibility, multi-document Markdown merge, metadata/title normalization, focused fake-parser tests, and a full repository validation run.
 - Prevention: Any future provider-specific LlamaParse options should stay in `engine_options.llama_parse` and continue to be covered with fake SDK tests before live-provider tests are introduced.
+
+### 2026-04-14 21:29:56 +08:00 | Knowledge Foundation Started
+
+- Stage: `CTX-20260412-037 ~ CTX-20260412-038`, `CTX-20260414-018 ~ CTX-20260414-020`
+- Event: Started the first Knowledge/Cognee delivery slice, focusing on a vendor-neutral `cortex_knowledge` foundation plus dataset create/get control-plane endpoints.
+- Cause: Parse foundation, sync/async API, worker reliability, and the planned parser adapters are now in place, so the next contract gap is the Knowledge domain entrypoint rather than more Parse surface area.
+- Action: Added a new task batch before coding and scoped the slice to dataset DTO/domain alignment, an optional Cognee runtime abstraction, dataset service wiring, resource authorization, and targeted validation.
+- Prevention: Keep Add/Cognify/Memify/Search execution for the next slice so the first Knowledge batch can stabilize contracts and authorization boundaries before background job orchestration is introduced.
+
+### 2026-04-14 21:42:10 +08:00 | Knowledge Slice Validation Friction
+
+- Stage: `CTX-20260414-018 ~ CTX-20260414-020`
+- Event: Two small execution issues surfaced during the Knowledge foundation slice: I initially reached for non-existent test filenames based on memory, and the first full-repo check failed on Ruff import ordering in the new knowledge service module.
+- Cause: The repository standardizes API integration test names as `test_api_<domain>.py`, and the new module was hand-written faster than the lint formatter was applied.
+- Action: Switched to the repository's actual test files, added `tests/integration/test_api_knowledge.py`, ran focused contract/API validation first, then used Ruff auto-fix on the import block before rerunning the full repository check.
+- Prevention: For future slices, inspect the existing `tests/integration/test_api_*` naming scheme before adding new tests, and run a focused `ruff check --fix <new file>` before the first full validation pass.
+
+### 2026-04-14 21:47:35 +08:00 | Knowledge Foundation And Dataset API Slice Completed
+
+- Stage: `CTX-20260414-018 ~ CTX-20260414-020`, `CTX-20260412-037 ~ CTX-20260412-038`
+- Event: The first Knowledge slice is complete: dataset contracts, dataset persistence alignment, optional Cognee runtime bootstrap, `/v1/knowledge/datasets` create/get endpoints, resource authorization, and end-to-end test coverage all landed successfully.
+- Cause: The project needed a stable knowledge control plane and dataset boundary before queuing Add/Cognify/Memify/Search work onto a dedicated Knowledge worker.
+- Action: Added `cortex_contracts.knowledge`, extended dataset domain/repository mapping, introduced `cortex_knowledge` runtime/service/bootstrap modules, wired the API lifespan and runtime dependencies to a knowledge service, added knowledge router/service helpers plus integration coverage, and reran `scripts/dev/check.ps1` to completion.
+- Prevention: Keep `CTX-20260412-037` and `CTX-20260412-038` open until the next slice adds knowledge run persistence and the queued Add/Cognify/Memify/Search execution path on top of the foundation added here.
+
+### 2026-04-14 21:49:29 +08:00 | Knowledge Jobs And Search Started
+
+- Stage: `CTX-20260412-039 ~ CTX-20260412-043`, `CTX-20260414-021 ~ CTX-20260414-026`
+- Event: Started the next Knowledge slice, focusing on queued Add/Cognify/Memify execution, synchronous Search, knowledge run persistence, and a real Knowledge worker loop.
+- Cause: Dataset create/get and the optional Cognee runtime boundary were already stable, so the next contract gap was the actual execution path behind the Knowledge APIs rather than more surface-only endpoints.
+- Action: Added a dedicated task batch, expanded the domain/repository targets to cover `knowledge_runs`, `search_requests`, and `search_hits`, and scoped the implementation to a vendor-neutral DB-backed control plane that reuses the existing job table and API authorization stack.
+- Prevention: Keep the runtime abstraction and worker semantics aligned with the Parse path so queue behavior, telemetry, and persistence stay portable when a non-SQL queue backend is introduced later.
+
+### 2026-04-14 22:02:10 +08:00 | Parallel UV Validation Collision
+
+- Stage: `CTX-20260414-026`
+- Event: A focused validation pass failed on Windows because two `uv run` commands were launched in parallel and both tried to recreate `.venv`, causing an install-path error inside the virtualenv metadata directory.
+- Cause: `uv run` eagerly provisions the shared environment, and parallel provisioning against the same workspace `.venv` is not safe on this platform.
+- Action: Switched the remaining Ruff, Pyright, and pytest commands to serialized `uv run` execution and continued validation without changing application code.
+- Prevention: Avoid parallel `uv run` commands in this repository; parallelize file reads and other independent shell work, but keep Python environment provisioning and test execution serialized.
+
+### 2026-04-14 22:07:18 +08:00 | Shared Module Import Drift During Full Check
+
+- Stage: `CTX-20260414-021 ~ CTX-20260414-026`
+- Event: The first full-repository check after the Knowledge worker slice failed on one long validation message plus import-order drift in shared `contracts`, `db`, and `domain` modules that were touched indirectly by the new exports and repositories.
+- Cause: Adding new knowledge records, repositories, and contract models widened several import blocks outside the immediate feature files, and the first pass only ran focused lint/type checks rather than the full repository style sweep.
+- Action: Wrapped the long `KnowledgeInput` validation error message, ran Ruff auto-fix on the shared modules, and reran the complete `scripts/dev/check.ps1` suite.
+- Prevention: After extending shared package exports or repository lists, run a full-repository Ruff pass before the final all-in-one check so import-order fallout is caught earlier.
+
+### 2026-04-14 22:09:36 +08:00 | Knowledge Jobs, Search, And Worker Slice Completed
+
+- Stage: `CTX-20260412-039 ~ CTX-20260412-043`, `CTX-20260414-021 ~ CTX-20260414-026`
+- Event: The queued Knowledge execution slice is complete: Add/Cognify/Memify job submission, synchronous Search, knowledge run persistence, search audit trails, and the Knowledge worker `run_once` loop all landed and passed full validation.
+- Cause: The project needed the actual execution backbone behind the Knowledge APIs so datasets can move from control-plane metadata into ingest, graph enrichment, and retrieval flows.
+- Action: Expanded contracts/domain/ORM/UoW layers for `knowledge_runs` and search audit entities, implemented knowledge job control and execution/search services, exposed `/v1/knowledge/add/jobs`, `/v1/knowledge/cognify/jobs`, `/v1/knowledge/memify/jobs`, and `/v1/knowledge/search`, replaced the worker placeholder with a real poll/execute/heartbeat loop, added contract/integration coverage, and reran `scripts/dev/check.ps1` successfully.
+- Prevention: The next Knowledge slice can build on this worker/job/search substrate for richer retry policy, deeper runtime adapters, and broader end-to-end flows without changing the REST contract or persistence model.

@@ -103,13 +103,13 @@
 
 | Task ID | Added At | Priority | Area | Task | Depends On | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| CTX-20260412-037 | 2026-04-12 21:11:20 +08:00 | P0 | knowledge | 实现 `cortex_knowledge`：dataset service、Cognee runtime abstraction、run model | CTX-20260412-007, CTX-20260412-008, CTX-20260412-012 | planned |
-| CTX-20260412-038 | 2026-04-12 21:11:20 +08:00 | P0 | knowledge | 实现 Dataset CRUD 与资源级授权 | CTX-20260412-037, CTX-20260412-016, CTX-20260412-018 | planned |
-| CTX-20260412-039 | 2026-04-12 21:11:20 +08:00 | P0 | knowledge | 实现 Add 作业提交与执行 | CTX-20260412-037, CTX-20260412-035 | planned |
-| CTX-20260412-040 | 2026-04-12 21:11:20 +08:00 | P1 | knowledge | 实现 Cognify 作业提交与执行 | CTX-20260412-039 | planned |
-| CTX-20260412-041 | 2026-04-12 21:11:20 +08:00 | P1 | knowledge | 实现 Memify 作业提交与执行 | CTX-20260412-040 | planned |
-| CTX-20260412-042 | 2026-04-12 21:11:20 +08:00 | P0 | knowledge | 实现 Search 服务、命中过滤、provenance 返回与授权二次校验 | CTX-20260412-038, CTX-20260412-039 | planned |
-| CTX-20260412-043 | 2026-04-12 21:11:20 +08:00 | P0 | knowledge-worker | 建立 Knowledge Worker bootstrap、Add/Cognify/Memify 后台执行链路 | CTX-20260412-002, CTX-20260412-037 | planned |
+| CTX-20260412-037 | 2026-04-12 21:11:20 +08:00 | P0 | knowledge | 实现 `cortex_knowledge`：dataset service、Cognee runtime abstraction、run model | CTX-20260412-007, CTX-20260412-008, CTX-20260412-012 | done |
+| CTX-20260412-038 | 2026-04-12 21:11:20 +08:00 | P0 | knowledge | 实现 Dataset CRUD 与资源级授权 | CTX-20260412-037, CTX-20260412-016, CTX-20260412-018 | done |
+| CTX-20260412-039 | 2026-04-12 21:11:20 +08:00 | P0 | knowledge | 实现 Add 作业提交与执行 | CTX-20260412-037, CTX-20260412-035 | done |
+| CTX-20260412-040 | 2026-04-12 21:11:20 +08:00 | P1 | knowledge | 实现 Cognify 作业提交与执行 | CTX-20260412-039 | done |
+| CTX-20260412-041 | 2026-04-12 21:11:20 +08:00 | P1 | knowledge | 实现 Memify 作业提交与执行 | CTX-20260412-040 | done |
+| CTX-20260412-042 | 2026-04-12 21:11:20 +08:00 | P0 | knowledge | 实现 Search 服务、命中过滤、provenance 返回与授权二次校验 | CTX-20260412-038, CTX-20260412-039 | done |
+| CTX-20260412-043 | 2026-04-12 21:11:20 +08:00 | P0 | knowledge-worker | 建立 Knowledge Worker bootstrap、Add/Cognify/Memify 后台执行链路 | CTX-20260412-002, CTX-20260412-037 | done |
 
 #### Phase K. Quality & Delivery
 
@@ -194,4 +194,27 @@ Goal: complete the remaining high-fidelity document parser slot with an optional
 | --- | --- | --- | --- | --- | --- | --- |
 | CTX-20260414-016 | 2026-04-14 21:04:41 +08:00 | P1 | parse-adapter | Implement an optional LlamaParse adapter with API-key/env validation, high-fidelity Markdown mapping, source metadata normalization, and bootstrap registration when available | CTX-20260412-031, CTX-20260414-014 | done |
 | CTX-20260414-017 | 2026-04-14 21:04:41 +08:00 | P1 | testing | Add focused LlamaParse adapter tests using a fake parser implementation, then run focused and full repository validation | CTX-20260414-016 | done |
+
+### Batch 2026-04-14 21:29:56 +08:00 | Phase J Knowledge Foundation Continuation
+
+Goal: start the knowledge phase by aligning vendor-neutral knowledge contracts, the optional Cognee runtime abstraction, and the dataset control-plane API before queue-backed Add/Cognify/Memify/Search execution.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260414-018 | 2026-04-14 21:29:56 +08:00 | P0 | knowledge-core | Implement `cortex_knowledge` foundation: dataset DTO/domain alignment, dataset service, optional Cognee runtime protocol/bootstrap, and response mapping that matches the Knowledge section of `cortex-api.yaml` without binding the API to a single provider | CTX-20260412-037 | done |
+| CTX-20260414-019 | 2026-04-14 21:29:56 +08:00 | P0 | knowledge-api | Expose `/v1/knowledge/datasets` create/get endpoints with functional auth, dataset resource authorization, and OpenAPI-compatible responses | CTX-20260412-038, CTX-20260414-018 | done |
+| CTX-20260414-020 | 2026-04-14 21:29:56 +08:00 | P0 | testing | Add focused integration coverage for dataset creation/read authorization paths, run repository validation, and close the batch plus task/log history | CTX-20260414-019 | done |
+
+### Batch 2026-04-14 21:49:29 +08:00 | Phase J Knowledge Jobs And Search Continuation
+
+Goal: extend the knowledge foundation into queued Add/Cognify/Memify execution plus synchronous Search, while persisting knowledge run and search audit trails behind the existing vendor-neutral REST contract.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260414-021 | 2026-04-14 21:49:29 +08:00 | P0 | knowledge-db | Align domain, ORM, repositories, and unit-of-work layers for `knowledge_runs`, `search_requests`, and `search_hits` so Knowledge job execution and search audit/provenance can persist without provider-specific fields | CTX-20260414-018 | done |
+| CTX-20260414-022 | 2026-04-14 21:49:29 +08:00 | P0 | knowledge-jobs | Implement Add/Cognify/Memify job contracts plus knowledge job control services that submit idempotent jobs and persist run metadata aligned with `cortex-api.yaml` | CTX-20260412-039, CTX-20260412-040, CTX-20260412-041, CTX-20260414-021 | done |
+| CTX-20260414-023 | 2026-04-14 21:49:29 +08:00 | P0 | knowledge-search | Implement synchronous Search service with dataset resolution, resource filtering, runtime dispatch, and search request/hit persistence | CTX-20260412-042, CTX-20260414-021 | done |
+| CTX-20260414-024 | 2026-04-14 21:49:29 +08:00 | P0 | knowledge-api | Expose `/v1/knowledge/add/jobs`, `/v1/knowledge/cognify/jobs`, `/v1/knowledge/memify/jobs`, and `/v1/knowledge/search` with functional and dataset-level authorization | CTX-20260414-022, CTX-20260414-023 | done |
+| CTX-20260414-025 | 2026-04-14 21:49:29 +08:00 | P0 | knowledge-worker | Replace the placeholder knowledge worker with a `run_once` execution loop for Add/Cognify/Memify jobs, including status transitions, knowledge run updates, and job events | CTX-20260412-043, CTX-20260414-022 | done |
+| CTX-20260414-026 | 2026-04-14 21:49:29 +08:00 | P0 | testing | Add focused contract/integration coverage for knowledge job submission, worker execution, search, and persisted run/search audit trails, then rerun full repository validation and update task/log history | CTX-20260414-024, CTX-20260414-025 | done |
 

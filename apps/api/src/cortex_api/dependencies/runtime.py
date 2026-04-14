@@ -5,6 +5,11 @@ from collections.abc import AsyncIterator
 from cortex_auth import AuthorizationService
 from cortex_common import CortexSettings
 from cortex_db import CortexUnitOfWork, SessionFactory
+from cortex_knowledge import (
+    KnowledgeDatasetService,
+    KnowledgeJobControlService,
+    KnowledgeSearchService,
+)
 from cortex_parse import ParseJobControlService, ParseService
 from cortex_storage import StorageService
 from fastapi import Request
@@ -24,6 +29,18 @@ def get_auth_service(request: Request) -> AuthorizationService:
 
 def get_storage_service(request: Request) -> StorageService:
     return request.app.state.storage_service  # type: ignore[no-any-return]
+
+
+def get_knowledge_service(request: Request) -> KnowledgeDatasetService:
+    return request.app.state.knowledge_service  # type: ignore[no-any-return]
+
+
+def get_knowledge_job_service(request: Request) -> KnowledgeJobControlService:
+    return request.app.state.knowledge_job_service  # type: ignore[no-any-return]
+
+
+def get_knowledge_search_service(request: Request) -> KnowledgeSearchService:
+    return request.app.state.knowledge_search_service  # type: ignore[no-any-return]
 
 
 def get_parse_service(request: Request) -> ParseService:

@@ -239,6 +239,7 @@ dependencies = [
     { name = "cortex-common" },
     { name = "cortex-contracts" },
     { name = "cortex-db" },
+    { name = "cortex-knowledge" },
     { name = "cortex-observability" },
     { name = "cortex-parse" },
     { name = "cortex-storage" },
@@ -252,6 +253,7 @@ requires-dist = [
     { name = "cortex-common", editable = "packages/common" },
     { name = "cortex-contracts", editable = "packages/contracts" },
     { name = "cortex-db", editable = "packages/db" },
+    { name = "cortex-knowledge", editable = "packages/knowledge" },
     { name = "cortex-observability", editable = "packages/observability" },
     { name = "cortex-parse", editable = "packages/parse" },
     { name = "cortex-storage", editable = "packages/storage" },
@@ -342,6 +344,22 @@ source = { editable = "packages/domain" }
 name = "cortex-knowledge"
 version = "0.1.0"
 source = { editable = "packages/knowledge" }
+dependencies = [
+    { name = "cortex-common" },
+    { name = "cortex-contracts" },
+    { name = "cortex-db" },
+    { name = "cortex-domain" },
+    { name = "cortex-observability" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "cortex-common", editable = "packages/common" },
+    { name = "cortex-contracts", editable = "packages/contracts" },
+    { name = "cortex-db", editable = "packages/db" },
+    { name = "cortex-domain", editable = "packages/domain" },
+    { name = "cortex-observability", editable = "packages/observability" },
+]
 
 [[package]]
 name = "cortex-observability"
@@ -416,6 +434,22 @@ requires-dist = [
 name = "cortex-worker-knowledge"
 version = "0.1.0"
 source = { editable = "workers/knowledge-worker" }
+dependencies = [
+    { name = "cortex-common" },
+    { name = "cortex-contracts" },
+    { name = "cortex-db" },
+    { name = "cortex-domain" },
+    { name = "cortex-knowledge" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "cortex-common", editable = "packages/common" },
+    { name = "cortex-contracts", editable = "packages/contracts" },
+    { name = "cortex-db", editable = "packages/db" },
+    { name = "cortex-domain", editable = "packages/domain" },
+    { name = "cortex-knowledge", editable = "packages/knowledge" },
+]
 
 [[package]]
 name = "cortex-worker-parse"

@@ -8,6 +8,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -387,6 +388,22 @@ class DatasetModel(Base):
     updated_at: Mapped[datetime] = updated_at_column()
 
 
+class DatasetItemModel(Base):
+    __tablename__ = "dataset_items"
+    __table_args__ = (Index("idx_dataset_items_item", "item_type", "item_id"),)
+
+    dataset_id: Mapped[str] = mapped_column(
+        ForeignKey("datasets.dataset_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    item_type: Mapped[str] = mapped_column(String(32), primary_key=True)
+    item_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    source_stage: Mapped[str] = mapped_column(String(32), nullable=False)
+    label: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    metadata_json: Mapped[str] = json_text_column()
+    created_at: Mapped[datetime] = created_at_column()
+
+
 class JobModel(Base):
     __tablename__ = "jobs"
     __table_args__ = (
@@ -501,6 +518,80 @@ class ParseRunAttemptModel(Base):
     completed_at: Mapped[datetime | None] = nullable_timestamp_column()
     error_code: Mapped[str | None] = mapped_column(String(128), nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class KnowledgeRunModel(Base):
+    __tablename__ = "knowledge_runs"
+    __table_args__ = (
+        UniqueConstraint("job_id"),
+        Index("idx_knowledge_runs_dataset", "dataset_id", "operation_name"),
+    )
+
+    knowledge_run_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    job_id: Mapped[str] = mapped_column(
+        ForeignKey("jobs.job_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    dataset_id: Mapped[str] = mapped_column(ForeignKey("datasets.dataset_id"), nullable=False)
+    operation_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    request_json: Mapped[str] = json_text_column()
+    result_summary_json: Mapped[str] = json_text_column()
+    telemetry_context_json: Mapped[str] = json_text_column()
+    deployment_context_json: Mapped[str] = json_text_column()
+    experiment_context_json: Mapped[str] = json_text_column()
+    created_at: Mapped[datetime] = created_at_column()
+
+
+class SearchRequestModel(Base):
+    __tablename__ = "search_requests"
+    __table_args__ = (
+        Index("idx_search_requests_tenant_created_at", "tenant_id", "created_at"),
+        Index("idx_search_requests_trace_id", "trace_id", "created_at"),
+    )
+
+    request_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.tenant_id"), nullable=False)
+    dataset_scope_json: Mapped[str] = json_text_column(default="[]")
+    session_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    search_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    span_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    query_text: Mapped[str] = mapped_column(Text, nullable=False)
+    filters_json: Mapped[str] = json_text_column()
+    options_json: Mapped[str] = json_text_column()
+    answer_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    telemetry_context_json: Mapped[str] = json_text_column()
+    deployment_context_json: Mapped[str] = json_text_column()
+    experiment_context_json: Mapped[str] = json_text_column()
+    created_by: Mapped[str | None] = mapped_column(ForeignKey("actors.actor_id"), nullable=True)
+    created_at: Mapped[datetime] = created_at_column()
+
+
+class SearchHitModel(Base):
+    __tablename__ = "search_hits"
+
+    request_id: Mapped[str] = mapped_column(
+        ForeignKey("search_requests.request_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    hit_index: Mapped[int] = mapped_column(Integer, primary_key=True)
+    hit_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    source_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    document_id: Mapped[str | None] = mapped_column(
+        ForeignKey("documents.document_id"),
+        nullable=True,
+    )
+    object_id: Mapped[str | None] = mapped_column(
+        ForeignKey("objects.object_id"),
+        nullable=True,
+    )
+    score: Mapped[float | None] = mapped_column(Numeric(12, 6), nullable=True)
+    title: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    snippet: Mapped[str | None] = mapped_column(Text, nullable=True)
+    citation_json: Mapped[str] = json_text_column()
+    metadata_json: Mapped[str] = json_text_column()
 
 
 class AuthorizationDecisionModel(Base):

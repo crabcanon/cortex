@@ -30,6 +30,66 @@ class StorageObjectStatus(StrEnum):
     DELETED = "deleted"
 
 
+class DatasetRetentionClass(StrEnum):
+    STANDARD = "standard"
+    DURABLE = "durable"
+    TEMPORARY = "temporary"
+
+
+class KnowledgeDatasetStatus(StrEnum):
+    ACTIVE = "active"
+    ARCHIVED = "archived"
+    DELETING = "deleting"
+
+
+class KnowledgeInputType(StrEnum):
+    OBJECT_ID = "object_id"
+    DOCUMENT_ID = "document_id"
+    TEXT = "text"
+    URI = "uri"
+
+
+class GraphPromptProfile(StrEnum):
+    DEFAULT = "default"
+    SIMPLE = "simple"
+    STRICT = "strict"
+    GUIDED = "guided"
+
+
+class MemifyPipeline(StrEnum):
+    CODING_RULES = "coding_rules"
+    TRIPLET_EMBEDDINGS = "triplet_embeddings"
+    SESSION_PERSISTENCE = "session_persistence"
+    ENTITY_CONSOLIDATION = "entity_consolidation"
+    CUSTOM = "custom"
+
+
+class SearchType(StrEnum):
+    GRAPH_COMPLETION = "GRAPH_COMPLETION"
+    RAG_COMPLETION = "RAG_COMPLETION"
+    CHUNKS = "CHUNKS"
+    SUMMARIES = "SUMMARIES"
+    GRAPH_SUMMARY_COMPLETION = "GRAPH_SUMMARY_COMPLETION"
+    GRAPH_COMPLETION_COT = "GRAPH_COMPLETION_COT"
+    GRAPH_COMPLETION_CONTEXT_EXTENSION = "GRAPH_COMPLETION_CONTEXT_EXTENSION"
+    TRIPLET_COMPLETION = "TRIPLET_COMPLETION"
+    CHUNKS_LEXICAL = "CHUNKS_LEXICAL"
+    CODING_RULES = "CODING_RULES"
+    TEMPORAL = "TEMPORAL"
+    CYPHER = "CYPHER"
+    NATURAL_LANGUAGE = "NATURAL_LANGUAGE"
+
+
+class SearchHitType(StrEnum):
+    CHUNK = "chunk"
+    SUMMARY = "summary"
+    GRAPH_NODE = "graph_node"
+    GRAPH_EDGE = "graph_edge"
+    TRIPLET = "triplet"
+    RULE = "rule"
+    CYPHER_ROW = "cypher_row"
+
+
 class DownloadDisposition(StrEnum):
     ATTACHMENT = "attachment"
     INLINE = "inline"

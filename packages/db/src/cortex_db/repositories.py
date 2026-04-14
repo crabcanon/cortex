@@ -10,6 +10,7 @@ from cortex_domain import (
     ActorRoleBindingRecord,
     AuthorizationDecisionRecord,
     AuthorizationPolicyRecord,
+    DatasetItemRecord,
     DatasetRecord,
     DecisionEffect,
     DocumentArtifactRecord,
@@ -20,6 +21,7 @@ from cortex_domain import (
     JobRecord,
     JobStatus,
     JobType,
+    KnowledgeRunRecord,
     ObjectRecord,
     ObjectStatus,
     ObjectVersionRecord,
@@ -33,6 +35,8 @@ from cortex_domain import (
     PermissionRecord,
     RolePermissionRecord,
     RoleRecord,
+    SearchHitRecord,
+    SearchRequestRecord,
     SourceType,
     StorageBucketRecord,
     TenantRecord,
@@ -45,6 +49,7 @@ from .models import (
     ActorRoleBindingModel,
     AuthorizationDecisionModel,
     AuthorizationPolicyModel,
+    DatasetItemModel,
     DatasetModel,
     DocumentArtifactModel,
     DocumentChunkModel,
@@ -52,6 +57,7 @@ from .models import (
     DocumentTagModel,
     JobEventModel,
     JobModel,
+    KnowledgeRunModel,
     ObjectModel,
     ObjectVersionModel,
     ParserEngineModel,
@@ -61,12 +67,15 @@ from .models import (
     PermissionModel,
     RoleModel,
     RolePermissionModel,
+    SearchHitModel,
+    SearchRequestModel,
     StorageBucketModel,
     TenantModel,
 )
 
 _OBJECT_TAGS_KEY = "__tags__"
 _OBJECT_UPLOAD_STATE_KEY = "__upload__"
+_DATASET_TAGS_KEY = "__tags__"
 
 
 def _json_object(value: dict[str, Any] | None) -> str:
@@ -340,15 +349,36 @@ def _document_chunk_from_model(model: DocumentChunkModel) -> DocumentChunkRecord
 
 
 def _dataset_from_model(model: DatasetModel) -> DatasetRecord:
+    payload = _json_dict(model.metadata_json)
+    raw_tags = payload.pop(_DATASET_TAGS_KEY, [])
+    tags = [str(value) for value in raw_tags] if isinstance(raw_tags, list) else []
     return DatasetRecord(
         dataset_id=model.dataset_id,
         tenant_id=model.tenant_id,
         dataset_key=model.dataset_key,
         display_name=model.display_name,
         description=model.description,
+        retention_class=model.retention_class,
         access_level=AccessLevel(model.access_level),
         access_policy=_json_dict(model.access_policy_json),
+        metadata=payload,
+        tags=tags,
+        status=model.status,
+        created_by=model.created_by,
+        created_at=model.created_at,
+        updated_at=model.updated_at,
+    )
+
+
+def _dataset_item_from_model(model: DatasetItemModel) -> DatasetItemRecord:
+    return DatasetItemRecord(
+        dataset_id=model.dataset_id,
+        item_type=model.item_type,
+        item_id=model.item_id,
+        source_stage=model.source_stage,
+        label=model.label,
         metadata=_json_dict(model.metadata_json),
+        created_at=model.created_at,
     )
 
 
@@ -434,6 +464,60 @@ def _parse_run_attempt_from_model(model: ParseRunAttemptModel) -> ParseRunAttemp
         completed_at=model.completed_at,
         error_code=model.error_code,
         error_message=model.error_message,
+    )
+
+
+def _knowledge_run_from_model(model: KnowledgeRunModel) -> KnowledgeRunRecord:
+    return KnowledgeRunRecord(
+        knowledge_run_id=model.knowledge_run_id,
+        job_id=model.job_id,
+        dataset_id=model.dataset_id,
+        operation_name=model.operation_name,
+        trace_id=model.trace_id,
+        request_payload=_json_dict(model.request_json),
+        result_summary=_json_dict(model.result_summary_json),
+        telemetry_context=_json_dict(model.telemetry_context_json),
+        deployment_context=_json_dict(model.deployment_context_json),
+        experiment_context=_json_dict(model.experiment_context_json),
+        created_at=model.created_at,
+    )
+
+
+def _search_request_from_model(model: SearchRequestModel) -> SearchRequestRecord:
+    return SearchRequestRecord(
+        request_id=model.request_id,
+        tenant_id=model.tenant_id,
+        dataset_scope=[str(value) for value in _json_list(model.dataset_scope_json)],
+        session_id=model.session_id,
+        search_type=model.search_type,
+        trace_id=model.trace_id,
+        span_id=model.span_id,
+        query_text=model.query_text,
+        filters=_json_dict(model.filters_json),
+        options=_json_dict(model.options_json),
+        answer_text=model.answer_text,
+        latency_ms=model.latency_ms,
+        telemetry_context=_json_dict(model.telemetry_context_json),
+        deployment_context=_json_dict(model.deployment_context_json),
+        experiment_context=_json_dict(model.experiment_context_json),
+        created_by=model.created_by,
+        created_at=model.created_at,
+    )
+
+
+def _search_hit_from_model(model: SearchHitModel) -> SearchHitRecord:
+    return SearchHitRecord(
+        request_id=model.request_id,
+        hit_index=model.hit_index,
+        hit_type=model.hit_type,
+        source_id=model.source_id,
+        document_id=model.document_id,
+        object_id=model.object_id,
+        score=float(model.score) if model.score is not None else None,
+        title=model.title,
+        snippet=model.snippet,
+        citation=_json_dict(model.citation_json),
+        metadata=_json_dict(model.metadata_json),
     )
 
 
@@ -1104,17 +1188,21 @@ class DatasetRepository:
         self._session = session
 
     async def add(self, record: DatasetRecord) -> DatasetRecord:
+        payload = dict(record.metadata)
+        if record.tags:
+            payload[_DATASET_TAGS_KEY] = list(record.tags)
         model = DatasetModel(
             dataset_id=record.dataset_id,
             tenant_id=record.tenant_id,
             dataset_key=record.dataset_key,
             display_name=record.display_name,
             description=record.description,
+            retention_class=record.retention_class,
             access_level=record.access_level.value,
             access_policy_json=_json_object(record.access_policy),
-            metadata_json=_json_object(record.metadata),
-            status="active",
-            retention_class="standard",
+            metadata_json=_json_object(payload),
+            status=record.status,
+            created_by=record.created_by,
         )
         self._session.add(model)
         await self._session.flush()
@@ -1134,6 +1222,89 @@ class DatasetRepository:
         )
         model = result.scalar_one_or_none()
         return None if model is None else _dataset_from_model(model)
+
+    async def list_for_tenant(
+        self,
+        tenant_id: str,
+        pagination: PaginationWindow | None = None,
+    ) -> Sequence[DatasetRecord]:
+        window = pagination or PaginationWindow()
+        result = await self._session.execute(
+            select(DatasetModel)
+            .where(DatasetModel.tenant_id == tenant_id)
+            .order_by(desc(DatasetModel.created_at))
+            .offset(window.offset)
+            .limit(window.limit)
+        )
+        return [_dataset_from_model(model) for model in result.scalars().all()]
+
+    async def update(self, record: DatasetRecord) -> DatasetRecord | None:
+        model = await self._session.get(DatasetModel, record.dataset_id)
+        if model is None:
+            return None
+        payload = dict(record.metadata)
+        if record.tags:
+            payload[_DATASET_TAGS_KEY] = list(record.tags)
+        model.display_name = record.display_name
+        model.description = record.description
+        model.retention_class = record.retention_class
+        model.access_level = record.access_level.value
+        model.access_policy_json = _json_object(record.access_policy)
+        model.metadata_json = _json_object(payload)
+        model.status = record.status
+        model.created_by = record.created_by
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _dataset_from_model(model)
+
+
+class DatasetItemRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: DatasetItemRecord) -> DatasetItemRecord:
+        model = DatasetItemModel(
+            dataset_id=record.dataset_id,
+            item_type=record.item_type,
+            item_id=record.item_id,
+            source_stage=record.source_stage,
+            label=record.label,
+            metadata_json=_json_object(record.metadata),
+            created_at=record.created_at or utc_now(),
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _dataset_item_from_model(model)
+
+    async def get(
+        self,
+        dataset_id: str,
+        *,
+        item_type: str,
+        item_id: str,
+    ) -> DatasetItemRecord | None:
+        model = await self._session.get(
+            DatasetItemModel,
+            {
+                "dataset_id": dataset_id,
+                "item_type": item_type,
+                "item_id": item_id,
+            },
+        )
+        return None if model is None else _dataset_item_from_model(model)
+
+    async def list_for_dataset(self, dataset_id: str) -> list[DatasetItemRecord]:
+        result = await self._session.execute(
+            select(DatasetItemModel)
+            .where(DatasetItemModel.dataset_id == dataset_id)
+            .order_by(
+                DatasetItemModel.created_at.asc(),
+                DatasetItemModel.item_type.asc(),
+                DatasetItemModel.item_id.asc(),
+            )
+        )
+        return [_dataset_item_from_model(model) for model in result.scalars().all()]
 
 
 class JobRepository:
@@ -1210,6 +1381,26 @@ class JobRepository:
         )
         return [_job_from_model(model) for model in result.scalars().all()]
 
+    async def list_queued_for_types(
+        self,
+        *,
+        job_types: Sequence[JobType],
+        limit: int = 1,
+    ) -> list[JobRecord]:
+        job_type_values = [job_type.value for job_type in job_types]
+        if not job_type_values:
+            return []
+        result = await self._session.execute(
+            select(JobModel)
+            .where(
+                JobModel.job_type.in_(job_type_values),
+                JobModel.status == JobStatus.QUEUED.value,
+            )
+            .order_by(JobModel.priority.desc(), JobModel.submitted_at.asc())
+            .limit(limit)
+        )
+        return [_job_from_model(model) for model in result.scalars().all()]
+
     async def list_stale_running(
         self,
         *,
@@ -1221,6 +1412,28 @@ class JobRepository:
             select(JobModel)
             .where(
                 JobModel.job_type == job_type.value,
+                JobModel.status == JobStatus.RUNNING.value,
+                or_(JobModel.heartbeat_at.is_(None), JobModel.heartbeat_at < stale_before),
+            )
+            .order_by(JobModel.started_at.asc())
+            .limit(limit)
+        )
+        return [_job_from_model(model) for model in result.scalars().all()]
+
+    async def list_stale_running_for_types(
+        self,
+        *,
+        job_types: Sequence[JobType],
+        stale_before: Any,
+        limit: int = 100,
+    ) -> list[JobRecord]:
+        job_type_values = [job_type.value for job_type in job_types]
+        if not job_type_values:
+            return []
+        result = await self._session.execute(
+            select(JobModel)
+            .where(
+                JobModel.job_type.in_(job_type_values),
                 JobModel.status == JobStatus.RUNNING.value,
                 or_(JobModel.heartbeat_at.is_(None), JobModel.heartbeat_at < stale_before),
             )
@@ -1382,6 +1595,131 @@ class ParseRunAttemptRepository:
             .order_by(ParseRunAttemptModel.attempt_no.asc())
         )
         return [_parse_run_attempt_from_model(model) for model in result.scalars().all()]
+
+
+class KnowledgeRunRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: KnowledgeRunRecord) -> KnowledgeRunRecord:
+        model = KnowledgeRunModel(
+            knowledge_run_id=record.knowledge_run_id,
+            job_id=record.job_id,
+            dataset_id=record.dataset_id,
+            operation_name=record.operation_name,
+            trace_id=record.trace_id,
+            request_json=_json_object(record.request_payload),
+            result_summary_json=_json_object(record.result_summary),
+            telemetry_context_json=_json_object(record.telemetry_context),
+            deployment_context_json=_json_object(record.deployment_context),
+            experiment_context_json=_json_object(record.experiment_context),
+            created_at=record.created_at or utc_now(),
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _knowledge_run_from_model(model)
+
+    async def get(self, knowledge_run_id: str) -> KnowledgeRunRecord | None:
+        model = await self._session.get(KnowledgeRunModel, knowledge_run_id)
+        return None if model is None else _knowledge_run_from_model(model)
+
+    async def get_by_job(self, job_id: str) -> KnowledgeRunRecord | None:
+        result = await self._session.execute(
+            select(KnowledgeRunModel).where(KnowledgeRunModel.job_id == job_id)
+        )
+        model = result.scalar_one_or_none()
+        return None if model is None else _knowledge_run_from_model(model)
+
+    async def update(self, record: KnowledgeRunRecord) -> KnowledgeRunRecord | None:
+        model = await self._session.get(KnowledgeRunModel, record.knowledge_run_id)
+        if model is None:
+            return None
+        model.dataset_id = record.dataset_id
+        model.operation_name = record.operation_name
+        model.trace_id = record.trace_id
+        model.request_json = _json_object(record.request_payload)
+        model.result_summary_json = _json_object(record.result_summary)
+        model.telemetry_context_json = _json_object(record.telemetry_context)
+        model.deployment_context_json = _json_object(record.deployment_context)
+        model.experiment_context_json = _json_object(record.experiment_context)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _knowledge_run_from_model(model)
+
+    async def list_for_dataset(self, dataset_id: str) -> list[KnowledgeRunRecord]:
+        result = await self._session.execute(
+            select(KnowledgeRunModel)
+            .where(KnowledgeRunModel.dataset_id == dataset_id)
+            .order_by(KnowledgeRunModel.created_at.asc())
+        )
+        return [_knowledge_run_from_model(model) for model in result.scalars().all()]
+
+
+class SearchRequestRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: SearchRequestRecord) -> SearchRequestRecord:
+        model = SearchRequestModel(
+            request_id=record.request_id,
+            tenant_id=record.tenant_id,
+            dataset_scope_json=json_dumps(record.dataset_scope),
+            session_id=record.session_id,
+            search_type=record.search_type,
+            trace_id=record.trace_id,
+            span_id=record.span_id,
+            query_text=record.query_text,
+            filters_json=_json_object(record.filters),
+            options_json=_json_object(record.options),
+            answer_text=record.answer_text,
+            latency_ms=record.latency_ms,
+            telemetry_context_json=_json_object(record.telemetry_context),
+            deployment_context_json=_json_object(record.deployment_context),
+            experiment_context_json=_json_object(record.experiment_context),
+            created_by=record.created_by,
+            created_at=record.created_at or utc_now(),
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _search_request_from_model(model)
+
+    async def get(self, request_id: str) -> SearchRequestRecord | None:
+        model = await self._session.get(SearchRequestModel, request_id)
+        return None if model is None else _search_request_from_model(model)
+
+
+class SearchHitRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: SearchHitRecord) -> SearchHitRecord:
+        model = SearchHitModel(
+            request_id=record.request_id,
+            hit_index=record.hit_index,
+            hit_type=record.hit_type,
+            source_id=record.source_id,
+            document_id=record.document_id,
+            object_id=record.object_id,
+            score=record.score,
+            title=record.title,
+            snippet=record.snippet,
+            citation_json=_json_object(record.citation),
+            metadata_json=_json_object(record.metadata),
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _search_hit_from_model(model)
+
+    async def list_for_request(self, request_id: str) -> list[SearchHitRecord]:
+        result = await self._session.execute(
+            select(SearchHitModel)
+            .where(SearchHitModel.request_id == request_id)
+            .order_by(SearchHitModel.hit_index.asc())
+        )
+        return [_search_hit_from_model(model) for model in result.scalars().all()]
 
 
 class AuthorizationDecisionRepository:

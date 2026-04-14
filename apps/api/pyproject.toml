@@ -8,6 +8,7 @@ dependencies = [
   "cortex-common",
   "cortex-contracts",
   "cortex-db",
+  "cortex-knowledge",
   "cortex-observability",
   "cortex-parse",
   "cortex-storage",

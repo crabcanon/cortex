@@ -181,9 +181,26 @@ class DatasetRecord:
     dataset_key: str
     display_name: str
     description: str | None = None
+    retention_class: str = "standard"
     access_level: AccessLevel = AccessLevel.TENANT_PRIVATE
     access_policy: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
+    status: str = "active"
+    created_by: str | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+@dataclass(slots=True)
+class DatasetItemRecord:
+    dataset_id: str
+    item_type: str
+    item_id: str
+    source_stage: str
+    label: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    created_at: datetime | None = None
 
 
 @dataclass(slots=True)
@@ -265,6 +282,57 @@ class ParseRunAttemptRecord:
     completed_at: datetime | None = None
     error_code: str | None = None
     error_message: str | None = None
+
+
+@dataclass(slots=True)
+class KnowledgeRunRecord:
+    knowledge_run_id: str
+    job_id: str
+    dataset_id: str
+    operation_name: str
+    trace_id: str | None = None
+    request_payload: dict[str, Any] = field(default_factory=dict)
+    result_summary: dict[str, Any] = field(default_factory=dict)
+    telemetry_context: dict[str, Any] = field(default_factory=dict)
+    deployment_context: dict[str, Any] = field(default_factory=dict)
+    experiment_context: dict[str, Any] = field(default_factory=dict)
+    created_at: datetime | None = None
+
+
+@dataclass(slots=True)
+class SearchRequestRecord:
+    request_id: str
+    tenant_id: str
+    dataset_scope: list[str] = field(default_factory=list)
+    session_id: str | None = None
+    search_type: str = "GRAPH_COMPLETION"
+    trace_id: str | None = None
+    span_id: str | None = None
+    query_text: str = ""
+    filters: dict[str, Any] = field(default_factory=dict)
+    options: dict[str, Any] = field(default_factory=dict)
+    answer_text: str | None = None
+    latency_ms: int | None = None
+    telemetry_context: dict[str, Any] = field(default_factory=dict)
+    deployment_context: dict[str, Any] = field(default_factory=dict)
+    experiment_context: dict[str, Any] = field(default_factory=dict)
+    created_by: str | None = None
+    created_at: datetime | None = None
+
+
+@dataclass(slots=True)
+class SearchHitRecord:
+    request_id: str
+    hit_index: int
+    hit_type: str
+    source_id: str | None = None
+    document_id: str | None = None
+    object_id: str | None = None
+    score: float | None = None
+    title: str | None = None
+    snippet: str | None = None
+    citation: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(slots=True)

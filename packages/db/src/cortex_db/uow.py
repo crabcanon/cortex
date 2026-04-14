@@ -8,6 +8,7 @@ from .repositories import (
     ActorRoleBindingRepository,
     AuthorizationDecisionRepository,
     AuthorizationPolicyRepository,
+    DatasetItemRepository,
     DatasetRepository,
     DocumentArtifactRepository,
     DocumentChunkRepository,
@@ -15,6 +16,7 @@ from .repositories import (
     DocumentTagRepository,
     JobEventRepository,
     JobRepository,
+    KnowledgeRunRepository,
     ObjectRepository,
     ObjectVersionRepository,
     ParserEngineRepository,
@@ -24,6 +26,8 @@ from .repositories import (
     PermissionRepository,
     RolePermissionRepository,
     RoleRepository,
+    SearchHitRepository,
+    SearchRequestRepository,
     StorageBucketRepository,
     TenantRepository,
 )
@@ -136,6 +140,10 @@ class CortexUnitOfWork:
         return DatasetRepository(self._require_session())
 
     @property
+    def dataset_items(self) -> DatasetItemRepository:
+        return DatasetItemRepository(self._require_session())
+
+    @property
     def jobs(self) -> JobRepository:
         return JobRepository(self._require_session())
 
@@ -150,6 +158,18 @@ class CortexUnitOfWork:
     @property
     def parse_run_attempts(self) -> ParseRunAttemptRepository:
         return ParseRunAttemptRepository(self._require_session())
+
+    @property
+    def knowledge_runs(self) -> KnowledgeRunRepository:
+        return KnowledgeRunRepository(self._require_session())
+
+    @property
+    def search_requests(self) -> SearchRequestRepository:
+        return SearchRequestRepository(self._require_session())
+
+    @property
+    def search_hits(self) -> SearchHitRepository:
+        return SearchHitRepository(self._require_session())
 
     @property
     def authorization_decisions(self) -> AuthorizationDecisionRepository:

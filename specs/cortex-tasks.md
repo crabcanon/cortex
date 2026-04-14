@@ -76,10 +76,10 @@
 
 | Task ID | Added At | Priority | Area | Task | Depends On | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| CTX-20260412-025 | 2026-04-12 21:11:20 +08:00 | P0 | parse | 实现 `cortex_parse` 的核心模型：`ParseRequest`、`EngineAttempt`、`ParsedDocument`、`ParseDiagnostics` | CTX-20260412-007, CTX-20260412-008 | planned |
-| CTX-20260412-026 | 2026-04-12 21:11:20 +08:00 | P0 | parse | 实现 parser engine protocol、router、engine registry、profile loader | CTX-20260412-025, CTX-20260412-009 | planned |
-| CTX-20260412-027 | 2026-04-12 21:11:20 +08:00 | P0 | parse | 实现 Markdown / metadata / provenance normalization pipeline | CTX-20260412-026 | planned |
-| CTX-20260412-028 | 2026-04-12 21:11:20 +08:00 | P0 | parse | 实现 parse run、attempt、artifact、document 持久化服务 | CTX-20260412-012, CTX-20260412-027, CTX-20260412-021 | planned |
+| CTX-20260412-025 | 2026-04-12 21:11:20 +08:00 | P0 | parse | 实现 `cortex_parse` 的核心模型：`ParseRequest`、`EngineAttempt`、`ParsedDocument`、`ParseDiagnostics` | CTX-20260412-007, CTX-20260412-008 | done |
+| CTX-20260412-026 | 2026-04-12 21:11:20 +08:00 | P0 | parse | 实现 parser engine protocol、router、engine registry、profile loader | CTX-20260412-025, CTX-20260412-009 | done |
+| CTX-20260412-027 | 2026-04-12 21:11:20 +08:00 | P0 | parse | 实现 Markdown / metadata / provenance normalization pipeline | CTX-20260412-026 | done |
+| CTX-20260412-028 | 2026-04-12 21:11:20 +08:00 | P0 | parse | 实现 parse run、attempt、artifact、document 持久化服务 | CTX-20260412-012, CTX-20260412-027, CTX-20260412-021 | done |
 
 #### Phase H. Parse Adapters
 
@@ -142,4 +142,15 @@ Goal: deliver the Storage phase end to end on top of the existing auth/API found
 | CTX-20260413-005 | 2026-04-13 10:05:00 +08:00 | P0 | storage | Implement `cortex_storage` core services: checksum helper, bucket resolver, S3 presign facade, upload-init strategy, upload-complete flow, and download URL signing | CTX-20260413-004 | done |
 | CTX-20260413-006 | 2026-04-13 10:05:00 +08:00 | P0 | api | Expose `/v1/storage/uploads`, `/v1/storage/uploads/{uploadId}/complete`, `/v1/storage/objects/{objectId}`, and `/v1/storage/objects/{objectId}/download-url` with functional + resource authorization and ProblemDetails parity | CTX-20260413-005 | done |
 | CTX-20260413-007 | 2026-04-13 10:05:00 +08:00 | P0 | testing | Add contract/integration coverage for storage DTOs, repository round-trips, upload session lifecycle, and download URL generation; finish with full lint/type/test validation and task/log closure | CTX-20260413-006 | done |
+
+### Batch 2026-04-14 09:20:00 +08:00 | Phase G Parse Foundation Continuation
+
+Goal: deliver the Parse foundation on top of the existing storage/auth/API platform, including parse contracts, registry/profile routing, normalization, persistence, and a reusable orchestration service that later adapters and API routes can build on.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260414-001 | 2026-04-14 09:20:00 +08:00 | P0 | parse-db | Align parse-related domain, contract, ORM, repository, and unit-of-work layers for parser engines, parser profiles, parse runs, attempts, artifacts, and chunks so the control plane matches `cortex-init.sql` and `cortex-api.yaml` | CTX-20260412-025, CTX-20260412-028 | done |
+| CTX-20260414-002 | 2026-04-14 09:20:00 +08:00 | P0 | parse-core | Implement `cortex_parse` core models, engine protocol, registry, profile loader, and selection router with vendor-neutral strategy/fallback behavior | CTX-20260414-001, CTX-20260412-026 | done |
+| CTX-20260414-003 | 2026-04-14 09:20:00 +08:00 | P0 | parse-service | Implement Markdown/metadata/provenance normalization plus parse orchestration and persistence services that can execute a registered engine and commit the resulting document graph | CTX-20260414-001, CTX-20260414-002, CTX-20260412-027, CTX-20260412-028 | done |
+| CTX-20260414-004 | 2026-04-14 09:20:00 +08:00 | P0 | testing | Add parse contract and integration coverage for registry/profile loading, router selection, normalization output, and parse persistence, then run full lint/type/test validation and close the batch in tasks/log | CTX-20260414-003 | done |
 

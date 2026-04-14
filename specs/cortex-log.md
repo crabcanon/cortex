@@ -191,3 +191,35 @@
 - Cause: Parse and Knowledge both depend on a stable object lifecycle, so Storage had to be finished before the next parser foundation stage could move safely.
 - Action: Implemented `cortex_storage`, expanded domain/contracts/DB models, wired `/v1/storage/*` endpoints into the API control plane, and reran the full repository check suite.
 - Prevention: The next phase can now reuse the object/version model, bucket resolution, auth/resource checks, and direct-to-storage upload pattern instead of rebuilding storage concerns inside Parse.
+
+### 2026-04-14 09:20:00 +08:00 | Phase G Started
+
+- Stage: `CTX-20260412-025 ~ CTX-20260412-028`, `CTX-20260414-001 ~ CTX-20260414-004`
+- Event: Started the Parse foundation continuation, with the first focus on aligning the parse control-plane schema, core routing abstractions, normalization pipeline, and persistence service before exposing new API routes.
+- Cause: The task ledger places Parse immediately after Storage, and the adapters/API endpoints need a stable engine registry, profile model, and document persistence substrate rather than one-off parser code.
+- Action: Added a dedicated Phase G batch to `specs/cortex-tasks.md` and began reconciling `cortex-api.yaml`, `cortex-schema.md`, `cortex-init.sql`, and the current empty `packages/parse` package.
+- Prevention: Keep the implementation ordered as parse persistence foundation -> routing/normalization -> orchestration -> tests/validation so the later adapter and API stages can build on stable contracts.
+
+### 2026-04-14 09:42:00 +08:00 | Parse Enum Boundary
+
+- Stage: `CTX-20260414-001 ~ CTX-20260414-003`
+- Event: `pyright` rejected the parse persistence layer because the in-memory registry descriptors used `cortex_contracts` parse enums while the ORM/domain layer expected the corresponding `cortex_domain` enums.
+- Cause: Parse foundation spans contract, runtime, and persistence boundaries; directly reusing contract enums inside domain records repeated the same cross-layer enum mismatch that appeared earlier in the Job API work.
+- Action: Added explicit value-based enum mapping when persisting registered parse engines, keeping the public API enums and the domain persistence enums independent.
+- Prevention: Continue treating `contracts -> domain` as an explicit adapter boundary inside service/repository code instead of passing contract enum instances directly into domain records.
+
+### 2026-04-14 09:47:00 +08:00 | Parse Test Constructor Strictness
+
+- Stage: `CTX-20260414-004`
+- Event: The first parse integration test draft passed raw nested `dict` objects into `ParseSyncRequest` fields that are typed as concrete Pydantic models, which `pyright` flagged even though runtime validation would have accepted them.
+- Cause: The parse request surface is deeper than the earlier storage tests, so ad hoc dict literals obscured the intended contract shape and weakened static validation.
+- Action: Rewrote the test to construct `ParseOutputOptions`, `ChunkingOptions`, `ParsePersistenceOptions`, and `AccessPolicy` explicitly, which made the test mirror the contract types exactly.
+- Prevention: For complex request DTOs, prefer model constructors over nested dict literals in tests so type-checking catches schema drift earlier and more precisely.
+
+### 2026-04-14 09:55:00 +08:00 | Phase G Completed
+
+- Stage: `CTX-20260412-025 ~ CTX-20260412-028`, `CTX-20260414-001 ~ CTX-20260414-004`
+- Event: The Parse foundation is now in place: parse contracts, engine/profile catalog persistence, registry/profile loading, routing/fallback, Markdown normalization, chunking, parse orchestration, and parse persistence all landed and passed full validation.
+- Cause: This phase had to establish a stable vendor-neutral substrate before Phase H adapters and Phase I parse API routes can plug in concrete engines such as Crawl4AI, Jina Reader, LlamaParse, MarkItDown, and Docling.
+- Action: Implemented `cortex_parse`, expanded domain/contracts/DB layers for parse entities, added a built-in default profile template, and introduced contract/integration coverage for parse routing and persistence.
+- Prevention: The next phase can now focus on concrete adapters and parse API exposure without rebuilding engine registry, normalization, chunk persistence, or parse-run control-plane concerns.

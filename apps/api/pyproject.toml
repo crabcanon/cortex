@@ -9,6 +9,7 @@ dependencies = [
   "cortex-contracts",
   "cortex-db",
   "cortex-observability",
+  "cortex-parse",
   "cortex-storage",
   "fastapi>=0.115,<1",
   "uvicorn>=0.35,<0.36",

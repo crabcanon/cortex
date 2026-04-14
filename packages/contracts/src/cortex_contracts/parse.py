@@ -147,6 +147,18 @@ class ParseSyncRequest(BaseModel):
     timeout_seconds: int = Field(default=45, ge=1, le=300)
 
 
+class WebhookConfig(BaseModel):
+    url: str
+    secret_ref: str | None = None
+    event_types: list[str] = Field(default_factory=list)
+    headers: dict[str, str] = Field(default_factory=dict)
+
+
+class ParseJobRequest(ParseSyncRequest):
+    priority: int = Field(default=5, ge=1, le=10)
+    webhook: WebhookConfig | None = None
+
+
 class StandardMetadata(BaseModel):
     title: str | None = None
     author: str | None = None

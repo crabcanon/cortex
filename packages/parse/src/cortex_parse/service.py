@@ -402,6 +402,52 @@ class ParseService:
                 submitted_by=caller.actor_id or caller.subject,
             )
         )
+        return await self._execute_job(
+            uow=uow,
+            caller=caller,
+            job=job,
+            request=request,
+            started_at=started_at,
+        )
+
+    async def execute_existing_job(
+        self,
+        *,
+        uow: CortexUnitOfWork,
+        caller: Any,
+        job: JobRecord,
+        request: ParseSyncRequest,
+    ) -> ParseResult:
+        started_at = utc_now()
+        running_job = await uow.jobs.update_status(
+            job.job_id,
+            status=JobStatus.RUNNING,
+            started_at=started_at,
+            heartbeat_at=started_at,
+        )
+        if running_job is None:
+            raise CortexError(
+                code="job_not_found",
+                detail=f"Parse job `{job.job_id}` disappeared before execution.",
+                status_code=404,
+            )
+        return await self._execute_job(
+            uow=uow,
+            caller=caller,
+            job=running_job,
+            request=request,
+            started_at=started_at,
+        )
+
+    async def _execute_job(
+        self,
+        *,
+        uow: CortexUnitOfWork,
+        caller: Any,
+        job: JobRecord,
+        request: ParseSyncRequest,
+        started_at: Any,
+    ) -> ParseResult:
         with self._tracer.start_as_current_span("parse.engine.execute") as span:
             selection = self._router.resolve(request)
             attempt_snapshots: list[AttemptSnapshot] = []
@@ -506,6 +552,7 @@ class ParseService:
                 result_payload={
                     "document_id": result.document.document_id,
                     "selected_engine_key": result.diagnostics.selected_engine_key,
+                    "parse_result": result.model_dump(mode="json"),
                 },
             )
             span.set_attribute("cortex.parse.engine", selected_descriptor.engine_key)

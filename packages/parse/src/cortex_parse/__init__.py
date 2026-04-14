@@ -1,5 +1,8 @@
 """Parse orchestration exports."""
 
+from .adapters import Crawl4AIParseEngine
+from .bootstrap import build_parse_service
+from .jobs import ParseJobControlService
 from .models import (
     EngineExecutionContext,
     EngineExecutionResult,
@@ -13,12 +16,15 @@ from .router import ParseRouter
 from .service import ParsePersistenceService, ParseService
 
 __all__ = [
+    "build_parse_service",
+    "Crawl4AIParseEngine",
     "EngineExecutionContext",
     "EngineExecutionResult",
     "LoadedParserProfile",
     "NormalizationResult",
     "ParseEngineProtocol",
     "ParseEngineRegistry",
+    "ParseJobControlService",
     "ParseNormalizationPipeline",
     "ParsePersistenceService",
     "ParseProfileLoader",

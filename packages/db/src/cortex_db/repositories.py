@@ -1193,6 +1193,42 @@ class JobRepository:
         model = result.scalar_one_or_none()
         return None if model is None else _job_from_model(model)
 
+    async def list_queued(
+        self,
+        *,
+        job_type: JobType,
+        limit: int = 1,
+    ) -> list[JobRecord]:
+        result = await self._session.execute(
+            select(JobModel)
+            .where(
+                JobModel.job_type == job_type.value,
+                JobModel.status == JobStatus.QUEUED.value,
+            )
+            .order_by(JobModel.priority.desc(), JobModel.submitted_at.asc())
+            .limit(limit)
+        )
+        return [_job_from_model(model) for model in result.scalars().all()]
+
+    async def list_stale_running(
+        self,
+        *,
+        job_type: JobType,
+        stale_before: Any,
+        limit: int = 100,
+    ) -> list[JobRecord]:
+        result = await self._session.execute(
+            select(JobModel)
+            .where(
+                JobModel.job_type == job_type.value,
+                JobModel.status == JobStatus.RUNNING.value,
+                or_(JobModel.heartbeat_at.is_(None), JobModel.heartbeat_at < stale_before),
+            )
+            .order_by(JobModel.started_at.asc())
+            .limit(limit)
+        )
+        return [_job_from_model(model) for model in result.scalars().all()]
+
     async def update_status(
         self,
         job_id: str,
@@ -1204,6 +1240,9 @@ class JobRepository:
         error_code: str | None = None,
         error_message: str | None = None,
         result_payload: dict[str, Any] | None = None,
+        deployment_context: dict[str, Any] | None = None,
+        telemetry_context: dict[str, Any] | None = None,
+        experiment_context: dict[str, Any] | None = None,
     ) -> JobRecord | None:
         model = await self._session.get(JobModel, job_id)
         if model is None:
@@ -1221,6 +1260,12 @@ class JobRepository:
             model.error_message = error_message
         if result_payload is not None:
             model.result_json = _json_object(result_payload)
+        if deployment_context is not None:
+            model.deployment_context_json = _json_object(deployment_context)
+        if telemetry_context is not None:
+            model.telemetry_context_json = _json_object(telemetry_context)
+        if experiment_context is not None:
+            model.experiment_context_json = _json_object(experiment_context)
         await self._session.flush()
         await self._session.refresh(model)
         return _job_from_model(model)

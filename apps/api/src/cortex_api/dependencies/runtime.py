@@ -5,6 +5,7 @@ from collections.abc import AsyncIterator
 from cortex_auth import AuthorizationService
 from cortex_common import CortexSettings
 from cortex_db import CortexUnitOfWork, SessionFactory
+from cortex_parse import ParseJobControlService, ParseService
 from cortex_storage import StorageService
 from fastapi import Request
 
@@ -23,6 +24,14 @@ def get_auth_service(request: Request) -> AuthorizationService:
 
 def get_storage_service(request: Request) -> StorageService:
     return request.app.state.storage_service  # type: ignore[no-any-return]
+
+
+def get_parse_service(request: Request) -> ParseService:
+    return request.app.state.parse_service  # type: ignore[no-any-return]
+
+
+def get_parse_job_service(request: Request) -> ParseJobControlService:
+    return request.app.state.parse_job_service  # type: ignore[no-any-return]
 
 
 async def get_uow(request: Request) -> AsyncIterator[CortexUnitOfWork]:

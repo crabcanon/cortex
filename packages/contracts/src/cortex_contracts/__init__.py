@@ -53,6 +53,7 @@ from .parse import (
     ParseEngineAttempt,
     ParseEngineDescriptor,
     ParseEngineList,
+    ParseJobRequest,
     ParseNormalizationOptions,
     ParseOutputOptions,
     ParsePersistenceOptions,
@@ -67,6 +68,7 @@ from .parse import (
     SslCertificateSummary,
     StandardMetadata,
     StorageObjectRef,
+    WebhookConfig,
 )
 from .problem import FieldError, ProblemDetails
 from .resources import AccessPolicy, AuditFields
@@ -123,6 +125,7 @@ __all__ = [
     "ParseEngineList",
     "ParseEngineStatus",
     "ParseInputKind",
+    "ParseJobRequest",
     "ParseLlmReadyMode",
     "ParseNormalizationOptions",
     "ParseOutputOptions",
@@ -153,6 +156,7 @@ __all__ = [
     "TRACESTATE_HEADER",
     "UploadMode",
     "UploadSessionStatus",
+    "WebhookConfig",
     "X_DECISION_ID_HEADER",
     "X_REQUEST_ID_HEADER",
     "X_TRACE_ID_HEADER",

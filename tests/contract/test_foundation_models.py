@@ -14,11 +14,24 @@ from cortex_contracts import (
     AccessPolicy as ContractAccessPolicy,
 )
 from cortex_contracts import (
+    AddJobRequest,
     AuditFields,
+    Citation,
+    CognifyJobRequest,
+    DatasetCounters,
+    DatasetRetentionClass,
     FallbackMode,
+    GraphPath,
     JobAccepted,
     JobStatus,
     JobType,
+    KnowledgeDataset,
+    KnowledgeDatasetCreateRequest,
+    KnowledgeDatasetStatus,
+    KnowledgeInput,
+    KnowledgeInputType,
+    MemifyJobRequest,
+    MemifyPipeline,
     PaginationEnvelope,
     ParseAttemptStatus,
     ParsedDocument,
@@ -34,6 +47,10 @@ from cortex_contracts import (
     ParseSyncRequest,
     ParseTimingSummary,
     ProblemDetails,
+    SearchHit,
+    SearchHitType,
+    SearchRequest,
+    SearchResponse,
     StorageObject,
     StorageObjectStatus,
     StorageUploadCreateRequest,
@@ -194,6 +211,80 @@ def test_storage_contract_models_capture_upload_and_object_metadata() -> None:
     assert create_request.access_policy.access_level is ContractAccessLevel.RESTRICTED
     assert storage_object.status is StorageObjectStatus.AVAILABLE
     assert storage_object.tags == ["finance"]
+
+
+def test_knowledge_contract_models_capture_dataset_metadata() -> None:
+    create_request = KnowledgeDatasetCreateRequest(
+        dataset_key="finance_docs",
+        display_name="Finance Docs",
+        tags=["finance"],
+        retention_class=DatasetRetentionClass.DURABLE,
+        access_policy=ContractAccessPolicy(access_level=ContractAccessLevel.TENANT_SHARED),
+    )
+    dataset = KnowledgeDataset(
+        dataset_id="dataset_123",
+        dataset_key="finance_docs",
+        display_name="Finance Docs",
+        status=KnowledgeDatasetStatus.ACTIVE,
+        tags=["finance"],
+        retention_class=DatasetRetentionClass.DURABLE,
+        counters=DatasetCounters(documents=3, chunks=8),
+        access_policy=ContractAccessPolicy(access_level=ContractAccessLevel.TENANT_SHARED),
+        audit=AuditFields(
+            created_at=datetime(2026, 4, 14, 21, 0, tzinfo=UTC),
+            updated_at=datetime(2026, 4, 14, 21, 0, tzinfo=UTC),
+        ),
+    )
+
+    assert create_request.retention_class is DatasetRetentionClass.DURABLE
+    assert dataset.status is KnowledgeDatasetStatus.ACTIVE
+    assert dataset.counters.documents == 3
+
+
+def test_knowledge_job_and_search_contract_models_capture_request_shapes() -> None:
+    add_request = AddJobRequest(
+        dataset_key="finance_docs",
+        inputs=[
+            KnowledgeInput(input_type=KnowledgeInputType.OBJECT_ID, object_id="obj_123"),
+            KnowledgeInput(input_type=KnowledgeInputType.TEXT, text="A short inline note."),
+        ],
+    )
+    cognify_request = CognifyJobRequest(dataset_id="dataset_123")
+    memify_request = MemifyJobRequest(
+        dataset_id="dataset_123",
+        pipeline=MemifyPipeline.TRIPLET_EMBEDDINGS,
+    )
+    search_request = SearchRequest(
+        query_text="what changed",
+        dataset_ids=["dataset_123"],
+        include_graph_paths=True,
+    )
+    search_response = SearchResponse(
+        request_id="sreq_123",
+        search_type=search_request.search_type,
+        dataset_scope=["dataset_123"],
+        answer="One answer",
+        context_items=[
+            SearchHit(
+                rank=1,
+                hit_type=SearchHitType.CHUNK,
+                score=0.99,
+                source_id="chunk_1",
+                citation=Citation(document_id="doc_123", chunk_id="chunk_1"),
+            )
+        ],
+        graph_paths=[GraphPath(nodes=[{"id": "n1"}], edges=[{"source": "n1", "target": "n2"}])],
+        created_at=datetime(2026, 4, 14, 22, 0, tzinfo=UTC),
+        latency_ms=12,
+    )
+
+    assert add_request.inputs[0].object_id == "obj_123"
+    assert cognify_request.graph_prompt_profile == "default"
+    assert memify_request.pipeline == "triplet_embeddings"
+    assert search_request.dataset_ids == ["dataset_123"]
+    assert search_response.context_items[0].citation is not None
+    assert search_response.context_items[0].citation.chunk_id == "chunk_1"
+    assert search_response.graph_paths[0].nodes[0]["id"] == "n1"
 
 
 def test_parse_contract_models_capture_request_and_result_shapes() -> None:

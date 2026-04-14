@@ -223,3 +223,75 @@
 - Cause: This phase had to establish a stable vendor-neutral substrate before Phase H adapters and Phase I parse API routes can plug in concrete engines such as Crawl4AI, Jina Reader, LlamaParse, MarkItDown, and Docling.
 - Action: Implemented `cortex_parse`, expanded domain/contracts/DB layers for parse entities, added a built-in default profile template, and introduced contract/integration coverage for parse routing and persistence.
 - Prevention: The next phase can now focus on concrete adapters and parse API exposure without rebuilding engine registry, normalization, chunk persistence, or parse-run control-plane concerns.
+
+### 2026-04-14 17:16:50 +08:00 | Phase H/I Started
+
+- Stage: `CTX-20260412-029`, `CTX-20260412-034`, `CTX-20260414-005 ~ CTX-20260414-007`
+- Event: Started the next Parse phase, focusing on the first concrete parser adapter, runtime bootstrap into FastAPI, and the synchronous Parse API endpoints defined in `cortex-api.yaml`.
+- Cause: The Parse foundation is already stable, so the next highest-value step is to expose a real engine-backed API surface before moving on to async worker execution and the remaining adapters.
+- Action: Added a new Phase H/I batch to `cortex-tasks.md` and began reconciling the current API app, parse runtime, and Crawl4AI integration boundary.
+- Prevention: Keep the work ordered as adapter/runtime bootstrap -> API routes -> tests/validation -> batch closure so later async parse jobs can reuse the same service graph rather than fork a second implementation path.
+
+### 2026-04-14 17:22:00 +08:00 | Optional Adapter Import Lint Boundary
+
+- Stage: `CTX-20260414-005 ~ CTX-20260414-007`
+- Event: The first full-repo validation failed after the Crawl4AI adapter landed because Ruff flagged constant-string `getattr(...)` usage on dynamically imported modules plus import-order drift in the new parse API tests.
+- Cause: Optional provider adapters naturally rely on runtime imports, but the initial implementation mixed dynamic-module access with patterns that Ruff treats as avoidable, and the new tests had not yet been normalized to the repository's import grouping rules.
+- Action: Replaced the flagged constant-string `getattr` calls with direct attribute access after module import, let Ruff normalize the new test file import block, and reran the full repository check suite.
+- Prevention: For future optional adapters, keep dynamic imports at the module boundary, but switch to direct attribute access immediately after import so lint, type-checking, and optional-dependency isolation all stay aligned.
+
+### 2026-04-14 17:24:45 +08:00 | Phase H/I Slice Completed
+
+- Stage: `CTX-20260414-005 ~ CTX-20260414-007`, `CTX-20260412-034`
+- Event: The first Phase H/I delivery slice is now complete: a concrete Crawl4AI-backed adapter, parse runtime bootstrap, `/v1/parse/engines`, `/v1/parse/profiles`, `/v1/parse/sync`, targeted adapter/API coverage, and full repository validation all landed successfully.
+- Cause: The immediate goal for this round was to expose a real parse control-plane entrypoint on top of the Phase G foundation before moving further into async parse jobs and the remaining adapters.
+- Action: Added `cortex_parse` adapter/bootstrap modules, wired ParseService into the API lifespan and runtime dependencies, introduced FastAPI parse routes, added integration tests for both the Crawl4AI adapter and parse endpoints, and reran `scripts/dev/check.ps1` to completion.
+- Prevention: The next round should build on this exact service graph for async parse job submission/execution and continue the remaining adapter backlog instead of creating a separate worker-only parse path.
+
+### 2026-04-14 20:16:20 +08:00 | Phase I Async Parse Started
+
+- Stage: `CTX-20260414-008 ~ CTX-20260414-011`, `CTX-20260412-035 ~ CTX-20260412-036`
+- Event: Started the asynchronous Parse continuation, focusing on queued job submission, a parse result endpoint, and a worker `run_once` execution path over the existing SQL job table.
+- Cause: The synchronous Parse API is now wired, so the next public contract gap is `/v1/parse/jobs` plus a worker loop that can execute queued parse work without coupling the API to a specific queue vendor.
+- Action: Added a new task batch before coding and selected a DB-backed queue boundary for this slice, keeping the API contract stable while deferring Redis/SQS/Kafka replacement to later infrastructure work.
+- Prevention: Keep async execution as a thin layer over the same `ParseService` runtime used by sync parsing so adapter behavior, normalization, telemetry, and persistence do not fork between API and worker paths.
+
+### 2026-04-14 20:20:00 +08:00 | Worker Bootstrap Import Formatting Failure
+
+- Stage: `CTX-20260414-010 ~ CTX-20260414-011`
+- Event: The first full-repo validation after adding the Parse Worker execution loop failed in Ruff because the new worker bootstrap imports were not sorted and one dependency import line exceeded the repository line-length limit.
+- Cause: The worker file changed from a tiny smoke-test placeholder into a real runtime module, and the new multi-package imports were added faster than the formatting rules were applied.
+- Action: Split the long `cortex_db` import into a parenthesized block and reran the full validation suite.
+- Prevention: For future placeholder-to-runtime rewrites, run a focused `ruff check <file>` immediately after the first implementation pass, before invoking the full repository check.
+
+### 2026-04-14 20:22:14 +08:00 | Phase I Async Parse Slice Completed
+
+- Stage: `CTX-20260414-008 ~ CTX-20260414-011`, `CTX-20260412-036`
+- Event: The asynchronous Parse slice is now complete: `ParseJobRequest`, idempotent queued-job submission, parse result retrieval, `/v1/parse/jobs`, `/v1/parse/jobs/{jobId}/result`, Parse Worker `run_once`, status transitions, job events, and integration coverage all landed.
+- Cause: The REST contract needed a non-blocking parse path before larger crawling/document workloads can be routed through worker execution instead of tying up API request handlers.
+- Action: Added a vendor-neutral DB-backed queue boundary using the existing `jobs` table, wired parse job control into FastAPI, expanded the worker package from bootstrap placeholder to executable poller, and verified the flow `submit -> pending result -> worker run_once -> completed result -> job events`.
+- Prevention: Keep `CTX-20260412-035` open for retry and timeout hardening; the next worker pass should add retry counters, lease/heartbeat semantics, and timeout handling before introducing a production queue backend.
+
+### 2026-04-14 20:25:08 +08:00 | Worker Reliability Started
+
+- Stage: `CTX-20260412-035`, `CTX-20260414-012 ~ CTX-20260414-015`
+- Event: Started worker reliability hardening for the SQL-backed Parse queue, focusing on retry budgets, lease ownership, heartbeat refresh, stale-lease recovery, and execution timeout handling.
+- Cause: The previous async slice proved the API/worker control path, but production-grade worker behavior needs bounded retries and lease/timeout semantics before additional adapters increase the failure surface.
+- Action: Added a dedicated reliability batch to `cortex-tasks.md` before coding and scoped the implementation to portable job metadata stored in existing standard-SQL columns.
+- Prevention: Keep the reliability state encoded as explicit job metadata and events so a future Redis/SQS/Kafka queue backend can map the same semantics without changing REST contracts.
+
+### 2026-04-14 20:34:00 +08:00 | Adapter Formatting Cleanup
+
+- Stage: `CTX-20260414-014`
+- Event: After adding the Jina Reader, MarkItDown, and Docling adapters, full validation failed on two long adapter lines and one unused import.
+- Cause: The adapter implementations were intentionally lightweight and optional, but the first pass left a long timeout expression and a long Docling config-error line that exceeded repository style limits.
+- Action: Split the long lines, removed the unused Jina adapter import, and reran full validation.
+- Prevention: Run focused Ruff checks immediately after adding each optional adapter module, especially when adapter code includes long provider names or MIME types.
+
+### 2026-04-14 20:40:25 +08:00 | Worker Reliability And Adapter Slice Completed
+
+- Stage: `CTX-20260412-030`, `CTX-20260412-032`, `CTX-20260412-033`, `CTX-20260412-035`, `CTX-20260414-012 ~ CTX-20260414-015`
+- Event: Worker reliability hardening and the next adapter slice are complete: SQL-backed parse jobs now carry retry/lease metadata, workers claim jobs with lease ownership, refresh heartbeat, recover stale leases, enforce execution timeout, and retry or fail with explicit job events; Jina Reader, MarkItDown, and Docling optional adapters are also registered through the parse bootstrap when available.
+- Cause: Async Parse needed failure handling before broader adapter diversity increased error and timeout scenarios; the adapter backlog also needed a vendor-neutral optional-dependency pattern beyond Crawl4AI.
+- Action: Extended job repository operations, added queue state management in `ParseJobControlService`, hardened `ParseWorker.run_once`, added adapter implementations and tests, and verified retry, timeout, stale lease recovery, and adapter conversion behavior.
+- Prevention: LlamaParse remains the main parse adapter gap; before adding it, reuse the same optional-adapter pattern and add API-key/config validation tests so cloud-only parser behavior does not leak provider-specific assumptions into the core contracts.

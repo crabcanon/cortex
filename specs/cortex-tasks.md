@@ -85,19 +85,19 @@
 
 | Task ID | Added At | Priority | Area | Task | Depends On | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| CTX-20260412-029 | 2026-04-12 21:11:20 +08:00 | P0 | parse-adapter | 实现 Crawl4AI adapter，覆盖 profile、advanced features 与 artifact 输出 | CTX-20260412-026 | planned |
-| CTX-20260412-030 | 2026-04-12 21:11:20 +08:00 | P1 | parse-adapter | 实现 Jina Reader adapter，覆盖 markdown / metadata 快速提取 | CTX-20260412-026 | planned |
+| CTX-20260412-029 | 2026-04-12 21:11:20 +08:00 | P0 | parse-adapter | 实现 Crawl4AI adapter，覆盖 profile、advanced features 与 artifact 输出 | CTX-20260412-026 | in_progress |
+| CTX-20260412-030 | 2026-04-12 21:11:20 +08:00 | P1 | parse-adapter | 实现 Jina Reader adapter，覆盖 markdown / metadata 快速提取 | CTX-20260412-026 | done |
 | CTX-20260412-031 | 2026-04-12 21:11:20 +08:00 | P1 | parse-adapter | 实现 LlamaParse adapter，覆盖高保真文档解析输出映射 | CTX-20260412-026 | planned |
-| CTX-20260412-032 | 2026-04-12 21:11:20 +08:00 | P1 | parse-adapter | 实现 MarkItDown adapter，作为本地轻量文件 fallback | CTX-20260412-026 | planned |
-| CTX-20260412-033 | 2026-04-12 21:11:20 +08:00 | P1 | parse-adapter | 实现 Docling adapter，覆盖结构化文档与 OCR 场景 | CTX-20260412-026 | planned |
+| CTX-20260412-032 | 2026-04-12 21:11:20 +08:00 | P1 | parse-adapter | 实现 MarkItDown adapter，作为本地轻量文件 fallback | CTX-20260412-026 | done |
+| CTX-20260412-033 | 2026-04-12 21:11:20 +08:00 | P1 | parse-adapter | 实现 Docling adapter，覆盖结构化文档与 OCR 场景 | CTX-20260412-026 | done |
 
 #### Phase I. Parse API & Worker
 
 | Task ID | Added At | Priority | Area | Task | Depends On | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| CTX-20260412-034 | 2026-04-12 21:11:20 +08:00 | P0 | parse-api | 实现同步 Parse API、引擎/配置模板查询 API | CTX-20260412-018, CTX-20260412-028, CTX-20260412-029 | planned |
-| CTX-20260412-035 | 2026-04-12 21:11:20 +08:00 | P0 | parse-worker | 建立 Parse Worker bootstrap、队列消费者、重试与超时边界 | CTX-20260412-002, CTX-20260412-028 | planned |
-| CTX-20260412-036 | 2026-04-12 21:11:20 +08:00 | P0 | parse-worker | 实现异步 Parse job 提交、执行、状态回写与审计事件 | CTX-20260412-020, CTX-20260412-035 | planned |
+| CTX-20260412-034 | 2026-04-12 21:11:20 +08:00 | P0 | parse-api | 实现同步 Parse API、引擎/配置模板查询 API | CTX-20260412-018, CTX-20260412-028, CTX-20260412-029 | done |
+| CTX-20260412-035 | 2026-04-12 21:11:20 +08:00 | P0 | parse-worker | 建立 Parse Worker bootstrap、队列消费者、重试与超时边界 | CTX-20260412-002, CTX-20260412-028 | done |
+| CTX-20260412-036 | 2026-04-12 21:11:20 +08:00 | P0 | parse-worker | 实现异步 Parse job 提交、执行、状态回写与审计事件 | CTX-20260412-020, CTX-20260412-035 | done |
 
 #### Phase J. Knowledge / Cognee
 
@@ -153,4 +153,36 @@ Goal: deliver the Parse foundation on top of the existing storage/auth/API platf
 | CTX-20260414-002 | 2026-04-14 09:20:00 +08:00 | P0 | parse-core | Implement `cortex_parse` core models, engine protocol, registry, profile loader, and selection router with vendor-neutral strategy/fallback behavior | CTX-20260414-001, CTX-20260412-026 | done |
 | CTX-20260414-003 | 2026-04-14 09:20:00 +08:00 | P0 | parse-service | Implement Markdown/metadata/provenance normalization plus parse orchestration and persistence services that can execute a registered engine and commit the resulting document graph | CTX-20260414-001, CTX-20260414-002, CTX-20260412-027, CTX-20260412-028 | done |
 | CTX-20260414-004 | 2026-04-14 09:20:00 +08:00 | P0 | testing | Add parse contract and integration coverage for registry/profile loading, router selection, normalization output, and parse persistence, then run full lint/type/test validation and close the batch in tasks/log | CTX-20260414-003 | done |
+
+### Batch 2026-04-14 17:16:50 +08:00 | Phase H/I Parse API Continuation
+
+Goal: land the first concrete parse adapter plus the synchronous Parse API surface, wire the runtime bootstrap into FastAPI, and close the batch with adapter/API coverage and repository-wide validation.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260414-005 | 2026-04-14 17:16:50 +08:00 | P0 | parse-adapter | Implement the first concrete Crawl4AI-based parse adapter plus parse runtime/bootstrap wiring so the registry can expose real engine descriptors without leaking provider-specific setup into the API surface | CTX-20260414-003 | done |
+| CTX-20260414-006 | 2026-04-14 17:16:50 +08:00 | P0 | parse-api | Expose `/v1/parse/engines`, `/v1/parse/profiles`, and `/v1/parse/sync` through FastAPI with auth, request correlation, and `cortex-api.yaml` parity | CTX-20260414-005 | done |
+| CTX-20260414-007 | 2026-04-14 17:16:50 +08:00 | P0 | testing | Add adapter and parse API integration coverage, run focused plus full validation, and update task/log closure for the completed Phase H/I slice | CTX-20260414-006 | done |
+
+### Batch 2026-04-14 20:16:20 +08:00 | Phase I Parse Async Worker Continuation
+
+Goal: extend the synchronous Parse API into an asynchronous control-plane loop using a vendor-neutral DB-backed queue boundary, then add a worker `run_once` execution path that can later be replaced by Redis/SQS/Kafka without changing the public REST contract.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260414-008 | 2026-04-14 20:16:20 +08:00 | P0 | parse-jobs | Add async Parse job request contracts plus idempotent queued-job submission and parse-result retrieval helpers on top of the existing job table | CTX-20260414-006 | done |
+| CTX-20260414-009 | 2026-04-14 20:16:20 +08:00 | P0 | parse-api | Expose `/v1/parse/jobs` and `/v1/parse/jobs/{jobId}/result` with functional auth, job-resource checks, and `cortex-api.yaml` response semantics | CTX-20260414-008 | done |
+| CTX-20260414-010 | 2026-04-14 20:16:20 +08:00 | P0 | parse-worker | Implement Parse Worker bootstrap and `run_once` polling/execution flow over queued parse jobs, including status transitions and job events | CTX-20260414-008 | done |
+| CTX-20260414-011 | 2026-04-14 20:16:20 +08:00 | P0 | testing | Add async parse API and worker integration tests, run focused and full validation, and close the batch in task/log history | CTX-20260414-009, CTX-20260414-010 | done |
+
+### Batch 2026-04-14 20:25:08 +08:00 | Phase I Worker Reliability Continuation
+
+Goal: harden the DB-backed Parse Worker queue boundary with retry attempts, heartbeat/lease metadata, stale-lease recovery, and execution timeout handling before continuing the remaining adapter backlog.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260414-012 | 2026-04-14 20:25:08 +08:00 | P0 | parse-worker | Add worker lease metadata, heartbeat refresh, stale lease detection, and retry budget accounting to the SQL job control layer | CTX-20260414-010 | done |
+| CTX-20260414-013 | 2026-04-14 20:25:08 +08:00 | P0 | parse-worker | Enforce parse worker execution timeouts and retry-or-fail transitions with job events and queryable metadata | CTX-20260414-012 | done |
+| CTX-20260414-014 | 2026-04-14 20:25:08 +08:00 | P1 | parse-adapter | Begin the remaining adapter backlog after worker hardening by adding vendor-neutral optional adapter scaffolding for Jina Reader, MarkItDown, and Docling | CTX-20260414-013 | done |
+| CTX-20260414-015 | 2026-04-14 20:25:08 +08:00 | P0 | testing | Add focused reliability tests for retry, heartbeat, stale lease, and timeout behavior, then run full repository validation and close the batch | CTX-20260414-012, CTX-20260414-013 | done |
 

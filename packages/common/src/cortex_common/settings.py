@@ -79,6 +79,22 @@ class AuthSettings(_BaseEnvSettings):
         default=True,
         alias="CORTEX_AUTH_AUTO_PROVISION_PRINCIPALS",
     )
+    token_issuer_enabled: bool = Field(
+        default=False,
+        alias="CORTEX_AUTH_TOKEN_ISSUER_ENABLED",
+    )
+    token_issuer_bootstrap_secret: str | None = Field(
+        default=None,
+        alias="CORTEX_AUTH_TOKEN_ISSUER_BOOTSTRAP_SECRET",
+    )
+    token_default_ttl_seconds: int = Field(
+        default=3600,
+        alias="CORTEX_AUTH_TOKEN_DEFAULT_TTL_SECONDS",
+    )
+    token_max_ttl_seconds: int = Field(
+        default=86400,
+        alias="CORTEX_AUTH_TOKEN_MAX_TTL_SECONDS",
+    )
 
 
 class ParseSettings(_BaseEnvSettings):

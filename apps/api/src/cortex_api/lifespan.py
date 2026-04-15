@@ -3,7 +3,7 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from cortex_auth import AuthorizationService
+from cortex_auth import AuthorizationService, TokenIssuerService
 from cortex_common import load_runtime_config, load_settings
 from cortex_db import create_database_engine, create_session_factory
 from cortex_knowledge import (
@@ -27,6 +27,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     engine = create_database_engine(settings.database.dsn)
     session_factory = create_session_factory(engine)
     auth_service = AuthorizationService(settings.auth)
+    token_issuer_service = TokenIssuerService(settings.auth)
     storage_service = StorageService(settings.s3)
     knowledge_runtime = build_cognee_runtime(settings.cognee, runtime_config)
     knowledge_service = KnowledgeDatasetService(knowledge_runtime)
@@ -42,6 +43,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.db_engine = engine
     app.state.session_factory = session_factory
     app.state.auth_service = auth_service
+    app.state.token_issuer_service = token_issuer_service
     app.state.storage_service = storage_service
     app.state.knowledge_service = knowledge_service
     app.state.knowledge_job_service = knowledge_job_service

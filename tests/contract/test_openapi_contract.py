@@ -26,12 +26,16 @@ from cortex_contracts import (
     StorageUploadCompleteRequest,
     StorageUploadCreateRequest,
     StorageUploadSession,
+    TokenIssueRequest,
+    TokenIssueResponse,
 )
 from fastapi.testclient import TestClient
 
 SPEC_PATH = Path("specs/cortex-api.yaml")
 SCHEMA_MODELS: dict[str, type] = {
     "HealthResponse": HealthResponse,
+    "TokenIssueRequest": TokenIssueRequest,
+    "TokenIssueResponse": TokenIssueResponse,
     "JobAccepted": JobAccepted,
     "JobStatus": JobStatusDetail,
     "ParseSyncRequest": ParseSyncRequest,

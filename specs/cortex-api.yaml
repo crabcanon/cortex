@@ -45,16 +45,20 @@ info:
     - Functional permissions are expressed through OAuth scopes such as `parse:write`, `storage:download`, and `knowledge:read`.
     - Data permissions are evaluated separately against tenant boundary, role bindings, `access_level`, and resource policies.
     - Authentication failures return `401`; authorization failures return `403` with decision context.
+    - An optional built-in bootstrap token issuer may be enabled for `dev`, `jwt`, or `hybrid` deployments; `introspection` mode still depends on an external authorization server.
     - 认证兼容 OAuth 2.0 / OIDC，优先使用 JWT access token，必要时兼容 opaque token introspection。
     - 功能权限通过 OAuth scope 表达，例如 `parse:write`、`storage:download`、`knowledge:read`。
     - 数据权限独立于 scope 求值，基于租户边界、角色绑定、`access_level` 和资源策略判断。
     - 认证失败返回 `401`，授权失败返回 `403` 并给出决策上下文。
+    - 可选的内建 bootstrap token 签发接口可用于 `dev`、`jwt`、`hybrid` 部署；`introspection` 模式仍依赖外部授权服务器。
 servers:
   - url: https://api.cortex.example.com
     description: Production / 生产环境
   - url: https://sandbox.cortex.example.com
     description: Sandbox / 沙箱环境
 tags:
+  - name: Auth
+    description: Optional bootstrap token issuance for local or self-hosted deployments. / 面向本地或自托管部署的可选 bootstrap token 签发接口。
   - name: Health
     description: Runtime liveness and dependency readiness probes. / 运行存活与依赖就绪探针。
   - name: Observability
@@ -70,6 +74,55 @@ tags:
 security:
   - OAuth2: []
 paths:
+  /v1/auth/token:
+    post:
+      tags:
+        - Auth
+      summary: Issue access token / 签发访问令牌
+      description: |
+        Issues a bearer token through Cortex's optional built-in bootstrap issuer. This endpoint is intended for local,
+        self-hosted, or operator-driven bootstrap flows and is not a replacement for a full external OAuth 2.0 / OIDC
+        authorization server. It is available only when the deployment enables the token issuer and protects it with
+        `X-Cortex-Issuer-Secret`. In `dev` mode the returned token uses Cortex's `dev:` payload format; in `jwt` or
+        `hybrid` mode the returned token is a signed shared-secret JWT. `introspection` mode does not support local
+        issuance. /
+        通过 Cortex 可选的内建 bootstrap 签发器生成 bearer token。该接口面向本地、自托管或运维 bootstrap 场景，
+        并不替代完整的外部 OAuth 2.0 / OIDC 授权服务器。只有在部署显式启用 token issuer 且使用
+        `X-Cortex-Issuer-Secret` 保护时才可用。在 `dev` 模式下返回 Cortex 的 `dev:` 令牌格式；在 `jwt`
+        或 `hybrid` 模式下返回共享密钥签名的 JWT；`introspection` 模式不支持本地签发。
+      operationId: issueAccessToken
+      security:
+        - BootstrapIssuerSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenIssueRequest'
+      responses:
+        '200':
+          description: Access token issued successfully. / 已成功签发访问令牌。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenIssueResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          description: Invalid token issuance request. / token 签发请求无效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          description: Built-in token issuer unavailable in the current deployment or auth mode. / 当前部署或鉴权模式下内建 token issuer 不可用。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   /v1/health/live:
     get:
       tags:
@@ -738,6 +791,14 @@ webhooks:
 
 components:
   securitySchemes:
+    BootstrapIssuerSecret:
+      type: apiKey
+      in: header
+      name: X-Cortex-Issuer-Secret
+      description: |
+        Bootstrap secret required to call Cortex's optional built-in token issuer. This secret should be configured
+        only for local, self-hosted, or tightly controlled operational bootstrap scenarios. /
+        调用 Cortex 可选内建 token issuer 时所需的 bootstrap secret。该密钥应只用于本地、自托管或受控的运维 bootstrap 场景。
     OAuth2:
       type: oauth2
       description: |
@@ -1010,6 +1071,110 @@ components:
         field:
           type: string
         message:
+          type: string
+
+    TokenIssueRequest:
+      type: object
+      required:
+        - subject
+        - tenant_id
+        - scopes
+      properties:
+        grant_type:
+          type: string
+          enum:
+            - urn:cortex:params:oauth:grant-type:bootstrap
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 255
+        tenant_id:
+          type: string
+          minLength: 1
+          maxLength: 255
+        actor_id:
+          type: string
+          minLength: 1
+          maxLength: 255
+        actor_ref:
+          type: string
+          minLength: 1
+          maxLength: 320
+        actor_type:
+          type: string
+          minLength: 1
+          maxLength: 64
+        display_name:
+          type: string
+          maxLength: 255
+        client_id:
+          type: string
+          minLength: 1
+          maxLength: 255
+        scopes:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            type: string
+        groups:
+          type: array
+          items:
+            type: string
+        expires_in:
+          type: integer
+          minimum: 60
+          maximum: 86400
+        additional_claims:
+          type: object
+          additionalProperties: true
+
+    TokenIssueResponse:
+      type: object
+      required:
+        - access_token
+        - issued_token_format
+        - expires_in
+        - issued_at
+        - expires_at
+        - scope
+        - subject
+        - tenant_id
+        - issuer
+        - audience
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          enum:
+            - Bearer
+        issued_token_format:
+          type: string
+          enum:
+            - dev
+            - jwt
+        expires_in:
+          type: integer
+          minimum: 1
+        issued_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        scope:
+          type: string
+        subject:
+          type: string
+        tenant_id:
+          type: string
+        issuer:
+          type: string
+        audience:
           type: string
 
     HealthResponse:

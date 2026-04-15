@@ -8,6 +8,7 @@ BAGGAGE_HEADER = "baggage"
 X_TRACE_ID_HEADER = "X-Trace-Id"
 X_REQUEST_ID_HEADER = "X-Request-Id"
 X_DECISION_ID_HEADER = "X-Decision-Id"
+X_CORTEX_ISSUER_SECRET_HEADER = "X-Cortex-Issuer-Secret"
 
 
 class CorrelationHeaders(BaseModel):

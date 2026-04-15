@@ -1,5 +1,6 @@
 """Contract models for Cortex APIs."""
 
+from .auth import BOOTSTRAP_GRANT_TYPE, TokenIssueRequest, TokenIssueResponse
 from .enums import (
     AccessLevel,
     ChunkingStrategy,
@@ -30,6 +31,7 @@ from .headers import (
     BAGGAGE_HEADER,
     TRACEPARENT_HEADER,
     TRACESTATE_HEADER,
+    X_CORTEX_ISSUER_SECRET_HEADER,
     X_DECISION_ID_HEADER,
     X_REQUEST_ID_HEADER,
     X_TRACE_ID_HEADER,
@@ -114,6 +116,7 @@ __all__ = [
     "AppliedParseEngine",
     "AuditFields",
     "BAGGAGE_HEADER",
+    "BOOTSTRAP_GRANT_TYPE",
     "BrowserProfile",
     "CaptureOptions",
     "Citation",
@@ -196,11 +199,14 @@ __all__ = [
     "StorageUploadCreateRequest",
     "StorageUploadSession",
     "TelemetryContext",
+    "TokenIssueRequest",
+    "TokenIssueResponse",
     "TRACEPARENT_HEADER",
     "TRACESTATE_HEADER",
     "UploadMode",
     "UploadSessionStatus",
     "WebhookConfig",
+    "X_CORTEX_ISSUER_SECRET_HEADER",
     "X_DECISION_ID_HEADER",
     "X_REQUEST_ID_HEADER",
     "X_TRACE_ID_HEADER",

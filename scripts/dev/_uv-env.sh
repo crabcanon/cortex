@@ -12,6 +12,40 @@ cortex_set_uv_environment() {
   export UV_PROJECT_ENVIRONMENT="${repo_root}/.venv"
 }
 
+cortex_normalize_path() {
+  local path_value="$1"
+  if command -v cygpath >/dev/null 2>&1; then
+    cygpath -m "${path_value}"
+  else
+    printf '%s\n' "${path_value}"
+  fi
+}
+
+cortex_is_project_venv_active() {
+  cortex_set_uv_environment
+  [[ -n "${VIRTUAL_ENV:-}" ]] || return 1
+
+  local active_env target_env
+  active_env="$(cortex_normalize_path "${VIRTUAL_ENV}" | tr '[:upper:]' '[:lower:]')"
+  target_env="$(cortex_normalize_path "${UV_PROJECT_ENVIRONMENT}" | tr '[:upper:]' '[:lower:]')"
+  [[ "${active_env}" == "${target_env}" ]]
+}
+
+cortex_test_venv_managed_by_repo() {
+  cortex_set_uv_environment
+
+  local config_path expected_root home_line home_root
+  config_path="${UV_PROJECT_ENVIRONMENT}/pyvenv.cfg"
+  [[ -f "${config_path}" ]] || return 1
+
+  home_line="$(sed -n 's/^[[:space:]]*home[[:space:]]*=[[:space:]]*//p' "${config_path}" | head -n 1)"
+  [[ -n "${home_line}" ]] || return 1
+
+  expected_root="$(cortex_normalize_path "${UV_PYTHON_INSTALL_DIR}" | tr '[:upper:]' '[:lower:]')"
+  home_root="$(cortex_normalize_path "${home_line}" | tr '[:upper:]' '[:lower:]')"
+  [[ "${home_root}" == "${expected_root}"* ]]
+}
+
 cortex_venv_bin_dir() {
   cortex_set_uv_environment
   if [[ -d "${UV_PROJECT_ENVIRONMENT}/Scripts" ]]; then
@@ -36,6 +70,8 @@ cortex_venv_command_path() {
 
 cortex_test_venv_healthy() {
   cortex_set_uv_environment
+  cortex_test_venv_managed_by_repo || return 1
+
   local python_path
   python_path="$(cortex_venv_command_path python)"
 
@@ -60,14 +96,38 @@ cortex_repair_venv() {
   local force_recreate="${1:-0}"
 
   cortex_set_uv_environment
+  if cortex_is_project_venv_active; then
+    cat >&2 <<'EOF'
+[cortex] the target workspace `.venv` is currently activated in this shell.
+Run `deactivate` (or open a fresh terminal) before repairing it, then rerun:
+  bash scripts/dev/repair-venv.sh --force-recreate
+EOF
+    return 1
+  fi
+
   if [[ "${force_recreate}" == "1" && -d "${UV_PROJECT_ENVIRONMENT}" ]]; then
-    rm -rf "${UV_PROJECT_ENVIRONMENT}"
+    if ! rm -rf "${UV_PROJECT_ENVIRONMENT}"; then
+      cat >&2 <<'EOF'
+[cortex] failed to recreate the workspace `.venv` because a running `cortex-api` / worker / Python / uv process is still using it.
+Stop those processes first, then rerun:
+  bash scripts/dev/repair-venv.sh --force-recreate
+EOF
+      return 1
+    fi
+    if [[ -d "${UV_PROJECT_ENVIRONMENT}" ]]; then
+      cat >&2 <<'EOF'
+[cortex] failed to recreate the workspace `.venv` because a running `cortex-api` / worker / Python / uv process is still using it.
+Stop those processes first, then rerun:
+  bash scripts/dev/repair-venv.sh --force-recreate
+EOF
+      return 1
+    fi
   fi
 
   if ! cortex_invoke_uv sync --all-packages --all-groups; then
     cat >&2 <<'EOF'
 [cortex] uv sync failed while repairing the workspace environment.
-Close any Python/uv/IDE processes holding `.venv`, then rerun:
+Stop any running `cortex-api` / worker / Python / uv process that is still using `.venv`, then rerun:
   bash scripts/dev/repair-venv.sh --force-recreate
 EOF
     return 1
@@ -78,7 +138,7 @@ EOF
 [cortex] the workspace `.venv` is still unhealthy after sync.
 Try:
   bash scripts/dev/repair-venv.sh --force-recreate
-after closing any process that is using `.venv`.
+after stopping any `cortex-api` / worker / Python / uv process that is using `.venv`.
 EOF
     return 1
   fi

@@ -28,12 +28,30 @@ done
 source "$(dirname "$0")/_uv-env.sh"
 
 if ! cortex_test_venv_healthy; then
+  if cortex_is_project_venv_active; then
+    cat >&2 <<'EOF'
+[cortex] the project `.venv` is currently activated in this shell and cannot be repaired in place.
+Run `deactivate` (or open a fresh terminal), then rerun:
+  bash scripts/dev/repair-venv.sh --force-recreate
+  bash scripts/dev/run-parse-worker.sh
+EOF
+    exit 1
+  fi
   echo "[cortex] .venv is missing or unhealthy, repairing before launching Parse Worker..."
   cortex_repair_venv "${force_recreate}"
 fi
 
 worker_path="$(cortex_venv_command_path cortex-parse-worker)"
 if [[ ! -f "${worker_path}" ]]; then
+  if cortex_is_project_venv_active; then
+    cat >&2 <<'EOF'
+[cortex] Parse Worker entrypoint is missing from the currently activated project `.venv`.
+Run `deactivate` (or open a fresh terminal), then rerun:
+  bash scripts/dev/repair-venv.sh --force-recreate
+  bash scripts/dev/run-parse-worker.sh
+EOF
+    exit 1
+  fi
   echo "[cortex] Parse Worker entrypoint is missing, syncing workspace first..."
   cortex_repair_venv "${force_recreate}"
   worker_path="$(cortex_venv_command_path cortex-parse-worker)"

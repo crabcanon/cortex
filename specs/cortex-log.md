@@ -849,3 +849,35 @@
   - `Select-String -Path scripts\dev\stack.ps1 -Pattern "Wait-TcpReady -Host "`
   The runtime-stack script passed both the infrastructure-backed slice and the live observability probe (`4 passed` + `1 passed`), the OpenAPI contract tests passed (`3 passed`), and the grep-style check confirmed the old `-Host` call sites were gone.
 - Prevention: For operator-facing documentation changes, validate the exact commands you publish instead of only running nearby unit tests. During this pass, `pytest` surfaced deprecation warnings from third-party `cognee` dependencies, but they are currently non-blocking and do not affect Cortex's own contract or runtime behavior.
+
+### 2026-04-15 21:25:00 +08:00 | Phase R Repo-Pinned Python And Dual-Shell Worker Entrypoints Started
+
+- Stage: `CTX-20260415-038 ~ CTX-20260415-040`
+- Event: The operator hit a recurring local-environment failure mode: a PowerShell worker loop was pasted into Git Bash, `Start-Sleep` / `while ($true)` failed at the shell layer, and repeated `uv run` usage landed on an already unhealthy `.venv`, which made uv attempt to repair or recreate the environment while files under `.venv\Scripts` were still locked.
+- Cause: Two separate issues were interacting: shell-specific command syntax was being mixed across PowerShell and Bash, and the repository did not yet provide a canonical wrapper that pinned uv's managed Python and project virtualenv into repository-owned paths before every `uv` invocation.
+- Action: Added repo-local environment helpers plus wrappers in `scripts\dev\_uv-env.ps1`, `scripts\dev\_uv-env.sh`, `scripts\dev\uv.ps1`, and `scripts\dev\uv.sh`; added repair entrypoints in `scripts\dev\repair-venv.ps1` and `scripts\dev\repair-venv.sh`; added dual-shell worker launchers in `scripts\dev\run-parse-worker.*` and `scripts\dev\run-knowledge-worker.*`; pinned `.python-version` to `3.12.12`; and refreshed the README guidance so operators use the wrapper/launcher layer instead of looping `uv run` manually.
+- Prevention: Keep managed Python and the project environment under the repository (`.uv-python` + `.venv`), and for long-running workers call the generated executables from the canonical `.venv` instead of wrapping `uv run` inside an infinite shell loop.
+
+### 2026-04-15 21:32:00 +08:00 | Repo-Local uv Wrapper Validation Surfaced And Fixed A PowerShell Output Swallowing Bug
+
+- Stage: `CTX-20260415-038`, `CTX-20260415-040`
+- Event: During validation, `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 --version` exited with code `0` but printed nothing, making the wrapper look broken even though the underlying `uv` command was succeeding.
+- Cause: `scripts\dev\uv.ps1` used `exit (Invoke-CortexUv @Args)`, which evaluated the wrapper function in an expression context and suppressed the native `uv` stdout that operators expect to see from commands like `uv --version` and `uv python dir`.
+- Action: Reworked `scripts\dev\uv.ps1` to set the repo-local uv environment, invoke `uv` directly, preserve stdout/stderr, and then exit with the captured `$LASTEXITCODE`. Also tightened `scripts\dev\bootstrap.ps1` and `scripts\dev\check-runtime-stack.ps1` so they propagate exit codes explicitly.
+- Prevention: When a PowerShell wrapper is meant to behave like a transparent pass-through for a native CLI, avoid wrapping the native call inside an `exit (...)` expression; invoke the command directly, then exit with the recorded exit code.
+
+### 2026-04-15 21:36:00 +08:00 | Phase R Validation Completed With Repo-Local Python Provenance And A Bash-Host Caveat
+
+- Stage: `CTX-20260415-040`
+- Event: The repo-pinned Python and dual-shell launcher slice now validates cleanly on the canonical PowerShell path.
+- Cause: The remaining work was verification rather than feature implementation once the wrapper and launcher layer landed.
+- Action: Completed validation with:
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\repair-venv.ps1`
+  - `Get-Content .venv\pyvenv.cfg`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 --version`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 run --no-sync python -c "import os,sys; ..."`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\run-parse-worker.ps1 -Once`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\run-knowledge-worker.ps1 -Once`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\check-runtime-stack.ps1`
+  Validation confirmed `.venv\pyvenv.cfg` now points to `D:\code\codex\cortex\.uv-python\cpython-3.12.12-windows-x86_64-none`, the wrapper exposes `UV_PYTHON_INSTALL_DIR=D:\code\codex\cortex\.uv-python` and `UV_PROJECT_ENVIRONMENT=D:\code\codex\cortex\.venv`, both worker one-shot launchers reported `bootstrap ready: idle`, and the runtime-stack validation still passed (`4 passed` + `1 passed`).
+- Prevention: Validate both the repo-local interpreter provenance (`pyvenv.cfg`) and the user-facing wrapper UX (`uv.ps1 --version`, worker one-shot launchers) so an environment fix is proven at both the file-system and operator-command layers. A residual caveat remains in this Codex host: invoking `bash.exe` for live validation still returns `Bash/Service/CreateInstance/E_ACCESSDENIED`, so the Bash launchers were implemented and documented but not executed end-to-end inside this session. During the same validation pass, `cortex-knowledge-worker` surfaced non-blocking third-party Cognee warnings about a missing log-file handler path and upcoming access-control defaults; they do not block the Cortex worker bootstrap path but should be kept in mind for real provider deployments.

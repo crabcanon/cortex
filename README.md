@@ -294,6 +294,63 @@ knowledge:
 
 ## 8. 本地启动
 
+### 8.0 推荐先使用仓库自带 uv wrapper
+
+为了把 uv 的托管 Python 固定在仓库内，并避免再次落到用户目录的全局安装路径，建议优先使用以下 wrapper，而不是直接裸跑 `uv`：
+
+当前仓库的 `.python-version` 已固定为 `3.12.12`，wrapper 会把该版本的托管 Python 安装到仓库内的 `.uv-python/`，并把项目虚拟环境固定到 `.venv/`。
+
+PowerShell：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 sync --all-packages --all-groups
+```
+
+Git Bash：
+
+```bash
+bash scripts/dev/uv.sh sync --all-packages --all-groups
+```
+
+这两个 wrapper 会统一注入：
+
+- `UV_PYTHON_INSTALL_DIR=<repo>/.uv-python`
+- `UV_PROJECT_ENVIRONMENT=<repo>/.venv`
+
+请不要在 Git Bash 里直接粘贴 PowerShell 语法，例如：
+
+```powershell
+while ($true) { uv run --package cortex-worker-parse cortex-parse-worker }
+```
+
+这类命令只适用于 PowerShell；在 Git Bash 中请使用上面的 `bash scripts/dev/*.sh` 启动脚本。
+
+如果你怀疑 `.venv` 已损坏，可直接执行：
+
+PowerShell：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev\repair-venv.ps1
+```
+
+强制重建：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev\repair-venv.ps1 -ForceRecreate
+```
+
+Git Bash：
+
+```bash
+bash scripts/dev/repair-venv.sh
+```
+
+强制重建：
+
+```bash
+bash scripts/dev/repair-venv.sh --force-recreate
+```
+
 ### 8.1 最小启动模式
 
 适用于先验证 API 控制面、SQLite、URL 解析和基础鉴权，不依赖完整 Docker 栈。
@@ -310,7 +367,13 @@ Copy-Item .env.example .env
 powershell -ExecutionPolicy Bypass -File scripts\dev\bootstrap.ps1
 ```
 
-或直接：
+Git Bash：
+
+```bash
+bash scripts/dev/uv.sh sync --all-packages --all-groups
+```
+
+或直接裸跑：
 
 ```powershell
 uv sync --all-packages --all-groups
@@ -330,24 +393,46 @@ uv run --package cortex-api cortex-api
 
 5. 在新终端启动 Worker
 
-注意：当前 Worker 入口是单次 `run_once()` 轮询，不是常驻无限循环。开发态建议使用简单 loop 或 supervisor 拉起。
+注意：当前 Worker 入口是单次 `run_once()` 轮询，不是内建常驻进程。请优先使用仓库自带启动脚本，它们会先检查/修复 `.venv`，然后直接运行 `.venv` 内生成的 worker 可执行文件，避免在死循环里反复触发 `uv run`。
 
-Parse Worker：
+Parse Worker，PowerShell：
 
 ```powershell
-while ($true) {
-  uv run --package cortex-worker-parse cortex-parse-worker
-  Start-Sleep -Seconds 1
-}
+powershell -ExecutionPolicy Bypass -File scripts\dev\run-parse-worker.ps1
 ```
 
-Knowledge Worker：
+Parse Worker，Git Bash：
+
+```bash
+bash scripts/dev/run-parse-worker.sh
+```
+
+Knowledge Worker，PowerShell：
 
 ```powershell
-while ($true) {
-  uv run --package cortex-worker-knowledge cortex-knowledge-worker
-  Start-Sleep -Seconds 1
-}
+powershell -ExecutionPolicy Bypass -File scripts\dev\run-knowledge-worker.ps1
+```
+
+Knowledge Worker，Git Bash：
+
+```bash
+bash scripts/dev/run-knowledge-worker.sh
+```
+
+单次执行模式：
+
+PowerShell：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev\run-parse-worker.ps1 -Once
+powershell -ExecutionPolicy Bypass -File scripts\dev\run-knowledge-worker.ps1 -Once
+```
+
+Git Bash：
+
+```bash
+bash scripts/dev/run-parse-worker.sh --once
+bash scripts/dev/run-knowledge-worker.sh --once
 ```
 
 启动后访问：
@@ -789,6 +874,12 @@ Kubernetes 推荐映射：
 uv sync --all-packages --all-groups
 ```
 
+推荐：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 sync --all-packages --all-groups
+```
+
 迁移数据库：
 
 ```powershell
@@ -804,13 +895,13 @@ uv run --package cortex-api cortex-api
 启动 Parse Worker 单次轮询：
 
 ```powershell
-uv run --package cortex-worker-parse cortex-parse-worker
+powershell -ExecutionPolicy Bypass -File scripts\dev\run-parse-worker.ps1 -Once
 ```
 
 启动 Knowledge Worker 单次轮询：
 
 ```powershell
-uv run --package cortex-worker-knowledge cortex-knowledge-worker
+powershell -ExecutionPolicy Bypass -File scripts\dev\run-knowledge-worker.ps1 -Once
 ```
 
 全量校验：

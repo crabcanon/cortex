@@ -355,3 +355,13 @@ Goal: close the operator-facing documentation gap by fixing the local stack help
 | CTX-20260415-036 | 2026-04-15 21:05:00 +08:00 | P0 | docs-readme | Rewrite `README.md` in Chinese with an industry-standard project guide covering architecture, API surface, configuration, local bootstrap, docker-backed validation, deployment patterns, testing commands, and verification examples aligned with the implemented runtime | CTX-20260415-035 | done |
 | CTX-20260415-037 | 2026-04-15 21:05:00 +08:00 | P0 | validation-log | Run focused validation for the repaired operator script and updated README guidance, then append the exact outcomes, remaining environmental caveats, and operator notes to `specs/cortex-log.md` and close the batch | CTX-20260415-036 | done |
 
+### Batch 2026-04-15 21:25:00 +08:00 | Phase R Repo-Pinned Python And Dual-Shell Worker Entrypoints
+
+Goal: eliminate the recurring `.venv` corruption and shell-mismatch pitfalls by standardizing repo-local uv environment wrappers, pinning managed Python into the repository via wrapper-exported environment variables, and adding both PowerShell and Bash worker entrypoints that avoid repeated `uv run` loops.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260415-038 | 2026-04-15 21:25:00 +08:00 | P0 | env-tooling | Add repository-local uv wrapper scripts for PowerShell and Bash that export `UV_PYTHON_INSTALL_DIR` and `UV_PROJECT_ENVIRONMENT` before delegating to `uv`, so managed Python stays under `.uv-python` and project env resolution stays anchored at `.venv` | CTX-20260415-037 | done |
+| CTX-20260415-039 | 2026-04-15 21:25:00 +08:00 | P0 | worker-devx | Add PowerShell and Bash worker launcher scripts for Parse and Knowledge that bootstrap/check the canonical `.venv`, avoid shell-specific syntax confusion, and run the generated worker executables in a predictable loop or one-shot mode | CTX-20260415-038 | done |
+| CTX-20260415-040 | 2026-04-15 21:25:00 +08:00 | P0 | docs-validation | Refresh the operator guidance for the new uv wrappers and dual-shell launchers, run focused validation proving the wrappers resolve the repo-local Python directory correctly, and append the outcome plus any residual caveats to `specs/cortex-log.md` | CTX-20260415-039 | done |
+

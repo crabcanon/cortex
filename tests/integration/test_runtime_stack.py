@@ -37,7 +37,7 @@ from cortex_contracts import (
 )
 from cortex_db import CortexUnitOfWork, create_database_engine, create_session_factory
 from cortex_db.cli import main as db_migrate_main
-from cortex_domain import JobStatus, TenantRecord
+from cortex_domain import ActorRecord, JobStatus, TenantRecord
 from cortex_knowledge import (
     CogneeRuntimeDescriptor,
     KnowledgeDatasetService,
@@ -165,6 +165,39 @@ def _case_dir(name: str) -> Path:
     case_dir = root / f"{name}-{time.time_ns()}"
     case_dir.mkdir(parents=True, exist_ok=True)
     return case_dir
+
+
+async def _ensure_tenant(session_factory, tenant_id: str) -> None:
+    async with CortexUnitOfWork(session_factory) as uow:
+        existing = await uow.tenants.get(tenant_id)
+        if existing is not None:
+            return
+        await uow.tenants.add(
+            TenantRecord(
+                tenant_id=tenant_id,
+                tenant_key=tenant_id,
+                display_name=tenant_id,
+                status="active",
+            )
+        )
+
+
+async def _ensure_actor(session_factory, tenant_id: str, actor_id: str) -> None:
+    await _ensure_tenant(session_factory, tenant_id)
+    async with CortexUnitOfWork(session_factory) as uow:
+        existing = await uow.actors.get(actor_id)
+        if existing is not None:
+            return
+        await uow.actors.add(
+            ActorRecord(
+                actor_id=actor_id,
+                tenant_id=tenant_id,
+                actor_type="user",
+                actor_ref=f"{actor_id}@example.com",
+                display_name=actor_id,
+                metadata={},
+            )
+        )
 
 
 class _RuntimeParseEngine(ParseEngineProtocol):
@@ -297,6 +330,11 @@ def test_minio_storage_presigned_upload_download_round_trip() -> None:
             async_engine = create_database_engine(async_dsn)
             session_factory = create_session_factory(async_engine)
             try:
+                await _ensure_actor(
+                    session_factory,
+                    "tenant_runtime_storage",
+                    "alice",
+                )
                 service = StorageService(
                     S3Settings.model_validate(
                         {
@@ -386,6 +424,11 @@ def test_parse_worker_executes_against_postgres() -> None:
             async_engine = create_database_engine(async_dsn)
             session_factory = create_session_factory(async_engine)
             try:
+                await _ensure_actor(
+                    session_factory,
+                    "tenant_runtime_parse",
+                    "alice",
+                )
                 caller = SimpleNamespace(
                     tenant_id="tenant_runtime_parse",
                     actor_id="alice",
@@ -442,6 +485,11 @@ def test_knowledge_worker_executes_against_postgres() -> None:
             async_engine = create_database_engine(async_dsn)
             session_factory = create_session_factory(async_engine)
             try:
+                await _ensure_actor(
+                    session_factory,
+                    "tenant_runtime_knowledge",
+                    "alice",
+                )
                 dataset_service = KnowledgeDatasetService(runtime)
                 job_service = KnowledgeJobControlService()
                 operation_service = KnowledgeOperationService(runtime, dataset_service)

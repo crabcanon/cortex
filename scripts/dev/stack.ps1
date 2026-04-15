@@ -43,7 +43,7 @@ function Wait-HttpReady {
 function Wait-TcpReady {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$Host,
+        [string]$HostName,
         [Parameter(Mandatory = $true)]
         [int]$Port,
         [int]$TimeoutSeconds = 90
@@ -53,7 +53,7 @@ function Wait-TcpReady {
     while ((Get-Date) -lt $deadline) {
         $client = [System.Net.Sockets.TcpClient]::new()
         try {
-            $async = $client.ConnectAsync($Host, $Port)
+            $async = $client.ConnectAsync($HostName, $Port)
             if ($async.Wait(3000) -and $client.Connected) {
                 return
             }
@@ -65,7 +65,7 @@ function Wait-TcpReady {
         Start-Sleep -Seconds 1
     }
 
-    throw "Timed out waiting for TCP endpoint: ${Host}:${Port}"
+    throw "Timed out waiting for TCP endpoint: ${HostName}:${Port}"
 }
 
 switch ($Action) {

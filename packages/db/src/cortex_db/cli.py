@@ -8,17 +8,19 @@ from alembic import command
 from alembic.config import Config
 from cortex_common import load_settings
 
-from .engine import normalize_alembic_dsn
+from .engine import ensure_sqlite_database_path, normalize_alembic_dsn
 
 
 def build_alembic_config(db_url: str | None = None) -> Config:
     """Create an Alembic config rooted at the db package."""
     package_root = Path(__file__).resolve().parents[2]
+    resolved_db_url = db_url or normalize_alembic_dsn(load_settings().database.dsn)
+    ensure_sqlite_database_path(resolved_db_url)
     config = Config(str(package_root / "alembic.ini"))
     config.set_main_option("script_location", str(package_root / "migrations"))
     config.set_main_option(
         "sqlalchemy.url",
-        db_url or normalize_alembic_dsn(load_settings().database.dsn),
+        resolved_db_url,
     )
     return config
 

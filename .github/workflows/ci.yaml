@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_runtime_stack:
+        description: Run docker-backed runtime stack integration tests / 运行基于 Docker 的运行栈集成测试
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: .python-version
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Sync workspace
+        run: uv sync --all-packages --all-groups --frozen
+
+      - name: Run repository validation
+        run: uv run --all-packages --all-groups python scripts/ci/check.py
+
+  runtime-stack:
+    name: Runtime Stack
+    needs:
+      - quality
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_runtime_stack == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: .python-version
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Sync workspace
+        run: uv sync --all-packages --all-groups --frozen
+
+      - name: Render compose config
+        run: docker compose -f compose.local.yaml config
+
+      - name: Start runtime stack
+        run: docker compose -p cortex-ci -f compose.local.yaml up -d postgres minio redis jaeger-all-in-one otel-collector prometheus grafana
+
+      - name: Wait for runtime stack
+        run: uv run --all-packages --all-groups python scripts/ci/wait_for_runtime_stack.py
+
+      - name: Run docker-backed integration tests
+        env:
+          CORTEX_RUNTIME_STACK: "1"
+        run: uv run --all-packages --all-groups pytest tests/integration/test_runtime_stack.py
+
+      - name: Show compose logs on failure
+        if: failure()
+        run: docker compose -p cortex-ci -f compose.local.yaml logs --no-color
+
+      - name: Teardown runtime stack
+        if: always()
+        run: docker compose -p cortex-ci -f compose.local.yaml down -v --remove-orphans

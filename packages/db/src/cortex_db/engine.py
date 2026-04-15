@@ -2,7 +2,9 @@
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -20,6 +22,7 @@ def create_database_engine(
     pool_pre_ping: bool = True,
 ) -> AsyncEngine:
     """Create a shared async engine for Cortex services."""
+    ensure_sqlite_database_path(dsn)
     return create_async_engine(
         dsn,
         echo=echo,
@@ -59,3 +62,17 @@ def normalize_alembic_dsn(dsn: str) -> str:
     if "+asyncpg" in dsn:
         return dsn.replace("+asyncpg", "+psycopg", 1)
     return dsn
+
+
+def ensure_sqlite_database_path(dsn: str) -> None:
+    """Create the parent directory for file-backed SQLite DSNs when needed."""
+    url = make_url(dsn)
+    if url.get_backend_name() != "sqlite":
+        return
+    database = url.database
+    if not database or database == ":memory:" or database.startswith("file:"):
+        return
+    path = Path(database)
+    if not path.is_absolute():
+        path = (Path.cwd() / path).resolve()
+    path.parent.mkdir(parents=True, exist_ok=True)

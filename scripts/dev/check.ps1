@@ -14,6 +14,9 @@ function Invoke-UvCheck {
     }
 }
 
+Write-Host "[cortex] validating YAML and OpenAPI assets..."
+Invoke-UvCheck @("run", "--all-packages", "--all-groups", "python", "scripts/ci/validate_yaml.py")
+
 Write-Host "[cortex] running Ruff..."
 Invoke-UvCheck @("run", "--all-packages", "--group", "lint", "ruff", "check", ".")
 

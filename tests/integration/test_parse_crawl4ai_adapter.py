@@ -110,7 +110,17 @@ async def test_crawl4ai_adapter_maps_request_into_engine_result(
     )
     monkeypatch.setattr(crawl4ai_adapter, "_crawl4ai_version", lambda: "0.8.test")
 
-    engine = Crawl4AIParseEngine()
+    engine = Crawl4AIParseEngine(
+        {
+            "enabled": True,
+            "browser_config": {
+                "headers": {"X-Runtime": "runtime"},
+                "proxy": "http://runtime-proxy.local:8080",
+                "storage_state": "C:/runtime/storage-state.json",
+            },
+            "crawler_run_config": {"simulate_user": True},
+        }
+    )
     result = await engine.execute(
         EngineExecutionContext(
             request=ParseSyncRequest(
@@ -161,13 +171,19 @@ async def test_crawl4ai_adapter_maps_request_into_engine_result(
     assert engine.descriptor.engine_key == "crawl4ai"
     assert _FakeAsyncWebCrawler.last_url == "https://example.com/start"
     assert _FakeAsyncWebCrawler.last_browser_config is not None
-    assert _FakeAsyncWebCrawler.last_browser_config.kwargs["browser_type"] == "chromium"
-    assert _FakeAsyncWebCrawler.last_browser_config.kwargs["enable_stealth"] is True
-    assert _FakeAsyncWebCrawler.last_browser_config.kwargs["light_mode"] is True
+    browser_kwargs = _FakeAsyncWebCrawler.last_browser_config.kwargs
+    headers = browser_kwargs.get("headers")
+    assert browser_kwargs["browser_type"] == "chromium"
+    assert browser_kwargs["enable_stealth"] is True
+    assert isinstance(headers, dict)
+    assert headers["X-Runtime"] == "runtime"
+    assert browser_kwargs["proxy"] == "http://proxy.local:8080"
+    assert browser_kwargs["light_mode"] is True
     assert _FakeAsyncWebCrawler.last_run_config is not None
     assert _FakeAsyncWebCrawler.last_run_config.kwargs["check_robots_txt"] is True
     assert _FakeAsyncWebCrawler.last_run_config.kwargs["screenshot"] is True
     assert _FakeAsyncWebCrawler.last_run_config.kwargs["pdf"] is True
+    assert _FakeAsyncWebCrawler.last_run_config.kwargs["simulate_user"] is True
     assert _FakeAsyncWebCrawler.last_run_config.kwargs["magic"] is True
     assert result.markdown == "# Fit Title\n\nFit body."
     assert result.title == "Example Page"

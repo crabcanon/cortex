@@ -52,14 +52,20 @@ def _llama_parse_version() -> str | None:
 class LlamaParseEngine(ParseEngineProtocol):
     """Use LlamaParse for remote high-fidelity document parsing."""
 
-    def __init__(self) -> None:
+    def __init__(self, config: dict[str, object] | None = None) -> None:
+        self._config = dict(config) if isinstance(config, dict) else {}
+        enabled = bool(self._config.get("enabled", False))
         available = _llama_parse_available()
         self._descriptor = ParseEngineDescriptor(
             engine_key="llama_parse",
             display_name="LlamaParse",
             engine_family="document_remote",
             deployment_mode=ParseEngineDeploymentMode.REMOTE,
-            status=ParseEngineStatus.ACTIVE if available else ParseEngineStatus.DISABLED,
+            status=(
+                ParseEngineStatus.ACTIVE
+                if enabled and available
+                else ParseEngineStatus.DISABLED
+            ),
             supported_source_types=[ParseInputKind.URI.value, ParseInputKind.URL.value],
             supported_formats=[
                 "application/pdf",
@@ -118,15 +124,26 @@ class LlamaParseEngine(ParseEngineProtocol):
             engine_payload_summary={"parser": "llama_parse", "document_count": len(documents)},
         )
 
-    @staticmethod
-    def _parser_options(context: EngineExecutionContext) -> dict[str, Any]:
-        options = context.engine_options.get("llama_parse")
+    def _parser_options(self, context: EngineExecutionContext) -> dict[str, Any]:
+        options = self._config.get("llama_parse")
         parser_options = dict(options) if isinstance(options, dict) else {}
-        api_key = parser_options.get("api_key") or os.getenv("LLAMA_CLOUD_API_KEY")
+        request_options = context.engine_options.get("llama_parse")
+        if isinstance(request_options, dict):
+            parser_options.update(request_options)
+        api_key = (
+            parser_options.get("api_key")
+            or self._config.get("api_key")
+            or os.getenv("LLAMA_CLOUD_API_KEY")
+        )
+        mode = str(self._config.get("mode", "cloud_api")).strip() or "cloud_api"
+        if mode != "cloud_api":
+            raise ConfigError(
+                "Only `cloud_api` mode is currently supported by the LlamaParse adapter."
+            )
         if not api_key:
             raise ConfigError(
-                "LlamaParse requires `engine_options.llama_parse.api_key` or "
-                "`LLAMA_CLOUD_API_KEY`."
+                "LlamaParse requires a unified runtime config `api_key_ref`, "
+                "`engine_options.llama_parse.api_key`, or `LLAMA_CLOUD_API_KEY`."
             )
         parser_options["api_key"] = api_key
         parser_options.setdefault("result_type", "markdown")

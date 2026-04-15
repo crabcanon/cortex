@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Vendor-neutral parsing, storage, and knowledge APIs."
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
-dependencies = []
+dependencies = [
+    "cognee>=0.5.8",
+]
 
 [dependency-groups]
 dev = [

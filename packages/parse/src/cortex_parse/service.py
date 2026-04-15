@@ -509,12 +509,13 @@ class ParseService:
                 break
 
             if execution is None or selected_descriptor is None:
+                failure_detail = self._failure_detail(attempt_snapshots)
                 await uow.jobs.update_status(
                     job.job_id,
                     status=JobStatus.FAILED,
                     finished_at=utc_now(),
                     error_code="parse_failed",
-                    error_message="No parse engine produced a successful result.",
+                    error_message=failure_detail,
                 )
                 self._metrics.counter(
                     "cortex.parse.failures",
@@ -522,7 +523,7 @@ class ParseService:
                 ).add(1)
                 raise CortexError(
                     code="parse_failed",
-                    detail="No parse engine produced a successful result.",
+                    detail=failure_detail,
                     status_code=502,
                 )
 
@@ -558,3 +559,21 @@ class ParseService:
             span.set_attribute("cortex.parse.engine", selected_descriptor.engine_key)
             span.set_attribute("cortex.parse.job_id", job.job_id)
             return result
+
+    @staticmethod
+    def _failure_detail(attempt_snapshots: list[AttemptSnapshot]) -> str:
+        if not attempt_snapshots:
+            return "No parse engine produced a successful result."
+        attempts: list[str] = []
+        for snapshot in attempt_snapshots:
+            warning = (snapshot.attempt.warning or "").replace("\n", " ").strip()
+            if len(warning) > 240:
+                warning = f"{warning[:237]}..."
+            detail = (
+                f"{snapshot.attempt.engine_key}:"
+                f"{snapshot.attempt.error_code or 'unknown_error'}"
+            )
+            if warning:
+                detail = f"{detail} ({warning})"
+            attempts.append(detail)
+        return "No parse engine produced a successful result. Attempts: " + "; ".join(attempts)

@@ -49,14 +49,20 @@ def _markitdown_version() -> str | None:
 class MarkItDownParseEngine(ParseEngineProtocol):
     """Use MarkItDown as a local lightweight file and URL fallback."""
 
-    def __init__(self) -> None:
+    def __init__(self, config: dict[str, object] | None = None) -> None:
+        self._config = dict(config) if isinstance(config, dict) else {}
+        enabled = bool(self._config.get("enabled", True))
         available = _markitdown_available()
         self._descriptor = ParseEngineDescriptor(
             engine_key="markitdown",
             display_name="Microsoft MarkItDown",
             engine_family="document_local",
             deployment_mode=ParseEngineDeploymentMode.LOCAL,
-            status=ParseEngineStatus.ACTIVE if available else ParseEngineStatus.DISABLED,
+            status=(
+                ParseEngineStatus.ACTIVE
+                if enabled and available
+                else ParseEngineStatus.DISABLED
+            ),
             supported_source_types=[ParseInputKind.URI.value, ParseInputKind.URL.value],
             supported_formats=[
                 "application/pdf",
@@ -105,10 +111,13 @@ class MarkItDownParseEngine(ParseEngineProtocol):
             engine_payload_summary={"converter": "markitdown"},
         )
 
-    @staticmethod
-    def _converter_options(context: EngineExecutionContext) -> dict[str, Any]:
-        options = context.engine_options.get("markitdown")
-        return options if isinstance(options, dict) else {}
+    def _converter_options(self, context: EngineExecutionContext) -> dict[str, Any]:
+        options = self._config.get("markitdown")
+        converter_options = dict(options) if isinstance(options, dict) else {}
+        request_options = context.engine_options.get("markitdown")
+        if isinstance(request_options, dict):
+            converter_options.update(request_options)
+        return converter_options
 
     @staticmethod
     def _title(source_ref: str, context: EngineExecutionContext) -> str:

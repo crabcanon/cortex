@@ -20,13 +20,15 @@ from ..models import EngineExecutionContext, EngineExecutionResult, ParseEngineP
 class JinaReaderParseEngine(ParseEngineProtocol):
     """Use Jina Reader's `r.jina.ai` endpoint to convert public URLs to Markdown."""
 
-    def __init__(self) -> None:
+    def __init__(self, config: dict[str, object] | None = None) -> None:
+        self._config = dict(config) if isinstance(config, dict) else {}
+        enabled = bool(self._config.get("enabled", True))
         self._descriptor = ParseEngineDescriptor(
             engine_key="jina_reader",
             display_name="Jina Reader",
             engine_family="web_remote",
             deployment_mode=ParseEngineDeploymentMode.REMOTE,
-            status=ParseEngineStatus.ACTIVE,
+            status=ParseEngineStatus.ACTIVE if enabled else ParseEngineStatus.DISABLED,
             supported_source_types=[ParseInputKind.URL.value, ParseInputKind.URI.value],
             supported_formats=["text/html", "application/pdf"],
             capabilities=[
@@ -49,11 +51,16 @@ class JinaReaderParseEngine(ParseEngineProtocol):
         if not target_url.startswith(("http://", "https://")):
             raise ValidationError("Jina Reader can only parse publicly reachable HTTP(S) URLs.")
 
-        base_url = str(context.engine_options.get("base_url", "https://r.jina.ai")).rstrip("/")
+        base_url = str(
+            context.engine_options.get("base_url", self._config.get("base_url", "https://r.jina.ai"))
+        ).rstrip("/")
         reader_url = f"{base_url}/{target_url}"
         headers = self._headers(context)
         timeout_seconds = float(
-            context.engine_options.get("timeout_seconds", context.request.timeout_seconds)
+            context.engine_options.get(
+                "timeout_seconds",
+                self._config.get("timeout_seconds", context.request.timeout_seconds),
+            )
         )
         async with httpx.AsyncClient(timeout=timeout_seconds) as client:
             response = await client.get(reader_url, headers=headers)
@@ -86,12 +93,17 @@ class JinaReaderParseEngine(ParseEngineProtocol):
         )
 
     @staticmethod
-    def _headers(context: EngineExecutionContext) -> dict[str, str]:
-        headers = {"Accept": "text/plain"}
-        api_key = context.engine_options.get("api_key")
+    def _mapping(value: object) -> dict[str, str]:
+        if not isinstance(value, dict):
+            return {}
+        return {str(key): str(item) for key, item in value.items()}
+
+    def _headers(self, context: EngineExecutionContext) -> dict[str, str]:
+        headers = {"Accept": "text/plain", **self._mapping(self._config.get("headers"))}
+        api_key = context.engine_options.get("api_key", self._config.get("api_key"))
         if isinstance(api_key, str) and api_key:
             headers["Authorization"] = f"Bearer {api_key}"
-        if context.engine_options.get("use_readerlm_v2"):
+        if bool(context.engine_options.get("use_readerlm_v2", self._config.get("use_readerlm_v2"))):
             headers["x-respond-with"] = "readerlm-v2"
         if context.request.crawl.content_selector:
             headers["x-target-selector"] = context.request.crawl.content_selector
@@ -99,14 +111,7 @@ class JinaReaderParseEngine(ParseEngineProtocol):
             headers["x-wait-for-selector"] = context.request.crawl.wait_for
         if context.request.crawl.excluded_selectors:
             headers["x-remove-selector"] = ", ".join(context.request.crawl.excluded_selectors)
-        headers.update(
-            {
-                str(key): str(value)
-                for key, value in context.engine_options.get("headers", {}).items()
-            }
-            if isinstance(context.engine_options.get("headers"), dict)
-            else {}
-        )
+        headers.update(self._mapping(context.engine_options.get("headers")))
         return headers
 
     @staticmethod

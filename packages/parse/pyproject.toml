@@ -14,6 +14,14 @@ dependencies = [
   "httpx>=0.28,<0.29",
 ]
 
+[project.optional-dependencies]
+runtime = [
+  "crawl4ai>=0.7,<0.9",
+  "docling>=2.70,<3",
+  "llama-parse>=0.6,<0.7",
+  "markitdown[all]>=0.1,<0.2",
+]
+
 [build-system]
 requires = ["uv_build>=0.10.4,<0.11.0"]
 build-backend = "uv_build"

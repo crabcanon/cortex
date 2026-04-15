@@ -8,6 +8,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import timedelta
 from pathlib import Path
+from typing import cast
 
 import pytest
 from cortex_api.main import create_app
@@ -31,6 +32,7 @@ from cortex_parse import (
     ParseService,
 )
 from cortex_worker_parse import ParseWorker, ParseWorkerConfig
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 
@@ -269,6 +271,54 @@ def test_parse_sync_requires_parse_write_scope(monkeypatch: pytest.MonkeyPatch) 
     assert response.json()["required_scopes"] == ["parse:write"]
 
 
+def test_parse_sync_surfaces_attempt_failure_details(monkeypatch: pytest.MonkeyPatch) -> None:
+    case_dir = _case_dir("api-parse-sync-failure")
+    db_path = case_dir / "cortex.db"
+    profiles_dir = case_dir / "profiles"
+    profiles_dir.mkdir(parents=True, exist_ok=True)
+    (profiles_dir / "test_profile.yaml").write_text(
+        "\n".join(
+            [
+                "profile_ref: test_profile",
+                "display_name: Test Profile",
+                "preferred_engine_key: failing_engine",
+                "allowed_engines: [failing_engine]",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    db_migrate_main(["upgrade", "head", "--db-url", _sync_sqlite_url(db_path)])
+
+    headers = {
+        "Authorization": _dev_bearer_token(
+            tenant_id="tenant_parse_sync_failure",
+            actor_id="alice",
+            scopes=["parse:read", "parse:write"],
+        )
+    }
+
+    with _build_client(monkeypatch, db_path, profiles_dir) as client:
+        app = cast(FastAPI, client.app)
+        app.state.parse_service = _build_parse_service(profiles_dir, _FailingParseEngine())
+        response = client.post(
+            "/v1/parse/sync",
+            headers=headers,
+            json={
+                "source": {
+                    "input_kind": "url",
+                    "url": "https://example.com/failure",
+                    "expected_content_type": "text/html",
+                },
+                "parser": {"profile_ref": "test_profile"},
+            },
+        )
+
+    assert response.status_code == 502
+    assert response.json()["error_code"] == "parse_failed"
+    assert "failing_engine:engine_unavailable" in response.json()["detail"]
+    assert "engine unavailable" in response.json()["detail"]
+
+
 async def _run_parse_worker_once(db_path: Path, profiles_dir: Path) -> None:
     engine = create_database_engine(_async_sqlite_url(db_path))
     session_factory = create_session_factory(engine)
@@ -482,6 +532,7 @@ def test_parse_worker_retries_then_fails(monkeypatch: pytest.MonkeyPatch) -> Non
     assert retry_status.json()["status"] == "queued"
     assert second_status == "failed"
     assert failed_status.json()["status"] == "failed"
+    assert "failing_engine:engine_unavailable" in failed_status.json()["error"]["message"]
     assert [event["event_type"] for event in events_response.json()] == [
         "parse.job.queued",
         "parse.job.started",
@@ -489,6 +540,7 @@ def test_parse_worker_retries_then_fails(monkeypatch: pytest.MonkeyPatch) -> Non
         "parse.job.started",
         "parse.job.failed",
     ]
+    assert "engine unavailable" in events_response.json()[-1]["details"]["last_error"]
 
 
 def test_parse_worker_timeout_fails_without_retry(monkeypatch: pytest.MonkeyPatch) -> None:

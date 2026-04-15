@@ -99,9 +99,13 @@ class KnowledgeOperationService:
                 dataset=dataset,
                 inputs=request.inputs,
             )
-            counter_delta = {
+            inferred_counter_delta = {
                 "objects": sum(1 for item in added_items if item.item_type == "object"),
                 "documents": sum(1 for item in added_items if item.item_type == "document"),
+            }
+            counter_delta = {
+                **inferred_counter_delta,
+                **self._extract_counter_delta(runtime_result),
             }
             dataset = await self._update_dataset_counters(
                 uow=uow,
@@ -114,6 +118,7 @@ class KnowledgeOperationService:
                 "dataset_key": dataset.dataset_key,
                 "items_added": len(added_items),
                 "item_types": self._item_type_counts(added_items),
+                "counter_delta": counter_delta,
                 "runtime": self._normalize_runtime_result(runtime_result),
             }
             await self._persist_run_summary(uow=uow, run=run, result_summary=result_summary)

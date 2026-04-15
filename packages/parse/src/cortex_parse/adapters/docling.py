@@ -49,14 +49,20 @@ def _docling_version() -> str | None:
 class DoclingParseEngine(ParseEngineProtocol):
     """Use Docling for higher-fidelity local document conversion."""
 
-    def __init__(self) -> None:
+    def __init__(self, config: dict[str, object] | None = None) -> None:
+        self._config = dict(config) if isinstance(config, dict) else {}
+        enabled = bool(self._config.get("enabled", True))
         available = _docling_available()
         self._descriptor = ParseEngineDescriptor(
             engine_key="docling",
             display_name="Docling",
             engine_family="document_local",
             deployment_mode=ParseEngineDeploymentMode.LOCAL,
-            status=ParseEngineStatus.ACTIVE if available else ParseEngineStatus.DISABLED,
+            status=(
+                ParseEngineStatus.ACTIVE
+                if enabled and available
+                else ParseEngineStatus.DISABLED
+            ),
             supported_source_types=[ParseInputKind.URI.value, ParseInputKind.URL.value],
             supported_formats=[
                 "application/pdf",
@@ -107,15 +113,21 @@ class DoclingParseEngine(ParseEngineProtocol):
             engine_payload_summary={"converter": "docling"},
         )
 
-    @staticmethod
-    def _converter_options(context: EngineExecutionContext) -> dict[str, Any]:
-        options = context.engine_options.get("docling")
-        return options if isinstance(options, dict) else {}
+    def _converter_options(self, context: EngineExecutionContext) -> dict[str, Any]:
+        options = self._config.get("docling")
+        converter_options = dict(options) if isinstance(options, dict) else {}
+        request_options = context.engine_options.get("docling")
+        if isinstance(request_options, dict):
+            converter_options.update(request_options)
+        return converter_options
 
-    @staticmethod
-    def _convert_options(context: EngineExecutionContext) -> dict[str, Any]:
-        options = context.engine_options.get("docling_convert")
-        return options if isinstance(options, dict) else {}
+    def _convert_options(self, context: EngineExecutionContext) -> dict[str, Any]:
+        options = self._config.get("docling_convert")
+        convert_options = dict(options) if isinstance(options, dict) else {}
+        request_options = context.engine_options.get("docling_convert")
+        if isinstance(request_options, dict):
+            convert_options.update(request_options)
+        return convert_options
 
     @staticmethod
     def _title(source_ref: str, context: EngineExecutionContext) -> str:

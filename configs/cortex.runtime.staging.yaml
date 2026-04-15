@@ -1,0 +1,81 @@
+schema_version: cortex.runtime.v1
+
+parse:
+  default_profile_ref: auto_default
+  engines:
+    crawl4ai:
+      enabled: true
+      browser_config:
+        browser_type: chromium
+        headless: true
+        enable_stealth: true
+        use_persistent_context: true
+      crawler_run_config:
+        cache_mode: bypass
+        remove_overlay_elements: true
+        check_robots_txt: true
+        verbose: false
+      proxy_ref: env:CORTEX_CRAWL4AI_PROXY
+      storage_state_ref: path:../secrets/crawl4ai/staging/storage_state.json
+
+    jina_reader:
+      enabled: true
+      base_url: https://r.jina.ai
+      timeout_seconds: 45
+      use_readerlm_v2: true
+      headers: {}
+      api_key_ref: env:JINA_API_KEY
+
+    llama_parse:
+      enabled: true
+      mode: cloud_api
+      api_key_ref: env:LLAMA_CLOUD_API_KEY
+      options:
+        result_type: markdown
+        verbose: false
+
+    markitdown:
+      enabled: true
+      options: {}
+
+    docling:
+      enabled: true
+      converter_options: {}
+      convert_options: {}
+
+knowledge:
+  provider: cognee
+  cognee:
+    enabled: true
+    monitoring_tool: noop
+    system_root_directory: ../.data/cognee/staging/system
+    data_root_directory: ../.data/cognee/staging/data
+
+    llm:
+      llm_provider: openai
+      llm_model: gpt-4.1-mini
+      llm_api_key_ref: env:OPENAI_API_KEY
+
+    embedding:
+      embedding_provider: openai
+      embedding_model: text-embedding-3-small
+      embedding_dimensions: 1536
+      embedding_api_key_ref: env:OPENAI_API_KEY
+
+    vector_db:
+      vector_db_provider: pgvector
+      vector_db_url_ref: env:COGNEE_VECTOR_DB_URL
+
+    graph_db:
+      graph_database_provider: kuzu-remote
+      graph_database_url_ref: env:COGNEE_GRAPH_DB_URL
+      graph_database_username_ref: env:COGNEE_GRAPH_DB_USERNAME
+      graph_database_password_ref: env:COGNEE_GRAPH_DB_PASSWORD
+
+    relational_db:
+      db_provider: postgres
+      db_url_ref: env:COGNEE_RELATIONAL_DB_URL
+
+    migration_db:
+      db_provider: postgres
+      db_url_ref: env:COGNEE_MIGRATION_DB_URL

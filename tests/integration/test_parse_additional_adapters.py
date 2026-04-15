@@ -30,7 +30,16 @@ async def test_jina_reader_adapter_fetches_markdown() -> None:
         )
     )
 
-    result = await JinaReaderParseEngine().execute(
+    engine = JinaReaderParseEngine(
+        {
+            "enabled": True,
+            "base_url": "https://r.jina.ai",
+            "timeout_seconds": 15,
+            "api_key": "jina-runtime-token",
+            "headers": {"x-runtime-header": "1"},
+        }
+    )
+    result = await engine.execute(
         EngineExecutionContext(
             request=ParseSyncRequest(
                 source=ParseSource(
@@ -49,6 +58,10 @@ async def test_jina_reader_adapter_fetches_markdown() -> None:
     )
 
     assert route.called
+    request_headers = route.calls[0].request.headers
+    assert request_headers["authorization"] == "Bearer jina-runtime-token"
+    assert request_headers["x-runtime-header"] == "1"
+    assert request_headers["x-respond-with"] == "readerlm-v2"
     assert result.markdown == "# Jina Title\n\nReader body."
     assert result.title == "Jina Title"
     assert result.metadata["source_host"] == "example.com"
@@ -78,7 +91,9 @@ async def test_markitdown_adapter_uses_optional_converter(
     monkeypatch.setattr(markitdown_adapter, "_load_markitdown_cls", lambda: _FakeMarkItDown)
     monkeypatch.setattr(markitdown_adapter, "_markitdown_version", lambda: "1.0.test")
 
-    engine = MarkItDownParseEngine()
+    engine = MarkItDownParseEngine(
+        {"enabled": True, "markitdown": {"enable_plugins": True, "output_format": "markdown"}}
+    )
     result = await engine.execute(
         EngineExecutionContext(
             request=ParseSyncRequest(
@@ -101,7 +116,10 @@ async def test_markitdown_adapter_uses_optional_converter(
 
     assert engine.descriptor.status.value == "active"
     assert _FakeMarkItDown.last_source == "file:///tmp/report.pdf"
-    assert _FakeMarkItDown.last_options == {"enable_plugins": False}
+    assert _FakeMarkItDown.last_options == {
+        "enable_plugins": False,
+        "output_format": "markdown",
+    }
     assert result.markdown == "# MarkItDown Title\n\nConverted content."
     assert result.title == "report.pdf"
     assert result.parser_version == "1.0.test"
@@ -140,7 +158,13 @@ async def test_docling_adapter_uses_optional_converter(monkeypatch: pytest.Monke
     )
     monkeypatch.setattr(docling_adapter, "_docling_version", lambda: "2.0.test")
 
-    engine = DoclingParseEngine()
+    engine = DoclingParseEngine(
+        {
+            "enabled": True,
+            "docling": {"allowed_formats": ["pdf", "pptx"], "enable_remote_services": False},
+            "docling_convert": {"raises_on_error": True},
+        }
+    )
     result = await engine.execute(
         EngineExecutionContext(
             request=ParseSyncRequest(
@@ -172,7 +196,10 @@ async def test_docling_adapter_uses_optional_converter(monkeypatch: pytest.Monke
 
     assert engine.descriptor.status.value == "active"
     assert _FakeDocumentConverter.last_source == "file:///tmp/slides.pptx"
-    assert _FakeDocumentConverter.last_init_options == {"allowed_formats": ["pptx"]}
+    assert _FakeDocumentConverter.last_init_options == {
+        "allowed_formats": ["pptx"],
+        "enable_remote_services": False,
+    }
     assert _FakeDocumentConverter.last_convert_options == {"raises_on_error": False}
     assert result.markdown == "# Docling Title\n\nStructured content."
     assert result.title == "slides.pptx"
@@ -210,7 +237,13 @@ async def test_llama_parse_adapter_maps_async_documents(
     monkeypatch.setattr(llama_parse_adapter, "_load_llama_parse_cls", lambda: _FakeLlamaParse)
     monkeypatch.setattr(llama_parse_adapter, "_llama_parse_version", lambda: "0.7.test")
 
-    engine = LlamaParseEngine()
+    engine = LlamaParseEngine(
+        {
+            "enabled": True,
+            "api_key": "llx-runtime",
+            "llama_parse": {"language": "en", "premium_mode": False},
+        }
+    )
     result = await engine.execute(
         EngineExecutionContext(
             request=ParseSyncRequest(
@@ -259,7 +292,7 @@ async def test_llama_parse_requires_api_key(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.delenv("LLAMA_CLOUD_API_KEY", raising=False)
 
     with pytest.raises(ConfigError):
-        await LlamaParseEngine().execute(
+        await LlamaParseEngine({"enabled": True}).execute(
             EngineExecutionContext(
                 request=ParseSyncRequest(
                     source=ParseSource(

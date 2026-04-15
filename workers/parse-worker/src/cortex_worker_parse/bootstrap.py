@@ -5,7 +5,13 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 
-from cortex_common import CortexError, CortexSettings, load_settings, new_prefixed_id
+from cortex_common import (
+    CortexError,
+    CortexSettings,
+    load_runtime_config,
+    load_settings,
+    new_prefixed_id,
+)
 from cortex_contracts import ParseJobRequest
 from cortex_db import (
     CortexUnitOfWork,
@@ -175,11 +181,12 @@ class ParseWorkerRuntime:
 
 def build_worker(settings: CortexSettings | None = None) -> ParseWorkerRuntime:
     loaded_settings = settings or load_settings()
+    runtime_config = load_runtime_config(loaded_settings.runtime.path)
     engine = create_database_engine(loaded_settings.database.dsn)
     session_factory = create_session_factory(engine)
     worker = ParseWorker(
         session_factory=session_factory,
-        parse_service=build_parse_service(loaded_settings.parse),
+        parse_service=build_parse_service(loaded_settings.parse, runtime_config),
         config=ParseWorkerConfig.create(),
     )
     return ParseWorkerRuntime(worker=worker, engine=engine)

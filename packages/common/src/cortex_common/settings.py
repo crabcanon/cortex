@@ -5,6 +5,8 @@ from functools import lru_cache
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from .runtime_config import RuntimeConfigSettings
+
 
 class _BaseEnvSettings(BaseSettings):
     """Base settings class with consistent env behavior."""
@@ -80,11 +82,11 @@ class AuthSettings(_BaseEnvSettings):
 
 
 class ParseSettings(_BaseEnvSettings):
-    default_profile: str = Field(default="auto_default", alias="CORTEX_PARSE_DEFAULT_PROFILE")
+    default_profile: str | None = Field(default=None, alias="CORTEX_PARSE_DEFAULT_PROFILE")
 
 
 class CogneeSettings(_BaseEnvSettings):
-    enabled: bool = Field(default=False, alias="CORTEX_COGNEE_ENABLED")
+    enabled: bool | None = Field(default=None, alias="CORTEX_COGNEE_ENABLED")
 
 
 class TelemetrySettings(_BaseEnvSettings):
@@ -104,6 +106,7 @@ class CortexSettings(BaseModel):
     s3: S3Settings
     queue: QueueSettings
     auth: AuthSettings
+    runtime: RuntimeConfigSettings
     parse: ParseSettings
     cognee: CogneeSettings
     telemetry: TelemetrySettings
@@ -118,6 +121,7 @@ def load_settings() -> CortexSettings:
         s3=S3Settings(),
         queue=QueueSettings(),
         auth=AuthSettings(),
+        runtime=RuntimeConfigSettings(),
         parse=ParseSettings(),
         cognee=CogneeSettings(),
         telemetry=TelemetrySettings(),

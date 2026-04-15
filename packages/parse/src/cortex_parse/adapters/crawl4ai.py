@@ -71,14 +71,20 @@ def _crawl4ai_version() -> str | None:
 class Crawl4AIParseEngine(ParseEngineProtocol):
     """Map Cortex parse requests to Crawl4AI's browser and crawler configs."""
 
-    def __init__(self) -> None:
+    def __init__(self, config: dict[str, object] | None = None) -> None:
+        self._config = dict(config) if isinstance(config, dict) else {}
+        enabled = bool(self._config.get("enabled", True))
         available = _crawl4ai_available()
         self._descriptor = ParseEngineDescriptor(
             engine_key="crawl4ai",
             display_name="Crawl4AI",
             engine_family="web_interactive",
             deployment_mode=ParseEngineDeploymentMode.LOCAL,
-            status=ParseEngineStatus.ACTIVE if available else ParseEngineStatus.DISABLED,
+            status=(
+                ParseEngineStatus.ACTIVE
+                if enabled and available
+                else ParseEngineStatus.DISABLED
+            ),
             supported_source_types=[ParseInputKind.URL.value, ParseInputKind.URI.value],
             supported_formats=["text/html", "application/xhtml+xml"],
             capabilities=[
@@ -147,6 +153,7 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
                 context.request.crawl.browser_profile.proxy_ref
                 or context.engine_options.get("proxy")
                 or context.engine_options.get("proxy_config")
+                or self._mapping(self._config.get("browser_config")).get("proxy")
             ),
             timings_ms=self._timings(result, metadata),
             fetched_at=utc_now(),
@@ -163,29 +170,43 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
             engine_payload_summary=self._payload_summary(result),
         )
 
-    @staticmethod
-    def _browser_kwargs(context: EngineExecutionContext) -> dict[str, Any]:
+    def _browser_kwargs(self, context: EngineExecutionContext) -> dict[str, Any]:
         browser_profile = context.request.crawl.browser_profile
+        runtime_browser_config = self._mapping(self._config.get("browser_config"))
+        runtime_headers = self._mapping(runtime_browser_config.get("headers"))
         browser_kwargs: dict[str, Any] = {
+            **runtime_browser_config,
             "browser_type": browser_profile.browser_type,
             "headless": browser_profile.headless,
             "viewport_width": browser_profile.viewport_width,
             "viewport_height": browser_profile.viewport_height,
-            "headers": dict(browser_profile.headers),
+            "headers": {
+                **{str(key): str(value) for key, value in runtime_headers.items()},
+                **dict(browser_profile.headers),
+            },
             "enable_stealth": browser_profile.enable_stealth,
             "use_persistent_context": browser_profile.use_persistent_context,
         }
         if browser_profile.user_agent:
             browser_kwargs["user_agent"] = browser_profile.user_agent
+        elif "user_agent" in runtime_browser_config:
+            browser_kwargs["user_agent"] = runtime_browser_config["user_agent"]
         if browser_profile.proxy_ref:
             browser_kwargs["proxy"] = browser_profile.proxy_ref
-        browser_kwargs.update(
-            Crawl4AIParseEngine._mapping(context.engine_options.get("browser_config"))
-        )
+        elif "proxy" not in browser_kwargs and isinstance(self._config.get("proxy"), str):
+            browser_kwargs["proxy"] = self._config["proxy"]
+        override_browser = self._mapping(context.engine_options.get("browser_config"))
+        override_headers = self._mapping(override_browser.pop("headers", None))
+        browser_kwargs.update(override_browser)
+        if override_headers:
+            browser_kwargs["headers"] = {
+                **self._mapping(browser_kwargs.get("headers")),
+                **override_headers,
+            }
         return browser_kwargs
 
-    @staticmethod
     def _run_kwargs(
+        self,
         context: EngineExecutionContext,
         cache_mode_enum: type[Any] | None,
     ) -> dict[str, Any]:
@@ -193,6 +214,7 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
         browser_profile = crawl.browser_profile
         capture = crawl.capture
         run_kwargs: dict[str, Any] = {
+            **self._mapping(self._config.get("crawler_run_config")),
             "css_selector": crawl.content_selector,
             "excluded_selector": ", ".join(crawl.excluded_selectors)
             if crawl.excluded_selectors
@@ -216,7 +238,7 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
             "session_id": browser_profile.session_id,
             "verbose": False,
         }
-        run_kwargs.update(Crawl4AIParseEngine._mapping(context.engine_options.get("crawler_run_config")))
+        run_kwargs.update(self._mapping(context.engine_options.get("crawler_run_config")))
         return {key: value for key, value in run_kwargs.items() if value is not None}
 
     @staticmethod
@@ -272,11 +294,13 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
                 raw[field_name] = value
         return raw
 
-    @staticmethod
-    def _warnings(context: EngineExecutionContext, result: Any) -> list[str]:
+    def _warnings(self, context: EngineExecutionContext, result: Any) -> list[str]:
         warnings: list[str] = []
         storage_state_ref = context.request.crawl.browser_profile.storage_state_ref
-        if storage_state_ref:
+        runtime_storage_state = self._mapping(self._config.get("browser_config")).get(
+            "storage_state"
+        )
+        if storage_state_ref and not runtime_storage_state:
             warnings.append(
                 "storage_state_ref is not resolved automatically yet; provide a concrete "
                 "storage_state via engine_options.browser_config when needed."

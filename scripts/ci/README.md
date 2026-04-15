@@ -38,3 +38,7 @@ GitHub Actions.
 - `runtime-stack` job: manual `workflow_dispatch` opt-in, starts `compose.local.yaml`,
   waits for readiness with `scripts/ci/wait_for_runtime_stack.py`, runs
   `tests/integration/test_runtime_stack.py`, and always tears the stack down.
+
+`scripts/dev/check-runtime-stack.ps1` currently runs both the infrastructure-backed
+`tests/integration/test_runtime_stack.py` slice and the live observability probe in
+`tests/integration/test_runtime_observability_stack.py`.

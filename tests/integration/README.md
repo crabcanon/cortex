@@ -26,3 +26,8 @@ Useful local endpoints:
 
 The runtime-stack tests are marked with `@pytest.mark.runtime_stack` and stay skipped unless
 `CORTEX_RUNTIME_STACK=1` is set.
+
+`scripts/dev/check-runtime-stack.ps1` now executes both:
+
+- `tests/integration/test_runtime_stack.py`
+- `tests/integration/test_runtime_observability_stack.py`

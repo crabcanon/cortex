@@ -300,6 +300,22 @@ knowledge:
 
 当前仓库的 `.python-version` 已固定为 `3.12.12`，wrapper 会把该版本的托管 Python 安装到仓库内的 `.uv-python/`，并把项目虚拟环境固定到 `.venv/`。
 
+不要在运行这些 wrapper 之前手工执行：
+
+- Git Bash: `source .venv/Scripts/activate`
+- PowerShell: `.\.venv\Scripts\Activate.ps1`
+
+原因很简单：这些 wrapper 自己负责检查和修复 `.venv`。如果你先激活了目标 `.venv`，Windows 很容易把 `.venv\Scripts` 锁住，后续 `uv sync` / `repair-venv` 就会报 `os error 32`。
+
+同样地，如果你正在运行：
+
+- `cortex-api`
+- `cortex-parse-worker`
+- `cortex-knowledge-worker`
+- 任何仍然绑定到仓库 `.venv` 的 `python` / `uv` 进程
+
+也请先停掉它们，再执行 `repair-venv`。
+
 PowerShell：
 
 ```powershell

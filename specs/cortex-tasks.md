@@ -365,3 +365,12 @@ Goal: eliminate the recurring `.venv` corruption and shell-mismatch pitfalls by 
 | CTX-20260415-039 | 2026-04-15 21:25:00 +08:00 | P0 | worker-devx | Add PowerShell and Bash worker launcher scripts for Parse and Knowledge that bootstrap/check the canonical `.venv`, avoid shell-specific syntax confusion, and run the generated worker executables in a predictable loop or one-shot mode | CTX-20260415-038 | done |
 | CTX-20260415-040 | 2026-04-15 21:25:00 +08:00 | P0 | docs-validation | Refresh the operator guidance for the new uv wrappers and dual-shell launchers, run focused validation proving the wrappers resolve the repo-local Python directory correctly, and append the outcome plus any residual caveats to `specs/cortex-log.md` | CTX-20260415-039 | done |
 
+### Batch 2026-04-15 21:40:00 +08:00 | Phase S Active-Venv Repair Guard And Git Bash Hardening
+
+Goal: prevent the new dual-shell env tooling from attempting to repair a project `.venv` that is currently activated and locked by the caller shell, and tighten health checks so stale non-repo-managed interpreters are detected before worker launch.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260415-041 | 2026-04-15 21:40:00 +08:00 | P0 | env-hardening | Harden the PowerShell and Bash uv helpers so `.venv` health checks validate repo-managed interpreter provenance, and repair paths fail fast with a clear message when the target `.venv` is currently activated in the caller shell | CTX-20260415-040 | done |
+| CTX-20260415-042 | 2026-04-15 21:40:00 +08:00 | P0 | worker-docs-validation | Refresh the Git Bash / PowerShell operator guidance to explicitly forbid pre-activating `.venv` before using the wrapper scripts, then rerun focused validation and append the issue/fix to `specs/cortex-log.md` | CTX-20260415-041 | done |
+

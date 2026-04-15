@@ -61,6 +61,7 @@ MANIFEST
 !.python-version
 .venv/
 .venv
+.venv-*/
 .uv-cache/
 .uv-python/
 venv/
@@ -116,6 +117,8 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 .abstra/
+.data/
+.tmp-runtime/
 
 # Environment / secrets
 .env

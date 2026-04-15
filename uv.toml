@@ -1,2 +1,5 @@
+# uv does not currently expose a project config key for the managed Python install directory.
+# Use the repo-local wrappers under `scripts/dev/` so managed Python stays under `.uv-python`
+# and the project environment stays anchored at `.venv`.
 cache-dir = ".uv-cache"
 python-preference = "only-managed"

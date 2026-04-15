@@ -1,6 +1,8 @@
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
-$env:UV_PYTHON_INSTALL_DIR = (Join-Path $PSScriptRoot "..\\..\\.uv-python")
+
+. (Join-Path $PSScriptRoot "_uv-env.ps1")
+Set-CortexUvEnvironment
 
 function Invoke-UvCheck {
     param(
@@ -8,9 +10,9 @@ function Invoke-UvCheck {
         [string[]]$Args
     )
 
-    & uv @Args
-    if ($LASTEXITCODE -ne 0) {
-        exit $LASTEXITCODE
+    $exitCode = Invoke-CortexUv @Args
+    if ($exitCode -ne 0) {
+        exit $exitCode
     }
 }
 

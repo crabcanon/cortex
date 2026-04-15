@@ -439,3 +439,257 @@
 - Cause: Static and default test validation can proceed without containers, while the actual PostgreSQL/MinIO execution path requires a reachable Docker runtime.
 - Action: Ran Ruff and Pyright on `tests/integration/test_runtime_stack.py`, verified `docker compose config`, and reran `scripts/dev/check.ps1` successfully with `44 passed, 1 skipped`.
 - Prevention: Keep the runtime-stack tests opt-in until CI or the local environment can guarantee Docker availability, then promote the blocked tasks to done after one successful end-to-end stack-backed run.
+
+### 2026-04-15 09:46:45 +08:00 | CI And Validation Continuation Started
+
+- Stage: `CTX-20260412-048`, `CTX-20260415-001 ~ CTX-20260415-004`
+- Event: Started the next continuation slice to close the still-planned CI baseline with reusable validation scripts, a GitHub Actions workflow, and an optional docker-backed runtime-stack job.
+- Cause: The REST surface, workers, and local dependency stack now exist, but the repository still lacked a portable CI entrypoint and automated YAML/OpenAPI validation outside the PowerShell-only local check wrapper.
+- Action: Added a new Phase K task batch before coding, rechecked the Docker state, and confirmed the local daemon is still unavailable (`docker ps` permission denied, `com.docker.service` stopped), so the implementation is being scoped first to unblocked CI and validation work that can later execute the runtime stack in CI where Docker is available.
+- Prevention: Keep future delivery slices tied to both local scripts and CI automation so contract drift, config regressions, and infrastructure readiness failures are surfaced early even when the current workstation cannot start containers.
+
+### 2026-04-15 09:51:20 +08:00 | GitHub Workflow YAML Needed `on` Key Normalization
+
+- Stage: `CTX-20260415-001 ~ CTX-20260415-003`
+- Event: The first pass of the new YAML validator could parse `.github/workflows/ci.yaml`, but the `on:` trigger block was not reachable through the usual `"on"` key lookup.
+- Cause: `yaml.safe_load` follows YAML 1.1 implicit boolean resolution, so GitHub Actions' literal `on:` key can be loaded as boolean `True` instead of the string `"on"`.
+- Action: Normalized workflow parsing in `scripts/ci/validate_yaml.py` to accept either `"on"` or `True`, then added structural assertions for `workflow_dispatch` inputs plus the required `quality` and `runtime-stack` job commands.
+- Prevention: Any future tooling that parses GitHub workflow YAML in this repository should account for YAML 1.1 boolean coercion or use a parser mode that preserves `on` as a literal key.
+
+### 2026-04-15 09:52:05 +08:00 | Recurrent Ruff Non-Python Path Misparse
+
+- Stage: `CTX-20260415-001 ~ CTX-20260415-004`
+- Event: A focused Ruff invocation produced a large burst of syntax errors after `.github/workflows/ci.yaml` and `scripts/dev/check.ps1` were passed directly on the command line.
+- Cause: This repeats the same class of issue seen in earlier ad hoc checks: Ruff auto-discovers Python files safely when pointed at the repository or Python directories, but explicit non-Python file arguments make it try to parse YAML and PowerShell as Python source.
+- Action: Moved workflow verification into `scripts/ci/validate_yaml.py`, limited focused Ruff checks to Python paths, and reran targeted plus full validation successfully.
+- Prevention: For focused linting in this repository, pass only Python files or directories to Ruff; use dedicated validators for YAML, PowerShell, and other config assets.
+
+### 2026-04-15 09:53:40 +08:00 | CI And Validation Continuation Completed
+
+- Stage: `CTX-20260412-048`, `CTX-20260412-049`, `CTX-20260415-001 ~ CTX-20260415-004`
+- Event: The CI baseline is now in place with a reusable cross-platform validation entrypoint, YAML/OpenAPI config validation, a GitHub Actions quality workflow, and an optional runtime-stack CI job.
+- Cause: The repository had already reached a meaningful REST and worker milestone, so the next leverage point was to turn the documented contracts and local stack into a repeatable automation path instead of relying only on manual checks.
+- Action: Added `scripts/ci/check.py`, `scripts/ci/validate_yaml.py`, `scripts/ci/wait_for_runtime_stack.py`, `.github/workflows/ci.yaml`, refreshed `scripts/ci/README.md`, wired `scripts/dev/check.ps1` into YAML/OpenAPI validation, and reran targeted checks plus `powershell -ExecutionPolicy Bypass -File scripts\dev\check.ps1` successfully (`44 passed, 1 skipped`).
+- Prevention: Keep `scripts/ci/check.py` and `scripts/ci/validate_yaml.py` as the shared contract for local and CI validation so new API slices extend one verification path instead of creating parallel check logic.
+
+### 2026-04-15 09:57:17 +08:00 | Docker Availability Differs Between Local Shell And Codex Session
+
+- Stage: `CTX-20260414-032 ~ CTX-20260414-035`
+- Event: After the operator confirmed Docker works in their own Git Bash / PowerShell sessions, this Codex-controlled shell still could not reach the daemon: `docker version` and `docker ps` both failed on `npipe:////./pipe/docker_engine`, and `com.docker.service` remained `Stopped` from the session's perspective.
+- Cause: The workstation may now have a usable Docker context for the operator, but the current Codex execution context still has a session-level permission or service-visibility mismatch around the Windows Docker pipe and `C:\Users\hy\.docker\config.json`.
+- Action: Kept the docker-backed validation tasks blocked for this session, recorded the environment mismatch explicitly, and pivoted to the next unblocked testing slice instead of repeatedly retrying daemon-dependent commands.
+- Prevention: When a tool-run context differs from the user's interactive shell on Windows, validate daemon reachability inside the Codex session itself before planning stack-backed execution; if the mismatch persists, continue with non-daemon work and resume stack validation once the agent context can access Docker.
+
+### 2026-04-15 10:04:10 +08:00 | Temp Directory Fixtures Fail In This Workspace Context
+
+- Stage: `CTX-20260415-005 ~ CTX-20260415-007`
+- Event: The first unit-test pass failed when new parse-profile tests used `tmp_path` and then `TemporaryDirectory()`: pytest could not initialize the disabled `tmpdir` plugin path, and direct writes under `C:\Users\hy\AppData\Local\Temp` raised `PermissionError`.
+- Cause: This repository intentionally disables pytest's `tmpdir` plugin in `pyproject.toml`, and the current Codex workspace context does not reliably allow scratch writes under the user temp directory.
+- Action: Reworked the parse-profile unit tests to create isolated case directories under the repository-local `runtime-test-data` tree, which already matches the rest of the test suite's Windows-safe scratch pattern.
+- Prevention: In this workspace, prefer repository-local scratch directories over `tmp_path`, `tmpdir`, or system temp locations when adding tests that write fixtures or ephemeral files.
+
+### 2026-04-15 10:06:00 +08:00 | Unit Coverage Continuation Completed
+
+- Stage: `CTX-20260412-044`, `CTX-20260415-005 ~ CTX-20260415-007`
+- Event: The package-level unit coverage slice is complete for `common`, `auth`, `storage`, `parse`, and `knowledge`, closing the remaining non-Docker unit-testing gap.
+- Cause: After the Docker-backed validation remained blocked in this agent context, the next highest-value path was to strengthen package-level confidence around pure settings, token, storage, profile, and knowledge helper logic.
+- Action: Added focused unit tests under `tests/unit` for settings cache/boolean normalization, auth token parsing and fallback chains, S3 bucket provisioning decisions, parse profile loading and registry filtering, and optional knowledge runtime/search/helper normalization; then reran focused checks plus `powershell -ExecutionPolicy Bypass -File scripts\dev\check.ps1` successfully (`62 passed, 1 skipped`).
+- Prevention: Keep expanding test coverage with pure unit slices before reaching for heavier integration paths so package behavior stays fast to validate even when external runtimes are unavailable from the current session.
+
+### 2026-04-15 10:44:36 +08:00 | Unified Runtime Config Continuation Started
+
+- Stage: `CTX-20260415-008 ~ CTX-20260415-011`
+- Event: Started a dedicated continuation slice to centralize provider runtime configuration for Crawl4AI, Jina Reader, LlamaParse, MarkItDown, Docling, and Cognee into one Cortex-owned runtime YAML plus loader.
+- Cause: The current implementation still splits runtime intent across env-driven `settings`, adapter-local defaults, and per-request/profile overrides, which makes real deployment setup harder to audit and reason about.
+- Action: Added a new Phase L task batch before coding, re-audited the adapter/bootstrap entry points, and scoped the implementation to a checked-in runtime config file, secret-reference resolution, parse/knowledge bootstrap wiring, and focused unit coverage.
+- Prevention: Keep provider defaults and deployment-specific behavior in one versioned runtime config contract, and reserve `.env` for secret material or coarse path overrides instead of scattering engine behavior across unrelated files.
+
+### 2026-04-15 11:04:20 +08:00 | Unified Runtime Config Continuation Completed
+
+- Stage: `CTX-20260415-008 ~ CTX-20260415-011`
+- Event: The runtime-config unification slice is complete: parse engines and Cognee now read from one checked-in `configs/cortex.runtime.yaml`, `.env` only holds secret/path inputs, and both API/worker bootstraps consume the same loader.
+- Cause: Real deployment setup needed a single operational source of truth for provider defaults and secret references, instead of splitting those knobs across adapter-local defaults and scattered environment variables.
+- Action: Added `cortex_common.runtime_config`, wired `RuntimeConfigSettings` into global settings, created `configs/cortex.runtime.yaml`, updated `.env.example`, connected Parse bootstrap plus Crawl4AI/Jina/LlamaParse/MarkItDown/Docling adapters to central defaults, mapped Cognee runtime config into `cognee.config.*`, refreshed `specs/cortex-tech.md`, and added focused unit/integration coverage for loader, bootstrap, and adapter wiring. Validation passed with `14` focused tests and `powershell -ExecutionPolicy Bypass -File scripts\dev\check.ps1` (`65 passed, 1 skipped`).
+- Prevention: Keep future provider additions behind the same runtime-config contract, and treat `.env` as a secret/reference layer only; if a new adapter needs its own knobs, add them to `configs/cortex.runtime.yaml` plus loader/tests in the same change.
+
+### 2026-04-15 11:31:02 +08:00 | Runtime Overlay Configs Continuation Started
+
+- Stage: `CTX-20260415-012 ~ CTX-20260415-013`
+- Event: Started a small follow-up slice to materialize the unified runtime-config model into three operator-facing files for `local`, `staging`, and `prod`.
+- Cause: The shared baseline file proved the config contract, but real integration testing needs environment-specific files that can be switched with `CORTEX_RUNTIME_CONFIG_PATH` instead of manual in-place edits.
+- Action: Added a dedicated task batch before editing, scoped the work to three complete runtime YAML files plus path/example refresh, and kept the provider choices aligned with the just-confirmed plan: LlamaParse via cloud API, Kuzu-first graph storage.
+- Prevention: Prefer explicit environment files over ad hoc last-minute edits to one config so promotion from local to staging to prod remains reviewable and repeatable.
+
+### 2026-04-15 11:34:10 +08:00 | Runtime Overlay Configs Continuation Completed
+
+- Stage: `CTX-20260415-012 ~ CTX-20260415-013`
+- Event: Added explicit `local`, `staging`, and `prod` runtime config files under `configs/`, switched the default runtime-config path to `configs/cortex.runtime.local.yaml`, and aligned the examples with Kuzu-first graph storage plus LlamaParse cloud mode.
+- Cause: The operator needed ready-to-fill environment files for real integration testing instead of editing one shared YAML by hand before each run.
+- Action: Created `configs/cortex.runtime.local.yaml`, `configs/cortex.runtime.staging.yaml`, and `configs/cortex.runtime.prod.yaml`; kept local on `kuzu`, moved staging/prod to `kuzu-remote`, set staging/prod vector storage to `pgvector`, refreshed `.env.example` and `specs/cortex-tech.md`, added unit coverage that loads all three files, and reran focused validation plus `powershell -ExecutionPolicy Bypass -File scripts\dev\check.ps1` successfully (`68 passed, 1 skipped`).
+- Prevention: When introducing new runtime environments, clone one of the explicit overlay files and keep all environment-specific endpoints and secrets behind `_ref` fields so promotion stays diffable and the loader behavior remains consistent.
+
+### 2026-04-15 12:12:26 +08:00 | Local Runtime Stack Validation Continuation Started
+
+- Stage: `CTX-20260415-014 ~ CTX-20260415-017`
+- Event: Started the next phase to resume the previously blocked docker-backed local runtime validation path after the operator filled `.env` and `cortex.runtime.local.yaml`.
+- Cause: The repository-level contract and provider wiring are in place, but the remaining confidence gap is still the real local environment boundary: PostgreSQL, MinIO, Redis, OTel, the populated runtime config, and live REST + worker execution.
+- Action: Added a dedicated Phase M task batch before execution, scoped the work to daemon reachability, compose startup, docker-backed tests, live API/worker exercise, and validation/log closure.
+- Prevention: Treat environment-backed validation as its own tracked phase with explicit startup, test, runtime, and closure tasks so blocked infrastructure issues do not get mixed into pure code-delivery slices.
+
+### 2026-04-15 14:16:18 +08:00 | Docker Daemon Reachability Still Diverges Inside Codex Session
+
+- Stage: `CTX-20260415-014`
+- Event: Rechecked Docker from the current Codex-controlled shell and it still could not reach `npipe:////./pipe/docker_engine`; `docker version` and `docker ps` both failed, even after redirecting `DOCKER_CONFIG` into a workspace-local directory to avoid the `C:\\Users\\hy\\.docker\\config.json` access warning.
+- Cause: The operator's interactive shell may have a working Docker context, but this agent session still sees a Windows pipe/service visibility or permission mismatch around the Docker daemon endpoint.
+- Action: Kept the docker-backed stack startup and MinIO/PostgreSQL/Redis validation blocked for this session, recorded the recurrence, and continued with non-docker live validation that can still exercise the configured API and worker paths.
+- Prevention: On this workstation, always validate Docker daemon access from the active Codex session itself before scheduling compose-backed work; if the pipe is unreachable here, treat daemon-dependent tasks as blocked even when the user's own terminal works.
+
+### 2026-04-15 14:16:18 +08:00 | Optional Provider Runtime Sync Blocked By Temp Or Build Artifact Permissions
+
+- Stage: `CTX-20260415-014`
+- Event: Tried to install live provider extras for Parse and Knowledge using `uv sync --all-packages --all-groups --extra runtime` and narrower package-scoped syncs, but the runs failed while building wheels for transitive dependencies such as `langdetect` and `pylatexenc`; even `ensurepip` hit `PermissionError` in temporary wheel extraction paths.
+- Cause: The current Codex workspace context still has a broader permission problem around temporary build directories and wheel artifacts, which affects source-build dependency installation even when the temporary directory is redirected into the workspace.
+- Action: Added optional `runtime` dependency groups to the Parse and Knowledge packages to formalize provider installation, documented the intended sync command, and then deferred full live provider installation once the permission issue blocked the build path.
+- Prevention: For this workspace context, prefer validating providers that do not need local binary/source installs first, and treat heavy optional runtime setup as a separate environment-readiness step until temporary build paths are writable end to end.
+
+### 2026-04-15 14:29:43 +08:00 | SQLite Runtime Path Was Not Prepared Before First Live Migration
+
+- Stage: `CTX-20260415-016`
+- Event: The first live API validation attempt failed before startup because Alembic could not open `sqlite:///./.data/cortex.db`; the configured file-backed SQLite parent directory did not exist yet.
+- Cause: Both the migration CLI and async engine bootstrap assumed the parent directory for file-backed SQLite DSNs already existed, which is not guaranteed in a fresh local environment.
+- Action: Added `ensure_sqlite_database_path(...)` to the DB engine layer, invoked it from both `create_database_engine(...)` and `build_alembic_config(...)`, added focused unit coverage, and reran the live validation successfully past migration/startup.
+- Prevention: Treat file-backed SQLite DSNs as real filesystem resources that need parent-directory preparation at the shared DB bootstrap layer instead of expecting operators to create directories by hand.
+
+### 2026-04-15 14:29:43 +08:00 | Live Runtime Validation Exposed Provider-Readiness And Error-Mapping Gaps
+
+- Stage: `CTX-20260415-016`
+- Event: The local API and worker stack was launched successfully against the populated `.env` and `configs/cortex.runtime.local.yaml`, and a real HTTP validation run was recorded at `runtime-test-data/live-runtime-compact-1776234366955494500/summary.json`.
+- Cause: The code path was ready for real execution, so the remaining failures came from provider readiness and runtime observability boundaries instead of missing API implementation.
+- Action: Verified `/metrics`, `/openapi.json`, `/v1/health/live`, `/v1/health/ready`, Parse engine/profile catalog endpoints, Knowledge dataset creation, and worker/job-event execution on the live stack; then fixed two runtime-debugging gaps uncovered by the run: Parse failures now surface per-engine attempt details (for example the Jina Reader `401 Unauthorized`), and storage connectivity failures now return `storage_endpoint_unreachable` (`503`) instead of collapsing into an opaque internal `500`.
+- Findings:
+  - Parse runtime currently exposes only `jina_reader` as active, and live Parse requests fail because the configured Jina Reader call returns `401 Unauthorized`, which strongly indicates a missing or invalid Reader credential in the local runtime config / secret reference path.
+  - Knowledge control-plane endpoints and queued Add jobs run, but live Knowledge execution and Search fail with `config_error: Cognee runtime module is unavailable`, which matches the earlier optional-provider installation block in this Codex session.
+  - Storage upload-session creation now fails explicitly with `storage_endpoint_unreachable` for `http://127.0.0.1:9000`, confirming that the local S3-compatible endpoint is not reachable from this session while Docker-backed MinIO remains blocked.
+  - OTLP export remained configured and the API stayed healthy, but the process logged connection-refused export warnings for `http://127.0.0.1:4318/v1/traces`, confirming that an OTel collector is not currently reachable from the Codex session.
+  - Because the live run used the configured shared SQLite database, the Parse worker picked up an older queued Parse job before the newly submitted one; this is expected queue behavior on a reused local DB but means worker validation is cleaner against an isolated DB or an emptied queue.
+- Prevention: Keep real-environment validation outcomes split into code fixes versus provider-readiness blockers, and prefer explicit, provider-specific failure surfaces so operators can map a failing live request directly back to the missing credential, package, or endpoint.
+
+### 2026-04-15 14:29:43 +08:00 | Phase M Validation Closure Completed
+
+- Stage: `CTX-20260415-017`
+- Event: The repository-wide validation pass succeeded after the runtime fixes and log updates.
+- Cause: The code changes from this phase were limited to DB bootstrap hardening, Parse failure diagnostics, Storage error mapping, and their focused tests.
+- Action: Reran `powershell -ExecutionPolicy Bypass -File scripts\\dev\\check.ps1` successfully, including YAML/OpenAPI validation, Ruff, Pyright, and pytest (`73 passed, 1 skipped`), then marked the task batch with Docker-specific steps still blocked and live API/runtime validation completed.
+- Prevention: After each live-runtime debugging slice, rerun the full repository validation before closing the batch so local environment discoveries do not leave hidden type, lint, or contract regressions behind.
+
+### 2026-04-15 17:18:17 +08:00 | PowerShell `$Host` Name Collision Broke Runtime Stack Wait Script
+
+- Stage: `CTX-20260415-014`
+- Event: The operator successfully started all Docker containers with `scripts\\dev\\stack.ps1 up`, but the script then failed while entering the readiness checks with `Cannot overwrite variable Host because that variable is read-only or constant.`
+- Cause: `Wait-TcpReady` declared a parameter named `Host`, which collides with PowerShell's built-in read-only `$Host` variable.
+- Action: Renamed the helper parameter to `HostName` in `scripts\\dev\\stack.ps1`, leaving the runtime stack startup logic unchanged while removing the PowerShell variable collision.
+- Prevention: Avoid parameter or local-variable names that shadow PowerShell automatic or built-in variables (`$Host`, `$PID`, `$Error`, etc.) in operator scripts, especially in shared helper functions reused across startup flows.
+
+### 2026-04-15 17:27:28 +08:00 | Docker-Backed Runtime Tests Exposed Hidden Postgres Referential Assumptions
+
+- Stage: `CTX-20260415-015`
+- Event: Once the operator-provided localhost stack was ready, `tests/integration/test_runtime_stack.py` initially failed on PostgreSQL foreign keys for `tenant_id` and `created_by` while the same flows had previously passed under SQLite-centric validation.
+- Cause: The runtime-stack tests were exercising service/worker layers directly, bypassing the API auth path that auto-provisions tenant/actor records in `dev` mode; SQLite had also masked some of these assumptions during earlier non-Postgres validation.
+- Action: Updated the docker-backed runtime tests to provision tenant and actor fixtures explicitly before direct storage/parse/knowledge writes, and adjusted Knowledge Add counter handling so provider-reported counters are honored instead of relying only on local item-type heuristics.
+- Prevention: When service-level tests bypass auth/bootstrap layers, seed every referential prerequisite explicitly; also keep Postgres-backed tests in the loop because they surface integrity assumptions that SQLite can hide.
+
+### 2026-04-15 17:27:28 +08:00 | Live Docker-Backed API Validation Passed Storage And Core Health, With Parse Or Knowledge Provider Gaps Remaining
+
+- Stage: `CTX-20260415-016`
+- Event: Ran a full live API/worker verification against the operator-started localhost stack and recorded the result at `runtime-test-data/live-runtime-postgres-1776245158854128000/summary.json`.
+- Cause: Docker-backed infrastructure was now reachable from the Codex session through localhost even though direct Docker daemon control in the session remains blocked.
+- Action: Verified successful `/metrics`, `/openapi.json`, `/v1/health/live`, `/v1/health/ready`, storage upload/complete/metadata/download, parse job submission/worker retry flow, knowledge dataset creation, and knowledge job submission/worker/job-event persistence against PostgreSQL + MinIO + Redis + OTel Collector.
+- Findings:
+  - Storage is fully healthy on the live stack: presigned upload, object completion, metadata retrieval, and presigned download all succeeded against MinIO.
+  - Readiness stayed healthy throughout the live run, and OTLP export no longer emitted the earlier connection-refused warnings once the collector was available on `http://127.0.0.1:4318`.
+  - Parse still fails at the provider layer because the active Jina Reader request returns `401 Unauthorized`, which strongly indicates a missing or invalid `JINA_API_KEY` for the current runtime config.
+  - Knowledge control-plane endpoints and queued job persistence are healthy, but execution/search remain blocked by `config_error: Cognee runtime module is unavailable`, which matches the still-missing optional provider installation in this Codex session.
+- Prevention: Keep infrastructure validation separate from provider-readiness validation so a healthy stack can be distinguished cleanly from missing third-party credentials or optional Python runtime packages.
+
+### 2026-04-15 17:27:28 +08:00 | Runtime Validation Closure Updated After Docker-Backed Pass
+
+- Stage: `CTX-20260415-017`
+- Event: Closed the current runtime-validation slice with both standard repository validation and docker-backed runtime-stack tests passing.
+- Cause: The only remaining blockers after the Docker-backed pass are provider-specific readiness issues (Jina credential and Cognee runtime package), not the REST API, worker queueing, or core infrastructure stack.
+- Action: Reran `powershell -ExecutionPolicy Bypass -File scripts\\dev\\check.ps1` successfully, reran `tests/integration/test_runtime_stack.py` successfully with `CORTEX_RUNTIME_STACK=1`, updated task status so `CTX-20260415-015` is now done, and left only the direct Docker-daemon control task blocked for this session.
+- Prevention: After an operator assists with a blocked infrastructure dependency, rerun both the normal repo checks and the dedicated infrastructure-backed tests so task state reflects the real remaining gap instead of the original blocker.
+
+### 2026-04-15 17:46:59 +08:00 | Provider Revalidation Continuation Started
+
+- Stage: `CTX-20260415-018 ~ CTX-20260415-020`
+- Event: Started a focused provider revalidation slice after the operator confirmed `JINA_API_KEY` is correct in `.env` and installed the optional `cognee` dependency into the active `.venv`.
+- Cause: The previous live runtime pass showed healthy infrastructure but still failed specifically at the Jina Reader provider boundary (`401 Unauthorized`) and the optional Cognee runtime boundary (`module is unavailable`), so the next step is to re-check those exact assumptions instead of reworking the general stack.
+- Action: Added a targeted follow-up batch in `specs/cortex-tasks.md`, avoided the full `scripts\\dev\\check.ps1` path until provider verification is finished to prevent accidental `.venv` recreation, and started direct provider/runtime visibility checks before re-running the live API + worker flows.
+- Prevention: When an operator changes credentials or optional-package state out of band, perform a narrow provider/runtime retest first so the result isolates configuration propagation from unrelated infrastructure or repository-wide validation noise.
+
+### 2026-04-15 18:09:17 +08:00 | Jina Reader And Cognee Module Visibility Recovered In The Current Session
+
+- Stage: `CTX-20260415-018`
+- Event: Re-ran direct provider visibility checks inside the active Codex session using `.venv-codex`.
+- Cause: The previous provider failure could have come either from stale runtime caching or from the optional provider environment still not being visible in the current Python process.
+- Action: Confirmed `tests/unit/test_runtime_config.py` and `tests/unit/test_cognee_runtime_adapter.py` both pass in `.venv-codex`; then verified Jina Reader directly against `https://r.jina.ai/https://example.com/` with `200 OK`, and confirmed `build_cognee_runtime(...)` now reports `descriptor.status == active` with version `0.5.8`.
+- Prevention: When `.venv` provenance is uncertain, run provider-level direct calls in the same Python environment that will execute the API and workers before assuming the remaining failures are in application code.
+
+### 2026-04-15 18:12:15 +08:00 | TestClient Worker Revalidation Initially Mixed Event Loops
+
+- Stage: `CTX-20260415-019`
+- Event: The first live provider revalidation script reached successful `/v1/health/*`, `/metrics`, `/v1/parse/engines`, `/v1/parse/profiles`, and `POST /v1/parse/sync`, but failed on the first `ParseWorker.run_once()` call with `RuntimeError: ... got Future ... attached to a different loop`.
+- Cause: The revalidation harness was calling `asyncio.run(...)` from outside FastAPI `TestClient`'s own anyio loop, so the worker attempted to reuse an async SQLAlchemy session factory that had been created on a different event loop.
+- Action: Switched the harness to execute async worker calls via `TestClient.portal.call(...)`, keeping worker execution on the same loop as the API lifespan-managed async engine and session factory.
+- Prevention: When an in-process live validation script mixes `TestClient` with async workers, use the client's blocking portal or an all-async ASGI test harness; do not wrap worker calls in a separate `asyncio.run(...)`.
+
+### 2026-04-15 18:14:39 +08:00 | Cognee 0.5.8 Exposed Monitoring And Memify Compatibility Gaps
+
+- Stage: `CTX-20260415-019`
+- Event: After the loop issue was removed, live Knowledge Add/Cognify/Search immediately failed because the runtime config used `monitoring_tool: noop`, while `cognee 0.5.8` only accepts `none` or `langfuse`; Memify also failed because `create_triplet_embeddings(...)` and `persist_sessions_in_knowledge_graph_pipeline(...)` require a `user` argument.
+- Cause: The Cortex-owned vendor-neutral config surface and the initial Cognee adapter implementation had not yet translated those current Cognee 0.5.8 API expectations.
+- Action: Updated `packages/knowledge/src/cortex_knowledge/runtime.py` so vendor-neutral monitoring values like `noop` are normalized to `none`, memify pipeline calls resolve and inject Cognee's default user automatically when the callable accepts `user`, and added focused coverage in `tests/unit/test_runtime_config.py` and `tests/unit/test_cognee_runtime_adapter.py`.
+- Prevention: Keep the runtime adapter as the only compatibility boundary between Cortex-owned config semantics and provider-specific APIs, and add focused tests whenever a live provider run reveals a concrete signature or enum mismatch.
+
+### 2026-04-15 18:21:04 +08:00 | Provider Revalidation Closed With Parse Restored And Knowledge Blocked By Upstream OpenAI Quota
+
+- Stage: `CTX-20260415-019 ~ CTX-20260415-020`
+- Event: Re-ran the live provider validation end to end and recorded the result at `runtime-test-data/live-provider-retest-1776248213840440500/summary.json`.
+- Cause: The local Docker-backed infrastructure, Jina Reader credential path, and Cognee module wiring were now healthy enough to execute real provider calls; the remaining failures came from the upstream LLM account state used by Cognee.
+- Action: Verified `GET /v1/health/live`, `GET /v1/health/ready`, `GET /metrics`, `GET /v1/parse/engines`, `GET /v1/parse/profiles`, `POST /v1/parse/sync`, `POST /v1/parse/jobs`, and `ParseWorker.run_once()` all succeeded against the live PostgreSQL/Redis/OTel-backed stack with `jina_reader`; then re-ran `tests/integration/test_api_knowledge.py` successfully after the adapter patch. The same live run showed all current Knowledge executions fail for upstream reasons:
+  - Add now reaches Cognee's real LLM connection flow, but fails with repeated `RateLimitError` / quota exhaustion from the configured OpenAI account.
+  - Cognify and Memify no longer fail on adapter/config mismatches, but still cannot complete because the LLM connection check times out after the upstream quota/connectivity problem.
+  - Search reaches the real provider path but aborts with an `InstructorRetryException` rooted in the same upstream OpenAI quota exhaustion, so the in-process test harness records a fatal provider exception before a JSON HTTP error body can be captured.
+- Prevention: Separate provider compatibility fixes from provider-account readiness; once the adapter is healthy, capture the exact upstream quota/timeout failure and stop changing application code unless the failure surface itself is misleading.
+
+### 2026-04-15 18:31:42 +08:00 | IDE Import Resolution Failed Because Pyright Targeted A Sparse `.venv`
+
+- Stage: `CTX-20260415-021`
+- Event: Investigated the local IDE error `Import "cortex_contracts" could not be resolved` and reproduced it directly with `.venv\\Scripts\\python.exe` and `.venv\\Scripts\\pyright.exe`.
+- Cause: The repository already pointed Pyright at `.venv`, but earlier live-provider work had installed the full editable workspace into `.venv-codex` instead, leaving `.venv` present but missing all workspace-owned packages such as `cortex_common` and `cortex_contracts`.
+- Action: Verified that `.venv-codex` could import the workspace packages while `.venv` could not, then selected `.venv` as the canonical environment to repair instead of changing the repository-wide Pyright target to a one-off alternate venv name.
+- Prevention: Keep one canonical project environment named `.venv` for editor tooling, and avoid leaving the full editable workspace installed only in an alternate venv when repo config and IDE analyzers are pinned to `.venv`.
+
+### 2026-04-15 18:33:18 +08:00 | Canonical `.venv` Was Re-Synced With The Full `uv workspace`
+
+- Stage: `CTX-20260415-022`
+- Event: Rebuilt the canonical `.venv` as a complete editable workspace environment.
+- Cause: Fixing the IDE import errors required the actual interpreter behind `.venv` to contain the workspace package `.pth` entries for every local package/app/worker, not just third-party dependencies.
+- Action: Ran `uv sync --all-groups --all-packages` with `UV_PROJECT_ENVIRONMENT=.venv`, which installed editable entries for `cortex-api`, `cortex-common`, `cortex-contracts`, `cortex-db`, `cortex-parse`, `cortex-knowledge`, both workers, and the other local packages; then verified direct imports from `.venv\\Scripts\\python.exe`.
+- Prevention: When bootstrapping or repairing the project environment, use `uv sync --all-groups --all-packages` against `.venv` so the entire workspace is installed consistently for both runtime execution and IDE analysis.
+
+### 2026-04-15 18:35:44 +08:00 | Local IDE Settings Were Anchored To The Canonical `.venv`
+
+- Stage: `CTX-20260415-023`
+- Event: Added a local workspace IDE configuration file at `.vscode\\settings.json`.
+- Cause: Even after `.venv` was repaired, VS Code / Pylance could still remember a previously selected interpreter or miss some `src` roots during analysis until the workspace was nudged back to the canonical environment.
+- Action: Configured the default interpreter path to `${workspaceFolder}\\.venv\\Scripts\\python.exe`, enabled terminal auto-activation, and added all workspace `src` directories to `python.analysis.extraPaths` so editor analysis resolves the `cortex_*` packages deterministically.
+- Prevention: In multi-package `src`-layout Python workspaces, keep a workspace-local IDE setting that pins the interpreter and analysis roots, even if the repository also carries Pyright settings in `pyproject.toml`.
+
+### 2026-04-15 18:37:53 +08:00 | Import And Type-Check Validation Passed On The Repaired `.venv`
+
+- Stage: `CTX-20260415-024`
+- Event: Validation completed successfully after repairing `.venv`.
+- Cause: The import-resolution problem was environmental rather than a systemic packaging design flaw, so once the correct venv contents and interpreter target were restored, editor/static-analysis behavior stabilized.
+- Action: Verified direct imports for all workspace packages from `.venv\\Scripts\\python.exe`, reran full `pyright` with `0 errors`, and reran the focused Cognee/runtime unit tests successfully. Also fixed one genuine type-check issue in `packages\\knowledge\\src\\cortex_knowledge\\runtime.py` that surfaced once imports were resolving cleanly again.
+- Prevention: Use full-environment validation after fixing IDE resolution issues, because a missing-import problem can mask real type errors that only become visible once the analyzer is looking at the right environment.

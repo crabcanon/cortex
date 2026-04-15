@@ -361,9 +361,10 @@ src/cortex_parse/
 2. **Runtime Settings**
    - `cortex_common.settings`
    - 使用 `pydantic-settings` 从环境变量、secret file、默认值加载
+   - 只承载应用基础设施参数和统一运行时配置文件路径，如 `CORTEX_RUNTIME_CONFIG_PATH`
 3. **Business Policy Config**
+   - `configs/cortex.runtime.yaml`
    - `packages/parse/profiles/*.yaml`
-   - `packages/parse/engines/*.yaml`
    - `packages/auth/policies/*.yaml` 或 DB policy
 
 建议的 settings 切分：
@@ -373,9 +374,65 @@ src/cortex_parse/
 - `S3Settings`
 - `QueueSettings`
 - `AuthSettings`
+- `RuntimeConfigSettings`
 - `ParseSettings`
 - `CogneeSettings`
 - `TelemetrySettings`
+
+#### 4.8.1 统一运行时配置文件
+
+真正部署时，Cortex 不再把 Crawl4AI、Jina Reader、LlamaParse、MarkItDown、Docling、Cognee 的配置散落在各个 adapter 或 `.env` 中，而是统一收敛到仓库内的：
+
+- `configs/cortex.runtime.yaml`
+- `configs/cortex.runtime.local.yaml`
+- `configs/cortex.runtime.staging.yaml`
+- `configs/cortex.runtime.prod.yaml`
+
+它是**受版本控制的运行时契约**，用于描述：
+
+- Parse 默认 profile
+- 各解析引擎的启停状态
+- 各引擎的 provider-specific 默认参数
+- 统一的 secret reference
+- Cognee 的 LLM / embedding / vector DB / graph DB / migration DB 配置
+
+推荐约定：
+
+- `.env` 只放 secret、endpoint、或 `CORTEX_RUNTIME_CONFIG_PATH` 这类 coarse override
+- `configs/cortex.runtime.yaml` 放 provider 行为与运行时模板
+- `configs/cortex.runtime.<env>.yaml` 放可直接切换的环境化运行时配置
+- `packages/parse/profiles/*.yaml` 放 route / fallback / normalization 策略
+- request 级 `engine_options` 只做最后一跳覆盖，不承担长期运维配置
+
+统一运行时配置支持以下 reference scheme：
+
+- `env:VAR_NAME`：从环境变量取值
+- `file:./relative/path.txt`：读取文件内容
+- `path:./relative/path`：解析为绝对路径字符串
+- `literal:value`：显式内联字面值
+
+这样可以做到：
+
+- API Key、proxy、storage state 不直接写进代码
+- 配置文件可审计、可 review、可灰度
+- 不同 deployment ring / tenant / environment 可以复用同一份结构化模板
+
+#### 4.8.2 配置优先级
+
+统一后的建议优先级为：
+
+```text
+Built-in Adapter Defaults
+  < configs/cortex.runtime.yaml
+  < parse profile engine_overrides
+  < request.parser.engine_options
+```
+
+其中：
+
+- 基础设施级 env 变量仍高于代码默认值，但不再承担主要的 provider 行为编排。
+- `configs/cortex.runtime.yaml` 是 parse / knowledge provider 的主配置面。
+- profile 负责“策略”，runtime config 负责“运行时默认值”，request override 负责“临时特例”。
 
 建议的配置优先级：
 
@@ -388,9 +445,10 @@ Environment Variables
 
 其中：
 
-- 凭据一律来自环境变量或 secret mount，不进入 Git。
+- 凭据推荐通过 `env:` / `file:` reference 注入，不进入 Git。
 - Parse profile 和权限策略优先以 YAML 启动，再逐步迁移为 DB 可运营配置。
 - `otel-collector.yaml` 保持仓库内可见，用作默认开发和部署基线。
+- `configs/cortex.runtime.yaml` 保持仓库内可见，作为 provider runtime baseline；真正敏感信息只通过 reference 解析。
 
 ### 4.9 数据访问与迁移模型
 
@@ -634,6 +692,8 @@ LlamaParse 官方 Parsing API 文档显示其支持大量文件扩展名，并�
 - `document_high_fidelity_primary`
 - `page_layout_rich_primary`
 - `cloud_document_parser`
+
+在当前 Cortex 实现中，`llama_parse` adapter 明确按 **Llama Cloud / Parsing API** 路线接入，并通过统一运行时配置中的 `parse.engines.llama_parse` 管理 `api_key_ref` 与默认参数；如果未来需要本地开源解析链路，应新增独立 adapter key，而不是把 cloud 与 local 行为混在一个 `llama_parse` 配置段里。
 
 #### MarkItDown
 

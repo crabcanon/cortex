@@ -115,12 +115,12 @@
 
 | Task ID | Added At | Priority | Area | Task | Depends On | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| CTX-20260412-044 | 2026-04-12 21:11:20 +08:00 | P0 | testing | 为 `common`、`auth`、`storage`、`parse`、`knowledge` 增加单元测试 | CTX-20260412-021, CTX-20260412-042 | planned |
+| CTX-20260412-044 | 2026-04-12 21:11:20 +08:00 | P0 | testing | 为 `common`、`auth`、`storage`、`parse`、`knowledge` 增加单元测试 | CTX-20260412-021, CTX-20260412-042 | done |
 | CTX-20260412-045 | 2026-04-12 21:11:20 +08:00 | P0 | testing | 增加 OpenAPI contract tests，校验 DTO 与 `cortex-api.yaml` 一致 | CTX-20260412-007, CTX-20260412-034, CTX-20260412-038 | done |
 | CTX-20260412-046 | 2026-04-12 21:11:20 +08:00 | P0 | testing | 增加集成测试：SQLite/PostgreSQL、S3 兼容存储、队列、Worker | CTX-20260412-036, CTX-20260412-043 | planned |
 | CTX-20260412-047 | 2026-04-12 21:11:20 +08:00 | P1 | testing | 增加端到端主链路测试：upload -> parse -> add -> search | CTX-20260412-046 | planned |
-| CTX-20260412-048 | 2026-04-12 21:11:20 +08:00 | P0 | ci | 建立 CI pipeline：`uv sync`、lint、types、tests、OpenAPI/YAML 校验 | CTX-20260412-004, CTX-20260412-045 | planned |
-| CTX-20260412-049 | 2026-04-12 21:11:20 +08:00 | P1 | devops | 补充本地 compose / runbook，覆盖 DB、S3、queue、OTel Collector、Jaeger、Prometheus、Grafana | CTX-20260412-005, CTX-20260412-048 | planned |
+| CTX-20260412-048 | 2026-04-12 21:11:20 +08:00 | P0 | ci | 建立 CI pipeline：`uv sync`、lint、types、tests、OpenAPI/YAML 校验 | CTX-20260412-004, CTX-20260412-045 | done |
+| CTX-20260412-049 | 2026-04-12 21:11:20 +08:00 | P1 | devops | 补充本地 compose / runbook，覆盖 DB、S3、queue、OTel Collector、Jaeger、Prometheus、Grafana | CTX-20260412-005, CTX-20260412-048 | done |
 
 ### Batch 2026-04-13 08:45:00 +08:00 | Phase D/E Continuation
 
@@ -240,4 +240,77 @@ Goal: add a vendor-neutral local dependency stack plus docker-backed integration
 | CTX-20260414-033 | 2026-04-14 22:41:12 +08:00 | P0 | testing | Add docker-backed MinIO storage integration coverage that exercises presigned upload/download behavior through the real S3-compatible client implementation | CTX-20260412-046, CTX-20260414-031 | blocked |
 | CTX-20260414-034 | 2026-04-14 22:41:12 +08:00 | P0 | testing | Add docker-backed Parse and Knowledge worker integration coverage on PostgreSQL so queued job execution is validated against the real SQL backend used as the portable queue boundary | CTX-20260412-046, CTX-20260414-032 | blocked |
 | CTX-20260414-035 | 2026-04-14 22:41:12 +08:00 | P0 | validation | Run focused docker-backed validation plus the repository-wide lint/type/test suite, then update task/log history with any environment or contract issues uncovered during the stack-backed run | CTX-20260414-033, CTX-20260414-034 | blocked |
+
+### Batch 2026-04-15 09:46:45 +08:00 | Phase K CI And Validation Continuation
+
+Goal: complete the still-planned CI baseline around the now-implemented REST surface and local runtime stack by adding vendor-neutral validation wrappers, GitHub Actions automation, and optional docker-backed runtime-stack execution that can run when Docker is available.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260415-001 | 2026-04-15 09:46:45 +08:00 | P0 | ci | Add a cross-platform CI validation entrypoint plus YAML/OpenAPI validation helpers so repository checks do not depend on a PowerShell-only wrapper and can be reused locally and in GitHub Actions | CTX-20260412-048, CTX-20260414-030 | done |
+| CTX-20260415-002 | 2026-04-15 09:46:45 +08:00 | P0 | ci | Add a GitHub Actions quality workflow for `uv sync`, lint, type-checking, tests, and YAML/OpenAPI validation using current maintained official actions and the existing `uv` workspace layout | CTX-20260415-001 | done |
+| CTX-20260415-003 | 2026-04-15 09:46:45 +08:00 | P1 | ci-devops | Add an optional runtime-stack CI job plus readiness helper that can bring up `compose.local.yaml`, wait for PostgreSQL/MinIO/Redis/OTel/Prometheus/Grafana/Jaeger, run docker-backed tests, and always tear the stack down when CI Docker is available | CTX-20260414-031, CTX-20260414-032, CTX-20260414-033, CTX-20260414-034, CTX-20260415-001 | done |
+| CTX-20260415-004 | 2026-04-15 09:46:45 +08:00 | P0 | docs-validation | Refresh the CI/runbook documentation, run focused and repository validation for the new automation layer, then update task/log history including the still-blocked local Docker execution note | CTX-20260415-002, CTX-20260415-003 | done |
+
+### Batch 2026-04-15 09:57:17 +08:00 | Phase L Unit Coverage Continuation
+
+Goal: close the remaining vendor-neutral package-level testing gap by adding focused unit coverage for shared settings/auth/storage/parse/knowledge behaviors that do not require the blocked Docker daemon path.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260415-005 | 2026-04-15 09:57:17 +08:00 | P0 | testing-common | Audit existing tests for `common`, `auth`, `storage`, `parse`, and `knowledge`, then add focused unit coverage around settings normalization, auth scope checks, and pure service/contract helpers that are still uncovered | CTX-20260412-044 | done |
+| CTX-20260415-006 | 2026-04-15 09:57:17 +08:00 | P0 | testing-services | Add unit tests for package-level control/service logic that can run without Docker, especially parse profile loading/selection and knowledge search/job helper behavior that is currently only exercised indirectly through integration tests | CTX-20260415-005 | done |
+| CTX-20260415-007 | 2026-04-15 09:57:17 +08:00 | P0 | validation | Run focused plus repository-wide validation for the new unit-coverage slice, update `CTX-20260412-044` status, and record any repeated testing pitfalls in the log | CTX-20260415-006 | done |
+
+### Batch 2026-04-15 10:44:36 +08:00 | Phase L Unified Runtime Config Continuation
+
+Goal: centralize parse-engine and Cognee runtime configuration into one vendor-neutral runtime YAML so provider setup does not remain scattered across `.env`, adapter defaults, and per-request overrides.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260415-008 | 2026-04-15 10:44:36 +08:00 | P0 | runtime-config | Add a unified runtime config model and checked-in baseline YAML for parse-engine and knowledge-provider settings, with secret references resolved from env/file/path instead of hardcoding provider credentials in code | CTX-20260414-016, CTX-20260414-018 | done |
+| CTX-20260415-009 | 2026-04-15 10:44:36 +08:00 | P0 | parse-runtime | Wire Parse bootstrap and concrete adapters to the unified runtime config so Crawl4AI, Jina Reader, LlamaParse, MarkItDown, and Docling all support central defaults plus profile/request overrides | CTX-20260415-008 | done |
+| CTX-20260415-010 | 2026-04-15 10:44:36 +08:00 | P0 | knowledge-runtime | Wire the optional Cognee runtime bootstrap to the unified runtime config and map the documented Cognee config API knobs into a stable Cortex-owned config surface | CTX-20260415-008 | done |
+| CTX-20260415-011 | 2026-04-15 10:44:36 +08:00 | P0 | docs-validation | Refresh the technical design and operator-facing config examples, add focused unit coverage for the new loader/runtime wiring, then rerun targeted and repository validation and close the batch in tasks/log | CTX-20260415-009, CTX-20260415-010 | done |
+
+### Batch 2026-04-15 11:31:02 +08:00 | Phase L Runtime Overlay Configs Continuation
+
+Goal: turn the unified runtime-config contract into explicit local/staging/prod operator files so real-environment integration tests can switch environments without hand-editing one shared YAML.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260415-012 | 2026-04-15 11:31:02 +08:00 | P0 | runtime-config | Add three explicit runtime config files for `local`, `staging`, and `prod`, keeping LlamaParse on cloud API mode and preferring Kuzu / Kuzu-remote for the graph store across environments | CTX-20260415-008 | done |
+| CTX-20260415-013 | 2026-04-15 11:31:02 +08:00 | P0 | docs-config | Refresh the default path examples to point at the new environment-specific runtime config files and keep the operator guidance aligned with the new layout | CTX-20260415-012 | done |
+
+### Batch 2026-04-15 12:12:26 +08:00 | Phase M Local Runtime Stack Validation Continuation
+
+Goal: resume the previously blocked docker-backed local runtime validation path now that the operator has populated `.env` and `cortex.runtime.local.yaml`, then verify the real API/worker stack against PostgreSQL, MinIO, Redis, OTel, and the configured parse/knowledge providers.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260415-014 | 2026-04-15 12:12:26 +08:00 | P0 | runtime-stack | Revalidate Docker daemon reachability in the current Codex session, bring up `compose.local.yaml`, and unblock or repair any stack startup/config issues found against the real local environment | CTX-20260414-031, CTX-20260415-013 | blocked |
+| CTX-20260415-015 | 2026-04-15 12:12:26 +08:00 | P0 | testing-runtime | Run the docker-backed runtime-stack integration tests plus focused migration/storage/worker checks against the live PostgreSQL + MinIO stack, fixing environment-specific failures as they surface | CTX-20260415-014, CTX-20260414-032, CTX-20260414-033, CTX-20260414-034 | done |
+| CTX-20260415-016 | 2026-04-15 12:12:26 +08:00 | P0 | api-runtime | Launch the local API and workers against the populated `.env` / `cortex.runtime.local.yaml`, execute real Parse and Knowledge REST flows, and verify telemetry/metrics surfaces remain healthy | CTX-20260415-015 | done |
+| CTX-20260415-017 | 2026-04-15 12:12:26 +08:00 | P0 | validation-log | Rerun repository validation after any fixes, update task/log history including repeated runtime issues, and record the real-environment verification outcome plus residual risks | CTX-20260415-016, CTX-20260414-035 | done |
+
+### Batch 2026-04-15 17:45:42 +08:00 | Phase M Provider Revalidation Continuation
+
+Goal: revalidate the live Parse and Knowledge provider paths after the operator confirmed the Jina credential and installed the optional Cognee dependency into the current `.venv`.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260415-018 | 2026-04-15 17:45:42 +08:00 | P0 | provider-runtime | Confirm the current Codex session sees the refreshed Jina/Cognee runtime state, then reproduce provider-level direct calls before re-running the API surface | CTX-20260415-016 | done |
+| CTX-20260415-019 | 2026-04-15 17:45:42 +08:00 | P0 | api-runtime | Re-run the live API and worker validation for Parse and Knowledge against the existing localhost stack, verify whether Jina Parse and Cognee-backed jobs/search now succeed, and capture any remaining provider-specific errors | CTX-20260415-018 | done |
+| CTX-20260415-020 | 2026-04-15 17:45:42 +08:00 | P0 | validation-log | Update runtime task/log history with the provider revalidation outcome, including any remaining auth/config gaps and the exact live verification artifacts | CTX-20260415-019 | done |
+
+### Batch 2026-04-15 18:26:30 +08:00 | Phase M IDE Import Resolution Continuation
+
+Goal: converge the repository onto one canonical `.venv` for local development and make Pyright/Pylance resolve the workspace `src` packages (`cortex_common`, `cortex_contracts`, etc.) reliably in the IDE.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260415-021 | 2026-04-15 18:26:30 +08:00 | P0 | env-diagnosis | Audit the current `.venv`, `.venv-codex`, and Pyright workspace configuration to pinpoint why IDE import resolution is failing for workspace-owned packages | CTX-20260415-020 | done |
+| CTX-20260415-022 | 2026-04-15 18:26:30 +08:00 | P0 | env-bootstrap | Rebuild or resync the canonical `.venv` so all workspace packages are installed in editable mode from the shared `uv workspace`, and verify direct imports from that environment | CTX-20260415-021 | done |
+| CTX-20260415-023 | 2026-04-15 18:26:30 +08:00 | P0 | ide-config | Update repository-local Pyright / IDE configuration so the canonical `.venv` and all workspace `src` roots resolve consistently in editor analysis | CTX-20260415-022 | done |
+| CTX-20260415-024 | 2026-04-15 18:26:30 +08:00 | P0 | validation-log | Run import and type-check validation against the repaired `.venv`, then record the root cause, fix, and operator guidance in task/log history | CTX-20260415-023 | done |
 

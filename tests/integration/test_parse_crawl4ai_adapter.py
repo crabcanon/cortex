@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
+from cortex_common import CortexError, ValidationError
 from cortex_contracts import (
     BrowserProfile,
     CaptureOptions,
@@ -92,6 +93,43 @@ class _FakeAsyncWebCrawler:
         type(self).last_url = url
         type(self).last_run_config = config
         return _FakeCrawlResult()
+
+
+class _FailureCrawlResult:
+    success = False
+    error_message = "crawler failed"
+
+
+class _MinimalMarkdownResult:
+    markdown_with_citations = "# Citation Only\n\nCitation fallback body."
+
+
+class _NoTimingsCrawlResult:
+    success = True
+    markdown = _MinimalMarkdownResult()
+    metadata = {
+        "title": "No Timing Page",
+        "language": "en",
+    }
+    response_headers = {}
+    links = {}
+    media = {}
+    html = "<html><body>No timing</body></html>"
+    status_code = 200
+
+
+class _FailureAsyncWebCrawler(_FakeAsyncWebCrawler):
+    async def arun(self, *, url: str, config: _FakeCrawlerRunConfig) -> _FailureCrawlResult:
+        type(self).last_url = url
+        type(self).last_run_config = config
+        return _FailureCrawlResult()
+
+
+class _NoTimingsAsyncWebCrawler(_FakeAsyncWebCrawler):
+    async def arun(self, *, url: str, config: _FakeCrawlerRunConfig) -> _NoTimingsCrawlResult:
+        type(self).last_url = url
+        type(self).last_run_config = config
+        return _NoTimingsCrawlResult()
 
 
 @pytest.mark.asyncio
@@ -200,3 +238,106 @@ async def test_crawl4ai_adapter_maps_request_into_engine_result(
     assert result.engine_payload_summary["captured_pdf"] is True
     assert result.engine_payload_summary["captured_network_requests"] == 1
     assert result.engine_payload_summary["captured_console_messages"] == 1
+
+
+@pytest.mark.asyncio
+async def test_crawl4ai_adapter_rejects_object_backed_sources() -> None:
+    engine = Crawl4AIParseEngine({"enabled": True})
+
+    with pytest.raises(ValidationError, match="does not support object-backed parse sources"):
+        await engine.execute(
+            EngineExecutionContext(
+                request=ParseSyncRequest(
+                    source=ParseSource(
+                        input_kind=ParseInputKind.OBJECT,
+                        object_id="obj_123",
+                    )
+                ),
+                source=ParseSource(
+                    input_kind=ParseInputKind.OBJECT,
+                    object_id="obj_123",
+                ),
+            )
+        )
+
+
+@pytest.mark.asyncio
+async def test_crawl4ai_adapter_surfaces_crawl_failures(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        crawl4ai_adapter,
+        "_load_crawl4ai_sdk",
+        lambda: crawl4ai_adapter._Crawl4AISdk(
+            async_web_crawler=_FailureAsyncWebCrawler,
+            browser_config=_FakeBrowserConfig,
+            crawler_run_config=_FakeCrawlerRunConfig,
+            cache_mode=_FakeCacheMode,
+        ),
+    )
+
+    engine = Crawl4AIParseEngine({"enabled": True})
+
+    with pytest.raises(CortexError, match="crawler failed") as exc_info:
+        await engine.execute(
+            EngineExecutionContext(
+                request=ParseSyncRequest(
+                    source=ParseSource(
+                        input_kind=ParseInputKind.URL,
+                        url="https://example.com/failure",
+                    )
+                ),
+                source=ParseSource(
+                    input_kind=ParseInputKind.URL,
+                    url="https://example.com/failure",
+                ),
+            )
+        )
+
+    assert exc_info.value.code == "crawl4ai_failed"
+
+
+@pytest.mark.asyncio
+async def test_crawl4ai_adapter_handles_missing_timing_fields_and_warns_on_unresolved_storage_state(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        crawl4ai_adapter,
+        "_load_crawl4ai_sdk",
+        lambda: crawl4ai_adapter._Crawl4AISdk(
+            async_web_crawler=_NoTimingsAsyncWebCrawler,
+            browser_config=_FakeBrowserConfig,
+            crawler_run_config=_FakeCrawlerRunConfig,
+            cache_mode=_FakeCacheMode,
+        ),
+    )
+    monkeypatch.setattr(crawl4ai_adapter, "_crawl4ai_version", lambda: "0.8.test")
+
+    engine = Crawl4AIParseEngine({"enabled": True})
+    result = await engine.execute(
+        EngineExecutionContext(
+            request=ParseSyncRequest(
+                source=ParseSource(
+                    input_kind=ParseInputKind.URL,
+                    url="https://example.com/no-timings",
+                ),
+                crawl=CrawlOptions(
+                    browser_profile=BrowserProfile(
+                        storage_state_ref="state/browser.json",
+                    )
+                ),
+                output=ParseOutputOptions(llm_ready_mode=ParseLlmReadyMode.FIT_MARKDOWN),
+            ),
+            source=ParseSource(
+                input_kind=ParseInputKind.URL,
+                url="https://example.com/no-timings",
+            ),
+        )
+    )
+
+    assert result.markdown == "# Citation Only\n\nCitation fallback body."
+    assert result.timings_ms == {}
+    assert result.warnings == [
+        "storage_state_ref is not resolved automatically yet; provide a concrete "
+        "storage_state via engine_options.browser_config when needed."
+    ]

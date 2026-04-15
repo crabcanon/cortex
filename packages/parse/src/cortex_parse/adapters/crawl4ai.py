@@ -107,11 +107,11 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
         return self._descriptor
 
     async def execute(self, context: EngineExecutionContext) -> EngineExecutionResult:
+        if context.source.input_kind is ParseInputKind.OBJECT:
+            raise ValidationError("Crawl4AI does not support object-backed parse sources.")
         source_url = context.source.url or context.source.uri
         if source_url is None:
             raise ValidationError("Crawl4AI requires `source.url` or `source.uri`.")
-        if context.source.input_kind is ParseInputKind.OBJECT:
-            raise ValidationError("Crawl4AI does not support object-backed parse sources.")
 
         sdk = _load_crawl4ai_sdk()
         browser_config = sdk.browser_config(**self._browser_kwargs(context))
@@ -326,7 +326,7 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
                 for key, value in metadata["timings_ms"].items()
                 if isinstance(value, int | float)
             }
-        dispatch_result = result.dispatch_result
+        dispatch_result = getattr(result, "dispatch_result", None)
         if isinstance(dispatch_result, dict):
             return {
                 str(key): int(value)

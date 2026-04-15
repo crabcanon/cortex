@@ -693,3 +693,123 @@
 - Cause: The import-resolution problem was environmental rather than a systemic packaging design flaw, so once the correct venv contents and interpreter target were restored, editor/static-analysis behavior stabilized.
 - Action: Verified direct imports for all workspace packages from `.venv\\Scripts\\python.exe`, reran full `pyright` with `0 errors`, and reran the focused Cognee/runtime unit tests successfully. Also fixed one genuine type-check issue in `packages\\knowledge\\src\\cortex_knowledge\\runtime.py` that surfaced once imports were resolving cleanly again.
 - Prevention: Use full-environment validation after fixing IDE resolution issues, because a missing-import problem can mask real type errors that only become visible once the analyzer is looking at the right environment.
+
+### 2026-04-15 19:08:00 +08:00 | Phase N End-To-End Main Path Continuation Started
+
+- Stage: `CTX-20260415-025 ~ CTX-20260415-027`
+- Event: Started the final planned E2E testing slice to close the still-open `upload -> parse -> add -> search` path.
+- Cause: The repository already had focused storage, parse, knowledge, and docker-backed runtime coverage, but `CTX-20260412-046` / `CTX-20260412-047` were still open because the full REST + worker + persistence chain had not yet been exercised in one deterministic test.
+- Action: Chose a deterministic strategy based on SQLite plus fake object-store / parse / knowledge runtimes while still using the real FastAPI routes, auth path, SQL persistence, and worker `run_once()` loops.
+- Prevention: Keep “control-plane closure” tests separate from live-provider tests so E2E confidence does not depend on external quotas, credentials, or transient network behavior.
+
+### 2026-04-15 19:19:00 +08:00 | TestClient Portal Optional Typing Gap Recurred During Worker-Backed E2E
+
+- Stage: `CTX-20260415-027`
+- Event: After the new E2E test passed under `pytest`, `pyright` still reported `client.portal.call(...)` as invalid because `portal` is typed as optional on `TestClient`.
+- Cause: The runtime lifecycle inside `with TestClient(...)` guarantees the portal exists, but static analysis only sees the broader optional attribute contract.
+- Action: Added an explicit `assert client.portal is not None` before invoking Parse and Knowledge worker runs through the in-process portal.
+- Prevention: Whenever a test uses `TestClient.portal` to keep async workers on the same event loop as the app lifespan, add an explicit non-null guard so type-checking and runtime lifecycle assumptions stay aligned.
+
+### 2026-04-15 19:23:00 +08:00 | Phase N End-To-End Main Path Validation Completed
+
+- Stage: `CTX-20260412-046`, `CTX-20260412-047`, `CTX-20260415-025 ~ CTX-20260415-027`
+- Event: The main-path integration flow is now covered end to end in `tests/integration/test_api_e2e.py`.
+- Cause: The remaining gap was not missing API implementation, but missing one deterministic test that proved the storage control plane, async parse queue, knowledge add queue, and synchronous search all compose correctly.
+- Action: Added a single API-level E2E test that verifies upload initialization/completion/download, async Parse job submission + `ParseWorker.run_once()`, dataset creation, Add job submission + `KnowledgeWorker.run_once()`, Search response content, and persisted object / parse-run / knowledge-run / search-request state. Validation passed with:
+  - `.\.venv\Scripts\python.exe -m ruff check tests/integration/test_api_e2e.py`
+  - `.\.venv\Scripts\pyright.exe`
+  - `.\.venv\Scripts\python.exe -m pytest tests/integration/test_api_storage.py tests/integration/test_api_parse.py tests/integration/test_api_knowledge.py tests/integration/test_api_e2e.py -q`
+- Prevention: For future workflow additions, extend this style of deterministic API-level chain test first, then keep live-provider validation as a separate readiness layer on top.
+
+### 2026-04-15 19:34:00 +08:00 | Phase O Docker-Backed Test Closure Continuation Started
+
+- Stage: `CTX-20260415-028 ~ CTX-20260415-030`
+- Event: Started a cleanup pass for the stale docker-backed tasks that still showed `blocked` even though later runtime-stack work had already landed.
+- Cause: The repository had accumulated two truths at once: direct Docker control from the Codex session was flaky, but localhost-backed runtime-stack tests and live runtime validation had already been passing with operator-started containers.
+- Action: Added a dedicated reconciliation batch to re-check Docker reachability from the current session, rerun the runtime-stack test slice explicitly, and decide which historical blocked tasks could now be closed.
+- Prevention: When a later batch effectively supersedes an earlier blocked task, add an explicit reconciliation step instead of leaving contradictory task states around indefinitely.
+
+### 2026-04-15 19:36:00 +08:00 | Docker CLI Is Still Blocked In This Codex Session Even Though Localhost Stack Is Reachable
+
+- Stage: `CTX-20260415-029`, `CTX-20260415-014`
+- Event: Re-checking Docker from the current Codex session with `docker ps` still failed.
+- Cause: The session cannot read `C:\Users\hy\.docker\config.json` and still receives `permission denied while trying to connect to the docker API at npipe:////./pipe/docker_engine`, so direct CLI/daemon control remains unavailable here.
+- Action: Kept `CTX-20260415-014` in the `blocked` state, but proceeded with stack-backed testing against the already-running localhost services because the inability to drive the daemon directly does not prevent validation of PostgreSQL/MinIO-backed behavior once the stack is up.
+- Prevention: Treat “docker daemon controllable from Codex” and “runtime stack reachable over localhost” as two separate readiness checks; only the first one should gate daemon-management tasks.
+
+### 2026-04-15 19:42:00 +08:00 | Docker-Backed Runtime Stack Validation Reconfirmed On Canonical `.venv`
+
+- Stage: `CTX-20260414-032 ~ CTX-20260414-035`, `CTX-20260415-030`
+- Event: Re-ran the stack-backed integration slice against the current localhost stack from the canonical `.venv`.
+- Cause: The stale `blocked` status on the historical docker-backed tasks needed fresh evidence in the current session before being cleared.
+- Action: Validation passed with:
+  - `$env:CORTEX_RUNTIME_STACK='1'; .\.venv\Scripts\python.exe -m pytest tests/integration/test_runtime_stack.py -q`
+  - `.\.venv\Scripts\pyright.exe`
+  - `.\.venv\Scripts\python.exe -m ruff check tests/integration/test_runtime_stack.py tests/integration/test_api_e2e.py`
+  These runs re-confirmed coverage for PostgreSQL migration / repository round-trip, MinIO presigned upload/download, Parse worker execution on PostgreSQL, and Knowledge worker execution on PostgreSQL.
+- Prevention: When a runtime-stack slice is healthy but daemon control is blocked, keep one explicit pytest entrypoint (`tests/integration/test_runtime_stack.py`) as the canonical proof that infrastructure-backed behaviors still work end to end.
+
+### 2026-04-15 19:42:00 +08:00 | Historical Docker-Backed Testing Tasks Closed, Direct Daemon Task Still Blocked
+
+- Stage: `CTX-20260414-032 ~ CTX-20260414-035`, `CTX-20260415-028 ~ CTX-20260415-030`
+- Event: Closed the historical docker-backed testing tasks while leaving the direct daemon reachability task blocked.
+- Cause: The evidence now cleanly separates two concerns: stack-backed integration coverage is present and passing, while direct Docker CLI/daemon control from this Codex session is still denied by the local user-profile permission boundary.
+- Action: Marked `CTX-20260414-032`, `CTX-20260414-033`, `CTX-20260414-034`, and `CTX-20260414-035` as `done`, and kept `CTX-20260415-014` blocked as the only remaining runtime-stack access issue.
+- Prevention: Keep task granularity aligned with the actual failure boundary so permission issues on Docker CLI access do not artificially keep already-validated infrastructure test work marked as incomplete.
+
+### 2026-04-15 20:02:00 +08:00 | Phase P Crawl4AI And Observability Continuation Started
+
+- Stage: `CTX-20260415-031 ~ CTX-20260415-034`
+- Event: Started the next focused testing slice using the already-running localhost Collector, Jaeger, Prometheus, PostgreSQL, MinIO, and Redis endpoints supplied by the operator.
+- Cause: After closing the main-path E2E and docker-backed runtime-stack tasks, the main remaining gaps were the still-open `CTX-20260412-029` Crawl4AI adapter coverage and the lack of an automated proof that Cortex exports telemetry all the way into Jaeger and Prometheus.
+- Action: Added a dedicated batch to expand Crawl4AI edge-case coverage and build a reusable live observability probe against the active localhost stack.
+- Prevention: Keep the next batch tightly scoped to the last genuinely-open behavior gaps rather than re-running already-green stack or E2E slices.
+
+### 2026-04-15 20:09:00 +08:00 | Crawl4AI Source Validation Order Hid The Real Unsupported-Source Error
+
+- Stage: `CTX-20260415-032`, `CTX-20260412-029`
+- Event: The new object-source edge test for Crawl4AI initially failed with `Crawl4AI requires source.url or source.uri` instead of the more accurate unsupported-object-source error.
+- Cause: `Crawl4AIParseEngine.execute(...)` validated the presence of `url/uri` before checking `ParseInputKind.OBJECT`, so object-backed requests tripped the generic missing-source validation first.
+- Action: Reordered the validation checks in `packages\\parse\\src\\cortex_parse\\adapters\\crawl4ai.py` so object-backed sources now fail fast with the intended adapter-specific message.
+- Prevention: For source-specific adapters, validate unsupported source kinds before generic field presence so callers receive the most actionable error surface.
+
+### 2026-04-15 20:11:00 +08:00 | Crawl4AI Timing Extraction Assumed An Optional SDK Field Always Existed
+
+- Stage: `CTX-20260415-032`, `CTX-20260412-029`
+- Event: While adding a no-timings Crawl4AI result fixture, the adapter revealed a latent assumption that `result.dispatch_result` is always present.
+- Cause: `_timings(...)` accessed `result.dispatch_result` directly instead of treating it as optional, which would raise `AttributeError` for valid SDK payloads that omit that field.
+- Action: Switched the adapter to use `getattr(result, "dispatch_result", None)` and added focused tests covering missing timing payloads, crawl failures, unsupported object sources, citation-markdown fallback, and unresolved `storage_state_ref` warnings in `tests/integration/test_parse_crawl4ai_adapter.py`.
+- Prevention: Treat optional provider SDK fields as optional at the adapter boundary and add explicit fixtures for sparse payload shapes, especially for advanced-feature adapters that aggregate many heterogeneous result fields.
+
+### 2026-04-15 20:18:00 +08:00 | Live Observability Validation Exposed Missing OTLP Metric Export Wiring
+
+- Stage: `CTX-20260415-033`
+- Event: Probing the running Collector / Jaeger / Prometheus stack showed Jaeger already receiving Cortex traces, but the Collector Prometheus endpoint had no `cortex_*` metrics from the application side.
+- Cause: `configure_telemetry(...)` only configured an OTLP trace exporter; the SDK `MeterProvider` had no OTLP metric reader/exporter attached, so application metrics recorded through `MetricsFacade` never left the process.
+- Action: Updated `packages\\observability\\src\\cortex_observability\\bootstrap.py` to create an OTLP HTTP metric exporter plus `PeriodicExportingMetricReader`, reusing the configured OTLP endpoint and exporting metrics every second for deterministic validation.
+- Prevention: Keep trace and metric export wiring paired in the same telemetry bootstrap layer so enabling OTLP does not silently cover only one signal type.
+
+### 2026-04-15 20:23:00 +08:00 | Reusable Live Observability Probe Added Against The Localhost Stack
+
+- Stage: `CTX-20260415-033`
+- Event: Added a reusable live observability probe and corresponding runtime-stack test.
+- Cause: Manual spot checks of Collector / Jaeger / Prometheus are useful once, but they do not leave behind a stable regression guard.
+- Action: Added `scripts\\dev\\live_observability_probe.py` and `tests\\integration\\test_runtime_observability_stack.py`. The probe spins up a temporary SQLite-backed API instance with OTLP enabled, overrides Parse with a deterministic fake engine, forces telemetry flush, then validates:
+  - Collector health on `http://127.0.0.1:13133/`
+  - Jaeger trace lookup for the returned `x-trace-id`
+  - Collector Prometheus exposition on `http://127.0.0.1:8889/metrics`
+  - Prometheus metric-name discovery and `up{job="otel-collector"} == 1`
+  The latest live summary was written to `runtime-test-data/live-observability-1776255711487484900/summary.json`.
+- Prevention: For live-stack observability checks, prefer a self-contained probe that generates its own deterministic request/trace/metric payloads instead of relying on whichever runtime traffic happened to occur recently.
+
+### 2026-04-15 20:26:00 +08:00 | Crawl4AI And Observability Validation Completed
+
+- Stage: `CTX-20260412-029`, `CTX-20260415-031 ~ CTX-20260415-034`
+- Event: The Crawl4AI adapter gap and live observability path are now both covered and validated.
+- Cause: The remaining work was a mix of adapter edge-case coverage and a telemetry-export implementation gap rather than any broader REST-contract or stack-availability problem.
+- Action: Completed validation with:
+  - `.\.venv\Scripts\python.exe -m ruff check packages/observability/src/cortex_observability/bootstrap.py packages/parse/src/cortex_parse/adapters/crawl4ai.py tests/integration/test_parse_crawl4ai_adapter.py tests/integration/test_runtime_observability_stack.py scripts/dev/live_observability_probe.py`
+  - `.\.venv\Scripts\pyright.exe`
+  - `$env:CORTEX_RUNTIME_STACK='1'; .\.venv\Scripts\python.exe -m pytest tests/contract/test_foundation_models.py tests/integration/test_parse_crawl4ai_adapter.py tests/integration/test_runtime_stack.py tests/integration/test_runtime_observability_stack.py -q`
+  and marked `CTX-20260412-029` done.
+- Prevention: When a provider adapter and a cross-cutting platform capability both remain open, pair them in one validation slice only if the resulting checks stay deterministic and locally reproducible, as they do here with fake Parse input plus a real localhost telemetry stack.

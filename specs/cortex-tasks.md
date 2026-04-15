@@ -85,7 +85,7 @@
 
 | Task ID | Added At | Priority | Area | Task | Depends On | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| CTX-20260412-029 | 2026-04-12 21:11:20 +08:00 | P0 | parse-adapter | 实现 Crawl4AI adapter，覆盖 profile、advanced features 与 artifact 输出 | CTX-20260412-026 | in_progress |
+| CTX-20260412-029 | 2026-04-12 21:11:20 +08:00 | P0 | parse-adapter | 实现 Crawl4AI adapter，覆盖 profile、advanced features 与 artifact 输出 | CTX-20260412-026 | done |
 | CTX-20260412-030 | 2026-04-12 21:11:20 +08:00 | P1 | parse-adapter | 实现 Jina Reader adapter，覆盖 markdown / metadata 快速提取 | CTX-20260412-026 | done |
 | CTX-20260412-031 | 2026-04-12 21:11:20 +08:00 | P1 | parse-adapter | 实现 LlamaParse adapter，覆盖高保真文档解析输出映射 | CTX-20260412-026 | done |
 | CTX-20260412-032 | 2026-04-12 21:11:20 +08:00 | P1 | parse-adapter | 实现 MarkItDown adapter，作为本地轻量文件 fallback | CTX-20260412-026 | done |
@@ -117,8 +117,8 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | CTX-20260412-044 | 2026-04-12 21:11:20 +08:00 | P0 | testing | 为 `common`、`auth`、`storage`、`parse`、`knowledge` 增加单元测试 | CTX-20260412-021, CTX-20260412-042 | done |
 | CTX-20260412-045 | 2026-04-12 21:11:20 +08:00 | P0 | testing | 增加 OpenAPI contract tests，校验 DTO 与 `cortex-api.yaml` 一致 | CTX-20260412-007, CTX-20260412-034, CTX-20260412-038 | done |
-| CTX-20260412-046 | 2026-04-12 21:11:20 +08:00 | P0 | testing | 增加集成测试：SQLite/PostgreSQL、S3 兼容存储、队列、Worker | CTX-20260412-036, CTX-20260412-043 | planned |
-| CTX-20260412-047 | 2026-04-12 21:11:20 +08:00 | P1 | testing | 增加端到端主链路测试：upload -> parse -> add -> search | CTX-20260412-046 | planned |
+| CTX-20260412-046 | 2026-04-12 21:11:20 +08:00 | P0 | testing | 增加集成测试：SQLite/PostgreSQL、S3 兼容存储、队列、Worker | CTX-20260412-036, CTX-20260412-043 | done |
+| CTX-20260412-047 | 2026-04-12 21:11:20 +08:00 | P1 | testing | 增加端到端主链路测试：upload -> parse -> add -> search | CTX-20260412-046 | done |
 | CTX-20260412-048 | 2026-04-12 21:11:20 +08:00 | P0 | ci | 建立 CI pipeline：`uv sync`、lint、types、tests、OpenAPI/YAML 校验 | CTX-20260412-004, CTX-20260412-045 | done |
 | CTX-20260412-049 | 2026-04-12 21:11:20 +08:00 | P1 | devops | 补充本地 compose / runbook，覆盖 DB、S3、queue、OTel Collector、Jaeger、Prometheus、Grafana | CTX-20260412-005, CTX-20260412-048 | done |
 
@@ -236,10 +236,10 @@ Goal: add a vendor-neutral local dependency stack plus docker-backed integration
 | Task ID | Added At | Priority | Area | Task | Depends On | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | CTX-20260414-031 | 2026-04-14 22:41:12 +08:00 | P0 | devops | Add a local Docker Compose stack and operator runbook for PostgreSQL, MinIO, Redis, OTel Collector, Jaeger, Prometheus, and Grafana so Cortex can be validated against the documented portable infrastructure baseline | CTX-20260412-049, CTX-20260414-030 | done |
-| CTX-20260414-032 | 2026-04-14 22:41:12 +08:00 | P0 | testing | Add docker-backed PostgreSQL integration coverage for baseline migration and repository/unit-of-work behavior, using isolated temporary databases to keep tests repeatable | CTX-20260412-046, CTX-20260414-031 | blocked |
-| CTX-20260414-033 | 2026-04-14 22:41:12 +08:00 | P0 | testing | Add docker-backed MinIO storage integration coverage that exercises presigned upload/download behavior through the real S3-compatible client implementation | CTX-20260412-046, CTX-20260414-031 | blocked |
-| CTX-20260414-034 | 2026-04-14 22:41:12 +08:00 | P0 | testing | Add docker-backed Parse and Knowledge worker integration coverage on PostgreSQL so queued job execution is validated against the real SQL backend used as the portable queue boundary | CTX-20260412-046, CTX-20260414-032 | blocked |
-| CTX-20260414-035 | 2026-04-14 22:41:12 +08:00 | P0 | validation | Run focused docker-backed validation plus the repository-wide lint/type/test suite, then update task/log history with any environment or contract issues uncovered during the stack-backed run | CTX-20260414-033, CTX-20260414-034 | blocked |
+| CTX-20260414-032 | 2026-04-14 22:41:12 +08:00 | P0 | testing | Add docker-backed PostgreSQL integration coverage for baseline migration and repository/unit-of-work behavior, using isolated temporary databases to keep tests repeatable | CTX-20260412-046, CTX-20260414-031 | done |
+| CTX-20260414-033 | 2026-04-14 22:41:12 +08:00 | P0 | testing | Add docker-backed MinIO storage integration coverage that exercises presigned upload/download behavior through the real S3-compatible client implementation | CTX-20260412-046, CTX-20260414-031 | done |
+| CTX-20260414-034 | 2026-04-14 22:41:12 +08:00 | P0 | testing | Add docker-backed Parse and Knowledge worker integration coverage on PostgreSQL so queued job execution is validated against the real SQL backend used as the portable queue boundary | CTX-20260412-046, CTX-20260414-032 | done |
+| CTX-20260414-035 | 2026-04-14 22:41:12 +08:00 | P0 | validation | Run focused docker-backed validation plus the repository-wide lint/type/test suite, then update task/log history with any environment or contract issues uncovered during the stack-backed run | CTX-20260414-033, CTX-20260414-034 | done |
 
 ### Batch 2026-04-15 09:46:45 +08:00 | Phase K CI And Validation Continuation
 
@@ -313,4 +313,35 @@ Goal: converge the repository onto one canonical `.venv` for local development a
 | CTX-20260415-022 | 2026-04-15 18:26:30 +08:00 | P0 | env-bootstrap | Rebuild or resync the canonical `.venv` so all workspace packages are installed in editable mode from the shared `uv workspace`, and verify direct imports from that environment | CTX-20260415-021 | done |
 | CTX-20260415-023 | 2026-04-15 18:26:30 +08:00 | P0 | ide-config | Update repository-local Pyright / IDE configuration so the canonical `.venv` and all workspace `src` roots resolve consistently in editor analysis | CTX-20260415-022 | done |
 | CTX-20260415-024 | 2026-04-15 18:26:30 +08:00 | P0 | validation-log | Run import and type-check validation against the repaired `.venv`, then record the root cause, fix, and operator guidance in task/log history | CTX-20260415-023 | done |
+
+### Batch 2026-04-15 19:08:00 +08:00 | Phase N End-To-End Main Path Continuation
+
+Goal: close the remaining planned integration/E2E testing gap by adding a deterministic `upload -> parse -> add -> search` main-path test that reuses the real REST API, SQL persistence, and worker execution loops without depending on external provider quotas.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260415-025 | 2026-04-15 19:08:00 +08:00 | P0 | testing-audit | Audit the still-open integration/E2E testing tasks and define a deterministic validation strategy that closes `CTX-20260412-046` / `CTX-20260412-047` without requiring live third-party providers | CTX-20260415-024 | done |
+| CTX-20260415-026 | 2026-04-15 19:08:00 +08:00 | P0 | testing-e2e | Implement an API-level end-to-end integration test for `upload -> parse -> add -> search`, using SQLite plus fake object-store / parse / knowledge runtimes while exercising the real REST routes and worker run loops | CTX-20260415-025 | done |
+| CTX-20260415-027 | 2026-04-15 19:08:00 +08:00 | P0 | validation-log | Run focused validation for the new E2E slice, update `CTX-20260412-046` / `CTX-20260412-047` and this batch status, and append any issues/fixes to `specs/cortex-log.md` in chronological order | CTX-20260415-026 | done |
+
+### Batch 2026-04-15 19:34:00 +08:00 | Phase O Docker-Backed Test Closure Continuation
+
+Goal: reconcile the still-blocked historical docker-backed testing tasks with the now-healthy local runtime stack by revalidating Docker access in the current Codex session and rerunning the stack-backed test slice explicitly.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260415-028 | 2026-04-15 19:34:00 +08:00 | P0 | testing-audit | Audit the remaining blocked docker-backed testing tasks (`CTX-20260414-032 ~ CTX-20260414-035`, `CTX-20260415-014`) and map them to the existing runtime-stack test surface plus any still-missing verification steps | CTX-20260415-027 | done |
+| CTX-20260415-029 | 2026-04-15 19:34:00 +08:00 | P0 | runtime-stack | Revalidate Docker daemon reachability from the current Codex session, inspect the local stack state, and determine whether the historical blocked state can now be cleared | CTX-20260415-028 | done |
+| CTX-20260415-030 | 2026-04-15 19:34:00 +08:00 | P0 | testing-runtime | Run the docker-backed runtime-stack / integration validation slice from the canonical `.venv`, then update blocked task status and log the exact evidence, residual gaps, and any repeated pitfalls | CTX-20260415-029 | done |
+
+### Batch 2026-04-15 20:02:00 +08:00 | Phase P Crawl4AI And Observability Continuation
+
+Goal: finish the remaining `Crawl4AI` adapter test gap and validate that the local API can export OpenTelemetry traces and metrics through the running localhost Collector into Jaeger and Prometheus.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260415-031 | 2026-04-15 20:02:00 +08:00 | P0 | testing-audit | Audit the remaining `CTX-20260412-029` Crawl4AI adapter gap plus the live observability path, and define the focused validation slice needed to close them without relying on remote provider credentials | CTX-20260415-030 | done |
+| CTX-20260415-032 | 2026-04-15 20:02:00 +08:00 | P0 | parse-adapter-testing | Add focused Crawl4AI adapter edge-case tests for unsupported sources, missing Markdown/timing payloads, crawl failure surfaces, and unresolved storage-state warnings, then fix any adapter defects they uncover | CTX-20260415-031 | done |
+| CTX-20260415-033 | 2026-04-15 20:02:00 +08:00 | P0 | observability-testing | Validate the live OTLP -> Collector -> Jaeger / Prometheus path against the running localhost stack, adding any missing telemetry export wiring and a reusable probe/test harness if the current implementation does not fully export both traces and metrics | CTX-20260415-031 | done |
+| CTX-20260415-034 | 2026-04-15 20:02:00 +08:00 | P0 | validation-log | Run focused validation for the Crawl4AI and observability slice, update `CTX-20260412-029` plus this batch status, and append the exact results/issues to `specs/cortex-log.md` | CTX-20260415-032, CTX-20260415-033 | done |
 

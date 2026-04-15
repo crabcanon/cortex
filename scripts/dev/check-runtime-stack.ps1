@@ -8,3 +8,4 @@ $PSNativeCommandUseErrorActionPreference = $true
 $env:CORTEX_RUNTIME_STACK = "1"
 
 & $PytestPath "tests/integration/test_runtime_stack.py"
+& $PytestPath "tests/integration/test_runtime_observability_stack.py"

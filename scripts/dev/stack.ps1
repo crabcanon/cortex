@@ -72,9 +72,9 @@ switch ($Action) {
     "up" {
         & docker @ComposeArgs up -d @Services
         if (-not $NoWait) {
-            Wait-TcpReady -Host "127.0.0.1" -Port 5432
+            Wait-TcpReady -HostName "127.0.0.1" -Port 5432
             Wait-HttpReady -Uri "http://127.0.0.1:9000/minio/health/ready"
-            Wait-TcpReady -Host "127.0.0.1" -Port 6379
+            Wait-TcpReady -HostName "127.0.0.1" -Port 6379
             Wait-HttpReady -Uri "http://127.0.0.1:13133/"
             Wait-HttpReady -Uri "http://127.0.0.1:16686/"
             Wait-HttpReady -Uri "http://127.0.0.1:9090/-/ready"
@@ -97,9 +97,9 @@ switch ($Action) {
     "restart" {
         & docker @ComposeArgs restart @Services
         if (-not $NoWait) {
-            Wait-TcpReady -Host "127.0.0.1" -Port 5432
+            Wait-TcpReady -HostName "127.0.0.1" -Port 5432
             Wait-HttpReady -Uri "http://127.0.0.1:9000/minio/health/ready"
-            Wait-TcpReady -Host "127.0.0.1" -Port 6379
+            Wait-TcpReady -HostName "127.0.0.1" -Port 6379
             Wait-HttpReady -Uri "http://127.0.0.1:13133/"
             Wait-HttpReady -Uri "http://127.0.0.1:16686/"
             Wait-HttpReady -Uri "http://127.0.0.1:9090/-/ready"

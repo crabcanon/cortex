@@ -191,6 +191,11 @@ flowchart LR
 | `CORTEX_S3_ENDPOINT` | S3 兼容存储端点 |
 | `CORTEX_S3_BUCKET` | 默认 bucket |
 | `CORTEX_AUTH_MODE` | `dev` / `jwt` / `introspection` / `hybrid` |
+| `CORTEX_AUTH_JWT_SHARED_SECRET` | `jwt` / `hybrid` 模式下验证与签发 JWT 的共享密钥 |
+| `CORTEX_AUTH_INTROSPECTION_URL` | `introspection` / `hybrid` 模式下的外部 token introspection 地址 |
+| `CORTEX_AUTH_INTROSPECTION_CLIENT_ID` / `CORTEX_AUTH_INTROSPECTION_CLIENT_SECRET` | 调用 introspection 端点所需的客户端凭据 |
+| `CORTEX_AUTH_TOKEN_ISSUER_ENABLED` | 是否启用 Cortex 内建 bootstrap token issuer |
+| `CORTEX_AUTH_TOKEN_ISSUER_BOOTSTRAP_SECRET` | 调用 `/v1/auth/token` 时必须提供的 bootstrap secret |
 | `CORTEX_RUNTIME_CONFIG_PATH` | 指向统一 runtime config 文件 |
 | `CORTEX_OTEL_ENABLED` | 是否开启 OTel |
 | `CORTEX_OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP HTTP 导出地址 |
@@ -263,6 +268,23 @@ knowledge:
 
 ## 7. 权限模型
 
+### 7.0 鉴权模式与 token 来源
+
+当前实现支持 4 种模式，但 token 来源并不相同：
+
+| 模式 | Cortex 如何验 token | token 从哪里来 | 需要哪些密钥 / 凭据 |
+| --- | --- | --- | --- |
+| `dev` | 解析 `dev:` payload | 本地手工构造，或调用 `/v1/auth/token` | 可选 `CORTEX_AUTH_TOKEN_ISSUER_BOOTSTRAP_SECRET`（仅在启用内建 issuer 时） |
+| `jwt` | 使用 `CORTEX_AUTH_JWT_SHARED_SECRET` 校验共享密钥 JWT | 外部系统自签发，或调用 `/v1/auth/token` | `CORTEX_AUTH_JWT_SHARED_SECRET` |
+| `introspection` | 调用外部 introspection 端点验 opaque token | 必须由外部授权服务器签发 | `CORTEX_AUTH_INTROSPECTION_URL`、`...CLIENT_ID`、`...CLIENT_SECRET` |
+| `hybrid` | 先尝试 JWT，再回退 introspection | JWT 可由外部系统或 `/v1/auth/token` 签发；opaque token 必须来自外部授权服务器 | `CORTEX_AUTH_JWT_SHARED_SECRET` + introspection 客户端凭据 |
+
+有一个关键边界：
+
+- Cortex 本质上仍然是资源服务器，不默认充当完整的 OAuth 2.0 / OIDC 授权服务器。
+- `/v1/auth/token` 是一个可选的 bootstrap issuance 接口，适合本地、自托管、运维或测试场景。
+- 真正的浏览器登录、授权码流程、用户目录、MFA、账号生命周期，仍建议交给外部 IdP。
+
 ### 7.1 功能权限 scope
 
 当前 API 使用的核心 scope：
@@ -291,6 +313,39 @@ knowledge:
 - 资源 owner
 - 角色绑定
 - 资源策略中的 allow / deny actor、role、标签、用途约束
+
+### 7.3 内建 token issuer
+
+当你需要在 `dev` / `jwt` / `hybrid` 模式下为不同主体快速生成 token，而又暂时没有外部 IdP 时，可以启用：
+
+- `POST /v1/auth/token`
+- 请求头：`X-Cortex-Issuer-Secret`
+- 请求体：主体、租户、scope、roles、groups、TTL 等
+
+返回规则：
+
+- `dev` 模式返回 `dev:` token
+- `jwt` / `hybrid` 模式返回共享密钥签名的 JWT
+- `introspection` 模式不会提供本地签发
+
+示例：
+
+```powershell
+$headers = @{ "X-Cortex-Issuer-Secret" = "replace-with-bootstrap-secret" }
+$body = @{
+  subject = "alice"
+  tenant_id = "tenant-demo"
+  scopes = @("health:read", "parse:write")
+  roles = @("tenant_admin")
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+  -Method Post `
+  -Uri http://127.0.0.1:8080/v1/auth/token `
+  -Headers $headers `
+  -ContentType "application/json" `
+  -Body $body
+```
 
 ## 8. 本地启动
 

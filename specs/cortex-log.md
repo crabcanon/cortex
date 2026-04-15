@@ -894,3 +894,22 @@
   - `Get-Process | Where-Object { $_.ProcessName -match 'cortex|python|uv' }`
   The first check now exits immediately with the intended "Run `deactivate` (or open a fresh terminal)" message; the second check now reports that a running `cortex-api` / worker / Python / uv process is still using `.venv` instead of leaking a raw `Remove-Item` stack trace; and process inspection confirmed an active `cortex-api` process in the local environment during validation.
 - Prevention: For repo-managed Windows virtualenv tooling, treat "activated target env" and "running repo executables from that env" as first-class operator states with their own explicit guidance instead of falling through to generic file-lock errors. Also keep the docs opinionated: wrapper scripts should be run from a fresh shell, not from inside an already activated project `.venv`.
+
+### 2026-04-15 22:05:00 +08:00 | Phase T Auth Mode Secret Model Clarified And An Optional Built-In Token Issuer Landed
+
+- Stage: `CTX-20260415-043 ~ CTX-20260415-045`
+- Event: The existing auth implementation could validate four modes (`dev`, `jwt`, `introspection`, `hybrid`) but did not yet explain, in operator terms, how each mode actually obtains its tokens or secrets. In practice, only tests were hand-crafting `dev:` tokens, which left no supported path for issuing per-user or per-service bearer tokens in local or self-hosted deployments without an external IdP.
+- Cause: Cortex had been modeled primarily as an OAuth 2.0 / OIDC-compatible resource server, which is correct, but the design surface did not yet include a bounded bootstrap issuance story for deployments that are not wired to a full authorization server.
+- Action: Added an optional built-in token issuance path:
+  - New auth settings: `CORTEX_AUTH_TOKEN_ISSUER_ENABLED`, `CORTEX_AUTH_TOKEN_ISSUER_BOOTSTRAP_SECRET`, `CORTEX_AUTH_TOKEN_DEFAULT_TTL_SECONDS`, `CORTEX_AUTH_TOKEN_MAX_TTL_SECONDS`
+  - New contracts: `TokenIssueRequest`, `TokenIssueResponse`
+  - New auth router: `POST /v1/auth/token`
+  - New security header: `X-Cortex-Issuer-Secret`
+  - New auth service: `TokenIssuerService`
+  The implementation keeps Cortex resource-server-first: `dev` issues Cortex `dev:` tokens, `jwt` / `hybrid` issue shared-secret JWTs, and `introspection` remains external-only. The docs were updated in `README.md`, `specs/cortex-api.yaml`, `specs/cortex-tech.md`, `specs/cortex-prd.md`, and `specs/cortex-schema.md` to spell out where secrets come from and when an external authorization server is still required.
+- Validation: Completed focused validation with:
+  - `.\.venv\Scripts\python.exe -m ruff check ...`
+  - `.\.venv\Scripts\pyright.exe`
+  - `.\.venv\Scripts\python.exe -m pytest tests/unit/test_common_auth.py tests/integration/test_api_auth_token.py tests/contract/test_openapi_contract.py -q`
+  Results: `ruff` passed, `pyright` passed (`0 errors`), and the focused pytest slice passed (`15 passed`). The new integration tests verify that `/v1/auth/token` can mint a token in both `dev` and `jwt` modes and that the issued bearer token can immediately access a protected endpoint (`/v1/health/live`). Contract tests also confirm that the runtime OpenAPI and the documented specification now agree on the new path and schemas.
+- Prevention: Keep the boundary explicit in both code and docs: Cortex may optionally mint bootstrap tokens for local/self-hosted `dev` / `jwt` / `hybrid` environments, but it does not try to become a full user directory or opaque-token authorization server. During this validation pass, pytest still surfaced non-blocking third-party `cognee` / `pydantic` deprecation warnings that are outside the new auth path and do not block the token issuer or authorization flows.

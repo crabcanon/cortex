@@ -138,10 +138,17 @@ Agent 对多个数据集发起混合搜索，返回答案、命中片段与引�
 必须支持：
 
 - 基于 OAuth 2.0 / OIDC 的 API 认证
+- 明确区分“Cortex 作为资源服务器验 token”与“外部 IdP 或可选内建 issuer 签发 token”的职责边界
 - 功能权限与数据权限的分层治理
 - 多租户默认隔离
 - 角色绑定、资源级授权与策略审计
 - 对 Search、Download URL、Job 查询这类高风险接口做二次资源授权
+
+产品要求补充：
+
+- 当部署接入外部 IdP 时，用户 token 获取流程应直接复用外部 OAuth 2.0 / OIDC 能力。
+- 当部署处于本地、自托管或早期 bootstrap 阶段时，系统应支持一个可选的内建 token issuance API，为不同 actor / tenant / scope 组合签发 bearer token。
+- 内建 issuance 只适用于 `dev` / `jwt` / `hybrid`；`introspection` 模式必须保持 external-only。
 
 ### 5.5 通用控制面
 

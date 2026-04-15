@@ -297,6 +297,8 @@ Cortex 的授权模型分成四层：
 - 功能权限以标准 scope / permission key 为主，适合放入 token。
 - 数据权限以 role binding + policy evaluation 为主，避免把大规模资源白名单塞进 token。
 - `authorization_decisions` 是审计表，不承担在线实时 PDP 的主存储职责。
+- 内建 token issuer 的 bootstrap secret、JWT shared secret、introspection client secret 等敏感凭据不进入业务 SQL 表，而是保留在环境变量、secret file 或外部 secret manager。
+- `/v1/auth/token` 这类 bootstrap issuance 只负责生成 bearer token，不引入额外的 user/password 凭据表，避免把 Cortex 扩展成完整身份目录系统。
 
 ## 5. 关系图
 

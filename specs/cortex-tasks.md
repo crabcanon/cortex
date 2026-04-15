@@ -374,3 +374,13 @@ Goal: prevent the new dual-shell env tooling from attempting to repair a project
 | CTX-20260415-041 | 2026-04-15 21:40:00 +08:00 | P0 | env-hardening | Harden the PowerShell and Bash uv helpers so `.venv` health checks validate repo-managed interpreter provenance, and repair paths fail fast with a clear message when the target `.venv` is currently activated in the caller shell | CTX-20260415-040 | done |
 | CTX-20260415-042 | 2026-04-15 21:40:00 +08:00 | P0 | worker-docs-validation | Refresh the Git Bash / PowerShell operator guidance to explicitly forbid pre-activating `.venv` before using the wrapper scripts, then rerun focused validation and append the issue/fix to `specs/cortex-log.md` | CTX-20260415-041 | done |
 
+### Batch 2026-04-15 21:55:00 +08:00 | Phase T Auth Mode Secret Model And Optional Token Issuer
+
+Goal: clarify how each supported auth mode obtains and validates credentials, then add an optional built-in token issuance API for local/self-hosted `dev` / `jwt` / `hybrid` deployments so operators can mint per-user or per-service bearer tokens without hand-crafting payloads.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260415-043 | 2026-04-15 21:55:00 +08:00 | P0 | auth-analysis | Audit the current `dev` / `jwt` / `introspection` / `hybrid` auth implementations and document, in operator terms, where each mode's secret or token source actually comes from and which modes require an external authorization server | CTX-20260415-042 | done |
+| CTX-20260415-044 | 2026-04-15 21:55:00 +08:00 | P0 | auth-api | Implement an optional built-in token issuance endpoint for `dev` / `jwt` / `hybrid`, protected by a bootstrap issuer secret, while keeping `introspection` mode external-only and preserving the resource-server-first architecture | CTX-20260415-043 | done |
+| CTX-20260415-045 | 2026-04-15 21:55:00 +08:00 | P0 | auth-docs-validation | Update the OpenAPI/design/runbook docs and focused tests so the new auth-mode guidance and token issuance flow are explicit, validated, and recorded in `specs/cortex-log.md` | CTX-20260415-044 | done |
+

@@ -379,6 +379,18 @@ src/cortex_parse/
 - `CogneeSettings`
 - `TelemetrySettings`
 
+其中与鉴权直接相关、且必须留在环境侧而不是 runtime YAML 中的配置包括：
+
+- `CORTEX_AUTH_MODE`
+- `CORTEX_AUTH_JWT_SHARED_SECRET`
+- `CORTEX_AUTH_INTROSPECTION_URL`
+- `CORTEX_AUTH_INTROSPECTION_CLIENT_ID`
+- `CORTEX_AUTH_INTROSPECTION_CLIENT_SECRET`
+- `CORTEX_AUTH_TOKEN_ISSUER_ENABLED`
+- `CORTEX_AUTH_TOKEN_ISSUER_BOOTSTRAP_SECRET`
+- `CORTEX_AUTH_TOKEN_DEFAULT_TTL_SECONDS`
+- `CORTEX_AUTH_TOKEN_MAX_TTL_SECONDS`
+
 #### 4.8.1 统一运行时配置文件
 
 真正部署时，Cortex 不再把 Crawl4AI、Jina Reader、LlamaParse、MarkItDown、Docling、Cognee 的配置散落在各个 adapter 或 `.env` 中，而是统一收敛到仓库内的：
@@ -1150,6 +1162,22 @@ Cortex 的认证层保持厂商中立，但应遵循行业通用标准：
 - `roles`
 - `entitlements`
 - `azp` / `act`（如存在代理调用或委托调用）
+
+当前实现的模式边界应明确写死，而不是模糊处理：
+
+| 模式 | Token 来源 | Cortex 侧校验方式 | 当前实现所需密钥 / 凭据 | 备注 |
+| --- | --- | --- | --- | --- |
+| `dev` | 手工构造 `dev:` token，或调用 `/v1/auth/token` | 解码 Cortex 自定义 `dev:` payload | 可选 `CORTEX_AUTH_TOKEN_ISSUER_BOOTSTRAP_SECRET` | 仅适合本地 / 测试，不应视为正式 IdP |
+| `jwt` | 外部系统签发，或调用 `/v1/auth/token` | 共享密钥 JWT 校验 | `CORTEX_AUTH_JWT_SHARED_SECRET` | 当前实现使用 HMAC shared secret，而非 JWKS |
+| `introspection` | 外部授权服务器签发 opaque token | 调用 introspection endpoint | `CORTEX_AUTH_INTROSPECTION_URL`、`...CLIENT_ID`、`...CLIENT_SECRET` | Cortex 不负责生成这类 token |
+| `hybrid` | JWT 与 opaque token 混用 | 先 JWT、后 introspection | `CORTEX_AUTH_JWT_SHARED_SECRET` + introspection client credentials | 内建 issuer 只负责 JWT 分支 |
+
+因此，Cortex 的定位仍然是 **OAuth 2.0 / OIDC 资源服务器优先**：
+
+- 如果接入企业统一身份平台，token 的签发应完全交给外部 IdP。
+- 如果处于本地、自托管、CI、运维 bootstrap 或无外部 IdP 的初期阶段，可以启用 Cortex 的内建 token issuer。
+- 内建 token issuer 必须显式启用，并受 `X-Cortex-Issuer-Secret` / `CORTEX_AUTH_TOKEN_ISSUER_BOOTSTRAP_SECRET` 保护。
+- `introspection` 模式不提供本地签发，因为那会把 Cortex 推向“自己实现一套 opaque token authorization server”的范畴，不符合当前范围控制。
 
 ### 13.2 功能权限模型
 

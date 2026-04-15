@@ -345,3 +345,13 @@ Goal: finish the remaining `Crawl4AI` adapter test gap and validate that the loc
 | CTX-20260415-033 | 2026-04-15 20:02:00 +08:00 | P0 | observability-testing | Validate the live OTLP -> Collector -> Jaeger / Prometheus path against the running localhost stack, adding any missing telemetry export wiring and a reusable probe/test harness if the current implementation does not fully export both traces and metrics | CTX-20260415-031 | done |
 | CTX-20260415-034 | 2026-04-15 20:02:00 +08:00 | P0 | validation-log | Run focused validation for the Crawl4AI and observability slice, update `CTX-20260412-029` plus this batch status, and append the exact results/issues to `specs/cortex-log.md` | CTX-20260415-032, CTX-20260415-033 | done |
 
+### Batch 2026-04-15 21:05:00 +08:00 | Phase Q Operator Runbook And README Completion
+
+Goal: close the operator-facing documentation gap by fixing the local stack helper that still breaks on PowerShell parameter binding, then refresh the root README into a Chinese deployment/runbook that maps the implemented REST API, local startup flow, runtime config overlays, testing, and cloud delivery paths.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260415-035 | 2026-04-15 21:05:00 +08:00 | P0 | devops-script | Repair the local stack helper so `scripts/dev/stack.ps1` no longer collides with PowerShell's built-in `$Host` variable and remains usable as the canonical docker-backed operator entrypoint | CTX-20260415-034 | done |
+| CTX-20260415-036 | 2026-04-15 21:05:00 +08:00 | P0 | docs-readme | Rewrite `README.md` in Chinese with an industry-standard project guide covering architecture, API surface, configuration, local bootstrap, docker-backed validation, deployment patterns, testing commands, and verification examples aligned with the implemented runtime | CTX-20260415-035 | done |
+| CTX-20260415-037 | 2026-04-15 21:05:00 +08:00 | P0 | validation-log | Run focused validation for the repaired operator script and updated README guidance, then append the exact outcomes, remaining environmental caveats, and operator notes to `specs/cortex-log.md` and close the batch | CTX-20260415-036 | done |
+

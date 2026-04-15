@@ -813,3 +813,39 @@
   - `$env:CORTEX_RUNTIME_STACK='1'; .\.venv\Scripts\python.exe -m pytest tests/contract/test_foundation_models.py tests/integration/test_parse_crawl4ai_adapter.py tests/integration/test_runtime_stack.py tests/integration/test_runtime_observability_stack.py -q`
   and marked `CTX-20260412-029` done.
 - Prevention: When a provider adapter and a cross-cutting platform capability both remain open, pair them in one validation slice only if the resulting checks stay deterministic and locally reproducible, as they do here with fake Parse input plus a real localhost telemetry stack.
+
+### 2026-04-15 20:37:39 +08:00 | Phase Q Operator Runbook And README Completion Started
+
+- Stage: `CTX-20260415-035 ~ CTX-20260415-037`
+- Event: Started the operator-documentation closure pass after the implementation, E2E, runtime-stack, and observability slices had already landed.
+- Cause: The functional API surface was in place, but the root README was still only a short bootstrap note and the local runtime-stack helper still contained a PowerShell parameter collision that made it unsafe to treat as the canonical operator entrypoint.
+- Action: Scoped the batch to two deliverables: repair the local stack helper first, then rewrite the repository README into a Chinese runbook that accurately reflects the current API surface, runtime config overlays, testing layers, and deployment paths.
+- Prevention: Before promoting a local script into official operator guidance, always verify that the script itself is free of shell-specific binding issues; otherwise the documentation can become the fastest path to reproducing a known bug.
+
+### 2026-04-15 20:39:00 +08:00 | PowerShell `$Host` Collision In The Local Stack Helper Was Fixed At The Source
+
+- Stage: `CTX-20260415-035`
+- Event: `scripts/dev/stack.ps1` still called `Wait-TcpReady -Host ...`, which collides with PowerShell's built-in read-only `$Host` variable and reproduces the exact startup error seen earlier by the operator.
+- Cause: The helper function parameter is named `HostName`, but the call sites in both the `up` and `restart` branches still used the shorthand `-Host`, which PowerShell binds as the built-in variable instead of the function parameter.
+- Action: Updated every `Wait-TcpReady` invocation in `scripts/dev/stack.ps1` to use the explicit `-HostName` parameter and expanded `scripts/dev/check-runtime-stack.ps1` so the canonical runtime-stack validation now runs both `tests/integration/test_runtime_stack.py` and `tests/integration/test_runtime_observability_stack.py`.
+- Prevention: In PowerShell helpers, avoid shorthand parameter names that shadow built-in automatic variables; use the declared parameter name verbatim in scripts that are meant to be copied into operator runbooks.
+
+### 2026-04-15 20:42:00 +08:00 | Root README Was Rewritten Into An Operator-Facing Chinese Runbook
+
+- Stage: `CTX-20260415-036`
+- Event: Replaced the previous minimal README with a comprehensive Chinese project guide and aligned the surrounding operator/testing docs.
+- Cause: The repository had already accumulated enough implementation depth that a short English bootstrap note was no longer sufficient for onboarding, local verification, or production deployment planning.
+- Action: Rewrote `README.md` to cover project positioning, implemented REST API groups, architecture, repository layout, unified runtime config, auth/scope model, minimal local startup, full docker-backed startup, verification samples, observability checks, and vendor-neutral production deployment guidance. Also aligned `scripts/ci/README.md`, `tests/integration/README.md`, and `tests/e2e/README.md` with the now-current runtime-stack and E2E behavior.
+- Prevention: Once the public REST surface, runtime overlays, and validation flows stabilize, keep the root README at the same maturity level as the implementation so operators do not need to reverse-engineer behavior from tests and specs.
+
+### 2026-04-15 20:49:00 +08:00 | Phase Q Validation Completed With A Non-Blocking Third-Party Warning Note
+
+- Stage: `CTX-20260415-037`
+- Event: The repaired runtime-stack helper and refreshed runbook were validated successfully.
+- Cause: The documentation phase still needed hard evidence that the canonical operator commands and published REST contract remained valid after the script and README updates.
+- Action: Completed validation with:
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\check-runtime-stack.ps1`
+  - `.\.venv\Scripts\python.exe -m pytest tests/contract/test_openapi_contract.py -q`
+  - `Select-String -Path scripts\dev\stack.ps1 -Pattern "Wait-TcpReady -Host "`
+  The runtime-stack script passed both the infrastructure-backed slice and the live observability probe (`4 passed` + `1 passed`), the OpenAPI contract tests passed (`3 passed`), and the grep-style check confirmed the old `-Host` call sites were gone.
+- Prevention: For operator-facing documentation changes, validate the exact commands you publish instead of only running nearby unit tests. During this pass, `pytest` surfaced deprecation warnings from third-party `cognee` dependencies, but they are currently non-blocking and do not affect Cortex's own contract or runtime behavior.

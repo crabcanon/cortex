@@ -166,7 +166,8 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
                 value = raw_input.get("uri")
             else:
                 raise ConfigError(
-                    "Cognee add currently supports only `text` and `uri` inputs for live runtime execution."
+                    "Cognee add currently supports only `text` and `uri` "
+                    "inputs for live runtime execution."
                 )
             if not isinstance(value, str) or not value.strip():
                 raise ConfigError(f"Cognee add input `{input_type}` is missing its content.")
@@ -209,7 +210,9 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
             "session_id": payload.get("session_id"),
         }
         search_type_name = str(payload.get("search_type", "GRAPH_COMPLETION"))
-        search_type_enum = getattr(self._module, "SearchType", None) if self._module is not None else None
+        search_type_enum = (
+            getattr(self._module, "SearchType", None) if self._module is not None else None
+        )
         if isinstance(search_type_enum, type) and issubclass(search_type_enum, Enum):
             try:
                 kwargs["query_type"] = search_type_enum[search_type_name]
@@ -273,12 +276,12 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
     def _resolve_memify_callable(self, pipeline: str) -> Callable[..., Any]:
         if pipeline == "triplet_embeddings":
             module = importlib.import_module("cognee.memify_pipelines.create_triplet_embeddings")
-            return getattr(module, "create_triplet_embeddings")
+            return module.create_triplet_embeddings
         if pipeline == "session_persistence":
             module = importlib.import_module(
                 "cognee.memify_pipelines.persist_sessions_in_knowledge_graph"
             )
-            return getattr(module, "persist_sessions_in_knowledge_graph_pipeline")
+            return module.persist_sessions_in_knowledge_graph_pipeline
         raise ConfigError(f"Unknown Cognee memify pipeline `{pipeline}`.")
 
     @staticmethod
@@ -310,7 +313,9 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
         methods_module = importlib.import_module("cognee.modules.users.methods")
         getter = getattr(methods_module, "get_default_user", None)
         if getter is None:
-            raise ConfigError("Cognee runtime does not expose `get_default_user` for memify execution.")
+            raise ConfigError(
+                "Cognee runtime does not expose `get_default_user` for memify execution."
+            )
         if asyncio.iscoroutinefunction(getter):
             return await cast(Callable[..., Awaitable[Any]], getter)()
         return await asyncio.to_thread(cast(Callable[..., Any], getter))
@@ -473,7 +478,10 @@ def _translate_db_url(db_url: str, *, provider: str, migration: bool) -> dict[st
     parsed = urlparse(db_url)
     scheme = provider or parsed.scheme.split("+", 1)[0].lower()
     if scheme in {"sqlite"}:
-        raw_path = db_url.split("sqlite:///", 1)[1] if db_url.startswith("sqlite:///") else parsed.path
+        if db_url.startswith("sqlite:///"):
+            raw_path = db_url.split("sqlite:///", 1)[1]
+        else:
+            raw_path = parsed.path
         path = Path(unquote(raw_path))
         if not path.is_absolute():
             path = (Path.cwd() / path).resolve()

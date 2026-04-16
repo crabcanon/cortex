@@ -17,6 +17,15 @@ from cortex_contracts import (
     SearchRequest,
     SearchResponse,
 )
+from cortex_contracts.openapi_examples import (
+    ADD_JOB_REQUEST_EXAMPLES,
+    COGNIFY_JOB_REQUEST_EXAMPLES,
+    DATASET_ID_EXAMPLE,
+    IDEMPOTENCY_KEY_EXAMPLE,
+    KNOWLEDGE_DATASET_CREATE_REQUEST_EXAMPLES,
+    MEMIFY_JOB_REQUEST_EXAMPLES,
+    SEARCH_REQUEST_EXAMPLES,
+)
 from cortex_db import CortexUnitOfWork
 from cortex_domain import DatasetRecord
 from cortex_knowledge import (
@@ -24,7 +33,7 @@ from cortex_knowledge import (
     KnowledgeJobControlService,
     KnowledgeSearchService,
 )
-from fastapi import APIRouter, Depends, Header, Request, status
+from fastapi import APIRouter, Body, Depends, Header, Path, Request, status
 
 from ..dependencies.auth import get_current_caller
 from ..dependencies.runtime import (
@@ -151,15 +160,34 @@ async def _authorized_search_scope(
     status_code=status.HTTP_201_CREATED,
     operation_id="createKnowledgeDataset",
     summary="Create a knowledge dataset",
+    description=("Create a dataset that Add, Cognify, Memify, and Search operations will target."),
 )
 async def create_knowledge_dataset(
     request: Request,
-    payload: KnowledgeDatasetCreateRequest,
+    payload: Annotated[
+        KnowledgeDatasetCreateRequest,
+        Body(
+            openapi_examples=KNOWLEDGE_DATASET_CREATE_REQUEST_EXAMPLES,
+            description=(
+                "Dataset creation request. `dataset_key` and `display_name` are required; "
+                "other fields are optional with documented defaults."
+            ),
+        ),
+    ],
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     knowledge_service: Annotated[KnowledgeDatasetService, Depends(get_knowledge_service)],
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
-    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+    idempotency_key: Annotated[
+        str | None,
+        Header(
+            alias="Idempotency-Key",
+            description=(
+                "Optional idempotency key for safely retrying dataset creation. Best default: omit."
+            ),
+            examples=[IDEMPOTENCY_KEY_EXAMPLE],
+        ),
+    ] = None,
 ) -> KnowledgeDataset:
     del idempotency_key
     await auth_service.authorize(
@@ -176,10 +204,17 @@ async def create_knowledge_dataset(
     response_model=KnowledgeDataset,
     operation_id="getKnowledgeDataset",
     summary="Get dataset metadata and counters",
+    description="Return one dataset including audit info, counters, and access policy.",
 )
 async def get_knowledge_dataset(
     request: Request,
-    datasetId: str,
+    datasetId: Annotated[
+        str,
+        Path(
+            description="Knowledge dataset identifier returned by `/v1/knowledge/datasets`.",
+            examples=[DATASET_ID_EXAMPLE],
+        ),
+    ],
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     knowledge_service: Annotated[KnowledgeDatasetService, Depends(get_knowledge_service)],
@@ -204,16 +239,39 @@ async def get_knowledge_dataset(
     status_code=status.HTTP_202_ACCEPTED,
     operation_id="createAddJob",
     summary="Submit a Cognee Add job",
+    description=(
+        "Queue an Add job to ingest objects, documents, text, "
+        "or URIs into a knowledge dataset."
+    ),
 )
 async def create_add_job(
     request: Request,
-    payload: AddJobRequest,
+    payload: Annotated[
+        AddJobRequest,
+        Body(
+            openapi_examples=ADD_JOB_REQUEST_EXAMPLES,
+            description=(
+                "Add job request. Provide either `dataset_id` "
+                "or `dataset_key`, then list one or more `inputs`."
+            ),
+        ),
+    ],
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     knowledge_service: Annotated[KnowledgeDatasetService, Depends(get_knowledge_service)],
     knowledge_job_service: KnowledgeJobServiceDep,
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
-    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+    idempotency_key: Annotated[
+        str | None,
+        Header(
+            alias="Idempotency-Key",
+            description=(
+                "Optional idempotency key for safely retrying "
+                "Add job submission. Best default: omit."
+            ),
+            examples=[IDEMPOTENCY_KEY_EXAMPLE],
+        ),
+    ] = None,
 ) -> JobAccepted:
     await auth_service.authorize(
         uow=uow,
@@ -253,16 +311,36 @@ async def create_add_job(
     status_code=status.HTTP_202_ACCEPTED,
     operation_id="createCognifyJob",
     summary="Submit a Cognify job",
+    description="Queue a Cognify job to derive graph structure from dataset content.",
 )
 async def create_cognify_job(
     request: Request,
-    payload: CognifyJobRequest,
+    payload: Annotated[
+        CognifyJobRequest,
+        Body(
+            openapi_examples=COGNIFY_JOB_REQUEST_EXAMPLES,
+            description=(
+                "Cognify job request. Provide either `dataset_id` "
+                "or `dataset_key`; all other fields are optional."
+            ),
+        ),
+    ],
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     knowledge_service: Annotated[KnowledgeDatasetService, Depends(get_knowledge_service)],
     knowledge_job_service: KnowledgeJobServiceDep,
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
-    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+    idempotency_key: Annotated[
+        str | None,
+        Header(
+            alias="Idempotency-Key",
+            description=(
+                "Optional idempotency key for safely retrying "
+                "Cognify job submission. Best default: omit."
+            ),
+            examples=[IDEMPOTENCY_KEY_EXAMPLE],
+        ),
+    ] = None,
 ) -> JobAccepted:
     await auth_service.authorize(
         uow=uow,
@@ -302,16 +380,36 @@ async def create_cognify_job(
     status_code=status.HTTP_202_ACCEPTED,
     operation_id="createMemifyJob",
     summary="Submit a Memify job",
+    description="Queue a Memify enrichment job over an existing dataset graph.",
 )
 async def create_memify_job(
     request: Request,
-    payload: MemifyJobRequest,
+    payload: Annotated[
+        MemifyJobRequest,
+        Body(
+            openapi_examples=MEMIFY_JOB_REQUEST_EXAMPLES,
+            description=(
+                "Memify job request. Provide either `dataset_id` "
+                "or `dataset_key`; `pipeline` defaults to `coding_rules`."
+            ),
+        ),
+    ],
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     knowledge_service: Annotated[KnowledgeDatasetService, Depends(get_knowledge_service)],
     knowledge_job_service: KnowledgeJobServiceDep,
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
-    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+    idempotency_key: Annotated[
+        str | None,
+        Header(
+            alias="Idempotency-Key",
+            description=(
+                "Optional idempotency key for safely retrying "
+                "Memify job submission. Best default: omit."
+            ),
+            examples=[IDEMPOTENCY_KEY_EXAMPLE],
+        ),
+    ] = None,
 ) -> JobAccepted:
     await auth_service.authorize(
         uow=uow,
@@ -350,10 +448,23 @@ async def create_memify_job(
     response_model=SearchResponse,
     operation_id="searchKnowledge",
     summary="Search across datasets and knowledge graphs",
+    description=(
+        "Search across one or more datasets using semantic, graph, or hybrid retrieval. "
+        "Use `recommended_graph_completion` for the most balanced default behavior."
+    ),
 )
 async def search_knowledge(
     request: Request,
-    payload: SearchRequest,
+    payload: Annotated[
+        SearchRequest,
+        Body(
+            openapi_examples=SEARCH_REQUEST_EXAMPLES,
+            description=(
+                "Knowledge search request. `query_text` is "
+                "required; dataset scope and filters are optional."
+            ),
+        ),
+    ],
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     knowledge_service: Annotated[KnowledgeDatasetService, Depends(get_knowledge_service)],

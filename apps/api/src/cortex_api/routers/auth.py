@@ -4,7 +4,8 @@ from typing import Annotated
 
 from cortex_auth import TokenIssueInput, TokenIssueResult, TokenIssuerService
 from cortex_contracts import TokenIssueRequest, TokenIssueResponse
-from fastapi import APIRouter, Depends
+from cortex_contracts.openapi_examples import TOKEN_ISSUE_REQUEST_EXAMPLES
+from fastapi import APIRouter, Body, Depends
 
 from ..dependencies.auth import get_bootstrap_issuer_secret
 from ..dependencies.runtime import get_token_issuer_service
@@ -49,9 +50,25 @@ def _to_token_issue_response(result: TokenIssueResult) -> TokenIssueResponse:
     response_model=TokenIssueResponse,
     operation_id="issueAccessToken",
     summary="Issue access token",
+    description=(
+        "Issue a bootstrap bearer token for local, self-hosted, "
+        "or operator-driven environments. Use the "
+        "`X-Cortex-Issuer-Secret` security header and copy "
+        "one of the request examples directly."
+    ),
 )
 async def issue_access_token(
-    request: TokenIssueRequest,
+    request: Annotated[
+        TokenIssueRequest,
+        Body(
+            openapi_examples=TOKEN_ISSUE_REQUEST_EXAMPLES,
+            description=(
+                "Bootstrap token issuance request. Required fields are "
+                "`subject`, `tenant_id`, and `scopes`; "
+                "most other fields may be omitted to use the documented defaults."
+            ),
+        ),
+    ],
     token_issuer_service: Annotated[TokenIssuerService, Depends(get_token_issuer_service)],
     bootstrap_secret: Annotated[str | None, Depends(get_bootstrap_issuer_secret)],
 ) -> TokenIssueResponse:

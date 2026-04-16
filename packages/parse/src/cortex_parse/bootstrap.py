@@ -47,6 +47,7 @@ def build_parse_service(
 def _crawl4ai_config(runtime_config: LoadedRuntimeConfig) -> dict[str, Any]:
     config = runtime_config.config.parse.engines.crawl4ai
     browser_config = dict(config.browser_config)
+    base_directory = runtime_config.resolve_reference(config.base_directory_ref)
     proxy = runtime_config.resolve_reference(config.proxy_ref)
     if proxy and "proxy" not in browser_config:
         browser_config["proxy"] = proxy
@@ -55,6 +56,7 @@ def _crawl4ai_config(runtime_config: LoadedRuntimeConfig) -> dict[str, Any]:
         browser_config["storage_state"] = storage_state
     return {
         "enabled": config.enabled,
+        "base_directory": base_directory,
         "browser_config": browser_config,
         "crawler_run_config": dict(config.crawler_run_config),
     }

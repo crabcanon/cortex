@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 from cortex_common import CortexError, ValidationError
@@ -65,6 +67,37 @@ class _FakeBrowserConfig:
         self.kwargs = kwargs
 
 
+class _CompatBrowserConfig:
+    def __init__(
+        self,
+        *,
+        browser_type: str,
+        headless: bool,
+        viewport_width: int,
+        viewport_height: int,
+        headers: dict[str, str],
+        user_agent: str | None = None,
+        proxy: str | None = None,
+        locale: str | None = None,
+        timezone_id: str | None = None,
+        use_persistent_context: bool = False,
+        light_mode: bool = False,
+    ) -> None:
+        self.kwargs = {
+            "browser_type": browser_type,
+            "headless": headless,
+            "viewport_width": viewport_width,
+            "viewport_height": viewport_height,
+            "headers": headers,
+            "user_agent": user_agent,
+            "proxy": proxy,
+            "locale": locale,
+            "timezone_id": timezone_id,
+            "use_persistent_context": use_persistent_context,
+            "light_mode": light_mode,
+        }
+
+
 class _FakeCrawlerRunConfig:
     def __init__(self, **kwargs: object) -> None:
         self.kwargs = kwargs
@@ -79,9 +112,11 @@ class _FakeAsyncWebCrawler:
     last_browser_config: _FakeBrowserConfig | None = None
     last_run_config: _FakeCrawlerRunConfig | None = None
     last_url: str | None = None
+    last_base_directory: str | None = None
 
-    def __init__(self, *, config: _FakeBrowserConfig) -> None:
+    def __init__(self, *, config: _FakeBrowserConfig, base_directory: str | None = None) -> None:
         type(self).last_browser_config = config
+        type(self).last_base_directory = base_directory
 
     async def __aenter__(self) -> _FakeAsyncWebCrawler:
         return self
@@ -341,3 +376,89 @@ async def test_crawl4ai_adapter_handles_missing_timing_fields_and_warns_on_unres
         "storage_state_ref is not resolved automatically yet; provide a concrete "
         "storage_state via engine_options.browser_config when needed."
     ]
+
+
+@pytest.mark.asyncio
+async def test_crawl4ai_adapter_maps_undetected_mode_for_newer_browser_config_signatures(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        crawl4ai_adapter,
+        "_load_crawl4ai_sdk",
+        lambda: crawl4ai_adapter._Crawl4AISdk(
+            async_web_crawler=_FakeAsyncWebCrawler,
+            browser_config=_CompatBrowserConfig,
+            crawler_run_config=_FakeCrawlerRunConfig,
+            cache_mode=_FakeCacheMode,
+        ),
+    )
+
+    engine = Crawl4AIParseEngine({"enabled": True})
+    result = await engine.execute(
+        EngineExecutionContext(
+            request=ParseSyncRequest(
+                source=ParseSource(
+                    input_kind=ParseInputKind.URL,
+                    url="https://example.com/compat",
+                ),
+                crawl=CrawlOptions(
+                    browser_profile=BrowserProfile(
+                        browser_type="chromium",
+                        enable_stealth=True,
+                        use_undetected_browser=True,
+                    )
+                ),
+            ),
+            source=ParseSource(
+                input_kind=ParseInputKind.URL,
+                url="https://example.com/compat",
+            ),
+        )
+    )
+
+    assert _FakeAsyncWebCrawler.last_browser_config is not None
+    browser_kwargs = _FakeAsyncWebCrawler.last_browser_config.kwargs
+    assert browser_kwargs["browser_type"] == "undetected"
+    assert "use_undetected_browser" not in browser_kwargs
+    assert "enable_stealth" not in browser_kwargs
+    assert result.anti_bot_strategy == "stealth_plus_undetected"
+
+
+@pytest.mark.asyncio
+async def test_crawl4ai_adapter_uses_repo_local_base_directory_when_unset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        crawl4ai_adapter,
+        "_load_crawl4ai_sdk",
+        lambda: crawl4ai_adapter._Crawl4AISdk(
+            async_web_crawler=_FakeAsyncWebCrawler,
+            browser_config=_FakeBrowserConfig,
+            crawler_run_config=_FakeCrawlerRunConfig,
+            cache_mode=_FakeCacheMode,
+        ),
+    )
+    monkeypatch.delenv("CRAWL4_AI_BASE_DIRECTORY", raising=False)
+    monkeypatch.delenv("CRAWL4AI_BASE_DIRECTORY", raising=False)
+
+    engine = Crawl4AIParseEngine({"enabled": True})
+    await engine.execute(
+        EngineExecutionContext(
+            request=ParseSyncRequest(
+                source=ParseSource(
+                    input_kind=ParseInputKind.URL,
+                    url="https://example.com/cache-dir",
+                )
+            ),
+            source=ParseSource(
+                input_kind=ParseInputKind.URL,
+                url="https://example.com/cache-dir",
+            ),
+        )
+    )
+
+    expected = (Path.cwd() / ".data" / "crawl4ai").resolve()
+    assert Path(os.environ["CRAWL4_AI_BASE_DIRECTORY"]).resolve() == expected
+    assert Path(os.environ["CRAWL4AI_BASE_DIRECTORY"]).resolve() == expected
+    assert Path(_FakeAsyncWebCrawler.last_base_directory or "").resolve() == expected
+    assert expected.exists()

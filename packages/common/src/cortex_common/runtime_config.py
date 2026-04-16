@@ -38,6 +38,7 @@ class Crawl4AIRuntimeConfig(_RuntimeModel):
     enabled: bool = True
     browser_config: dict[str, Any] = Field(default_factory=dict)
     crawler_run_config: dict[str, Any] = Field(default_factory=dict)
+    base_directory_ref: str | None = None
     proxy_ref: str | None = None
     storage_state_ref: str | None = None
 

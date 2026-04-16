@@ -5,6 +5,7 @@ parse:
   engines:
     crawl4ai:
       enabled: true
+      base_directory_ref: path:../.data/crawl4ai/default
       browser_config:
         browser_type: chromium
         headless: true

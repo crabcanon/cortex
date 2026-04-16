@@ -5,7 +5,10 @@ from __future__ import annotations
 import hashlib
 import importlib
 import importlib.metadata
+import inspect
+import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from cortex_common import ConfigError, CortexError, ValidationError, utc_now
@@ -75,7 +78,6 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
             supported_source_types=[
                 ParseInputKind.URL.value,
                 ParseInputKind.URI.value,
-                ParseInputKind.OBJECT.value,
             ],
             supported_formats=["text/html", "application/xhtml+xml"],
             capabilities=[
@@ -98,15 +100,21 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
         return self._descriptor
 
     async def execute(self, context: EngineExecutionContext) -> EngineExecutionResult:
+        if context.source.input_kind is ParseInputKind.OBJECT:
+            raise ValidationError("Crawl4AI does not support object-backed parse sources.")
         source_url = context.source.url or context.source.uri
         if source_url is None:
             raise ValidationError("Crawl4AI requires `source.url` or `source.uri`.")
 
+        base_directory = self._ensure_base_directory()
         sdk = _load_crawl4ai_sdk()
-        browser_config = sdk.browser_config(**self._browser_kwargs(context))
+        browser_config = sdk.browser_config(**self._browser_kwargs(context, sdk.browser_config))
         run_config = sdk.crawler_run_config(**self._run_kwargs(context, sdk.cache_mode))
 
-        async with sdk.async_web_crawler(config=browser_config) as crawler:
+        async with sdk.async_web_crawler(
+            config=browser_config,
+            base_directory=base_directory,
+        ) as crawler:
             result = await crawler.arun(url=source_url, config=run_config)
 
         if not getattr(result, "success", False):
@@ -159,7 +167,11 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
             engine_payload_summary=self._payload_summary(result),
         )
 
-    def _browser_kwargs(self, context: EngineExecutionContext) -> dict[str, Any]:
+    def _browser_kwargs(
+        self,
+        context: EngineExecutionContext,
+        browser_config_cls: type[Any] | None = None,
+    ) -> dict[str, Any]:
         browser_profile = context.request.crawl.browser_profile
         runtime_browser_config = self._mapping(self._config.get("browser_config"))
         runtime_headers = self._mapping(runtime_browser_config.get("headers"))
@@ -193,7 +205,81 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
                 **self._mapping(browser_kwargs.get("headers")),
                 **override_headers,
             }
-        return browser_kwargs
+        return self._adapt_browser_kwargs_for_sdk(
+            browser_kwargs,
+            browser_profile=browser_profile,
+            browser_config_cls=browser_config_cls,
+        )
+
+    @staticmethod
+    def _adapt_browser_kwargs_for_sdk(
+        browser_kwargs: dict[str, Any],
+        *,
+        browser_profile: Any,
+        browser_config_cls: type[Any] | None,
+    ) -> dict[str, Any]:
+        normalized = {key: value for key, value in browser_kwargs.items() if value is not None}
+        if browser_config_cls is None:
+            return normalized
+
+        try:
+            parameters = inspect.signature(browser_config_cls.__init__).parameters
+        except (TypeError, ValueError):  # pragma: no cover - depends on third-party SDK
+            return normalized
+
+        accepted_names = {
+            name
+            for name, parameter in parameters.items()
+            if name != "self"
+            and parameter.kind
+            not in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)
+        }
+        accepts_kwargs = any(
+            parameter.kind is inspect.Parameter.VAR_KEYWORD
+            for parameter in parameters.values()
+        )
+        if accepts_kwargs:
+            return normalized
+
+        if (
+            browser_profile.use_undetected_browser
+            and "use_undetected_browser" not in accepted_names
+            and "browser_type" in accepted_names
+        ):
+            normalized["browser_type"] = "undetected"
+            normalized.pop("use_undetected_browser", None)
+
+        if "enable_stealth" not in accepted_names:
+            normalized.pop("enable_stealth", None)
+        if "use_undetected_browser" not in accepted_names:
+            normalized.pop("use_undetected_browser", None)
+
+        return {
+            key: value
+            for key, value in normalized.items()
+            if key in accepted_names
+        }
+
+    def _ensure_base_directory(self) -> str:
+        configured = self._string_value(self._config.get("base_directory"))
+        selected = configured or os.getenv("CRAWL4_AI_BASE_DIRECTORY")
+        if selected is None:
+            selected = str((Path.cwd() / ".data" / "crawl4ai").resolve())
+
+        base_path = Path(selected).expanduser().resolve()
+        try:
+            base_path.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            raise ConfigError(
+                "Unable to initialize the Crawl4AI base directory. "
+                "Set `parse.engines.crawl4ai.base_directory_ref` or "
+                "`CRAWL4_AI_BASE_DIRECTORY` to a writable path."
+            ) from exc
+
+        resolved = str(base_path)
+        os.environ["CRAWL4_AI_BASE_DIRECTORY"] = resolved
+        os.environ["CRAWL4AI_BASE_DIRECTORY"] = resolved
+        return resolved
 
     def _run_kwargs(
         self,
@@ -381,8 +467,10 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
     @staticmethod
     def _anti_bot_strategy(context: EngineExecutionContext) -> str | None:
         browser_profile = context.request.crawl.browser_profile
+        if browser_profile.enable_stealth and browser_profile.use_undetected_browser:
+            return "stealth_plus_undetected"
         if browser_profile.use_undetected_browser:
-            return "undetected_browser"
+            return "undetected"
         if browser_profile.enable_stealth:
             return "stealth"
         return None

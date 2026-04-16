@@ -990,16 +990,12 @@ dependencies = [
     { name = "cortex-domain" },
     { name = "cortex-observability" },
     { name = "cortex-storage" },
-    { name = "httpx" },
-    { name = "pyyaml" },
-]
-
-[package.optional-dependencies]
-runtime = [
     { name = "crawl4ai" },
     { name = "docling" },
+    { name = "httpx" },
     { name = "llama-parse" },
     { name = "markitdown", extra = ["all"] },
+    { name = "pyyaml" },
 ]
 
 [package.metadata]
@@ -1010,14 +1006,13 @@ requires-dist = [
     { name = "cortex-domain", editable = "packages/domain" },
     { name = "cortex-observability", editable = "packages/observability" },
     { name = "cortex-storage", editable = "packages/storage" },
-    { name = "crawl4ai", marker = "extra == 'runtime'", specifier = ">=0.7,<0.9" },
-    { name = "docling", marker = "extra == 'runtime'", specifier = ">=2.70,<3" },
+    { name = "crawl4ai", specifier = ">=0.7,<0.9" },
+    { name = "docling", specifier = ">=2.70,<3" },
     { name = "httpx", specifier = ">=0.28,<0.29" },
-    { name = "llama-parse", marker = "extra == 'runtime'", specifier = ">=0.6,<0.7" },
-    { name = "markitdown", extras = ["all"], marker = "extra == 'runtime'", specifier = ">=0.1,<0.2" },
+    { name = "llama-parse", specifier = ">=0.6,<0.7" },
+    { name = "markitdown", extras = ["all"], specifier = ">=0.1,<0.2" },
     { name = "pyyaml", specifier = ">=6.0,<7" },
 ]
-provides-extras = ["runtime"]
 
 [[package]]
 name = "cortex-storage"

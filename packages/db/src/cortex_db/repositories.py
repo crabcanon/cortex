@@ -1294,7 +1294,9 @@ class DatasetItemRepository:
         )
         return None if model is None else _dataset_item_from_model(model)
 
-    async def list_for_dataset(self, dataset_id: str) -> list[DatasetItemRecord]:
+    async def list_for_dataset(
+        self, dataset_id: str, *, limit: int = 1000
+    ) -> list[DatasetItemRecord]:
         result = await self._session.execute(
             select(DatasetItemModel)
             .where(DatasetItemModel.dataset_id == dataset_id)
@@ -1303,6 +1305,7 @@ class DatasetItemRepository:
                 DatasetItemModel.item_type.asc(),
                 DatasetItemModel.item_id.asc(),
             )
+            .limit(limit)
         )
         return [_dataset_item_from_model(model) for model in result.scalars().all()]
 
@@ -1588,11 +1591,14 @@ class ParseRunAttemptRepository:
         await self._session.refresh(model)
         return _parse_run_attempt_from_model(model)
 
-    async def list_for_run(self, parse_run_id: str) -> list[ParseRunAttemptRecord]:
+    async def list_for_run(
+        self, parse_run_id: str, *, limit: int = 1000
+    ) -> list[ParseRunAttemptRecord]:
         result = await self._session.execute(
             select(ParseRunAttemptModel)
             .where(ParseRunAttemptModel.parse_run_id == parse_run_id)
             .order_by(ParseRunAttemptModel.attempt_no.asc())
+            .limit(limit)
         )
         return [_parse_run_attempt_from_model(model) for model in result.scalars().all()]
 
@@ -1647,11 +1653,14 @@ class KnowledgeRunRepository:
         await self._session.refresh(model)
         return _knowledge_run_from_model(model)
 
-    async def list_for_dataset(self, dataset_id: str) -> list[KnowledgeRunRecord]:
+    async def list_for_dataset(
+        self, dataset_id: str, *, limit: int = 1000
+    ) -> list[KnowledgeRunRecord]:
         result = await self._session.execute(
             select(KnowledgeRunModel)
             .where(KnowledgeRunModel.dataset_id == dataset_id)
             .order_by(KnowledgeRunModel.created_at.asc())
+            .limit(limit)
         )
         return [_knowledge_run_from_model(model) for model in result.scalars().all()]
 
@@ -1713,11 +1722,14 @@ class SearchHitRepository:
         await self._session.refresh(model)
         return _search_hit_from_model(model)
 
-    async def list_for_request(self, request_id: str) -> list[SearchHitRecord]:
+    async def list_for_request(
+        self, request_id: str, *, limit: int = 1000
+    ) -> list[SearchHitRecord]:
         result = await self._session.execute(
             select(SearchHitModel)
             .where(SearchHitModel.request_id == request_id)
             .order_by(SearchHitModel.hit_index.asc())
+            .limit(limit)
         )
         return [_search_hit_from_model(model) for model in result.scalars().all()]
 

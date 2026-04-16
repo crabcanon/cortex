@@ -131,7 +131,11 @@ def test_build_parse_service_respects_runtime_engine_enablement(
                 "parse:",
                 "  default_profile_ref: auto_default",
                 "  engines:",
+                "    crawl4ai:",
+                "      enabled: false",
                 "    jina_reader:",
+                "      enabled: false",
+                "    llama_parse:",
                 "      enabled: false",
                 "    markitdown:",
                 "      enabled: true",
@@ -144,10 +148,19 @@ def test_build_parse_service_respects_runtime_engine_enablement(
         encoding="utf-8",
     )
 
-    monkeypatch.setattr(crawl4ai_adapter, "_crawl4ai_available", lambda: False)
-    monkeypatch.setattr(llama_parse_adapter, "_llama_parse_available", lambda: False)
-    monkeypatch.setattr(markitdown_adapter, "_markitdown_available", lambda: True)
-    monkeypatch.setattr(docling_adapter, "_docling_available", lambda: True)
+    def _fake_load_crawl4ai_sdk():
+        raise ImportError("not installed")
+    def _fake_load_llama_parse_cls():
+        raise ImportError("not installed")
+    def _fake_load_markitdown_cls():
+        pass
+    def _fake_load_docling_cls():
+        pass
+
+    monkeypatch.setattr(crawl4ai_adapter, "_load_crawl4ai_sdk", _fake_load_crawl4ai_sdk)
+    monkeypatch.setattr(llama_parse_adapter, "_load_llama_parse_cls", _fake_load_llama_parse_cls)
+    monkeypatch.setattr(markitdown_adapter, "_load_markitdown_cls", _fake_load_markitdown_cls)
+    monkeypatch.setattr(docling_adapter, "_load_document_converter_cls", _fake_load_docling_cls)
 
     service = build_parse_service(ParseSettings(), load_runtime_config(config_path))
     engines = service._router.list_engines().engines

@@ -725,6 +725,32 @@ Docling 官方 README 明确列出多种导出格式，包括 Markdown、HTML、
 
 ### 5.5 路由策略
 
+#### 策略零：极简公共 API + 内部编译器
+
+对外 REST 不再把 `parser.profile_ref`、`fallback_policy`、`crawl.content_selector`、
+`engine_options` 等低层细节暴露给普通调用方，而是收敛为：
+
+- `source`
+- `engine_id`
+- `scene`（可选）
+
+同步接口默认只需要前两个字段；异步作业额外补充：
+
+- `priority`
+- `webhook`
+
+因此：
+
+- **两参数是否足够**：对同步 Parse 的主路径，`source + engine_id` 足够覆盖大多数调用。
+- **为什么仍保留第 3 个参数 `scene`**：同一个引擎通常同时存在“快速”“高保真”“深度抓取”“认证态”等不同最优配置。没有 `scene`，系统只能猜测，难以同时兼顾性能与结果质量。
+- **为什么不把更多高级参数继续公开**：这些参数会迅速把 API 重新推回“适配器透传接口”，破坏稳定性、可维护性与可迁移性。
+
+内部通过 `Parse Request Compiler / Planner` 完成：
+
+`Public Parse Request -> Source Resolver -> Scene Preset Resolver -> Internal ParseSyncRequest`
+
+这样保留了 Cortex 当前多引擎、profile、worker、fallback、持久化与审计主链路，同时把用户心智降到最小。
+
 #### 策略一：显式选引擎
 
 客户端直接指定：
@@ -841,25 +867,89 @@ fallback 触发条件：
 
 ## 6. Parse API 设计
 
-### 6.1 输入模型
+### 6.1 公共输入模型
 
-Parse 输入需要支持：
+对外 Parse API 采用“少参数、强约束、自动编译”的设计。
 
-- `url`
-- `object_id`
-- `uri`
+#### 同步 Parse
 
-配套字段包括：
+顶层字段不超过 3 个：
 
-- `parser.profile_ref`
-- `parser.preferred_engine_key`
-- `parser.allowed_engines`
-- `parser.engine_options`
-- `parser.fallback_policy`
-- `normalization`
-- `crawl`
-- `output`
-- `persistence`
+1. `source`
+2. `engine_id`
+3. `scene`（可选）
+
+#### 异步 Parse Job
+
+顶层字段不超过 5 个：
+
+1. `source`
+2. `engine_id`
+3. `scene`（可选）
+4. `priority`（可选）
+5. `webhook`（可选）
+
+#### `source` 统一模型
+
+`source` 本身是一个轻量对象，不要求调用方理解内部 parser 模型：
+
+- `uri`：统一承载 `https://...`、`s3://...`、`file://...` 等来源
+- `object_id`：引用已上传对象
+- `kind`：可选显式提示，未给出时自动推断
+- `filename`：可选文件名提示
+- `mime_type`：可选 MIME 提示
+
+#### `engine_id`
+
+`engine_id` 是公开 API 的主选择器，典型值：
+
+- `crawl4ai`
+- `jina_reader`
+- `llama_parse`
+- `markitdown`
+- `docling`
+- `auto`
+
+`auto` 允许平台基于来源类型、MIME、文件扩展名和可用引擎目录自动选择默认引擎，但不要求普通调用方理解 profile 细节。
+
+#### `scene`
+
+`scene` 是**可选**的高层意图，不是 provider-specific 参数透传。典型值：
+
+- `balanced`
+- `deep_web`
+- `authenticated_web`
+- `fast_extract`
+- `document_fidelity`
+- `document_ai`
+- `lightweight`
+
+它的作用是让 Cortex 在相同 `engine_id` 下切换不同 profile / preset，而不是让用户填写几十个细粒度抓取参数。
+
+### 6.1A 内部编译模型
+
+公共请求不会直接进入 `ParseService`，而是先进入 `Parse Request Compiler`：
+
+1. 解析 `source`
+2. 自动推断 `kind`
+3. 如 `object_id` 存在，则解析为受控的可访问 URI / URL
+4. 根据 `engine_id + scene + source_kind + mime_type` 选择内部 `profile_ref`
+5. 装配该 profile 对应的：
+   - `parser.allowed_engines`
+   - `parser.engine_options`
+   - `crawl`
+   - `normalization`
+   - `output`
+   - `persistence`
+   - `timeout_seconds`
+6. 生成内部 `ParseSyncRequest` / `ParseJobRequest`
+
+这使得：
+
+- API 保持简洁
+- 引擎能力仍然可插拔
+- profile 与 preset 仍然是运营面的主控制点
+- 后续新增解析引擎时无需重新设计公开 API
 
 ### 6.2 输出模型
 
@@ -882,7 +972,10 @@ Parse 输出包括：
 - 当前注册的解析器
 - 能力标签
 - 支持输入类型
-- 推荐 profile
+- 推荐 scene
+- 默认 scene
+- 默认 profile
+- scene 到 profile 的解析规则（面向运维与调试）
 
 ## 7. Storage 设计
 
@@ -956,7 +1049,19 @@ Search 返回的 provenance 应能够回溯到：
 
 ## 10. 配置模板设计
 
-Profile 应采用“平台通用参数 + 引擎覆盖参数”的双层结构：
+Parse 的配置建议拆成两层：
+
+1. **Public Scene Preset**
+   - 公开给 API 调用方的是 `engine_id + scene`
+   - 它定义“高层场景意图”，例如 `crawl4ai + deep_web`
+
+2. **Internal Profile**
+   - 公开场景最终解析为内部 `profile_ref`
+   - profile 继续承载 fallback、normalization、engine overrides 等底层控制
+
+换句话说，`scene` 是外部契约，`profile` 是内部编排与运维契约。
+
+Profile 仍采用“平台通用参数 + 引擎覆盖参数”的双层结构：
 
 ```yaml
 profile_ref: web_authenticated
@@ -989,9 +1094,10 @@ engine_overrides:
 
 优先考虑：
 
-- Jina Reader
-- MarkItDown
-- 简化模式 Crawl4AI
+- `source + engine_id` 两参数路径
+- Jina Reader 快速提取 preset
+- MarkItDown 轻量文档 preset
+- Crawl4AI `balanced` preset
 
 ### 11.2 异步模式
 
@@ -1004,7 +1110,7 @@ engine_overrides:
 
 优先考虑：
 
-- Crawl4AI 全功能模式
+- Crawl4AI `deep_web` / `authenticated_web` 强配置 preset
 - LlamaParse
 - Docling
 

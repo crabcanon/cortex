@@ -1,0 +1,11 @@
+profile_ref: llama_parse_document_fidelity
+display_name: LlamaParse Document Fidelity
+description: High-fidelity cloud document parsing preset.
+routing_mode: explicit
+preferred_engine_key: llama_parse
+allowed_engines: [llama_parse]
+fallback_policy:
+  enabled: false
+  mode: none
+  on_error: fail_fast
+  max_engine_attempts: 1

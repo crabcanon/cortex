@@ -384,3 +384,34 @@ Goal: clarify how each supported auth mode obtains and validates credentials, th
 | CTX-20260415-044 | 2026-04-15 21:55:00 +08:00 | P0 | auth-api | Implement an optional built-in token issuance endpoint for `dev` / `jwt` / `hybrid`, protected by a bootstrap issuer secret, while keeping `introspection` mode external-only and preserving the resource-server-first architecture | CTX-20260415-043 | done |
 | CTX-20260415-045 | 2026-04-15 21:55:00 +08:00 | P0 | auth-docs-validation | Update the OpenAPI/design/runbook docs and focused tests so the new auth-mode guidance and token issuance flow are explicit, validated, and recorded in `specs/cortex-log.md` | CTX-20260415-044 | done |
 
+### Batch 2026-04-15 22:20:00 +08:00 | Phase U Swagger Bearer Security Wiring
+
+Goal: fix the local `/docs` experience so bearer tokens issued by `/v1/auth/token` can be entered through Swagger UI's standard `Authorize` flow instead of a plain `Authorization` header parameter that browsers / OpenAPI tooling may ignore.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260415-046 | 2026-04-15 22:20:00 +08:00 | P0 | auth-docs-runtime | Replace the plain `Authorization` header dependency with a proper FastAPI bearer security scheme so runtime OpenAPI and Swagger UI generate a usable `Authorize` control for protected endpoints | CTX-20260415-045 | done |
+| CTX-20260415-047 | 2026-04-15 22:20:00 +08:00 | P0 | auth-docs-validation | Update operator guidance and add focused runtime OpenAPI tests proving the bearer security scheme is emitted and attached to protected routes, then record the issue/fix in `specs/cortex-log.md` | CTX-20260415-046 | done |
+
+### Batch 2026-04-15 22:45:00 +08:00 | Phase V Request Examples And Parameter Guidance
+
+Goal: make every API route substantially easier to call from Swagger UI by adding directly reusable request examples, field-level meaning/default guidance, and clearer parameter metadata at both runtime OpenAPI and the checked-in `specs/cortex-api.yaml` contract.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260415-048 | 2026-04-15 22:45:00 +08:00 | P0 | openapi-runtime | Add route-level request examples plus parameter descriptions/examples/defaults to the FastAPI runtime so `/docs` exposes copy-paste-ready payloads for Auth, Parse, Storage, Jobs, and Knowledge operations | CTX-20260415-047 | done |
+| CTX-20260415-049 | 2026-04-15 22:45:00 +08:00 | P0 | contracts-docs | Enrich request DTO schemas with field-level descriptions, examples, and recommended defaults so nested Swagger schemas explain each request parameter clearly without forcing users to inspect source code | CTX-20260415-048 | done |
+| CTX-20260415-050 | 2026-04-15 22:45:00 +08:00 | P0 | spec-validation | Update `specs/cortex-api.yaml` to mirror the new request examples and request-parameter guidance, add focused OpenAPI regression tests, run validation, and append the outcome to `specs/cortex-log.md` | CTX-20260415-049 | done |
+
+### Batch 2026-04-15 23:20:00 +08:00 | Phase W Minimal Parse API Redesign
+
+Goal: redesign the public Parse API into a much simpler, operator-friendly surface with no more than five top-level request parameters, centered on `source` plus `engine_id`, while keeping the internal parse pipeline, worker model, and multi-engine extensibility intact through automatic profile/preset compilation.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260415-051 | 2026-04-15 23:20:00 +08:00 | P0 | parse-design | Redesign the public Parse request contract around a minimal `source` + `engine_id` entrypoint, analyze whether two parameters are sufficient, define optional `scene` / job-control fields, and update the Parse-related design docs accordingly | CTX-20260415-050 | done |
+| CTX-20260415-052 | 2026-04-15 23:20:00 +08:00 | P0 | parse-api | Implement a Parse request compiler/planner that converts the simplified public API request into the existing internal parse execution contract, including engine-scene preset resolution, profile binding, and source-type inference | CTX-20260415-051 | done |
+| CTX-20260415-053 | 2026-04-15 23:20:00 +08:00 | P0 | parse-api | Refactor `/v1/parse/sync`, `/v1/parse/jobs`, and `/v1/parse/engines` to expose the simplified contract, surface recommended scenes/profiles, and preserve auth, job, and telemetry behavior | CTX-20260415-052 | done |
+| CTX-20260415-054 | 2026-04-15 23:20:00 +08:00 | P0 | parse-runtime | Extend engine/profile support so the simplified API can resolve object/url/uri sources, map engine-specific strongest presets (especially Crawl4AI advanced features), and keep the design vendor-neutral and extensible | CTX-20260415-052 | done |
+| CTX-20260415-055 | 2026-04-15 23:20:00 +08:00 | P0 | validation-docs | Update README/OpenAPI/examples/tests/logs for the redesigned Parse API, run focused validation, and append all issues/fixes to `specs/cortex-log.md` in chronological order | CTX-20260415-053, CTX-20260415-054 | done |
+

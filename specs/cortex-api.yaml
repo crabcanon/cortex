@@ -99,6 +99,31 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/TokenIssueRequest'
+            example:
+              grant_type: urn:cortex:params:oauth:grant-type:bootstrap
+              subject: alice
+              tenant_id: tenant_demo
+              actor_id: alice
+              actor_ref: alice@example.com
+              actor_type: user
+              display_name: Alice
+              client_id: swagger-ui
+              scopes:
+                - health:read
+                - parse:read
+                - parse:write
+                - storage:read
+                - storage:write
+                - knowledge:read
+                - knowledge:write
+                - jobs:read
+              roles:
+                - tenant_admin
+              groups:
+                - platform-ops
+              expires_in: 3600
+              additional_claims:
+                environment: local
       responses:
         '200':
           description: Access token issued successfully. / 已成功签发访问令牌。
@@ -287,8 +312,10 @@ paths:
         - Parse
       summary: List available parse engines / 获取可用解析引擎
       description: |
-        Returns the registered parse engines, supported source types, capability flags, and deployment modes. /
-        返回当前已注册的解析引擎、支持的输入类型、能力标签和部署模式。
+        Returns the registered parse engines, supported source types, default scene, supported scenes,
+        and the default internal profile selected by the Parse request compiler for each engine. /
+        返回当前已注册的解析引擎、支持的输入类型、默认 scene、支持的 scene，
+        以及 Parse 请求编译器为每个引擎绑定的默认内部 profile。
       operationId: listParseEngines
       security:
         - OAuth2:
@@ -311,8 +338,11 @@ paths:
         - Parse
       summary: List parser profiles / 获取解析配置模板
       description: |
-        Returns reusable parser profiles that drive engine selection, fallback rules, and normalization defaults. /
-        返回可复用的解析模板，用于驱动引擎选择、回退策略和标准化默认值。
+        Returns internal parser profiles for operators and debugging workflows. Most API callers should not need
+        to reference them directly because the public Parse API compiles `source + engine_id (+ scene)` into
+        these profiles automatically. /
+        返回面向运维与调试的内部 parser profile。大多数 API 调用方无需直接引用它们，
+        因为公共 Parse API 会自动将 `source + engine_id (+ scene)` 编译为这些 profile。
       operationId: listParserProfiles
       security:
         - OAuth2:
@@ -335,10 +365,11 @@ paths:
         - Parse
       summary: Parse content synchronously / 同步解析内容
       description: |
-        Use this endpoint for bounded, interactive parsing workloads across URLs, stored objects, or external file URIs.
-        The service may reject oversized or long-running jobs with `409` and require the asynchronous job endpoint instead. /
-        该接口用于 URL、对象存储文件或外部文件 URI 的受控同步解析请求。对于体积过大或执行时间过长的任务，
-        服务可能返回 `409`，要求改用异步作业接口。
+        Synchronously parse a source into LLM-ready Markdown through a minimal public contract. Most callers only
+        need `source` plus `engine_id`; `scene` is optional and selects a stronger preset such as `deep_web` or
+        `document_fidelity`. /
+        通过极简公共契约将来源同步解析为 LLM-ready Markdown。大多数调用方只需要 `source` 与 `engine_id`；
+        `scene` 为可选字段，用于选择如 `deep_web`、`document_fidelity` 等更强预设。
       operationId: parseContentSync
       security:
         - OAuth2:
@@ -350,7 +381,45 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ParseSyncRequest'
+              $ref: '#/components/schemas/ParseSubmitRequest'
+            examples:
+              two_parameter_url_parse:
+                summary: Two-parameter URL parse / 双参数 URL 解析
+                description: |
+                  The default public Parse path: provide `source` plus `engine_id`, and let Cortex resolve
+                  the best internal profile and execution defaults. /
+                  默认公共 Parse 路径：只提供 `source` 与 `engine_id`，由 Cortex 自动解析最佳内部 profile 与执行默认值。
+                value:
+                  source:
+                    uri: https://docs.cognee.ai/core-concepts/overview
+                    canonical_url: https://docs.cognee.ai/core-concepts/overview
+                    mime_type: text/html
+                  engine_id: crawl4ai
+              crawl4ai_deep_web:
+                summary: Crawl4AI deep web scene / Crawl4AI 深度抓取场景
+                description: |
+                  Use the optional `scene` field when you want the high-intensity Crawl4AI preset with
+                  richer artifacts and diagnostics. /
+                  当你需要更高强度的 Crawl4AI 预设以及更丰富的产物与诊断时，可使用可选 `scene` 字段。
+                value:
+                  source:
+                    uri: https://docs.cognee.ai/core-concepts/overview
+                    mime_type: text/html
+                  engine_id: crawl4ai
+                  scene: deep_web
+              object_backed_parse:
+                summary: Parse a stored object / 解析已上传对象
+                description: |
+                  Useful after Storage upload succeeds. Cortex resolves the object into a controlled source
+                  for the selected engine automatically. /
+                  适用于 Storage 上传成功后的对象解析。Cortex 会自动将对象解析为所选引擎可消费的受控来源。
+                value:
+                  source:
+                    object_id: obj_3f6c1d5e9b1646b5a4eabdbf8b417bd3
+                    filename: architecture-overview.pdf
+                    mime_type: application/pdf
+                  engine_id: docling
+                  scene: document_ai
       responses:
         '200':
           description: Parse completed within the sync timeout budget. / 已在同步超时预算内完成解析。
@@ -379,8 +448,10 @@ paths:
         - Parse
       summary: Submit an asynchronous parse job / 提交异步解析任务
       description: |
-        Creates a parse job that can route across multiple parser engines by explicit engine choice, profile, or fallback policy. /
-        创建一个异步解析任务，可通过显式引擎选择、配置模板或回退策略在多个解析引擎之间路由。
+        Queue a long-running parse task using the same minimal public Parse contract. Add optional `priority`
+        and `webhook` only when job control is needed. /
+        使用同一套极简公共 Parse 契约排队执行长耗时解析任务。只有在需要作业控制时，才额外提供可选
+        `priority` 与 `webhook`。
       operationId: createParseJob
       security:
         - OAuth2:
@@ -392,7 +463,28 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ParseJobRequest'
+              $ref: '#/components/schemas/ParseJobSubmitRequest'
+            examples:
+              async_parse_with_webhook:
+                summary: Asynchronous parse with webhook callback / 带回调的异步解析
+                description: |
+                  Recommended when parsing may take longer and another service will consume job-completion events. /
+                  适用于解析耗时较长且需要由其他服务消费任务完成事件的场景。
+                value:
+                  source:
+                    uri: https://docs.cognee.ai/core-concepts/overview
+                    mime_type: text/html
+                  engine_id: crawl4ai
+                  scene: deep_web
+                  priority: 5
+                  webhook:
+                    url: https://example.com/hooks/cortex/parse
+                    secret_ref: vault:cortex/webhooks/parse
+                    event_types:
+                      - job.succeeded
+                      - job.failed
+                    headers:
+                      X-Consumer: knowledge-pipeline
       responses:
         '202':
           description: Parse job accepted. / 已接受解析任务。
@@ -462,6 +554,32 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/StorageUploadCreateRequest'
+            example:
+              filename: product-overview.md
+              content_type: text/markdown
+              size_bytes: 20480
+              checksum_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+              metadata:
+                source: swagger-demo
+                document_type: guide
+              access_policy:
+                access_level: tenant_shared
+                classification_labels:
+                  - internal
+                allowed_role_keys:
+                  - tenant_admin
+                  - analyst
+                denied_role_keys: []
+                purpose_tags:
+                  - knowledge_ingest
+                constraints: {}
+              tags:
+                - docs
+                - product
+              upload_mode: single_part
+              part_size_bytes: 8388608
+              bucket_ref: default
+              object_prefix: uploads/docs/
       responses:
         '201':
           description: Upload session created. / 上传会话已创建。
@@ -495,6 +613,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/StorageUploadCompleteRequest'
+            example:
+              parts: []
+              checksum_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
       responses:
         '200':
           description: Upload finalized and metadata committed. / 上传已完成且元数据已提交。
@@ -552,6 +673,7 @@ paths:
         - name: ttl_seconds
           in: query
           description: Requested URL lifetime in seconds. / 请求的 URL 有效时长（秒）。
+          example: 900
           schema:
             type: integer
             minimum: 60
@@ -560,6 +682,7 @@ paths:
         - name: disposition
           in: query
           description: Content disposition for the download. / 下载的 Content-Disposition。
+          example: attachment
           schema:
             type: string
             enum:
@@ -597,6 +720,29 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/KnowledgeDatasetCreateRequest'
+            example:
+              dataset_key: product_docs
+              display_name: Product Docs
+              description: Primary product knowledge base for demos and regression tests.
+              tags:
+                - docs
+                - product
+              retention_class: standard
+              metadata:
+                domain: product
+                owner_team: platform
+              access_policy:
+                access_level: tenant_shared
+                classification_labels:
+                  - internal
+                allowed_role_keys:
+                  - tenant_admin
+                  - analyst
+                denied_role_keys: []
+                purpose_tags:
+                  - search
+                  - assistant
+                constraints: {}
       responses:
         '201':
           description: Dataset created. / 数据集已创建。
@@ -661,6 +807,36 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/AddJobRequest'
+            example:
+              dataset_key: product_docs
+              inputs:
+                - input_type: object_id
+                  object_id: obj_3f6c1d5e9b1646b5a4eabdbf8b417bd3
+                  label: Uploaded source file
+                  node_set:
+                    - docs
+                  metadata:
+                    source: storage
+                - input_type: document_id
+                  document_id: doc_71fe50adf1cb4981bb322f0d74f32598
+                  label: Normalized parsed document
+                  node_set:
+                    - docs
+                    - parsed
+                  metadata:
+                    source: parse
+              options:
+                normalize_text: true
+                structured_ingest: true
+                incremental: true
+                persist_source_copy: true
+              webhook:
+                url: https://example.com/hooks/cortex/knowledge-add
+                event_types:
+                  - job.succeeded
+                  - job.failed
+                headers:
+                  X-Consumer: knowledge-worker
       responses:
         '202':
           description: Add job accepted. / 已接受 Add 任务。
@@ -696,6 +872,23 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CognifyJobRequest'
+            example:
+              dataset_key: product_docs
+              incremental_loading: true
+              graph_prompt_profile: default
+              chunking:
+                enabled: true
+                strategy: semantic
+                target_tokens: 512
+                overlap_tokens: 64
+                max_chunks: 256
+              webhook:
+                url: https://example.com/hooks/cortex/cognify
+                event_types:
+                  - job.succeeded
+                  - job.failed
+                headers:
+                  X-Consumer: graph-sync
       responses:
         '202':
           description: Cognify job accepted. / 已接受 Cognify 任务。
@@ -731,6 +924,21 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/MemifyJobRequest'
+            example:
+              dataset_key: product_docs
+              pipeline: coding_rules
+              node_type: document
+              node_names:
+                - Cortex API Overview
+                - Runtime Configuration Guide
+              session_ids: []
+              webhook:
+                url: https://example.com/hooks/cortex/memify
+                event_types:
+                  - job.succeeded
+                  - job.failed
+                headers:
+                  X-Consumer: knowledge-memify
       responses:
         '202':
           description: Memify job accepted. / 已接受 Memify 任务。
@@ -760,6 +968,25 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/SearchRequest'
+            example:
+              query_text: What does the documentation say about Cortex parse workflows?
+              dataset_keys:
+                - product_docs
+              search_type: GRAPH_COMPLETION
+              top_k: 10
+              filters:
+                document_ids: []
+                object_ids: []
+                tags:
+                  - docs
+                node_sets:
+                  - docs
+                metadata:
+                  domain: product
+              only_context: false
+              include_provenance: true
+              include_graph_paths: true
+              timeout_seconds: 30
       responses:
         '200':
           description: Search results with answer, context, and provenance. / 返回包含答案、上下文和来源追溯的搜索结果。
@@ -851,6 +1078,7 @@ components:
       required: true
       schema:
         type: string
+        example: job_71fe50adf1cb4981bb322f0d74f32598
       description: Stable job identifier, typically a UUID or ULID generated by the service. / 稳定的任务标识，通常由服务生成 UUID 或 ULID。
     UploadId:
       name: uploadId
@@ -858,18 +1086,24 @@ components:
       required: true
       schema:
         type: string
+        example: upl_9feeaad1935f4b478ff61d6347ee5562
+      description: Upload session identifier returned by `POST /v1/storage/uploads`. / 由 `POST /v1/storage/uploads` 返回的上传会话标识。
     ObjectId:
       name: objectId
       in: path
       required: true
       schema:
         type: string
+        example: obj_3f6c1d5e9b1646b5a4eabdbf8b417bd3
+      description: Stable object identifier returned by the Storage API. / 由 Storage API 返回的稳定对象标识。
     DatasetId:
       name: datasetId
       in: path
       required: true
       schema:
         type: string
+        example: dset_9558cfc9178444e4a4c60d5658db78f5
+      description: Stable dataset identifier returned by the Knowledge API. / 由 Knowledge API 返回的稳定数据集标识。
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -881,6 +1115,7 @@ components:
       schema:
         type: string
         maxLength: 255
+        example: parse-demo-001
     TraceparentHeader:
       name: traceparent
       in: header
@@ -1595,6 +1830,63 @@ components:
           type: boolean
           default: false
 
+    ParseSubmitRequest:
+      type: object
+      required:
+        - source
+        - engine_id
+      properties:
+        source:
+          $ref: '#/components/schemas/ParseSourceInput'
+          description: Required source reference. This is the first and most important public Parse input. / 必填的来源引用，是公共 Parse API 的首要输入。
+        engine_id:
+          type: string
+          minLength: 1
+          description: Required public parser engine identifier such as `crawl4ai`, `jina_reader`, `llama_parse`, `markitdown`, or `docling`. / 必填的公共解析引擎标识。
+          example: crawl4ai
+        scene:
+          anyOf:
+            - type: string
+            - type: 'null'
+          description: Optional high-level parse scene. Best default is to omit it and let Cortex select the engine default scene. / 可选的高层解析场景，最佳默认值是留空并由 Cortex 选择引擎默认 scene。
+          example: deep_web
+
+    ParseJobSubmitRequest:
+      type: object
+      required:
+        - source
+        - engine_id
+      properties:
+        source:
+          $ref: '#/components/schemas/ParseSourceInput'
+          description: Required source reference. This is the first and most important public Parse input. / 必填的来源引用，是公共 Parse API 的首要输入。
+        engine_id:
+          type: string
+          minLength: 1
+          description: Required public parser engine identifier such as `crawl4ai`, `jina_reader`, `llama_parse`, `markitdown`, or `docling`. / 必填的公共解析引擎标识。
+          example: crawl4ai
+        scene:
+          anyOf:
+            - type: string
+            - type: 'null'
+          description: Optional high-level parse scene. Best default is to omit it and let Cortex select the engine default scene. / 可选的高层解析场景，最佳默认值是留空并由 Cortex 选择引擎默认 scene。
+          example: deep_web
+        priority:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 5
+          description: >-
+            Job priority where higher values are more urgent. Best default: 5. /
+            作业优先级，越高越紧急，最佳默认值为 5。
+        webhook:
+          anyOf:
+            - $ref: '#/components/schemas/WebhookConfig'
+            - type: 'null'
+          description: >-
+            Optional webhook callback configuration. Best default: omit. /
+            可选的 webhook 回调配置，最佳默认值为留空。
+
     ParseSyncRequest:
       type: object
       required:
@@ -1630,6 +1922,57 @@ components:
               default: 5
             webhook:
               $ref: '#/components/schemas/WebhookConfig'
+
+    ParseSourceInput:
+      type: object
+      properties:
+        uri:
+          anyOf:
+            - type: string
+            - type: 'null'
+          description: >-
+            Unified source locator for URL or external URI inputs. Best default:
+            provide `uri` for public web pages or externally addressable files. /
+            URL 或外部 URI 输入的统一来源定位字段。
+          example: https://docs.cognee.ai/core-concepts/overview
+        object_id:
+          anyOf:
+            - type: string
+            - type: 'null'
+          description: >-
+            Previously uploaded Cortex object identifier. Best default: omit unless
+            parsing a stored object. / 已上传 Cortex 对象的标识。
+          example: obj_3f6c1d5e9b1646b5a4eabdbf8b417bd3
+        kind:
+          anyOf:
+            - $ref: '#/components/schemas/ParseInputKind'
+            - type: 'null'
+          description: >-
+            Optional explicit source-kind hint. Best default: omit and let Cortex
+            infer from `uri` or `object_id`. / 可选的来源类型提示，默认由 Cortex 自动推断。
+          example: url
+        filename:
+          anyOf:
+            - type: string
+            - type: 'null'
+          description: Optional filename hint used for MIME or profile inference. / 可选文件名提示，用于 MIME 或 profile 推断。
+          example: architecture-overview.pdf
+        mime_type:
+          anyOf:
+            - type: string
+            - type: 'null'
+          description: >-
+            Optional MIME hint used for engine-scene compilation. Best default:
+            omit to let Cortex infer it. / 可选 MIME 提示，用于引擎与 scene 编译。
+          example: application/pdf
+        canonical_url:
+          anyOf:
+            - type: string
+            - type: 'null'
+          description: >-
+            Optional canonical URL saved into document provenance. Best default:
+            omit to use the resolved final URL. / 可选 canonical URL，用于写入文档溯源信息。
+          example: https://docs.cognee.ai/core-concepts/overview
 
     ParseSource:
       type: object
@@ -2183,6 +2526,18 @@ components:
           type: array
           items:
             type: string
+        default_scene_id:
+          anyOf:
+            - type: string
+            - type: 'null'
+        supported_scene_ids:
+          type: array
+          items:
+            type: string
+        default_profile_ref:
+          anyOf:
+            - type: string
+            - type: 'null'
 
     ParseEngineList:
       type: object

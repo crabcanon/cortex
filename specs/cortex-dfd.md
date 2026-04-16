@@ -222,7 +222,8 @@ flowchart LR
 Parse 链路已经升级为多引擎平台，不再绑定单一解析器。其关键能力包括：
 
 - URL、对象存储文件、外部 URI 的统一输入
-- profile / 模板驱动的解析策略选择
+- 极简公共 API：`source + engine_id (+ scene)`
+- `scene -> profile/preset` 的内部自动编译
 - 引擎能力匹配与显式选引擎
 - fallback 链路与多引擎回退
 - 统一 Markdown 与结构化元数据标准化
@@ -236,6 +237,7 @@ Parse 链路已经升级为多引擎平台，不再绑定单一解析器。其�
 sequenceDiagram
     participant C as Client
     participant A as Cortex API
+    participant P as Parse Request Compiler
     participant DB as Relational DB
     participant Q as Queue
     participant W as Parse Worker
@@ -245,6 +247,9 @@ sequenceDiagram
     participant O as Object Storage
 
     C->>A: POST /v1/parse/sync or /v1/parse/jobs
+    A->>P: resolve source + engine_id + scene
+    P->>DB: read object metadata when source=object_id
+    P-->>A: compiled internal Parse request
     A->>DB: create job + request snapshot
     A->>Q: enqueue parse job (async path)
     Q->>W: dispatch job
@@ -263,13 +268,20 @@ sequenceDiagram
 
 ### 6.3 Parse 输入
 
-- URL / object_id / file URI
-- parser profile / engine selector
-- 抓取配置
-- 会话引用
+公开输入最小化为：
+
+- `source`
+- `engine_id`
+- 可选 `scene`
+- 异步作业下可选 `priority`
+- 异步作业下可选 `webhook`
+
+内部再编译为完整执行请求，包含：
+
+- resolved source kind
+- internal profile
+- crawl / normalization / output / persistence defaults
 - `traceparent` / `tracestate` / `baggage`
-- 输出与持久化策略
-- 可选 webhook
 
 ### 6.4 Parse 输出
 

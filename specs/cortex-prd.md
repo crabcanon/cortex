@@ -85,26 +85,21 @@ Agent 对多个数据集发起混合搜索，返回答案、命中片段与引�
 - 任意 URL 抓取
 - 对象存储文件解析与外部文件 URI 解析
 - 同步与异步两种调用模式
+- 同步接口默认不超过 3 个顶层参数，异步作业接口不超过 5 个顶层参数
 - LLM-ready Markdown 输出
 - 标准元数据输出
 - 分类标签与审计字段
 - 多解析引擎可插拔接入
-- 基于 profile / 模板的解析策略切换
+- 基于 `engine_id + scene -> profile/preset` 的自动策略切换
 - 引擎 fallback 与标准化输出
 
 重点能力：
 
-- `proxy`
-- `custom headers`
-- `storage state`
-- `robots.txt compliance`
-- `pdf / screenshot capture`
-- `ssl certificate capture`
-- `stealth / undetected browser`
-- `wait_for` / `js_code` 交互控制
-- `preferred_engine`
-- `profile_ref`
-- `fallback_policy`
+- `source` 统一承载 `url / object_id / uri`
+- `engine_id` 作为公开主选择器
+- `scene` 作为高层场景意图，而不是暴露大量底层 adapter 参数
+- `crawl4ai` 的 `balanced / deep_web / authenticated_web` 强配置 preset
+- 文档引擎的 `document_fidelity / document_ai / lightweight` preset
 
 ### 5.2 Cortex Storage API
 
@@ -166,12 +161,19 @@ Agent 对多个数据集发起混合搜索，返回答案、命中片段与引�
 
 系统必须接受：
 
-- `url` / `object_id` / `uri`
-- parser profile / engine selector
-- 浏览器档案
-- session / storage state 引用
-- 头信息、代理引用、超时、重试策略
-- 输出策略与持久化策略
+- `source`
+- `engine_id`
+- 可选 `scene`
+- 异步场景下可选 `priority`
+- 异步场景下可选 `webhook`
+
+并满足：
+
+- `source` 统一覆盖 `url / object_id / uri`
+- 当未显式给出 `source.kind` 时，系统自动推断来源类型
+- 当给出 `object_id` 时，系统自动解析对象元数据并转换为引擎可消费的受控来源
+- 公开 API 不要求调用方理解内部 `profile_ref`、`fallback_policy`、`engine_options`
+- 引擎最优配置由平台根据 `engine_id + scene` 自动装配
 
 ### FR-2 Parse 输出
 
@@ -180,7 +182,7 @@ Agent 对多个数据集发起混合搜索，返回答案、命中片段与引�
 - Markdown 正文
 - 标题、原始 URL、最终 URL、语言、格式、分类标签
 - 标准化、结构化元数据对象
-- 实际命中的解析引擎、profile 与 fallback 轨迹
+- 实际命中的解析引擎、scene、内部 profile 与 fallback 轨迹
 - 产物引用（HTML、Markdown、截图、PDF、SSL 摘要）
 - 诊断信息（时延、代理使用、反机器人策略）
 
@@ -188,7 +190,9 @@ Agent 对多个数据集发起混合搜索，返回答案、命中片段与引�
 
 系统必须以内置注册表或适配器机制支持多种解析引擎，并允许：
 
-- 显式指定首选引擎
+- 显式指定公开 `engine_id`
+- 通过公开 `scene` 选择高层场景配置
+- 由内部编译器自动映射到 `profile_ref`
 - 按模板自动路由
 - 引擎失败后按策略回退
 - 将不同引擎输出归一为统一 Markdown 和标准化元数据
@@ -276,6 +280,11 @@ Agent 对多个数据集发起混合搜索，返回答案、命中片段与引�
 - 同步 Parse 在可控页面上 `P95 <= 10s`
 - Search 在热路径上 `P95 <= 2s`
 - 上传初始化接口 `P95 <= 500ms`
+
+补充要求：
+
+- 极简 Parse API 不因参数减少而牺牲性能，`Parse Request Compiler` 必须是常数级决策流程，除 `object_id` 解析为受控来源外不得引入额外外部网络跳转。
+- `engine_id=crawl4ai, scene=deep_web` 等高保真模式允许更高时延，但必须能够平滑切换到异步作业路径。
 
 ### NFR-3 可用性
 
@@ -375,6 +384,8 @@ Agent 对多个数据集发起混合搜索，返回答案、命中片段与引�
 
 ### Parse 验收
 
+- 同步 Parse 在 `source + engine_id` 两参数下即可直接返回 Markdown 与标准元数据。
+- 当调用方给出 `scene` 时，系统会自动命中对应内部 profile，而不是要求调用方理解 profile 细节。
 - 给定公开网页 URL，可返回 Markdown 与元数据。
 - 给定需要登录态的 URL，可通过 session 引用抓取成功。
 - 给定复杂页面，可按配置返回 PDF / 截图 / SSL 摘要。

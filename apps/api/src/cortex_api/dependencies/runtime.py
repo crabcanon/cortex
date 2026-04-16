@@ -10,7 +10,7 @@ from cortex_knowledge import (
     KnowledgeJobControlService,
     KnowledgeSearchService,
 )
-from cortex_parse import ParseJobControlService, ParseService
+from cortex_parse import ParseJobControlService, ParseRequestCompiler, ParseService
 from cortex_storage import StorageService
 from fastapi import Request
 
@@ -49,6 +49,10 @@ def get_knowledge_search_service(request: Request) -> KnowledgeSearchService:
 
 def get_parse_service(request: Request) -> ParseService:
     return request.app.state.parse_service  # type: ignore[no-any-return]
+
+
+def get_parse_request_compiler(request: Request) -> ParseRequestCompiler:
+    return request.app.state.parse_request_compiler  # type: ignore[no-any-return]
 
 
 def get_parse_job_service(request: Request) -> ParseJobControlService:

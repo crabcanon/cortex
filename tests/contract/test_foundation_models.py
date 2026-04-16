@@ -41,9 +41,12 @@ from cortex_contracts import (
     ParseEngineDescriptor,
     ParseEngineStatus,
     ParseInputKind,
+    ParseJobSubmitRequest,
     ParseResult,
     ParserProfile,
     ParseSource,
+    ParseSourceInput,
+    ParseSubmitRequest,
     ParseSyncRequest,
     ParseTimingSummary,
     ProblemDetails,
@@ -288,6 +291,15 @@ def test_knowledge_job_and_search_contract_models_capture_request_shapes() -> No
 
 
 def test_parse_contract_models_capture_request_and_result_shapes() -> None:
+    public_request = ParseSubmitRequest(
+        source=ParseSourceInput(uri="https://example.com/docs"),
+        engine_id="crawl4ai",
+    )
+    public_job_request = ParseJobSubmitRequest(
+        source=ParseSourceInput(object_id="obj_123", mime_type="application/pdf"),
+        engine_id="docling",
+        scene="document_ai",
+    )
     request = ParseSyncRequest(
         source=ParseSource(
             input_kind=ParseInputKind.URL,
@@ -339,6 +351,8 @@ def test_parse_contract_models_capture_request_and_result_shapes() -> None:
         ),
     )
 
+    assert public_request.engine_id == "crawl4ai"
+    assert public_job_request.source.object_id == "obj_123"
     assert request.source.input_kind is ParseInputKind.URL
     assert engine.deployment_mode is ParseEngineDeploymentMode.LOCAL
     assert profile.profile_ref == "auto_default"

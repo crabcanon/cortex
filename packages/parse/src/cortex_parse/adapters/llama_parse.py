@@ -66,7 +66,11 @@ class LlamaParseEngine(ParseEngineProtocol):
                 if enabled and available
                 else ParseEngineStatus.DISABLED
             ),
-            supported_source_types=[ParseInputKind.URI.value, ParseInputKind.URL.value],
+            supported_source_types=[
+                ParseInputKind.URI.value,
+                ParseInputKind.URL.value,
+                ParseInputKind.OBJECT.value,
+            ],
             supported_formats=[
                 "application/pdf",
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -93,9 +97,6 @@ class LlamaParseEngine(ParseEngineProtocol):
         source_ref = context.source.uri or context.source.url
         if source_ref is None:
             raise ValidationError("LlamaParse requires `source.uri` or `source.url`.")
-        if context.source.input_kind is ParseInputKind.OBJECT:
-            raise ValidationError("LlamaParse object sources must be resolved to a URI first.")
-
         parser_cls = _load_llama_parse_cls()
         parser = parser_cls(**self._parser_options(context))
         documents = await self._load_documents(parser, source_ref)

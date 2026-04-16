@@ -1,0 +1,14 @@
+profile_ref: jina_reader_balanced
+display_name: Jina Reader Balanced
+description: Balanced Jina Reader preset with ReaderLM-v2 enabled when available.
+routing_mode: explicit
+preferred_engine_key: jina_reader
+allowed_engines: [jina_reader]
+fallback_policy:
+  enabled: false
+  mode: none
+  on_error: fail_fast
+  max_engine_attempts: 1
+engine_overrides:
+  jina_reader:
+    use_readerlm_v2: true

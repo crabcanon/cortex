@@ -28,7 +28,7 @@ Cortex 基于 Python 3.12、`uv workspace`、FastAPI、标准 SQL、S3 兼容对
   - LlamaParse（云 API 模式）
   - MarkItDown
   - Docling
-- 通过 parser profile 和 runtime config 实现路由、优先级、回退策略和引擎默认配置
+- 对外采用极简 `source + engine_id (+ scene)` 契约，内部通过请求编译器自动绑定 scene preset、parser profile、回退策略和引擎默认配置
 
 ### 1.2 Storage API
 
@@ -262,9 +262,16 @@ knowledge:
 - Knowledge provider
   - `cognee`
 
-内置默认 parse profile 位于：
+内置 parse scene profile 位于：
 
-- `packages/parse/src/cortex_parse/profiles/auto_default.yaml`
+- `packages/parse/src/cortex_parse/profiles/crawl4ai_balanced.yaml`
+- `packages/parse/src/cortex_parse/profiles/crawl4ai_deep_web.yaml`
+- `packages/parse/src/cortex_parse/profiles/crawl4ai_authenticated_web.yaml`
+- `packages/parse/src/cortex_parse/profiles/jina_reader_balanced.yaml`
+- `packages/parse/src/cortex_parse/profiles/jina_reader_fast_extract.yaml`
+- `packages/parse/src/cortex_parse/profiles/llama_parse_document_fidelity.yaml`
+- `packages/parse/src/cortex_parse/profiles/markitdown_lightweight.yaml`
+- `packages/parse/src/cortex_parse/profiles/docling_document_ai.yaml`
 
 ## 7. 权限模型
 
@@ -327,6 +334,10 @@ knowledge:
 - `dev` 模式返回 `dev:` token
 - `jwt` / `hybrid` 模式返回共享密钥签名的 JWT
 - `introspection` 模式不会提供本地签发
+
+如果你通过本地 Swagger UI (`/docs`) 调试受保护接口，不要再手工填写某个 `authorization` 参数。
+请使用右上角的 `Authorize` 按钮，并填入 `/v1/auth/token` 返回的 `access_token`。
+Swagger UI 会自动补上 `Authorization: Bearer ...` 请求头。
 
 示例：
 
@@ -599,13 +610,10 @@ curl -X POST http://127.0.0.1:8080/v1/parse/sync \
   -H "Content-Type: application/json" \
   -d '{
     "source": {
-      "input_kind": "url",
-      "url": "https://example.com",
-      "expected_content_type": "text/html"
+      "uri": "https://example.com",
+      "mime_type": "text/html"
     },
-    "parser": {
-      "profile_ref": "auto_default"
-    }
+    "engine_id": "crawl4ai"
   }'
 ```
 
@@ -629,13 +637,12 @@ curl -X POST http://127.0.0.1:8080/v1/parse/jobs \
   -H "Content-Type: application/json" \
   -d '{
     "source": {
-      "input_kind": "url",
-      "url": "https://example.com",
-      "expected_content_type": "text/html"
+      "uri": "https://example.com",
+      "mime_type": "text/html"
     },
-    "parser": {
-      "profile_ref": "auto_default"
-    }
+    "engine_id": "crawl4ai",
+    "scene": "deep_web",
+    "priority": 5
   }'
 ```
 

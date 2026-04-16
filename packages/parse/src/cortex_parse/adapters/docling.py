@@ -63,7 +63,11 @@ class DoclingParseEngine(ParseEngineProtocol):
                 if enabled and available
                 else ParseEngineStatus.DISABLED
             ),
-            supported_source_types=[ParseInputKind.URI.value, ParseInputKind.URL.value],
+            supported_source_types=[
+                ParseInputKind.URI.value,
+                ParseInputKind.URL.value,
+                ParseInputKind.OBJECT.value,
+            ],
             supported_formats=[
                 "application/pdf",
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",

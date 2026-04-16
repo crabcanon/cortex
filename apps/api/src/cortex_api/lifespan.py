@@ -13,7 +13,7 @@ from cortex_knowledge import (
     build_cognee_runtime,
 )
 from cortex_observability import configure_telemetry, install_logging_correlation
-from cortex_parse import ParseJobControlService, build_parse_service
+from cortex_parse import ParseJobControlService, ParseRequestCompiler, build_parse_service
 from cortex_storage import StorageService
 from fastapi import FastAPI
 
@@ -34,6 +34,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     knowledge_job_service = KnowledgeJobControlService()
     knowledge_search_service = KnowledgeSearchService(knowledge_runtime)
     parse_service = build_parse_service(settings.parse, runtime_config)
+    parse_request_compiler = ParseRequestCompiler(
+        {descriptor.engine_key for descriptor in parse_service.list_engines().engines}
+    )
     parse_job_service = ParseJobControlService()
     logger = install_logging_correlation()
 
@@ -49,6 +52,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.knowledge_job_service = knowledge_job_service
     app.state.knowledge_search_service = knowledge_search_service
     app.state.parse_service = parse_service
+    app.state.parse_request_compiler = parse_request_compiler
     app.state.parse_job_service = parse_job_service
     app.state.logger = logger
 

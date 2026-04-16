@@ -29,7 +29,11 @@ class JinaReaderParseEngine(ParseEngineProtocol):
             engine_family="web_remote",
             deployment_mode=ParseEngineDeploymentMode.REMOTE,
             status=ParseEngineStatus.ACTIVE if enabled else ParseEngineStatus.DISABLED,
-            supported_source_types=[ParseInputKind.URL.value, ParseInputKind.URI.value],
+            supported_source_types=[
+                ParseInputKind.URL.value,
+                ParseInputKind.URI.value,
+                ParseInputKind.OBJECT.value,
+            ],
             supported_formats=["text/html", "application/pdf"],
             capabilities=[
                 "markdown",

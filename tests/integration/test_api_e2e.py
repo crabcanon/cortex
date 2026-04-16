@@ -19,6 +19,7 @@ from cortex_contracts import (
     ParseEngineDeploymentMode,
     ParseEngineDescriptor,
     ParseEngineStatus,
+    ParseInputKind,
     PresignedRequestDescriptor,
 )
 from cortex_db import CortexUnitOfWork, create_database_engine, create_session_factory
@@ -48,6 +49,8 @@ from cortex_parse import (
     ParseEngineProtocol,
     ParseEngineRegistry,
     ParseProfileLoader,
+    ParseRequestCompiler,
+    ParseScenePreset,
     ParseService,
 )
 from cortex_storage import StorageService
@@ -333,6 +336,26 @@ def _build_parse_service(profiles_dir: Path) -> ParseService:
     )
 
 
+def _build_parse_compiler() -> ParseRequestCompiler:
+    return ParseRequestCompiler(
+        {"e2e_parse_engine"},
+        presets=(
+            ParseScenePreset(
+                engine_key="e2e_parse_engine",
+                scene_id="balanced",
+                profile_ref="e2e_profile",
+                description="E2E default scene.",
+                source_kinds=(
+                    ParseInputKind.URL,
+                    ParseInputKind.URI,
+                    ParseInputKind.OBJECT,
+                ),
+            ),
+        ),
+        default_scene_by_engine={"e2e_parse_engine": "balanced"},
+    )
+
+
 @contextmanager
 def _build_client(
     monkeypatch: pytest.MonkeyPatch,
@@ -352,6 +375,7 @@ def _build_client(
             object_store=_FakeObjectStoreClient(),
         )
         app.state.parse_service = _build_parse_service(profiles_dir)
+        app.state.parse_request_compiler = _build_parse_compiler()
         app.state.knowledge_service = KnowledgeDatasetService(fake_runtime)
         app.state.knowledge_job_service = KnowledgeJobControlService()
         app.state.knowledge_search_service = KnowledgeSearchService(fake_runtime)
@@ -490,22 +514,12 @@ def test_e2e_upload_parse_add_search_round_trip(monkeypatch: pytest.MonkeyPatch)
             headers={**headers, "Idempotency-Key": "e2e-parse-job-001"},
             json={
                 "source": {
-                    "input_kind": "object",
                     "object_id": object_id,
                     "filename": "guide.md",
                     "canonical_url": "https://example.com/guides/cortex",
-                    "expected_content_type": "text/markdown",
+                    "mime_type": "text/markdown",
                 },
-                "parser": {"profile_ref": "e2e_profile"},
-                "output": {
-                    "chunking": {
-                        "enabled": True,
-                        "strategy": "heading",
-                        "target_tokens": 256,
-                        "overlap_tokens": 32,
-                        "max_chunks": 16,
-                    }
-                },
+                "engine_id": "e2e_parse_engine",
             },
         )
         parse_job_id = parse_job_response.json()["job_id"]

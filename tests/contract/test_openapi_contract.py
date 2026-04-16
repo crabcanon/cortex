@@ -17,9 +17,9 @@ from cortex_contracts import (
     KnowledgeDataset,
     KnowledgeDatasetCreateRequest,
     MemifyJobRequest,
-    ParseJobRequest,
+    ParseJobSubmitRequest,
     ParseResult,
-    ParseSyncRequest,
+    ParseSubmitRequest,
     SearchRequest,
     SearchResponse,
     StorageObject,
@@ -38,8 +38,8 @@ SCHEMA_MODELS: dict[str, type] = {
     "TokenIssueResponse": TokenIssueResponse,
     "JobAccepted": JobAccepted,
     "JobStatus": JobStatusDetail,
-    "ParseSyncRequest": ParseSyncRequest,
-    "ParseJobRequest": ParseJobRequest,
+    "ParseSubmitRequest": ParseSubmitRequest,
+    "ParseJobSubmitRequest": ParseJobSubmitRequest,
     "ParseResult": ParseResult,
     "StorageUploadCreateRequest": StorageUploadCreateRequest,
     "StorageUploadCompleteRequest": StorageUploadCompleteRequest,
@@ -175,9 +175,7 @@ def test_contract_model_signatures_match_documented_schemas() -> None:
             documented_schemas,
         )
         generated_schema = model.model_json_schema(ref_template="#/components/schemas/{model}")
-        assert _schema_signature(generated_schema) == _schema_signature(
-            resolved_documented_schema
-        )
+        assert _schema_signature(generated_schema) == _schema_signature(resolved_documented_schema)
 
 
 def test_metrics_endpoint_returns_prometheus_text(
@@ -197,3 +195,86 @@ def test_metrics_endpoint_returns_prometheus_text(
     assert response.headers["content-type"].startswith("text/plain")
     assert "cortex_build_info" in response.text
     assert "cortex_runtime_up" in response.text
+
+
+def test_runtime_openapi_exposes_bearer_security_scheme_for_protected_routes() -> None:
+    runtime = _runtime_openapi()
+    components = runtime["components"]
+    assert isinstance(components, dict)
+    security_schemes = components["securitySchemes"]
+    assert isinstance(security_schemes, dict)
+    bearer = security_schemes["BearerAuth"]
+    assert isinstance(bearer, dict)
+    assert bearer["type"] == "http"
+    assert bearer["scheme"] == "bearer"
+
+    paths = runtime["paths"]
+    assert isinstance(paths, dict)
+    readiness = paths["/v1/health/ready"]
+    assert isinstance(readiness, dict)
+    get_operation = readiness["get"]
+    assert isinstance(get_operation, dict)
+    assert {"BearerAuth": []} in get_operation["security"]
+
+
+REQUEST_EXAMPLE_OPERATIONS: tuple[tuple[str, str], ...] = (
+    ("/v1/auth/token", "post"),
+    ("/v1/parse/sync", "post"),
+    ("/v1/parse/jobs", "post"),
+    ("/v1/storage/uploads", "post"),
+    ("/v1/storage/uploads/{uploadId}/complete", "post"),
+    ("/v1/knowledge/datasets", "post"),
+    ("/v1/knowledge/add/jobs", "post"),
+    ("/v1/knowledge/cognify/jobs", "post"),
+    ("/v1/knowledge/memify/jobs", "post"),
+    ("/v1/knowledge/search", "post"),
+)
+
+
+def test_documented_openapi_includes_examples_for_all_request_bodies() -> None:
+    documented = _load_documented_openapi()
+    paths = documented["paths"]
+    assert isinstance(paths, dict)
+
+    for path, method in REQUEST_EXAMPLE_OPERATIONS:
+        operation = paths[path][method]
+        assert isinstance(operation, dict)
+        request_body = operation["requestBody"]
+        assert isinstance(request_body, dict)
+        content = request_body["content"]
+        assert isinstance(content, dict)
+        json_content = content["application/json"]
+        assert isinstance(json_content, dict)
+        assert "example" in json_content or "examples" in json_content
+
+
+def test_runtime_openapi_includes_examples_for_all_request_bodies() -> None:
+    runtime = _runtime_openapi()
+    paths = runtime["paths"]
+    assert isinstance(paths, dict)
+
+    for path, method in REQUEST_EXAMPLE_OPERATIONS:
+        operation = paths[path][method]
+        assert isinstance(operation, dict)
+        request_body = operation["requestBody"]
+        assert isinstance(request_body, dict)
+        content = request_body["content"]
+        assert isinstance(content, dict)
+        json_content = content["application/json"]
+        assert isinstance(json_content, dict)
+        assert "example" in json_content or "examples" in json_content
+
+
+def test_documented_parameter_examples_cover_common_request_inputs() -> None:
+    documented = _load_documented_openapi()
+    components = documented["components"]
+    assert isinstance(components, dict)
+    parameters = components["parameters"]
+    assert isinstance(parameters, dict)
+
+    for parameter_name in ("JobId", "UploadId", "ObjectId", "DatasetId", "IdempotencyKey"):
+        parameter = parameters[parameter_name]
+        assert isinstance(parameter, dict)
+        schema = parameter["schema"]
+        assert isinstance(schema, dict)
+        assert "example" in schema

@@ -1,0 +1,11 @@
+profile_ref: crawl4ai_deep_web
+display_name: Crawl4AI Deep Web
+description: High-intensity Crawl4AI preset with deep crawl artifacts and rich diagnostics.
+routing_mode: explicit
+preferred_engine_key: crawl4ai
+allowed_engines: [crawl4ai]
+fallback_policy:
+  enabled: false
+  mode: none
+  on_error: fail_fast
+  max_engine_attempts: 1

@@ -1,0 +1,14 @@
+profile_ref: jina_reader_fast_extract
+display_name: Jina Reader Fast Extract
+description: Lower-latency Jina Reader preset with ReaderLM-v2 disabled.
+routing_mode: explicit
+preferred_engine_key: jina_reader
+allowed_engines: [jina_reader]
+fallback_policy:
+  enabled: false
+  mode: none
+  on_error: fail_fast
+  max_engine_attempts: 1
+engine_overrides:
+  jina_reader:
+    use_readerlm_v2: false

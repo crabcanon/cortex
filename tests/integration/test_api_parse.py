@@ -18,6 +18,7 @@ from cortex_contracts import (
     ParseEngineDeploymentMode,
     ParseEngineDescriptor,
     ParseEngineStatus,
+    ParseInputKind,
 )
 from cortex_db import CortexUnitOfWork, create_database_engine, create_session_factory
 from cortex_db.cli import main as db_migrate_main
@@ -29,6 +30,8 @@ from cortex_parse import (
     ParseEngineRegistry,
     ParseJobControlService,
     ParseProfileLoader,
+    ParseRequestCompiler,
+    ParseScenePreset,
     ParseService,
 )
 from cortex_worker_parse import ParseWorker, ParseWorkerConfig
@@ -151,6 +154,35 @@ def _build_parse_service(
     )
 
 
+def _build_parse_compiler(
+    *engine_keys: str,
+    profile_ref: str = "test_profile",
+    retry_attempts: int = 3,
+    timeout_seconds: int = 45,
+) -> ParseRequestCompiler:
+    presets = tuple(
+        ParseScenePreset(
+            engine_key=engine_key,
+            scene_id="balanced",
+            profile_ref=profile_ref,
+            description=f"Test preset for {engine_key}.",
+            source_kinds=(
+                ParseInputKind.URL,
+                ParseInputKind.URI,
+                ParseInputKind.OBJECT,
+            ),
+            timeout_seconds=timeout_seconds,
+            crawl={"retry_policy": {"max_attempts": retry_attempts}},
+        )
+        for engine_key in engine_keys
+    )
+    return ParseRequestCompiler(
+        set(engine_keys),
+        presets=presets,
+        default_scene_by_engine={engine_key: "balanced" for engine_key in engine_keys},
+    )
+
+
 @contextmanager
 def _build_client(
     monkeypatch: pytest.MonkeyPatch,
@@ -164,6 +196,7 @@ def _build_client(
     app = create_app()
     with TestClient(app) as client:
         app.state.parse_service = _build_parse_service(profiles_dir)
+        app.state.parse_request_compiler = _build_parse_compiler("api_test_engine")
         yield client
     load_settings.cache_clear()
 
@@ -208,16 +241,18 @@ def test_parse_api_lists_catalog_and_runs_sync_parse(monkeypatch: pytest.MonkeyP
             headers=headers,
             json={
                 "source": {
-                    "input_kind": "url",
-                    "url": "https://example.com/docs",
-                    "expected_content_type": "text/html",
+                    "uri": "https://example.com/docs",
+                    "mime_type": "text/html",
                 },
-                "parser": {"profile_ref": "test_profile"},
+                "engine_id": "api_test_engine",
             },
         )
 
     assert engines_response.status_code == 200
     assert engines_response.json()["engines"][0]["engine_key"] == "api_test_engine"
+    assert engines_response.json()["engines"][0]["default_scene_id"] == "balanced"
+    assert engines_response.json()["engines"][0]["supported_scene_ids"] == ["balanced"]
+    assert engines_response.json()["engines"][0]["default_profile_ref"] == "test_profile"
     assert profiles_response.status_code == 200
     assert profiles_response.json()["profiles"][0]["profile_ref"] == "test_profile"
     assert sync_response.status_code == 200
@@ -259,10 +294,9 @@ def test_parse_sync_requires_parse_write_scope(monkeypatch: pytest.MonkeyPatch) 
             headers=headers,
             json={
                 "source": {
-                    "input_kind": "url",
-                    "url": "https://example.com/docs",
+                    "uri": "https://example.com/docs",
                 },
-                "parser": {"profile_ref": "test_profile"},
+                "engine_id": "api_test_engine",
             },
         )
 
@@ -300,16 +334,16 @@ def test_parse_sync_surfaces_attempt_failure_details(monkeypatch: pytest.MonkeyP
     with _build_client(monkeypatch, db_path, profiles_dir) as client:
         app = cast(FastAPI, client.app)
         app.state.parse_service = _build_parse_service(profiles_dir, _FailingParseEngine())
+        app.state.parse_request_compiler = _build_parse_compiler("failing_engine")
         response = client.post(
             "/v1/parse/sync",
             headers=headers,
             json={
                 "source": {
-                    "input_kind": "url",
-                    "url": "https://example.com/failure",
-                    "expected_content_type": "text/html",
+                    "uri": "https://example.com/failure",
+                    "mime_type": "text/html",
                 },
-                "parser": {"profile_ref": "test_profile"},
+                "engine_id": "failing_engine",
             },
         )
 
@@ -364,16 +398,17 @@ def test_async_parse_job_submit_worker_and_result(monkeypatch: pytest.MonkeyPatc
     }
 
     with _build_client(monkeypatch, db_path, profiles_dir) as client:
+        app = cast(FastAPI, client.app)
+        app.state.parse_request_compiler = _build_parse_compiler("api_test_engine")
         accepted_response = client.post(
             "/v1/parse/jobs",
             headers=headers,
             json={
                 "source": {
-                    "input_kind": "url",
-                    "url": "https://example.com/docs",
-                    "expected_content_type": "text/html",
+                    "uri": "https://example.com/docs",
+                    "mime_type": "text/html",
                 },
-                "parser": {"profile_ref": "test_profile"},
+                "engine_id": "api_test_engine",
                 "priority": 7,
             },
         )
@@ -382,11 +417,10 @@ def test_async_parse_job_submit_worker_and_result(monkeypatch: pytest.MonkeyPatc
             headers=headers,
             json={
                 "source": {
-                    "input_kind": "url",
-                    "url": "https://example.com/docs",
-                    "expected_content_type": "text/html",
+                    "uri": "https://example.com/docs",
+                    "mime_type": "text/html",
                 },
-                "parser": {"profile_ref": "test_profile"},
+                "engine_id": "api_test_engine",
                 "priority": 7,
             },
         )
@@ -494,17 +528,20 @@ def test_parse_worker_retries_then_fails(monkeypatch: pytest.MonkeyPatch) -> Non
     }
 
     with _build_client(monkeypatch, db_path, profiles_dir) as client:
+        app = cast(FastAPI, client.app)
+        app.state.parse_request_compiler = _build_parse_compiler(
+            "failing_engine",
+            retry_attempts=2,
+        )
         accepted_response = client.post(
             "/v1/parse/jobs",
             headers=headers,
             json={
                 "source": {
-                    "input_kind": "url",
-                    "url": "https://example.com/retry",
-                    "expected_content_type": "text/html",
+                    "uri": "https://example.com/retry",
+                    "mime_type": "text/html",
                 },
-                "parser": {"profile_ref": "test_profile"},
-                "crawl": {"retry_policy": {"max_attempts": 2}},
+                "engine_id": "failing_engine",
             },
         )
         job_id = accepted_response.json()["job_id"]
@@ -569,18 +606,21 @@ def test_parse_worker_timeout_fails_without_retry(monkeypatch: pytest.MonkeyPatc
     }
 
     with _build_client(monkeypatch, db_path, profiles_dir) as client:
+        app = cast(FastAPI, client.app)
+        app.state.parse_request_compiler = _build_parse_compiler(
+            "slow_engine",
+            retry_attempts=1,
+            timeout_seconds=1,
+        )
         accepted_response = client.post(
             "/v1/parse/jobs",
             headers=headers,
             json={
                 "source": {
-                    "input_kind": "url",
-                    "url": "https://example.com/slow",
-                    "expected_content_type": "text/html",
+                    "uri": "https://example.com/slow",
+                    "mime_type": "text/html",
                 },
-                "parser": {"profile_ref": "test_profile"},
-                "crawl": {"retry_policy": {"max_attempts": 1}},
-                "timeout_seconds": 1,
+                "engine_id": "slow_engine",
             },
         )
         job_id = accepted_response.json()["job_id"]
@@ -627,17 +667,20 @@ def test_parse_worker_recovers_stale_lease(monkeypatch: pytest.MonkeyPatch) -> N
     }
 
     with _build_client(monkeypatch, db_path, profiles_dir) as client:
+        app = cast(FastAPI, client.app)
+        app.state.parse_request_compiler = _build_parse_compiler(
+            "api_test_engine",
+            retry_attempts=2,
+        )
         accepted_response = client.post(
             "/v1/parse/jobs",
             headers=headers,
             json={
                 "source": {
-                    "input_kind": "url",
-                    "url": "https://example.com/stale",
-                    "expected_content_type": "text/html",
+                    "uri": "https://example.com/stale",
+                    "mime_type": "text/html",
                 },
-                "parser": {"profile_ref": "test_profile"},
-                "crawl": {"retry_policy": {"max_attempts": 2}},
+                "engine_id": "api_test_engine",
             },
         )
         job_id = accepted_response.json()["job_id"]

@@ -108,6 +108,12 @@
 - `supported_formats_json`：支持的 MIME 或扩展名。
 - `capability_flags_json`：例如 `interactive_web`、`ocr`、`structured_json`、`anti_bot`。
 
+补充说明：
+
+- 公开 API 面向用户暴露的是 `engine_id`，它直接对应 `engine_key`。
+- `scene` 不要求落成一张新的强建模表；当前建议把公开 `scene` 与最终命中的 preset/profile 关系保存在配置目录与 `jobs.request_json` / `parse_runs.selection_policy` 中。
+- 这样既保留了灵活扩展能力，又避免为了高频调整的场景模板频繁变更 SQL schema。
+
 它让平台可以：
 
 - 列出当前引擎目录
@@ -130,6 +136,14 @@
 - `engine_overrides_json`
 
 Profile 是 Cortex 实现“策略模式 + 配置模板”最关键的控制面实体。
+
+在新的公共 Parse API 中，`profile` 退居内部控制面：
+
+- 调用方主要提交 `engine_id` 与可选 `scene`
+- `scene` 经由编译器解析到内部 `profile_key`
+- profile 继续承载 fallback、normalization 与 engine override
+
+也就是说：`scene` 是公开契约，`profile` 是内部运维契约。
 
 ### 4.6 CrawlSession
 
@@ -234,6 +248,13 @@ Profile 是 Cortex 实现“策略模式 + 配置模板”最关键的控制面�
 
 `request_json` 和 `result_json` 负责保存 API 请求快照与摘要结果，便于重放、审计与故障排查。
 
+对于极简 Parse API，建议在 `jobs.request_json` 中明确保留：
+
+- 原始 `source`
+- 原始 `engine_id`
+- 原始 `scene`
+- 编译后的内部 parse request 摘要
+
 ### 4.13 ParseRun、ParseRunAttempt 与 KnowledgeRun
 
 这两张表是领域级运行明细：
@@ -243,6 +264,12 @@ Profile 是 Cortex 实现“策略模式 + 配置模板”最关键的控制面�
 - `knowledge_runs`：保存 Add/Cognify/Memify 的数据集、请求概要、结果摘要与遥测上下文。
 
 它们与 `jobs` 是一对一关系，目的是让通用调度和领域细节解耦。
+
+对 Parse 而言，公开 `engine_id` 与 `scene` 的命中结果建议体现在：
+
+- `parse_runs.selection_policy`：保存 `requested_engine_id`、`requested_scene`、`resolved_profile_ref`
+- `parse_run_attempts`：保存实际执行引擎顺序
+- `documents.audit_json`：保存命中的公共 scene / 内部 profile 摘要，方便后续诊断与 A/B 比较
 
 ### 4.14 SearchRequest 与 SearchHit
 

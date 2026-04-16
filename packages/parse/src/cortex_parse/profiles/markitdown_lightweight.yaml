@@ -1,0 +1,11 @@
+profile_ref: markitdown_lightweight
+display_name: MarkItDown Lightweight
+description: Lightweight local conversion preset for text-like documents.
+routing_mode: explicit
+preferred_engine_key: markitdown
+allowed_engines: [markitdown]
+fallback_policy:
+  enabled: false
+  mode: none
+  on_error: fail_fast
+  max_engine_attempts: 1

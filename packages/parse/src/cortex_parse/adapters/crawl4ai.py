@@ -85,7 +85,11 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
                 if enabled and available
                 else ParseEngineStatus.DISABLED
             ),
-            supported_source_types=[ParseInputKind.URL.value, ParseInputKind.URI.value],
+            supported_source_types=[
+                ParseInputKind.URL.value,
+                ParseInputKind.URI.value,
+                ParseInputKind.OBJECT.value,
+            ],
             supported_formats=["text/html", "application/xhtml+xml"],
             capabilities=[
                 "markdown",
@@ -107,8 +111,6 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
         return self._descriptor
 
     async def execute(self, context: EngineExecutionContext) -> EngineExecutionResult:
-        if context.source.input_kind is ParseInputKind.OBJECT:
-            raise ValidationError("Crawl4AI does not support object-backed parse sources.")
         source_url = context.source.url or context.source.uri
         if source_url is None:
             raise ValidationError("Crawl4AI requires `source.url` or `source.uri`.")
@@ -185,6 +187,7 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
                 **dict(browser_profile.headers),
             },
             "enable_stealth": browser_profile.enable_stealth,
+            "use_undetected_browser": browser_profile.use_undetected_browser,
             "use_persistent_context": browser_profile.use_persistent_context,
         }
         if browser_profile.user_agent:

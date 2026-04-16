@@ -12,6 +12,7 @@ from .models import (
 from .normalization.pipeline import NormalizationResult, ParseNormalizationPipeline
 from .profile_loader import ParseProfileLoader
 from .registry import ParseEngineRegistry
+from .request_compiler import ParseRequestCompiler, ParseScenePreset
 from .router import ParseRouter
 from .service import ParsePersistenceService, ParseService
 
@@ -28,6 +29,8 @@ __all__ = [
     "ParseNormalizationPipeline",
     "ParsePersistenceService",
     "ParseProfileLoader",
+    "ParseRequestCompiler",
+    "ParseScenePreset",
     "ParseRouter",
     "ParseService",
 ]

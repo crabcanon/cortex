@@ -1,0 +1,11 @@
+profile_ref: docling_document_ai
+display_name: Docling Document AI
+description: Structured local document conversion preset for PDF and office content.
+routing_mode: explicit
+preferred_engine_key: docling
+allowed_engines: [docling]
+fallback_policy:
+  enabled: false
+  mode: none
+  on_error: fail_fast
+  max_engine_attempts: 1

@@ -400,6 +400,8 @@ src/cortex_parse/
 - `configs/cortex.runtime.staging.yaml`
 - `configs/cortex.runtime.prod.yaml`
 
+其中 `parse.engines.crawl4ai.base_directory_ref` 用于集中管理 Crawl4AI 的运行期工作目录。它覆盖 provider 默认的用户 Home 目录，把缓存、日志、内部 SQLite、下载文件和浏览器状态统一收敛到仓库内或挂载卷中的可写路径，避免不同主机、容器或服务账号下出现权限漂移。
+
 它是**受版本控制的运行时契约**，用于描述：
 
 - Parse 默认 profile
@@ -415,6 +417,7 @@ src/cortex_parse/
 - `configs/cortex.runtime.<env>.yaml` 放可直接切换的环境化运行时配置
 - `packages/parse/profiles/*.yaml` 放 route / fallback / normalization 策略
 - request 级 `engine_options` 只做最后一跳覆盖，不承担长期运维配置
+- 浏览器型 provider 的工作目录、代理引用、storage state 等运行时基础设施项也应留在 runtime config，而不是散落到临时请求里
 
 统一运行时配置支持以下 reference scheme：
 
@@ -686,6 +689,8 @@ class ParseEngine(Protocol):
 - `anti_bot_primary`
 
 而不是通用文件解析器。
+
+在工程实现上，还需要把“可写工作目录”和“Playwright 子进程 / 命名管道可用性”视为部署前置条件。前者由 `parse.engines.crawl4ai.base_directory_ref` 统一收敛，后者则必须在目标宿主环境中完成能力验证；这属于运行时承载条件，不应再由 API 调用方手工理解或拼装。
 
 #### Jina Reader
 

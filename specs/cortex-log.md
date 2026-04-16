@@ -986,3 +986,41 @@
   - `python -m pytest tests/unit/test_parse_request_compiler.py tests/unit/test_parse_profiles.py tests/contract/test_foundation_models.py tests/contract/test_openapi_contract.py tests/integration/test_api_parse.py tests/integration/test_api_e2e.py -q`
   - A runtime smoke check against `create_app()` with `GET /v1/parse/engines`, which returned HTTP `200` and the full activated catalog `['crawl4ai', 'jina_reader', 'llama_parse', 'markitdown', 'docling']`
 - Prevention: Keep provider import/install concerns separate from catalog activation semantics. The runtime engine catalog should reflect the deployment's intended active engines from the checked-in runtime config, while execution-time adapter validation should explain missing SDKs, missing API keys, or provider-side failures without hiding the engine from discovery. When the public Parse contract changes again, update runtime routes, static OpenAPI, README examples, task history, and focused tests in the same patch set.
+
+### 2026-04-16 13:15:00 +08:00 | Crawl4AI 0.8.6 Dropped `use_undetected_browser` From BrowserConfig But The Adapter Still Passed It
+
+- Stage: `CTX-20260416-060`, `CTX-20260416-061`
+- Event: A live `engine_id=crawl4ai` parse request failed with `BrowserConfig.__init__() got an unexpected keyword argument 'use_undetected_browser'`, surfacing as `parse_failed` from `/v1/parse/sync`.
+- Cause: The Cortex Crawl4AI adapter still emitted an older BrowserConfig kwarg (`use_undetected_browser`) while the installed official SDK had already moved undetected-browser selection to `browser_type="undetected"`. Local validation confirmed the currently installed package was `crawl4ai==0.8.6`, whose `BrowserConfig.__init__` still accepts `enable_stealth` but no longer accepts `use_undetected_browser`.
+- Action: Patched `packages\parse\src\cortex_parse\adapters\crawl4ai.py` to inspect the actual SDK signature before constructing `BrowserConfig`, drop unsupported kwargs, and compatibility-map `use_undetected_browser=True` onto `browser_type="undetected"` when the new signature is in use. Also aligned the emitted anti-bot diagnostic label to the documented values (`undetected`, `stealth_plus_undetected`) and restored the adapter's explicit object-source rejection path so the focused Crawl4AI regression suite stayed green.
+- Validation:
+  - `uv sync --all-packages --all-groups` now installs `crawl4ai==0.8.6` into the repo-managed `.venv`
+  - Direct compatibility smoke check:
+    - built Crawl4AI browser kwargs from a `BrowserProfile(enable_stealth=True, use_undetected_browser=True)`
+    - verified they became `{'browser_type': 'undetected', ..., 'enable_stealth': True}` with no `use_undetected_browser`
+    - successfully instantiated the real `crawl4ai.BrowserConfig(**kwargs)` without raising
+  - `uv run python -m pytest tests/integration/test_parse_crawl4ai_adapter.py tests/unit/test_parse_request_compiler.py -q`
+  - `uv run python -m ruff check packages/parse/src/cortex_parse/adapters/crawl4ai.py tests/integration/test_parse_crawl4ai_adapter.py`
+- Prevention: For third-party adapters with fast-moving config surfaces, never pass a hardcoded provider kwarg list straight into the SDK constructor. Always normalize through a version-tolerant compatibility layer keyed off the installed signature, and keep at least one regression test that mimics a newer SDK removing a previously supported kwarg.
+
+### 2026-04-16 15:20:00 +08:00 | Crawl4AI Advanced Parse Reached Real Browser Launch, Then Hit A Host-Level Playwright Permission Boundary
+
+- Stage: `CTX-20260416-062`, `CTX-20260416-063`
+- Event: After the BrowserConfig compatibility hotfix, a real `/v1/parse/sync` request with `engine_id=crawl4ai` progressed past adapter construction but still failed before content capture. The first failure was a write-permission error against the provider default cache directory (`C:\Users\hy\.crawl4ai\cache`). After redirecting Crawl4AI state into the repository, the request advanced again and then failed during Playwright driver launch with `PermissionError: [WinError 5]` while creating the Windows named pipe used by `asyncio.create_subprocess_exec`.
+- Cause: Two separate runtime assumptions were being violated. First, Crawl4AI defaulted its cache/log/database state into the user home directory unless an explicit base directory was supplied. Second, the current Windows tool environment allowed the Cortex API process itself to run but denied the Playwright child-process / named-pipe setup that Crawl4AI needs for browser-backed crawling. That second blocker is a host-execution constraint rather than a Cortex request-contract or adapter-mapping bug.
+- Action:
+  - Extended the unified runtime config with `parse.engines.crawl4ai.base_directory_ref` and wired it through parse bootstrap into the Crawl4AI adapter.
+  - Updated the adapter to initialize both `CRAWL4_AI_BASE_DIRECTORY` and `CRAWL4AI_BASE_DIRECTORY` before importing the SDK, create the target directory eagerly, and pass the resolved `base_directory` directly into `AsyncWebCrawler(...)` so provider state stays under a writable repo-managed path such as `.data/crawl4ai/local`.
+  - Added focused regression coverage proving the adapter now defaults to a repo-local base directory when no explicit setting is supplied.
+  - Re-ran live integration checks against the real FastAPI app with a dev bearer token: `GET /v1/parse/engines` returned HTTP `200` with the active catalog `crawl4ai`, `jina_reader`, `llama_parse`, `markitdown`, `docling`; `POST /v1/parse/sync` returned HTTP `200` for `jina_reader`, `markitdown`, and `docling` against `https://example.com`; `crawl4ai` reached the Playwright launch path and failed only at the host pipe/subprocess boundary.
+- Validation:
+  - `uv run python -m pytest tests/integration/test_parse_crawl4ai_adapter.py tests/unit/test_parse_request_compiler.py -q`
+  - `uv run python -m ruff check packages/common/src/cortex_common/runtime_config.py packages/parse/src/cortex_parse/bootstrap.py packages/parse/src/cortex_parse/adapters/crawl4ai.py tests/integration/test_parse_crawl4ai_adapter.py`
+  - `uv run pyright packages/common/src/cortex_common/runtime_config.py packages/parse/src/cortex_parse/bootstrap.py packages/parse/src/cortex_parse/adapters/crawl4ai.py tests/integration/test_parse_crawl4ai_adapter.py`
+  - Live runtime checks through `create_app()` + `TestClient`:
+    - `GET /v1/parse/engines` -> `200`
+    - `POST /v1/parse/sync` with `engine_id=jina_reader` -> `200`
+    - `POST /v1/parse/sync` with `engine_id=markitdown` -> `200`
+    - `POST /v1/parse/sync` with `engine_id=docling` -> `200`
+    - `POST /v1/parse/sync` with `engine_id=crawl4ai` -> adapter/runtime path reached Playwright startup, then failed with host-level `PermissionError: [WinError 5]`
+- Prevention: Treat browser-backed adapters as having an additional host capability requirement: writable working directories plus permission to spawn Playwright child processes and named pipes. Keep that requirement explicit in runtime docs and deployment runbooks, and validate browser-engine availability in the target shell/host where the service actually runs instead of assuming parity with pure-HTTP or pure-local file adapters.

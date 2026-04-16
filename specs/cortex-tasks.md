@@ -426,3 +426,21 @@ Goal: close the last public Parse API gaps by making every runtime-enabled engin
 | CTX-20260416-058 | 2026-04-16 11:20:00 +08:00 | P0 | parse-api | Refine the public Parse compiler and API routes so sync/job submission accept only `sources`, `engine_id`, optional `scene`, plus async job controls, with automatic locator normalization, MIME inference, per-source compilation, and batch job acceptance/results | CTX-20260416-056, CTX-20260416-057 | done |
 | CTX-20260416-059 | 2026-04-16 11:20:00 +08:00 | P0 | docs-validation | Update OpenAPI/design/README/task/log artifacts for the final Parse contract, run focused validation plus an engine-catalog smoke check, and record the exact outcomes in `specs/cortex-log.md` | CTX-20260416-058 | done |
 
+### Batch 2026-04-16 13:05:00 +08:00 | Phase Y Crawl4AI SDK Compatibility Hotfix
+
+Goal: repair the live Crawl4AI parse path after the public API began passing a BrowserConfig field removed in the current SDK, while keeping the deep-web/authenticated presets usable across Crawl4AI minor-version differences.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260416-060 | 2026-04-16 13:05:00 +08:00 | P0 | parse-adapter | Audit the failing Crawl4AI runtime path against the installed official SDK signature and patch the adapter so unsupported BrowserConfig kwargs are filtered or compatibility-mapped instead of crashing parse execution | CTX-20260416-059 | done |
+| CTX-20260416-061 | 2026-04-16 13:05:00 +08:00 | P0 | parse-testing | Add focused Crawl4AI adapter regression coverage for newer BrowserConfig signatures, rerun targeted validation, and append the root cause plus fix details to `specs/cortex-log.md` | CTX-20260416-060 | done |
+
+### Batch 2026-04-16 15:20:00 +08:00 | Phase Z Crawl4AI Writable Base Directory And Live Multi-Engine Validation
+
+Goal: finish the next layer of real integration validation by moving Crawl4AI runtime state into a repo-managed writable directory, exposing that path in unified runtime config, and re-running live `/v1/parse` checks across browser and non-browser engines to separate code defects from host-environment restrictions.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260416-062 | 2026-04-16 15:20:00 +08:00 | P0 | parse-runtime | Add a unified Crawl4AI base-directory control to runtime config/bootstrap and force the adapter to initialize provider cache/log state under a writable repo-local path instead of defaulting into the user home directory | CTX-20260416-061 | done |
+| CTX-20260416-063 | 2026-04-16 15:20:00 +08:00 | P0 | live-validation | Re-run real `/v1/parse/engines` and `/v1/parse/sync` validation for active engines, confirm non-browser adapters succeed end to end, and capture any remaining Crawl4AI host-runtime blockers in `specs/cortex-log.md` with exact environment evidence | CTX-20260416-062 | done |
+

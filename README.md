@@ -242,6 +242,8 @@ $env:CORTEX_RUNTIME_CONFIG_PATH = "configs/cortex.runtime.prod.yaml"
 ```yaml
 parse:
   engines:
+    crawl4ai:
+      base_directory_ref: path:../.data/crawl4ai/local
     jina_reader:
       api_key_ref: env:JINA_API_KEY
 knowledge:
@@ -273,6 +275,10 @@ knowledge:
 - `packages/parse/src/cortex_parse/profiles/llama_parse_document_fidelity.yaml`
 - `packages/parse/src/cortex_parse/profiles/markitdown_lightweight.yaml`
 - `packages/parse/src/cortex_parse/profiles/docling_document_ai.yaml`
+
+其中 `crawl4ai` 建议始终通过 `parse.engines.crawl4ai.base_directory_ref` 统一指定工作目录，把缓存、日志、数据库和下载目录收敛到仓库内 `.data/crawl4ai/<env>`。这样可以避免默认落到用户 Home 目录后出现权限漂移，也更方便容器化和环境迁移。
+
+如果要启用 `crawl4ai` 的真实浏览器抓取能力，还需要部署环境本身允许 Playwright 创建子进程与命名管道；否则 `jina_reader`、`markitdown`、`docling` 这类非浏览器引擎仍可正常工作，但 `crawl4ai` 会在浏览器驱动启动阶段失败。
 
 ## 7. 权限模型
 

@@ -6,6 +6,8 @@ from cortex_auth import AuthorizationService, CallerContext, ResourceAuthorizati
 from cortex_contracts import (
     JobAccepted,
     JobStatusDetail,
+    ParseBatchJobAccepted,
+    ParseBatchResult,
     ParseEngineList,
     ParseJobSubmitRequest,
     ParseResult,
@@ -34,7 +36,7 @@ from ..dependencies.runtime import (
     get_uow,
 )
 from ..services.jobs import get_job_status
-from ..services.parse_requests import compile_parse_job_request, compile_parse_sync_request
+from ..services.parse_requests import compile_parse_job_requests, compile_parse_sync_requests
 
 router = APIRouter(prefix="/v1/parse", tags=["Parse"])
 
@@ -134,12 +136,12 @@ async def list_parser_profiles(
 
 @router.post(
     "/sync",
-    response_model=ParseResult,
+    response_model=ParseBatchResult,
     operation_id="parseContentSync",
     summary="Parse content synchronously",
     description=(
-        "Synchronously parse a source into LLM-ready Markdown through a minimal public contract. "
-        "Most callers only need `source` plus `engine_id`; `scene` is optional."
+        "Synchronously parse one or more source locators into LLM-ready Markdown. "
+        "The public contract is centered on `sources`, `engine_id`, and optional `scene`."
     ),
 )
 async def parse_content_sync(
@@ -149,9 +151,8 @@ async def parse_content_sync(
         Body(
             openapi_examples=PARSE_SYNC_REQUEST_EXAMPLES,
             description=(
-                "Simplified Parse request body. Required: `source` and `engine_id`. Optional: "
-                "`scene` to select a stronger engine preset such as `deep_web` or "
-                "`document_fidelity`."
+                "Unified Parse request body. Required: `sources`. `engine_id` defaults to `auto`, "
+                "and `scene` is optional."
             ),
         ),
     ],
@@ -174,7 +175,7 @@ async def parse_content_sync(
             examples=[IDEMPOTENCY_KEY_EXAMPLE],
         ),
     ] = None,
-) -> ParseResult:
+) -> ParseBatchResult:
     del idempotency_key
     await auth_service.authorize(
         uow=uow,
@@ -182,7 +183,7 @@ async def parse_content_sync(
         permission_key="parse:write",
         request_id=getattr(request.state, "request_id", None),
     )
-    compiled = await compile_parse_sync_request(
+    compiled_requests = await compile_parse_sync_requests(
         payload=payload,
         caller=caller,
         auth_service=auth_service,
@@ -191,17 +192,26 @@ async def parse_content_sync(
         uow=uow,
         request_id=getattr(request.state, "request_id", None),
     )
-    return await parse_service.parse(uow=uow, caller=caller, request=compiled)
+    results = [
+        await parse_service.parse(uow=uow, caller=caller, request=compiled_request)
+        for compiled_request in compiled_requests
+    ]
+    return ParseBatchResult(
+        requested_sources=list(payload.sources),
+        engine_id=payload.engine_id,
+        scene=payload.scene,
+        results=results,
+    )
 
 
 @router.post(
     "/jobs",
-    response_model=JobAccepted,
+    response_model=ParseBatchJobAccepted,
     status_code=status.HTTP_202_ACCEPTED,
     operation_id="createParseJob",
     summary="Submit an asynchronous parse job",
     description=(
-        "Queue a long-running parse task using the same minimal public Parse contract. "
+        "Queue one async parse job per source using the same unified public Parse contract. "
         "Add optional `priority` and `webhook` only when job control is needed."
     ),
 )
@@ -212,8 +222,8 @@ async def create_parse_job(
         Body(
             openapi_examples=PARSE_JOB_REQUEST_EXAMPLES,
             description=(
-                "Asynchronous Parse job request. Reuses the simplified synchronous Parse body and "
-                "adds optional `priority` plus optional `webhook`."
+                "Unified async Parse request. `sources` may contain one or more locators; "
+                "`engine_id` defaults to `auto`."
             ),
         ),
     ],
@@ -236,14 +246,14 @@ async def create_parse_job(
             examples=[IDEMPOTENCY_KEY_EXAMPLE],
         ),
     ] = None,
-) -> JobAccepted:
+) -> ParseBatchJobAccepted:
     await auth_service.authorize(
         uow=uow,
         caller=caller,
         permission_key="parse:write",
         request_id=getattr(request.state, "request_id", None),
     )
-    compiled = await compile_parse_job_request(
+    compiled_requests = await compile_parse_job_requests(
         payload=payload,
         caller=caller,
         auth_service=auth_service,
@@ -252,12 +262,27 @@ async def create_parse_job(
         uow=uow,
         request_id=getattr(request.state, "request_id", None),
     )
-    return await parse_job_service.submit(
-        uow=uow,
-        caller=caller,
-        request=compiled,
-        idempotency_key=idempotency_key,
-        request_id=getattr(request.state, "request_id", None),
+    jobs: list[JobAccepted] = []
+    for index, compiled_request in enumerate(compiled_requests):
+        batch_key = (
+            f"{idempotency_key}:{index}"
+            if idempotency_key is not None and len(compiled_requests) > 1
+            else idempotency_key
+        )
+        jobs.append(
+            await parse_job_service.submit(
+                uow=uow,
+                caller=caller,
+                request=compiled_request,
+                idempotency_key=batch_key,
+                request_id=getattr(request.state, "request_id", None),
+            )
+        )
+    return ParseBatchJobAccepted(
+        requested_sources=list(payload.sources),
+        engine_id=payload.engine_id,
+        scene=payload.scene,
+        jobs=jobs,
     )
 
 

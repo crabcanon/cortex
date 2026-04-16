@@ -53,14 +53,6 @@ def _load_crawl4ai_sdk() -> _Crawl4AISdk:
     )
 
 
-def _crawl4ai_available() -> bool:
-    try:
-        _load_crawl4ai_sdk()
-    except Exception:
-        return False
-    return True
-
-
 def _crawl4ai_version() -> str | None:
     try:
         return importlib.metadata.version("crawl4ai")
@@ -74,17 +66,12 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
     def __init__(self, config: dict[str, object] | None = None) -> None:
         self._config = dict(config) if isinstance(config, dict) else {}
         enabled = bool(self._config.get("enabled", True))
-        available = _crawl4ai_available()
         self._descriptor = ParseEngineDescriptor(
             engine_key="crawl4ai",
             display_name="Crawl4AI",
             engine_family="web_interactive",
             deployment_mode=ParseEngineDeploymentMode.LOCAL,
-            status=(
-                ParseEngineStatus.ACTIVE
-                if enabled and available
-                else ParseEngineStatus.DISABLED
-            ),
+            status=ParseEngineStatus.ACTIVE if enabled else ParseEngineStatus.DISABLED,
             supported_source_types=[
                 ParseInputKind.URL.value,
                 ParseInputKind.URI.value,

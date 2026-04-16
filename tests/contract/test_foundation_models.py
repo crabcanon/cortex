@@ -34,6 +34,8 @@ from cortex_contracts import (
     MemifyPipeline,
     PaginationEnvelope,
     ParseAttemptStatus,
+    ParseBatchJobAccepted,
+    ParseBatchResult,
     ParsedDocument,
     ParseDiagnostics,
     ParseEngineAttempt,
@@ -45,7 +47,6 @@ from cortex_contracts import (
     ParseResult,
     ParserProfile,
     ParseSource,
-    ParseSourceInput,
     ParseSubmitRequest,
     ParseSyncRequest,
     ParseTimingSummary,
@@ -292,12 +293,12 @@ def test_knowledge_job_and_search_contract_models_capture_request_shapes() -> No
 
 def test_parse_contract_models_capture_request_and_result_shapes() -> None:
     public_request = ParseSubmitRequest(
-        source=ParseSourceInput(uri="https://example.com/docs"),
-        engine_id="crawl4ai",
+        sources=["https://example.com/docs"],
+        engine_id="auto",
     )
     public_job_request = ParseJobSubmitRequest(
-        source=ParseSourceInput(object_id="obj_123", mime_type="application/pdf"),
-        engine_id="docling",
+        sources=["cortex://objects/obj_123"],
+        engine_id="auto",
         scene="document_ai",
     )
     request = ParseSyncRequest(
@@ -350,12 +351,32 @@ def test_parse_contract_models_capture_request_and_result_shapes() -> None:
             timings_ms=ParseTimingSummary(total=120),
         ),
     )
+    batch_result = ParseBatchResult(
+        requested_sources=["https://example.com/docs"],
+        engine_id="auto",
+        results=[result],
+    )
+    accepted = JobAccepted(
+        job_id="job_456",
+        job_type=JobType.PARSE,
+        status=JobStatus.QUEUED,
+        submitted_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
+        poll_url="/v1/jobs/job_456",
+    )
+    batch_accepted = ParseBatchJobAccepted(
+        requested_sources=["https://example.com/docs"],
+        engine_id="auto",
+        jobs=[accepted],
+    )
 
-    assert public_request.engine_id == "crawl4ai"
-    assert public_job_request.source.object_id == "obj_123"
+    assert public_request.engine_id == "auto"
+    assert public_request.sources == ["https://example.com/docs"]
+    assert public_job_request.sources == ["cortex://objects/obj_123"]
     assert request.source.input_kind is ParseInputKind.URL
     assert engine.deployment_mode is ParseEngineDeploymentMode.LOCAL
     assert profile.profile_ref == "auto_default"
     assert result.diagnostics.engine_attempts[0].status is ParseAttemptStatus.FAILED
     assert result.diagnostics.fallback_used is True
+    assert batch_result.results[0].job_id == "job_123"
+    assert batch_accepted.jobs[0].job_id == "job_456"
     assert FallbackMode.ORDERED == "ordered"

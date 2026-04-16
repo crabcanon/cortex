@@ -31,14 +31,6 @@ def _load_document_converter_cls() -> type[Any]:
     return module.DocumentConverter
 
 
-def _docling_available() -> bool:
-    try:
-        _load_document_converter_cls()
-    except Exception:
-        return False
-    return True
-
-
 def _docling_version() -> str | None:
     try:
         return importlib.metadata.version("docling")
@@ -52,17 +44,12 @@ class DoclingParseEngine(ParseEngineProtocol):
     def __init__(self, config: dict[str, object] | None = None) -> None:
         self._config = dict(config) if isinstance(config, dict) else {}
         enabled = bool(self._config.get("enabled", True))
-        available = _docling_available()
         self._descriptor = ParseEngineDescriptor(
             engine_key="docling",
             display_name="Docling",
             engine_family="document_local",
             deployment_mode=ParseEngineDeploymentMode.LOCAL,
-            status=(
-                ParseEngineStatus.ACTIVE
-                if enabled and available
-                else ParseEngineStatus.DISABLED
-            ),
+            status=ParseEngineStatus.ACTIVE if enabled else ParseEngineStatus.DISABLED,
             supported_source_types=[
                 ParseInputKind.URI.value,
                 ParseInputKind.URL.value,

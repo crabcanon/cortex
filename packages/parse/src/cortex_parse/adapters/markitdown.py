@@ -31,14 +31,6 @@ def _load_markitdown_cls() -> type[Any]:
     return module.MarkItDown
 
 
-def _markitdown_available() -> bool:
-    try:
-        _load_markitdown_cls()
-    except Exception:
-        return False
-    return True
-
-
 def _markitdown_version() -> str | None:
     try:
         return importlib.metadata.version("markitdown")
@@ -52,17 +44,12 @@ class MarkItDownParseEngine(ParseEngineProtocol):
     def __init__(self, config: dict[str, object] | None = None) -> None:
         self._config = dict(config) if isinstance(config, dict) else {}
         enabled = bool(self._config.get("enabled", True))
-        available = _markitdown_available()
         self._descriptor = ParseEngineDescriptor(
             engine_key="markitdown",
             display_name="Microsoft MarkItDown",
             engine_family="document_local",
             deployment_mode=ParseEngineDeploymentMode.LOCAL,
-            status=(
-                ParseEngineStatus.ACTIVE
-                if enabled and available
-                else ParseEngineStatus.DISABLED
-            ),
+            status=ParseEngineStatus.ACTIVE if enabled else ParseEngineStatus.DISABLED,
             supported_source_types=[
                 ParseInputKind.URI.value,
                 ParseInputKind.URL.value,

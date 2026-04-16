@@ -32,14 +32,6 @@ def _load_llama_parse_cls() -> type[Any]:
     return module.LlamaParse
 
 
-def _llama_parse_available() -> bool:
-    try:
-        _load_llama_parse_cls()
-    except Exception:
-        return False
-    return True
-
-
 def _llama_parse_version() -> str | None:
     for package_name in ("llama-parse", "llama-index-readers-llama-parse"):
         try:
@@ -55,17 +47,12 @@ class LlamaParseEngine(ParseEngineProtocol):
     def __init__(self, config: dict[str, object] | None = None) -> None:
         self._config = dict(config) if isinstance(config, dict) else {}
         enabled = bool(self._config.get("enabled", False))
-        available = _llama_parse_available()
         self._descriptor = ParseEngineDescriptor(
             engine_key="llama_parse",
             display_name="LlamaParse",
             engine_family="document_remote",
             deployment_mode=ParseEngineDeploymentMode.REMOTE,
-            status=(
-                ParseEngineStatus.ACTIVE
-                if enabled and available
-                else ParseEngineStatus.DISABLED
-            ),
+            status=ParseEngineStatus.ACTIVE if enabled else ParseEngineStatus.DISABLED,
             supported_source_types=[
                 ParseInputKind.URI.value,
                 ParseInputKind.URL.value,

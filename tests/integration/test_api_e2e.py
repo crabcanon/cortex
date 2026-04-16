@@ -513,16 +513,11 @@ def test_e2e_upload_parse_add_search_round_trip(monkeypatch: pytest.MonkeyPatch)
             "/v1/parse/jobs",
             headers={**headers, "Idempotency-Key": "e2e-parse-job-001"},
             json={
-                "source": {
-                    "object_id": object_id,
-                    "filename": "guide.md",
-                    "canonical_url": "https://example.com/guides/cortex",
-                    "mime_type": "text/markdown",
-                },
-                "engine_id": "e2e_parse_engine",
+                "sources": [f"cortex://objects/{object_id}"],
+                "engine_id": "auto",
             },
         )
-        parse_job_id = parse_job_response.json()["job_id"]
+        parse_job_id = parse_job_response.json()["jobs"][0]["job_id"]
         pending_parse_result = client.get(
             f"/v1/parse/jobs/{parse_job_id}/result",
             headers=headers,

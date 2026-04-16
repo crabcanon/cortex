@@ -11,7 +11,6 @@ from cortex_contracts import (
     ParseEngineStatus,
     ParseInputKind,
     ParseSource,
-    ParseSourceInput,
     ParseSubmitRequest,
 )
 from cortex_parse import ParseRequestCompiler
@@ -19,16 +18,13 @@ from cortex_parse import ParseRequestCompiler
 
 def test_compiler_maps_two_parameter_request_to_default_scene_and_profile() -> None:
     compiler = ParseRequestCompiler({"crawl4ai"})
-
-    compiled = compiler.compile_sync(
-        ParseSubmitRequest(
-            source=ParseSourceInput(
-                uri="https://example.com/docs",
-                mime_type="text/html",
-            ),
-            engine_id="crawl4ai",
-        )
+    request = ParseSubmitRequest(
+        sources=["https://example.com/docs"],
+        engine_id="crawl4ai",
     )
+    source_input = compiler.source_input_from_locator(request.sources[0])
+
+    compiled = compiler.compile_sync(request, source_input)
 
     assert compiled.source.input_kind is ParseInputKind.URL
     assert compiled.source.url == "https://example.com/docs"
@@ -41,17 +37,14 @@ def test_compiler_maps_two_parameter_request_to_default_scene_and_profile() -> N
 
 def test_compiler_enables_crawl4ai_deep_web_advanced_features() -> None:
     compiler = ParseRequestCompiler({"crawl4ai"})
-
-    compiled = compiler.compile_sync(
-        ParseSubmitRequest(
-            source=ParseSourceInput(
-                uri="https://example.com/interactive",
-                mime_type="text/html",
-            ),
-            engine_id="crawl4ai",
-            scene="deep_web",
-        )
+    request = ParseSubmitRequest(
+        sources=["https://example.com/interactive"],
+        engine_id="crawl4ai",
+        scene="deep_web",
     )
+    source_input = compiler.source_input_from_locator(request.sources[0])
+
+    compiled = compiler.compile_sync(request, source_input)
 
     assert compiled.parser.profile_ref == "crawl4ai_deep_web"
     assert compiled.timeout_seconds == 90
@@ -69,43 +62,38 @@ def test_compiler_enables_crawl4ai_deep_web_advanced_features() -> None:
 
 def test_compiler_requires_resolved_object_source_for_public_object_requests() -> None:
     compiler = ParseRequestCompiler({"docling"})
+    request = ParseSubmitRequest(
+        sources=["cortex://objects/obj_123"],
+        engine_id="docling",
+    )
+    source_input = compiler.source_input_from_locator(request.sources[0])
 
     with pytest.raises(
         ValidationError,
         match="must be resolved to an engine-accessible source first",
     ):
-        compiler.compile_sync(
-            ParseSubmitRequest(
-                source=ParseSourceInput(
-                    object_id="obj_123",
-                    filename="guide.pdf",
-                    mime_type="application/pdf",
-                ),
-                engine_id="docling",
-            )
-        )
+        compiler.compile_sync(request, source_input)
 
 
 def test_compiler_preserves_resolved_object_sources_and_annotates_engine_catalog() -> None:
     compiler = ParseRequestCompiler({"docling"})
+    request = ParseSubmitRequest(
+        sources=["cortex://objects/obj_123"],
+        engine_id="docling",
+    )
+    source_input = compiler.source_input_from_locator(request.sources[0])
     resolved_source = ParseSource(
         input_kind=ParseInputKind.OBJECT,
         object_id="obj_123",
         url="https://storage.test/objects/obj_123?signature=demo",
         filename="guide.pdf",
         expected_content_type="application/pdf",
+        canonical_url="https://example.com/guide.pdf",
     )
 
     compiled = compiler.compile_sync(
-        ParseSubmitRequest(
-            source=ParseSourceInput(
-                object_id="obj_123",
-                filename="guide.pdf",
-                mime_type="application/pdf",
-                canonical_url="https://example.com/guide.pdf",
-            ),
-            engine_id="docling",
-        ),
+        request,
+        source_input,
         resolved_source=resolved_source,
     )
     described = compiler.describe_engines(
@@ -133,3 +121,54 @@ def test_compiler_preserves_resolved_object_sources_and_annotates_engine_catalog
     assert described.engines[0].default_scene_id == "document_ai"
     assert described.engines[0].supported_scene_ids == ["document_ai"]
     assert described.engines[0].default_profile_ref == "docling_document_ai"
+
+
+def test_compiler_auto_selects_available_web_engine_and_fallbacks() -> None:
+    compiler = ParseRequestCompiler({"crawl4ai", "jina_reader"})
+    request = ParseSubmitRequest(
+        sources=["https://example.com/docs"],
+        engine_id="auto",
+    )
+    source_input = compiler.source_input_from_locator(request.sources[0])
+
+    compiled = compiler.compile_sync(request, source_input)
+
+    assert compiled.parser.preferred_engine_key == "crawl4ai"
+    assert compiled.parser.allowed_engines == ["crawl4ai", "jina_reader"]
+    assert compiled.parser.profile_ref == "crawl4ai_balanced"
+    assert compiled.parser.fallback_policy.enabled is True
+    assert compiled.parser.fallback_policy.max_engine_attempts == 3
+
+
+def test_compiler_auto_selects_document_engine_from_source_extension() -> None:
+    compiler = ParseRequestCompiler({"llama_parse", "docling", "markitdown"})
+    request = ParseSubmitRequest(
+        sources=["s3://demo-bucket/manuals/architecture.pdf"],
+        engine_id="auto",
+    )
+    source_input = compiler.source_input_from_locator(request.sources[0])
+
+    compiled = compiler.compile_sync(request, source_input)
+
+    assert compiled.source.input_kind is ParseInputKind.URI
+    assert compiled.source.filename == "architecture.pdf"
+    assert compiled.source.expected_content_type == "application/pdf"
+    assert compiled.parser.preferred_engine_key == "llama_parse"
+    assert compiled.parser.allowed_engines == ["llama_parse", "docling", "markitdown"]
+    assert compiled.parser.profile_ref == "llama_parse_document_fidelity"
+
+
+def test_compiler_auto_honors_scene_override_when_supported() -> None:
+    compiler = ParseRequestCompiler({"crawl4ai", "jina_reader"})
+    request = ParseSubmitRequest(
+        sources=["https://example.com/docs"],
+        engine_id="auto",
+        scene="fast_extract",
+    )
+    source_input = compiler.source_input_from_locator(request.sources[0])
+
+    compiled = compiler.compile_sync(request, source_input)
+
+    assert compiled.parser.preferred_engine_key == "jina_reader"
+    assert compiled.parser.profile_ref == "jina_reader_fast_extract"
+    assert compiled.parser.allowed_engines == ["jina_reader", "crawl4ai"]

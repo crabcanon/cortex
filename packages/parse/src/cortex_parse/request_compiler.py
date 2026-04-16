@@ -1,9 +1,12 @@
-"""Compile the simplified public Parse API into the internal execution contract."""
+"""Compile the public Parse API into the internal execution contract."""
 
 from __future__ import annotations
 
+import mimetypes
 from dataclasses import dataclass, field
+from pathlib import PurePosixPath
 from typing import Any
+from urllib.parse import urlparse
 
 from cortex_common import ValidationError
 from cortex_contracts import (
@@ -31,6 +34,8 @@ from cortex_contracts import (
     ParseSyncRequest,
 )
 
+AUTO_ENGINE_ID = "auto"
+
 
 @dataclass(frozen=True, slots=True)
 class ParseScenePreset:
@@ -44,6 +49,45 @@ class ParseScenePreset:
     normalization: dict[str, Any] = field(default_factory=dict)
     output: dict[str, Any] = field(default_factory=dict)
     persistence: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class CompiledEngineSelection:
+    engine_key: str
+    scene_id: str | None
+    allowed_engines: list[str] = field(default_factory=list)
+
+
+DOCUMENT_EXTENSIONS = {
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".ppt",
+    ".pptx",
+    ".xls",
+    ".xlsx",
+    ".csv",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".tiff",
+    ".bmp",
+    ".gif",
+    ".webp",
+}
+TEXT_LIKE_EXTENSIONS = {
+    ".md",
+    ".markdown",
+    ".txt",
+    ".rst",
+    ".json",
+    ".xml",
+    ".yaml",
+    ".yml",
+    ".html",
+    ".htm",
+    ".csv",
+}
 
 
 def _default_browser_profile() -> dict[str, Any]:
@@ -116,6 +160,14 @@ DEFAULT_FALLBACK_POLICY = FallbackPolicy(
 )
 
 
+AUTO_FALLBACK_POLICY = FallbackPolicy(
+    enabled=True,
+    mode=FallbackMode.ORDERED,
+    on_error=FallbackOnError.TRY_NEXT,
+    max_engine_attempts=3,
+)
+
+
 PRESETS: tuple[ParseScenePreset, ...] = (
     ParseScenePreset(
         engine_key="crawl4ai",
@@ -185,7 +237,7 @@ PRESETS: tuple[ParseScenePreset, ...] = (
         engine_key="crawl4ai",
         scene_id="authenticated_web",
         profile_ref="crawl4ai_authenticated_web",
-        description="Interactive Crawl4AI preset optimized for authenticated or stateful pages.",
+        description="Interactive Crawl4AI preset optimized for authenticated pages.",
         source_kinds=(ParseInputKind.URL, ParseInputKind.URI, ParseInputKind.OBJECT),
         timeout_seconds=90,
         crawl={
@@ -216,7 +268,7 @@ PRESETS: tuple[ParseScenePreset, ...] = (
         engine_key="jina_reader",
         scene_id="balanced",
         profile_ref="jina_reader_balanced",
-        description="Balanced Jina Reader mode with ReaderLM-v2 enabled when configured.",
+        description="Balanced Jina Reader mode with ReaderLM-v2 when configured.",
         source_kinds=(ParseInputKind.URL, ParseInputKind.URI, ParseInputKind.OBJECT),
         timeout_seconds=30,
         normalization=_default_normalization_options(),
@@ -227,7 +279,7 @@ PRESETS: tuple[ParseScenePreset, ...] = (
         engine_key="jina_reader",
         scene_id="fast_extract",
         profile_ref="jina_reader_fast_extract",
-        description="Low-latency Jina Reader mode without extra high-cost response shaping.",
+        description="Low-latency Jina Reader mode for lightweight extraction.",
         source_kinds=(ParseInputKind.URL, ParseInputKind.URI, ParseInputKind.OBJECT),
         timeout_seconds=20,
         normalization=_default_normalization_options(),
@@ -238,7 +290,7 @@ PRESETS: tuple[ParseScenePreset, ...] = (
         engine_key="llama_parse",
         scene_id="document_fidelity",
         profile_ref="llama_parse_document_fidelity",
-        description="High-fidelity cloud document parsing for PDFs and office formats.",
+        description="High-fidelity cloud document parsing for complex files.",
         source_kinds=(ParseInputKind.URL, ParseInputKind.URI, ParseInputKind.OBJECT),
         timeout_seconds=90,
         normalization=_default_normalization_options(),
@@ -260,7 +312,7 @@ PRESETS: tuple[ParseScenePreset, ...] = (
         engine_key="docling",
         scene_id="document_ai",
         profile_ref="docling_document_ai",
-        description="Structured local document conversion with OCR- and layout-friendly defaults.",
+        description="Structured local document conversion with OCR-friendly defaults.",
         source_kinds=(ParseInputKind.URL, ParseInputKind.URI, ParseInputKind.OBJECT),
         timeout_seconds=90,
         normalization=_default_normalization_options(),
@@ -280,7 +332,7 @@ DEFAULT_SCENE_BY_ENGINE: dict[str, str] = {
 
 
 class ParseRequestCompiler:
-    """Compile the simplified public Parse request into the internal execution contract."""
+    """Compile the public Parse request into the internal execution contract."""
 
     def __init__(
         self,
@@ -321,22 +373,28 @@ class ParseRequestCompiler:
     def compile_sync(
         self,
         request: ParseSubmitRequest,
+        source_input: ParseSourceInput,
         *,
         resolved_source: ParseSource | None = None,
     ) -> ParseSyncRequest:
-        source = self._compile_source(request.source, resolved_source=resolved_source)
+        source = self._compile_source(source_input, resolved_source=resolved_source)
+        selection = self._compile_engine_selection(request, source, source_input)
         preset = self._preset_for(
-            engine_key=request.engine_id,
-            scene_id=request.scene,
+            engine_key=selection.engine_key,
+            scene_id=selection.scene_id,
             source=source,
         )
         return ParseSyncRequest(
             source=source,
             parser=ParserSelection(
                 profile_ref=preset.profile_ref,
-                preferred_engine_key=request.engine_id,
-                allowed_engines=[request.engine_id],
-                fallback_policy=DEFAULT_FALLBACK_POLICY,
+                preferred_engine_key=selection.engine_key,
+                allowed_engines=selection.allowed_engines or [selection.engine_key],
+                fallback_policy=(
+                    AUTO_FALLBACK_POLICY
+                    if request.engine_id.strip().lower() == AUTO_ENGINE_ID
+                    else DEFAULT_FALLBACK_POLICY
+                ),
             ),
             crawl=CrawlOptions.model_validate(preset.crawl or _default_crawl_options()),
             normalization=ParseNormalizationOptions.model_validate(
@@ -352,15 +410,17 @@ class ParseRequestCompiler:
     def compile_job(
         self,
         request: ParseJobSubmitRequest,
+        source_input: ParseSourceInput,
         *,
         resolved_source: ParseSource | None = None,
     ) -> ParseJobRequest:
         sync_request = self.compile_sync(
             ParseSubmitRequest(
-                source=request.source,
+                sources=request.sources,
                 engine_id=request.engine_id,
                 scene=request.scene,
             ),
+            source_input,
             resolved_source=resolved_source,
         )
         return ParseJobRequest(
@@ -369,53 +429,218 @@ class ParseRequestCompiler:
             webhook=request.webhook,
         )
 
+    @staticmethod
+    def source_input_from_locator(locator: str) -> ParseSourceInput:
+        text = locator.strip()
+        if not text:
+            raise ValidationError("Parse source locator must not be empty.")
+        if text.startswith("cortex://objects/"):
+            object_id = text.removeprefix("cortex://objects/").strip("/")
+            if not object_id:
+                raise ValidationError(
+                    "Object-backed parse locators must follow `cortex://objects/{object_id}`."
+                )
+            return ParseSourceInput(object_id=object_id, kind=ParseInputKind.OBJECT)
+        if text.startswith("obj_"):
+            return ParseSourceInput(object_id=text, kind=ParseInputKind.OBJECT)
+        parsed = urlparse(text)
+        if parsed.scheme in {"http", "https"}:
+            return ParseSourceInput(
+                uri=text,
+                kind=ParseInputKind.URL,
+                filename=ParseRequestCompiler._filename_from_locator(text),
+                mime_type=ParseRequestCompiler._mime_type_from_locator(text),
+                canonical_url=text,
+            )
+        return ParseSourceInput(
+            uri=text,
+            kind=ParseInputKind.URI,
+            filename=ParseRequestCompiler._filename_from_locator(text),
+            mime_type=ParseRequestCompiler._mime_type_from_locator(text),
+        )
+
+    @staticmethod
+    def _filename_from_locator(locator: str) -> str | None:
+        parsed = urlparse(locator)
+        path = parsed.path or locator
+        name = PurePosixPath(path).name
+        return name or None
+
+    @staticmethod
+    def _mime_type_from_locator(locator: str) -> str | None:
+        parsed = urlparse(locator)
+        path = parsed.path or locator
+        mime_type, _ = mimetypes.guess_type(path)
+        return mime_type
+
+    def _compile_engine_selection(
+        self,
+        request: ParseSubmitRequest,
+        source: ParseSource,
+        source_input: ParseSourceInput,
+    ) -> CompiledEngineSelection:
+        engine_id = request.engine_id.strip().lower()
+        if engine_id != AUTO_ENGINE_ID:
+            self._require_available(engine_id)
+            return CompiledEngineSelection(
+                engine_key=engine_id,
+                scene_id=request.scene,
+                allowed_engines=[engine_id],
+            )
+        available = self._available_in_priority_order()
+        if not available:
+            raise ValidationError("No active parse engine is currently available for auto routing.")
+        preferred, fallback = self._auto_route_candidates(
+            source=source,
+            source_input=source_input,
+            scene_id=request.scene,
+            available_engine_keys=available,
+        )
+        selected_scene = request.scene or self._default_scene_by_engine.get(preferred)
+        return CompiledEngineSelection(
+            engine_key=preferred,
+            scene_id=selected_scene,
+            allowed_engines=[preferred, *fallback],
+        )
+
     def _compile_source(
         self,
-        source: ParseSourceInput,
+        source_input: ParseSourceInput,
         *,
         resolved_source: ParseSource | None = None,
     ) -> ParseSource:
         if resolved_source is not None:
             return resolved_source.model_copy(
                 update={
-                    "filename": source.filename or resolved_source.filename,
-                    "canonical_url": source.canonical_url or resolved_source.canonical_url,
-                    "expected_content_type": source.mime_type
+                    "filename": source_input.filename or resolved_source.filename,
+                    "expected_content_type": source_input.mime_type
                     or resolved_source.expected_content_type,
                 }
             )
-
-        kind = source.kind or self._infer_kind(source)
+        kind = source_input.kind or self._infer_kind(source_input)
         if kind is ParseInputKind.OBJECT:
             raise ValidationError(
                 "Object-backed public Parse requests must be resolved to an "
                 "engine-accessible source first."
             )
-        if source.uri is None:
-            raise ValidationError("`source.uri` is required for non-object Parse requests.")
+        if source_input.uri is None:
+            raise ValidationError("Parse source URI is required for non-object locators.")
         if kind is ParseInputKind.URL:
             return ParseSource(
                 input_kind=ParseInputKind.URL,
-                url=source.uri,
-                filename=source.filename,
-                canonical_url=source.canonical_url,
-                expected_content_type=source.mime_type,
+                url=source_input.uri,
+                filename=source_input.filename,
+                canonical_url=source_input.canonical_url,
+                expected_content_type=source_input.mime_type,
             )
         return ParseSource(
             input_kind=kind,
-            uri=source.uri,
-            filename=source.filename,
-            canonical_url=source.canonical_url,
-            expected_content_type=source.mime_type,
+            uri=source_input.uri,
+            filename=source_input.filename,
+            expected_content_type=source_input.mime_type,
         )
 
     @staticmethod
-    def _infer_kind(source: ParseSourceInput) -> ParseInputKind:
-        if source.object_id:
+    def _infer_kind(source_input: ParseSourceInput) -> ParseInputKind:
+        if source_input.object_id:
             return ParseInputKind.OBJECT
-        if source.uri and source.uri.startswith(("http://", "https://")):
+        if source_input.uri and source_input.uri.startswith(("http://", "https://")):
             return ParseInputKind.URL
         return ParseInputKind.URI
+
+    def _available_in_priority_order(self) -> list[str]:
+        ordered = [
+            "crawl4ai",
+            "jina_reader",
+            "llama_parse",
+            "docling",
+            "markitdown",
+        ]
+        if not self._available_engine_keys:
+            return ordered
+        priority = [engine for engine in ordered if engine in self._available_engine_keys]
+        remainder = sorted(self._available_engine_keys - set(priority))
+        return [*priority, *remainder]
+
+    def _auto_route_candidates(
+        self,
+        *,
+        source: ParseSource,
+        source_input: ParseSourceInput,
+        scene_id: str | None,
+        available_engine_keys: list[str],
+    ) -> tuple[str, list[str]]:
+        extension = self._source_extension(source_input, source)
+        scene = (scene_id or "").strip().lower()
+        if scene == "fast_extract":
+            return self._choose_with_fallback(
+                ["jina_reader", "crawl4ai"],
+                available_engine_keys,
+            )
+        if scene == "document_ai":
+            return self._choose_with_fallback(
+                ["docling", "llama_parse", "markitdown"],
+                available_engine_keys,
+            )
+        if scene == "document_fidelity":
+            return self._choose_with_fallback(
+                ["llama_parse", "docling"],
+                available_engine_keys,
+            )
+        if scene == "lightweight":
+            return self._choose_with_fallback(
+                ["markitdown", "docling", "llama_parse"],
+                available_engine_keys,
+            )
+        if source.input_kind is ParseInputKind.URL:
+            if extension in DOCUMENT_EXTENSIONS:
+                return self._choose_with_fallback(
+                    ["llama_parse", "docling", "jina_reader"],
+                    available_engine_keys,
+                )
+            return self._choose_with_fallback(
+                ["crawl4ai", "jina_reader"],
+                available_engine_keys,
+            )
+        if extension in DOCUMENT_EXTENSIONS:
+            return self._choose_with_fallback(
+                ["llama_parse", "docling", "markitdown"],
+                available_engine_keys,
+            )
+        if extension in TEXT_LIKE_EXTENSIONS:
+            return self._choose_with_fallback(
+                ["markitdown", "docling", "llama_parse"],
+                available_engine_keys,
+            )
+        return self._choose_with_fallback(
+            ["docling", "markitdown", "llama_parse"],
+            available_engine_keys,
+        )
+
+    @staticmethod
+    def _choose_with_fallback(
+        candidates: list[str],
+        available_engine_keys: list[str],
+    ) -> tuple[str, list[str]]:
+        chosen = [engine for engine in candidates if engine in available_engine_keys]
+        if chosen:
+            return chosen[0], chosen[1:]
+        return available_engine_keys[0], available_engine_keys[1:]
+
+    @staticmethod
+    def _source_extension(
+        source_input: ParseSourceInput,
+        source: ParseSource,
+    ) -> str | None:
+        filename = source_input.filename or source.filename
+        if filename:
+            suffix = PurePosixPath(filename).suffix.lower()
+            if suffix:
+                return suffix
+        locator = source.url or source.uri
+        if locator:
+            return PurePosixPath(urlparse(locator).path).suffix.lower() or None
+        return None
 
     def _preset_for(
         self,
@@ -424,8 +649,7 @@ class ParseRequestCompiler:
         scene_id: str | None,
         source: ParseSource,
     ) -> ParseScenePreset:
-        if self._available_engine_keys and engine_key not in self._available_engine_keys:
-            raise ValidationError(f"Parse engine `{engine_key}` is not currently available.")
+        self._require_available(engine_key)
         effective_scene = scene_id or self._default_scene_by_engine.get(engine_key)
         if effective_scene is None:
             raise ValidationError(f"Parse engine `{engine_key}` does not expose a default scene.")
@@ -444,6 +668,10 @@ class ParseRequestCompiler:
                 f"source kind `{source.input_kind.value}`."
             )
         return preset
+
+    def _require_available(self, engine_key: str) -> None:
+        if self._available_engine_keys and engine_key not in self._available_engine_keys:
+            raise ValidationError(f"Parse engine `{engine_key}` is not currently available.")
 
     def _default_profile_ref(self, engine_key: str) -> str | None:
         default_scene = self._default_scene_by_engine.get(engine_key)

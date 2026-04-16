@@ -73,50 +73,18 @@ TOKEN_ISSUE_REQUEST_EXAMPLES: dict[str, Example] = cast(
 PARSE_SYNC_REQUEST_EXAMPLES: dict[str, Example] = cast(
     dict[str, Example],
     {
-        "two_parameter_url_parse": {
-            "summary": "Two-parameter URL parse",
+        "auto_batch_parse": {
+            "summary": "Auto-routed batch parse",
             "description": (
-                "The default public Parse path: provide `source` plus `engine_id`, and let "
-                "Cortex resolve the best internal profile and execution defaults."
+                "Submit one or more source locators and let Cortex pick the best active engine "
+                "and scene automatically."
             ),
             "value": {
-                "source": {
-                    "uri": "https://docs.cognee.ai/core-concepts/overview",
-                    "canonical_url": "https://docs.cognee.ai/core-concepts/overview",
-                    "mime_type": "text/html",
-                },
-                "engine_id": "crawl4ai",
-            },
-        },
-        "crawl4ai_deep_web": {
-            "summary": "Crawl4AI deep web scene",
-            "description": (
-                "Use the optional `scene` field only when you want a non-default high-intensity "
-                "preset such as deep crawl, extra artifacts, and richer diagnostics."
-            ),
-            "value": {
-                "source": {
-                    "uri": "https://docs.cognee.ai/core-concepts/overview",
-                    "mime_type": "text/html",
-                },
-                "engine_id": "crawl4ai",
-                "scene": "deep_web",
-            },
-        },
-        "object_backed_parse": {
-            "summary": "Parse a previously uploaded object",
-            "description": (
-                "Useful after Storage upload succeeds. Cortex resolves the object into a "
-                "controlled source for the selected engine automatically."
-            ),
-            "value": {
-                "source": {
-                    "object_id": "obj_3f6c1d5e9b1646b5a4eabdbf8b417bd3",
-                    "filename": "architecture-overview.pdf",
-                    "mime_type": "application/pdf",
-                },
-                "engine_id": "docling",
-                "scene": "document_ai",
+                "sources": [
+                    "https://docs.cognee.ai/core-concepts/overview",
+                    "s3://demo-bucket/manuals/architecture.pdf",
+                ],
+                "engine_id": "auto",
             },
         },
     },
@@ -125,19 +93,18 @@ PARSE_SYNC_REQUEST_EXAMPLES: dict[str, Example] = cast(
 PARSE_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
     dict[str, Example],
     {
-        "async_parse_with_webhook": {
-            "summary": "Asynchronous parse with webhook callback",
+        "async_auto_batch_parse": {
+            "summary": "Async auto-routed batch parse",
             "description": (
-                "Recommended when parsing may take longer and another service will consume job "
-                "completion events."
+                "Recommended when you want one async parse job per source with the same "
+                "high-level routing contract."
             ),
             "value": {
-                "source": {
-                    "uri": "https://docs.cognee.ai/core-concepts/overview",
-                    "mime_type": "text/html",
-                },
-                "engine_id": "crawl4ai",
-                "scene": "deep_web",
+                "sources": [
+                    "https://docs.cognee.ai/core-concepts/overview",
+                    "s3://demo-bucket/manuals/architecture.pdf",
+                ],
+                "engine_id": "auto",
                 "priority": 5,
                 "webhook": {
                     "url": "https://example.com/hooks/cortex/parse",

@@ -16,7 +16,7 @@ from .enums import (
     ParseLlmReadyMode,
     ParseStoragePolicy,
 )
-from .jobs import TelemetryContext
+from .jobs import JobAccepted, TelemetryContext
 from .resources import AccessPolicy, AuditFields
 
 
@@ -647,18 +647,23 @@ class ParseSyncRequest(BaseModel):
 
 
 class ParseSubmitRequest(BaseModel):
-    source: ParseSourceInput = Field(
-        description=(
-            "Required source reference. This is the first and most important public Parse input."
-        )
-    )
-    engine_id: str = Field(
+    sources: list[str] = Field(
         min_length=1,
         description=(
-            "Required public parser engine identifier such as `crawl4ai`, `jina_reader`, "
+            "Required source locators. Each item may be an HTTP(S) URL, `s3://` URI, `file://` "
+            "URI, or `cortex://objects/{object_id}` reference."
+        ),
+        examples=[["https://docs.cognee.ai/core-concepts/overview"]],
+    )
+    engine_id: str = Field(
+        default="auto",
+        min_length=1,
+        description=(
+            "Public parser engine identifier. Use `auto` to let Cortex choose the best active "
+            "engine and scene per source; otherwise use `crawl4ai`, `jina_reader`, "
             "`llama_parse`, `markitdown`, or `docling`."
         ),
-        examples=["crawl4ai"],
+        examples=["auto"],
     )
     scene: str | None = Field(
         default=None,
@@ -669,6 +674,43 @@ class ParseSubmitRequest(BaseModel):
         ),
         examples=["deep_web"],
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize_legacy_source_shapes(cls, value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+        normalized = dict(value)
+        if "sources" not in normalized and "source" in normalized:
+            normalized["sources"] = [normalized.pop("source")]
+        elif isinstance(normalized.get("sources"), str):
+            normalized["sources"] = [normalized["sources"]]
+        raw_sources = normalized.get("sources")
+        if isinstance(raw_sources, list):
+            normalized["sources"] = [
+                cls._normalize_source_locator(item)
+                for item in raw_sources
+            ]
+        return normalized
+
+    @staticmethod
+    def _normalize_source_locator(value: Any) -> str:
+        if isinstance(value, str):
+            text = value.strip()
+            if not text:
+                raise ValueError("`sources` entries must not be empty.")
+            return text
+        if isinstance(value, dict):
+            object_id = value.get("object_id")
+            if isinstance(object_id, str) and object_id.strip():
+                return f"cortex://objects/{object_id.strip()}"
+            uri = value.get("uri") or value.get("url")
+            if isinstance(uri, str) and uri.strip():
+                return uri.strip()
+        raise ValueError(
+            "`sources` entries must be locator strings or legacy source objects with `uri`, `url`, "
+            "or `object_id`."
+        )
 
 
 class WebhookConfig(BaseModel):
@@ -840,6 +882,20 @@ class ParseResult(BaseModel):
     artifacts: ParseArtifacts | None = None
     diagnostics: ParseDiagnostics
     telemetry: TelemetryContext | None = None
+
+
+class ParseBatchResult(BaseModel):
+    requested_sources: list[str] = Field(default_factory=list)
+    engine_id: str
+    scene: str | None = None
+    results: list[ParseResult] = Field(default_factory=list)
+
+
+class ParseBatchJobAccepted(BaseModel):
+    requested_sources: list[str] = Field(default_factory=list)
+    engine_id: str
+    scene: str | None = None
+    jobs: list[JobAccepted] = Field(default_factory=list)
 
 
 class ParseEngineDescriptor(BaseModel):

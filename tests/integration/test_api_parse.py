@@ -240,11 +240,8 @@ def test_parse_api_lists_catalog_and_runs_sync_parse(monkeypatch: pytest.MonkeyP
             "/v1/parse/sync",
             headers=headers,
             json={
-                "source": {
-                    "uri": "https://example.com/docs",
-                    "mime_type": "text/html",
-                },
-                "engine_id": "api_test_engine",
+                "sources": ["https://example.com/docs"],
+                "engine_id": "auto",
             },
         )
 
@@ -256,10 +253,17 @@ def test_parse_api_lists_catalog_and_runs_sync_parse(monkeypatch: pytest.MonkeyP
     assert profiles_response.status_code == 200
     assert profiles_response.json()["profiles"][0]["profile_ref"] == "test_profile"
     assert sync_response.status_code == 200
-    assert sync_response.json()["document"]["title"] == "API Parse"
-    assert sync_response.json()["document"]["parser"]["engine_key"] == "api_test_engine"
-    assert sync_response.json()["diagnostics"]["selected_engine_key"] == "api_test_engine"
-    assert sync_response.json()["job_id"].startswith("job_")
+    assert sync_response.json()["engine_id"] == "auto"
+    assert sync_response.json()["results"][0]["document"]["title"] == "API Parse"
+    assert (
+        sync_response.json()["results"][0]["document"]["parser"]["engine_key"]
+        == "api_test_engine"
+    )
+    assert (
+        sync_response.json()["results"][0]["diagnostics"]["selected_engine_key"]
+        == "api_test_engine"
+    )
+    assert sync_response.json()["results"][0]["job_id"].startswith("job_")
     assert X_REQUEST_ID_HEADER in sync_response.headers
 
 
@@ -293,9 +297,7 @@ def test_parse_sync_requires_parse_write_scope(monkeypatch: pytest.MonkeyPatch) 
             "/v1/parse/sync",
             headers=headers,
             json={
-                "source": {
-                    "uri": "https://example.com/docs",
-                },
+                "sources": ["https://example.com/docs"],
                 "engine_id": "api_test_engine",
             },
         )
@@ -339,10 +341,7 @@ def test_parse_sync_surfaces_attempt_failure_details(monkeypatch: pytest.MonkeyP
             "/v1/parse/sync",
             headers=headers,
             json={
-                "source": {
-                    "uri": "https://example.com/failure",
-                    "mime_type": "text/html",
-                },
+                "sources": ["https://example.com/failure"],
                 "engine_id": "failing_engine",
             },
         )
@@ -404,11 +403,8 @@ def test_async_parse_job_submit_worker_and_result(monkeypatch: pytest.MonkeyPatc
             "/v1/parse/jobs",
             headers=headers,
             json={
-                "source": {
-                    "uri": "https://example.com/docs",
-                    "mime_type": "text/html",
-                },
-                "engine_id": "api_test_engine",
+                "sources": ["https://example.com/docs"],
+                "engine_id": "auto",
                 "priority": 7,
             },
         )
@@ -416,24 +412,21 @@ def test_async_parse_job_submit_worker_and_result(monkeypatch: pytest.MonkeyPatc
             "/v1/parse/jobs",
             headers=headers,
             json={
-                "source": {
-                    "uri": "https://example.com/docs",
-                    "mime_type": "text/html",
-                },
-                "engine_id": "api_test_engine",
+                "sources": ["https://example.com/docs"],
+                "engine_id": "auto",
                 "priority": 7,
             },
         )
-        job_id = accepted_response.json()["job_id"]
+        job_id = accepted_response.json()["jobs"][0]["job_id"]
         pending_result = client.get(f"/v1/parse/jobs/{job_id}/result", headers=headers)
         asyncio.run(_run_parse_worker_once(db_path, profiles_dir))
         completed_result = client.get(f"/v1/parse/jobs/{job_id}/result", headers=headers)
         events_response = client.get(f"/v1/jobs/{job_id}/events", headers=headers)
 
     assert accepted_response.status_code == 202
-    assert accepted_response.json()["status"] == "queued"
+    assert accepted_response.json()["jobs"][0]["status"] == "queued"
     assert duplicate_response.status_code == 202
-    assert duplicate_response.json()["job_id"] == job_id
+    assert duplicate_response.json()["jobs"][0]["job_id"] == job_id
     assert pending_result.status_code == 202
     assert pending_result.json()["status"] == "queued"
     assert completed_result.status_code == 200
@@ -537,14 +530,11 @@ def test_parse_worker_retries_then_fails(monkeypatch: pytest.MonkeyPatch) -> Non
             "/v1/parse/jobs",
             headers=headers,
             json={
-                "source": {
-                    "uri": "https://example.com/retry",
-                    "mime_type": "text/html",
-                },
+                "sources": ["https://example.com/retry"],
                 "engine_id": "failing_engine",
             },
         )
-        job_id = accepted_response.json()["job_id"]
+        job_id = accepted_response.json()["jobs"][0]["job_id"]
         first_status = asyncio.run(
             _run_worker_once_with_engine(
                 db_path,
@@ -616,14 +606,11 @@ def test_parse_worker_timeout_fails_without_retry(monkeypatch: pytest.MonkeyPatc
             "/v1/parse/jobs",
             headers=headers,
             json={
-                "source": {
-                    "uri": "https://example.com/slow",
-                    "mime_type": "text/html",
-                },
+                "sources": ["https://example.com/slow"],
                 "engine_id": "slow_engine",
             },
         )
-        job_id = accepted_response.json()["job_id"]
+        job_id = accepted_response.json()["jobs"][0]["job_id"]
         worker_status = asyncio.run(
             _run_worker_once_with_engine(
                 db_path,
@@ -676,14 +663,11 @@ def test_parse_worker_recovers_stale_lease(monkeypatch: pytest.MonkeyPatch) -> N
             "/v1/parse/jobs",
             headers=headers,
             json={
-                "source": {
-                    "uri": "https://example.com/stale",
-                    "mime_type": "text/html",
-                },
+                "sources": ["https://example.com/stale"],
                 "engine_id": "api_test_engine",
             },
         )
-        job_id = accepted_response.json()["job_id"]
+        job_id = accepted_response.json()["jobs"][0]["job_id"]
         claimed_job_id = asyncio.run(
             _age_claimed_job(db_path, worker_id="stuck-worker", lease_seconds=1)
         )

@@ -5,19 +5,15 @@ description = "Parse orchestration for Cortex."
 requires-python = ">=3.12,<3.14"
 dependencies = [
   "PyYAML>=6.0,<7",
+  "crawl4ai>=0.7,<0.9",
   "cortex-common",
   "cortex-contracts",
   "cortex-db",
   "cortex-domain",
   "cortex-observability",
   "cortex-storage",
-  "httpx>=0.28,<0.29",
-]
-
-[project.optional-dependencies]
-runtime = [
-  "crawl4ai>=0.7,<0.9",
   "docling>=2.70,<3",
+  "httpx>=0.28,<0.29",
   "llama-parse>=0.6,<0.7",
   "markitdown[all]>=0.1,<0.2",
 ]

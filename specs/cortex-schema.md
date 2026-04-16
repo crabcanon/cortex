@@ -250,7 +250,7 @@ Profile 是 Cortex 实现“策略模式 + 配置模板”最关键的控制面�
 
 对于极简 Parse API，建议在 `jobs.request_json` 中明确保留：
 
-- 原始 `source`
+- 原始 `sources`
 - 原始 `engine_id`
 - 原始 `scene`
 - 编译后的内部 parse request 摘要

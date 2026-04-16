@@ -222,7 +222,7 @@ flowchart LR
 Parse 链路已经升级为多引擎平台，不再绑定单一解析器。其关键能力包括：
 
 - URL、对象存储文件、外部 URI 的统一输入
-- 极简公共 API：`source + engine_id (+ scene)`
+- 极简公共 API：`sources + engine_id (+ scene)`
 - `scene -> profile/preset` 的内部自动编译
 - 引擎能力匹配与显式选引擎
 - fallback 链路与多引擎回退
@@ -247,8 +247,8 @@ sequenceDiagram
     participant O as Object Storage
 
     C->>A: POST /v1/parse/sync or /v1/parse/jobs
-    A->>P: resolve source + engine_id + scene
-    P->>DB: read object metadata when source=object_id
+    A->>P: resolve sources + engine_id + scene
+    P->>DB: read object metadata when source=cortex://objects/{object_id}
     P-->>A: compiled internal Parse request
     A->>DB: create job + request snapshot
     A->>Q: enqueue parse job (async path)
@@ -270,7 +270,7 @@ sequenceDiagram
 
 公开输入最小化为：
 
-- `source`
+- `sources`
 - `engine_id`
 - 可选 `scene`
 - 异步作业下可选 `priority`

@@ -730,7 +730,7 @@ Docling 官方 README 明确列出多种导出格式，包括 Markdown、HTML、
 对外 REST 不再把 `parser.profile_ref`、`fallback_policy`、`crawl.content_selector`、
 `engine_options` 等低层细节暴露给普通调用方，而是收敛为：
 
-- `source`
+- `sources`
 - `engine_id`
 - `scene`（可选）
 
@@ -741,7 +741,7 @@ Docling 官方 README 明确列出多种导出格式，包括 Markdown、HTML、
 
 因此：
 
-- **两参数是否足够**：对同步 Parse 的主路径，`source + engine_id` 足够覆盖大多数调用。
+- **两参数是否足够**：对同步 Parse 的主路径，`sources + engine_id` 足够覆盖大多数调用；其中 `sources` 可同时承载单条或批量来源。
 - **为什么仍保留第 3 个参数 `scene`**：同一个引擎通常同时存在“快速”“高保真”“深度抓取”“认证态”等不同最优配置。没有 `scene`，系统只能猜测，难以同时兼顾性能与结果质量。
 - **为什么不把更多高级参数继续公开**：这些参数会迅速把 API 重新推回“适配器透传接口”，破坏稳定性、可维护性与可迁移性。
 
@@ -875,7 +875,7 @@ fallback 触发条件：
 
 顶层字段不超过 3 个：
 
-1. `source`
+1. `sources`
 2. `engine_id`
 3. `scene`（可选）
 
@@ -883,21 +883,27 @@ fallback 触发条件：
 
 顶层字段不超过 5 个：
 
-1. `source`
+1. `sources`
 2. `engine_id`
 3. `scene`（可选）
 4. `priority`（可选）
 5. `webhook`（可选）
 
-#### `source` 统一模型
+#### `sources` 统一模型
 
-`source` 本身是一个轻量对象，不要求调用方理解内部 parser 模型：
+`sources` 是一个字符串数组，不要求调用方理解内部 parser 模型，也不再要求显式传 `mime_type`、`kind`、`filename`：
 
-- `uri`：统一承载 `https://...`、`s3://...`、`file://...` 等来源
-- `object_id`：引用已上传对象
-- `kind`：可选显式提示，未给出时自动推断
-- `filename`：可选文件名提示
-- `mime_type`：可选 MIME 提示
+- `https://...` / `http://...`：公共网页 URL
+- `s3://bucket/key`、`file://...`：外部文件 URI
+- `cortex://objects/{object_id}`：引用已上传对象
+
+调用方只需要提交来源定位符。系统会自动完成：
+
+- 来源类型识别（URL / URI / object）
+- 文件名推断
+- 扩展名推断
+- MIME 侦测或推断
+- 对象来源的受控下载 URL 解析
 
 #### `engine_id`
 
@@ -910,7 +916,7 @@ fallback 触发条件：
 - `docling`
 - `auto`
 
-`auto` 允许平台基于来源类型、MIME、文件扩展名和可用引擎目录自动选择默认引擎，但不要求普通调用方理解 profile 细节。
+`auto` 允许平台基于来源类型、文件扩展名、推断 MIME、场景意图和可用引擎目录自动选择默认引擎，但不要求普通调用方理解 profile 细节。
 
 #### `scene`
 
@@ -930,11 +936,13 @@ fallback 触发条件：
 
 公共请求不会直接进入 `ParseService`，而是先进入 `Parse Request Compiler`：
 
-1. 解析 `source`
-2. 自动推断 `kind`
-3. 如 `object_id` 存在，则解析为受控的可访问 URI / URL
-4. 根据 `engine_id + scene + source_kind + mime_type` 选择内部 `profile_ref`
-5. 装配该 profile 对应的：
+1. 逐条解析 `sources`
+2. 自动推断 `source_kind`
+3. 自动推断文件名、扩展名与 MIME；如来源是 `cortex://objects/{object_id}`，则解析为受控可访问 URI / URL
+4. 若 `engine_id=auto`，根据 `scene + source_kind + extension + inferred_mime + activated_engines` 选择最佳首选引擎与 fallback 链
+5. 若 `engine_id` 为显式值，则校验其是否已激活并解析到该引擎默认 scene 或指定 scene
+6. 根据最终的 `engine_id + scene` 选择内部 `profile_ref`
+7. 装配该 profile 对应的：
    - `parser.allowed_engines`
    - `parser.engine_options`
    - `crawl`
@@ -942,7 +950,16 @@ fallback 触发条件：
    - `output`
    - `persistence`
    - `timeout_seconds`
-6. 生成内部 `ParseSyncRequest` / `ParseJobRequest`
+8. 为每个来源生成一份内部 `ParseSyncRequest` / `ParseJobRequest`
+
+当前自动路由策略遵循以下原则：
+
+- 普通网页 URL 优先 `crawl4ai`，回退 `jina_reader`
+- 快速网页抽取场景优先 `jina_reader`
+- PDF / 高保真文档优先 `llama_parse`，回退 `docling`
+- 本地轻量文档优先 `markitdown`，回退 `docling`
+- 显式 `scene=document_ai` 时优先 `docling`
+- 当某类内置引擎未激活时，自动路由器会在当前激活引擎目录内选择最接近的可用路径，而不是返回空选择
 
 这使得：
 
@@ -1094,7 +1111,7 @@ engine_overrides:
 
 优先考虑：
 
-- `source + engine_id` 两参数路径
+- `sources + engine_id` 两参数主路径
 - Jina Reader 快速提取 preset
 - MarkItDown 轻量文档 preset
 - Crawl4AI `balanced` preset

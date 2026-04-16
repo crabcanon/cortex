@@ -95,7 +95,7 @@ Agent 对多个数据集发起混合搜索，返回答案、命中片段与引�
 
 重点能力：
 
-- `source` 统一承载 `url / object_id / uri`
+- `sources` 统一承载 `url / cortex://objects/{object_id} / uri`，支持单条或批量
 - `engine_id` 作为公开主选择器
 - `scene` 作为高层场景意图，而不是暴露大量底层 adapter 参数
 - `crawl4ai` 的 `balanced / deep_web / authenticated_web` 强配置 preset
@@ -161,7 +161,7 @@ Agent 对多个数据集发起混合搜索，返回答案、命中片段与引�
 
 系统必须接受：
 
-- `source`
+- `sources`
 - `engine_id`
 - 可选 `scene`
 - 异步场景下可选 `priority`
@@ -169,9 +169,9 @@ Agent 对多个数据集发起混合搜索，返回答案、命中片段与引�
 
 并满足：
 
-- `source` 统一覆盖 `url / object_id / uri`
-- 当未显式给出 `source.kind` 时，系统自动推断来源类型
-- 当给出 `object_id` 时，系统自动解析对象元数据并转换为引擎可消费的受控来源
+- `sources` 统一覆盖 `url / cortex://objects/{object_id} / uri`
+- 系统自动推断来源类型、文件名与 MIME，不要求调用方再传 `kind` 或 `mime_type`
+- 当给出 `cortex://objects/{object_id}` 时，系统自动解析对象元数据并转换为引擎可消费的受控来源
 - 公开 API 不要求调用方理解内部 `profile_ref`、`fallback_policy`、`engine_options`
 - 引擎最优配置由平台根据 `engine_id + scene` 自动装配
 
@@ -384,7 +384,7 @@ Agent 对多个数据集发起混合搜索，返回答案、命中片段与引�
 
 ### Parse 验收
 
-- 同步 Parse 在 `source + engine_id` 两参数下即可直接返回 Markdown 与标准元数据。
+- 同步 Parse 在 `sources + engine_id` 两参数下即可直接返回 Markdown 与标准元数据。
 - 当调用方给出 `scene` 时，系统会自动命中对应内部 profile，而不是要求调用方理解 profile 细节。
 - 给定公开网页 URL，可返回 Markdown 与元数据。
 - 给定需要登录态的 URL，可通过 session 引用抓取成功。

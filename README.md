@@ -28,7 +28,8 @@ Cortex 基于 Python 3.12、`uv workspace`、FastAPI、标准 SQL、S3 兼容对
   - LlamaParse（云 API 模式）
   - MarkItDown
   - Docling
-- 对外采用极简 `source + engine_id (+ scene)` 契约，内部通过请求编译器自动绑定 scene preset、parser profile、回退策略和引擎默认配置
+- 对外采用极简 `sources + engine_id (+ scene)` 契约，`engine_id=auto` 时由系统自动为每个来源选择最佳激活引擎，内部通过请求编译器绑定 scene preset、parser profile、回退策略和引擎默认配置
+- `/v1/parse/engines` 会直接暴露当前 runtime config 中启用的解析引擎目录；默认本地配置会一次性激活 `crawl4ai`、`jina_reader`、`llama_parse`、`markitdown`、`docling`
 
 ### 1.2 Storage API
 
@@ -609,20 +610,20 @@ curl -X POST http://127.0.0.1:8080/v1/parse/sync \
   -H "Authorization: $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "source": {
-      "uri": "https://example.com",
-      "mime_type": "text/html"
-    },
-    "engine_id": "crawl4ai"
+    "sources": [
+      "https://docs.cognee.ai/core-concepts/overview",
+      "s3://demo-bucket/manuals/architecture.pdf"
+    ],
+    "engine_id": "auto"
   }'
 ```
 
 返回结果中可看到：
 
-- `document.markdown`
-- `document.metadata`
-- `diagnostics.selected_engine_key`
-- `job_id`
+- `results[0].document.markdown`
+- `results[0].document.metadata`
+- `results[0].diagnostics.selected_engine_key`
+- `results[0].job_id`
 - `x-request-id`
 - `x-trace-id`
 
@@ -636,17 +637,16 @@ curl -X POST http://127.0.0.1:8080/v1/parse/jobs \
   -H "Idempotency-Key: parse-demo-001" \
   -H "Content-Type: application/json" \
   -d '{
-    "source": {
-      "uri": "https://example.com",
-      "mime_type": "text/html"
-    },
-    "engine_id": "crawl4ai",
-    "scene": "deep_web",
+    "sources": [
+      "https://docs.cognee.ai/core-concepts/overview",
+      "s3://demo-bucket/manuals/architecture.pdf"
+    ],
+    "engine_id": "auto",
     "priority": 5
   }'
 ```
 
-轮询结果：
+提交响应中的 `jobs[0].job_id` 就是每个来源对应的异步作业 ID。轮询结果：
 
 ```bash
 curl -H "Authorization: $TOKEN" \

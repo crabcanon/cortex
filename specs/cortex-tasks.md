@@ -415,3 +415,14 @@ Goal: redesign the public Parse API into a much simpler, operator-friendly surfa
 | CTX-20260415-054 | 2026-04-15 23:20:00 +08:00 | P0 | parse-runtime | Extend engine/profile support so the simplified API can resolve object/url/uri sources, map engine-specific strongest presets (especially Crawl4AI advanced features), and keep the design vendor-neutral and extensible | CTX-20260415-052 | done |
 | CTX-20260415-055 | 2026-04-15 23:20:00 +08:00 | P0 | validation-docs | Update README/OpenAPI/examples/tests/logs for the redesigned Parse API, run focused validation, and append all issues/fixes to `specs/cortex-log.md` in chronological order | CTX-20260415-053, CTX-20260415-054 | done |
 
+### Batch 2026-04-16 11:20:00 +08:00 | Phase X Parse Engine Activation And Batch Locator Contract
+
+Goal: close the last public Parse API gaps by making every runtime-enabled engine visible and selectable through `/v1/parse/engines`, unifying sync/async requests around `sources + engine_id (+ scene)`, and validating that `engine_id=auto` plus batch locator input really drives the runtime/compiler/docs consistently.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260416-056 | 2026-04-16 11:20:00 +08:00 | P0 | parse-audit | Audit the remaining Parse API drift reported by operators: runtime engine catalog visibility, explicit engine activation, unified request-body shape, and batch-source expectations across code, docs, and tests | CTX-20260415-055 | done |
+| CTX-20260416-057 | 2026-04-16 11:20:00 +08:00 | P0 | parse-runtime | Ensure all runtime-config-enabled engines register as active/selectable in the parse bootstrap and install path, so `/v1/parse/engines` exposes `crawl4ai`, `jina_reader`, `llama_parse`, `markitdown`, and `docling` together | CTX-20260416-056 | done |
+| CTX-20260416-058 | 2026-04-16 11:20:00 +08:00 | P0 | parse-api | Refine the public Parse compiler and API routes so sync/job submission accept only `sources`, `engine_id`, optional `scene`, plus async job controls, with automatic locator normalization, MIME inference, per-source compilation, and batch job acceptance/results | CTX-20260416-056, CTX-20260416-057 | done |
+| CTX-20260416-059 | 2026-04-16 11:20:00 +08:00 | P0 | docs-validation | Update OpenAPI/design/README/task/log artifacts for the final Parse contract, run focused validation plus an engine-catalog smoke check, and record the exact outcomes in `specs/cortex-log.md` | CTX-20260416-058 | done |
+

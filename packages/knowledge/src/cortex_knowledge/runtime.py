@@ -273,12 +273,12 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
     def _resolve_memify_callable(self, pipeline: str) -> Callable[..., Any]:
         if pipeline == "triplet_embeddings":
             module = importlib.import_module("cognee.memify_pipelines.create_triplet_embeddings")
-            return getattr(module, "create_triplet_embeddings")
+            return module.create_triplet_embeddings
         if pipeline == "session_persistence":
             module = importlib.import_module(
                 "cognee.memify_pipelines.persist_sessions_in_knowledge_graph"
             )
-            return getattr(module, "persist_sessions_in_knowledge_graph_pipeline")
+            return module.persist_sessions_in_knowledge_graph_pipeline
         raise ConfigError(f"Unknown Cognee memify pipeline `{pipeline}`.")
 
     @staticmethod

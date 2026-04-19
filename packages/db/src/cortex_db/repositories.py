@@ -41,7 +41,7 @@ from cortex_domain import (
     StorageBucketRecord,
     TenantRecord,
 )
-from sqlalchemy import desc, or_, select, update
+from sqlalchemy import desc, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import (
@@ -1504,6 +1504,13 @@ class JobEventRepository:
         await self._session.flush()
         await self._session.refresh(model)
         return _job_event_from_model(model)
+
+    async def get_next_sequence_for_job(self, job_id: str) -> int:
+        result = await self._session.execute(
+            select(func.max(JobEventModel.sequence_no)).where(JobEventModel.job_id == job_id)
+        )
+        max_seq = result.scalar_one_or_none()
+        return (max_seq or 0) + 1
 
     async def list_for_job(
         self,

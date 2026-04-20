@@ -66,4 +66,4 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     for table_name in TABLE_DROP_ORDER:
-        op.execute(sa.text(f"DROP TABLE IF EXISTS {table_name}"))
+        op.drop_table(table_name)

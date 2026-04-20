@@ -166,7 +166,8 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
                 value = raw_input.get("uri")
             else:
                 raise ConfigError(
-                    "Cognee add currently supports only `text` and `uri` inputs for live runtime execution."
+                    "Cognee add currently supports only `text` and "
+                    "`uri` inputs for live runtime execution."
                 )
             if not isinstance(value, str) or not value.strip():
                 raise ConfigError(f"Cognee add input `{input_type}` is missing its content.")

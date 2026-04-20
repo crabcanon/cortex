@@ -46,7 +46,9 @@ class _FakeCogneeModule:
         ]
 
 
-def _build_runtime(monkeypatch: pytest.MonkeyPatch) -> tuple[PythonCogneeRuntime, _FakeCogneeModule]:
+def _build_runtime(
+    monkeypatch: pytest.MonkeyPatch,
+) -> tuple[PythonCogneeRuntime, _FakeCogneeModule]:
     fake_module = _FakeCogneeModule()
     monkeypatch.setattr("cortex_knowledge.runtime._cognee_available", lambda: True)
     monkeypatch.setattr("cortex_knowledge.runtime._cognee_version", lambda: "0.5.test")
@@ -118,8 +120,14 @@ def test_python_cognee_runtime_translates_memify_and_search(
     async def _fake_triplet_pipeline(**kwargs: object) -> dict[str, object]:
         return {"pipeline": "triplet_embeddings", **kwargs}
 
-    monkeypatch.setattr(runtime, "_resolve_memify_callable", lambda pipeline: _fake_triplet_pipeline)
-    monkeypatch.setattr(runtime, "_resolve_cognee_user", lambda: asyncio.sleep(0, result=fake_user))
+    monkeypatch.setattr(
+        runtime,
+        "_resolve_memify_callable",
+        lambda pipeline: _fake_triplet_pipeline,
+    )
+    monkeypatch.setattr(
+        runtime, "_resolve_cognee_user", lambda: asyncio.sleep(0, result=fake_user)
+    )
 
     memify_result = asyncio.run(
         runtime.memify(

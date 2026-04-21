@@ -124,6 +124,7 @@ __marimo__/
 .env
 .env.*
 !.env.example
+!.env.prod.example
 .envrc
 *.local
 .pypirc

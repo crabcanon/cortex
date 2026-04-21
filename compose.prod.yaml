@@ -1,0 +1,97 @@
+x-cortex-prod-env: &cortex-prod-env
+  CORTEX_ENV: ${CORTEX_ENV:-prod}
+  CORTEX_HOST: 0.0.0.0
+  CORTEX_PORT: "8080"
+  CORTEX_DB_DSN: ${CORTEX_DB_DSN:?Set CORTEX_DB_DSN for production deployments.}
+  CORTEX_S3_ENDPOINT: ${CORTEX_S3_ENDPOINT:?Set CORTEX_S3_ENDPOINT for production deployments.}
+  CORTEX_S3_REGION: ${CORTEX_S3_REGION:-us-east-1}
+  CORTEX_S3_BUCKET: ${CORTEX_S3_BUCKET:?Set CORTEX_S3_BUCKET for production deployments.}
+  CORTEX_S3_ACCESS_KEY: ${CORTEX_S3_ACCESS_KEY:?Set CORTEX_S3_ACCESS_KEY for production deployments.}
+  CORTEX_S3_SECRET_KEY: ${CORTEX_S3_SECRET_KEY:?Set CORTEX_S3_SECRET_KEY for production deployments.}
+  CORTEX_S3_FORCE_PATH_STYLE: ${CORTEX_S3_FORCE_PATH_STYLE:-false}
+  CORTEX_S3_AUTO_CREATE_BUCKET: ${CORTEX_S3_AUTO_CREATE_BUCKET:-false}
+  CORTEX_QUEUE_URL: ${CORTEX_QUEUE_URL:?Set CORTEX_QUEUE_URL for production deployments.}
+  CORTEX_AUTH_MODE: ${CORTEX_AUTH_MODE:-oidc}
+  CORTEX_OIDC_ISSUER: ${CORTEX_OIDC_ISSUER:-}
+  CORTEX_OIDC_AUDIENCE: ${CORTEX_OIDC_AUDIENCE:-cortex-api}
+  CORTEX_AUTH_JWT_ALGORITHM: ${CORTEX_AUTH_JWT_ALGORITHM:-RS256}
+  CORTEX_AUTH_JWT_SHARED_SECRET: ${CORTEX_AUTH_JWT_SHARED_SECRET:-}
+  CORTEX_AUTH_JWKS_URL: ${CORTEX_AUTH_JWKS_URL:-}
+  CORTEX_AUTH_INTROSPECTION_URL: ${CORTEX_AUTH_INTROSPECTION_URL:-}
+  CORTEX_AUTH_INTROSPECTION_CLIENT_ID: ${CORTEX_AUTH_INTROSPECTION_CLIENT_ID:-}
+  CORTEX_AUTH_INTROSPECTION_CLIENT_SECRET: ${CORTEX_AUTH_INTROSPECTION_CLIENT_SECRET:-}
+  CORTEX_AUTH_AUTO_PROVISION_PRINCIPALS: ${CORTEX_AUTH_AUTO_PROVISION_PRINCIPALS:-false}
+  CORTEX_AUTH_TOKEN_ISSUER_ENABLED: ${CORTEX_AUTH_TOKEN_ISSUER_ENABLED:-false}
+  CORTEX_AUTH_TOKEN_ISSUER_BOOTSTRAP_SECRET: ${CORTEX_AUTH_TOKEN_ISSUER_BOOTSTRAP_SECRET:-}
+  CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.prod.yaml}
+  CORTEX_CRAWL4AI_SKIP_PROBE: ${CORTEX_CRAWL4AI_SKIP_PROBE:-0}
+  CORTEX_CRAWL4AI_INSTALL_IF_MISSING: ${CORTEX_CRAWL4AI_INSTALL_IF_MISSING:-0}
+  CORTEX_CRAWL4AI_WITH_DEPS: ${CORTEX_CRAWL4AI_WITH_DEPS:-0}
+  CORTEX_PLAYWRIGHT_BROWSERS_PATH: ${CORTEX_PLAYWRIGHT_BROWSERS_PATH:-/ms-playwright}
+  CORTEX_CRAWL4AI_BASE_DIRECTORY: ${CORTEX_CRAWL4AI_BASE_DIRECTORY:-}
+  CORTEX_OTEL_ENABLED: ${CORTEX_OTEL_ENABLED:-true}
+  CORTEX_OTEL_EXPORTER_OTLP_ENDPOINT: ${CORTEX_OTEL_EXPORTER_OTLP_ENDPOINT:?Set CORTEX_OTEL_EXPORTER_OTLP_ENDPOINT for production deployments.}
+  CORTEX_DEPLOYMENT_ENV: ${CORTEX_DEPLOYMENT_ENV:-prod}
+  CORTEX_REGION: ${CORTEX_REGION:-global}
+  CORTEX_CLUSTER: ${CORTEX_CLUSTER:-cortex-prod}
+  CORTEX_CRAWL4AI_PROXY: ${CORTEX_CRAWL4AI_PROXY:-}
+  JINA_API_KEY: ${JINA_API_KEY:-}
+  LLAMA_CLOUD_API_KEY: ${LLAMA_CLOUD_API_KEY:-}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  COGNEE_VECTOR_DB_URL: ${COGNEE_VECTOR_DB_URL:-}
+  COGNEE_GRAPH_DB_URL: ${COGNEE_GRAPH_DB_URL:-}
+  COGNEE_GRAPH_DB_USERNAME: ${COGNEE_GRAPH_DB_USERNAME:-}
+  COGNEE_GRAPH_DB_PASSWORD: ${COGNEE_GRAPH_DB_PASSWORD:-}
+  COGNEE_RELATIONAL_DB_URL: ${COGNEE_RELATIONAL_DB_URL:-}
+  COGNEE_MIGRATION_DB_URL: ${COGNEE_MIGRATION_DB_URL:-}
+
+services:
+  cortex-migrate:
+    image: ${CORTEX_API_IMAGE:-ghcr.io/crabcanon/cortex-api:latest}
+    profiles: ["migrate"]
+    environment:
+      <<: *cortex-prod-env
+    entrypoint: ["/app/.venv/bin/cortex-db-migrate"]
+    command: ["upgrade", "head"]
+    restart: "no"
+    volumes:
+      - cortex-data:/app/.data
+
+  cortex-api:
+    image: ${CORTEX_API_IMAGE:-ghcr.io/crabcanon/cortex-api:latest}
+    init: true
+    shm_size: "1gb"
+    environment:
+      <<: *cortex-prod-env
+    ports:
+      - "${CORTEX_API_PUBLISHED_PORT:-8080}:8080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/v1/health/live || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    volumes:
+      - cortex-data:/app/.data
+
+  cortex-parse-worker:
+    image: ${CORTEX_PARSE_WORKER_IMAGE:-ghcr.io/crabcanon/cortex-parse-worker:latest}
+    init: true
+    shm_size: "1gb"
+    environment:
+      <<: *cortex-prod-env
+    restart: unless-stopped
+    volumes:
+      - cortex-data:/app/.data
+
+  cortex-knowledge-worker:
+    image: ${CORTEX_KNOWLEDGE_WORKER_IMAGE:-ghcr.io/crabcanon/cortex-knowledge-worker:latest}
+    environment:
+      <<: *cortex-prod-env
+    restart: unless-stopped
+    volumes:
+      - cortex-data:/app/.data
+
+volumes:
+  cortex-data:

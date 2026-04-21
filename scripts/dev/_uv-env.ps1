@@ -162,3 +162,33 @@ function Repair-CortexVenv {
         )
     }
 }
+
+function Invoke-CortexRuntimePrep {
+    param(
+        [switch]$InstallIfMissing,
+        [switch]$WithDeps,
+        [switch]$NoProbe
+    )
+
+    Set-CortexUvEnvironment
+    $pythonPath = Get-CortexVenvCommandPath -Name "python"
+    $scriptPath = Join-Path (Get-CortexRepoRoot) "scripts\\runtime\\prepare_crawl4ai_runtime.py"
+    $args = @($scriptPath)
+    if ($InstallIfMissing) {
+        $args += "--install-if-missing"
+    }
+    if ($WithDeps) {
+        $args += "--with-deps"
+    }
+    if ($NoProbe) {
+        $args += "--no-probe"
+    }
+
+    Push-Location (Get-CortexRepoRoot)
+    try {
+        & $pythonPath @args
+        return $LASTEXITCODE
+    } finally {
+        Pop-Location
+    }
+}

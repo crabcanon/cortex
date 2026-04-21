@@ -3,7 +3,8 @@ param(
     [string]$Action = "up",
     [string[]]$Services = @(),
     [switch]$Follow,
-    [switch]$NoWait
+    [switch]$NoWait,
+    [switch]$Build
 )
 
 $ErrorActionPreference = "Stop"
@@ -17,6 +18,19 @@ $ComposeArgs = @(
     "-f",
     (Join-Path $RepoRoot "compose.local.yaml")
 )
+
+function Test-ServiceRequested {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Name
+    )
+
+    if ($Services.Count -eq 0) {
+        return $true
+    }
+
+    return $Services -contains $Name
+}
 
 function Wait-HttpReady {
     param(
@@ -70,22 +84,49 @@ function Wait-TcpReady {
 
 switch ($Action) {
     "up" {
-        & docker @ComposeArgs up -d @Services
+        $upArgs = @($ComposeArgs + @("up", "-d"))
+        if ($Build) {
+            $upArgs += "--build"
+        }
+        $upArgs += $Services
+        & docker @upArgs
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
         if (-not $NoWait) {
-            Wait-TcpReady -HostName "127.0.0.1" -Port 5432
-            Wait-HttpReady -Uri "http://127.0.0.1:9000/minio/health/ready"
-            Wait-TcpReady -HostName "127.0.0.1" -Port 6379
-            Wait-HttpReady -Uri "http://127.0.0.1:13133/"
-            Wait-HttpReady -Uri "http://127.0.0.1:16686/"
-            Wait-HttpReady -Uri "http://127.0.0.1:9090/-/ready"
-            Wait-HttpReady -Uri "http://127.0.0.1:3000/api/health"
+            if (Test-ServiceRequested "postgres") {
+                Wait-TcpReady -HostName "127.0.0.1" -Port 5432
+            }
+            if (Test-ServiceRequested "minio") {
+                Wait-HttpReady -Uri "http://127.0.0.1:9000/minio/health/ready"
+            }
+            if (Test-ServiceRequested "redis") {
+                Wait-TcpReady -HostName "127.0.0.1" -Port 6379
+            }
+            if (Test-ServiceRequested "otel-collector") {
+                Wait-HttpReady -Uri "http://127.0.0.1:13133/"
+            }
+            if (Test-ServiceRequested "jaeger-all-in-one") {
+                Wait-HttpReady -Uri "http://127.0.0.1:16686/"
+            }
+            if (Test-ServiceRequested "prometheus") {
+                Wait-HttpReady -Uri "http://127.0.0.1:9090/-/ready"
+            }
+            if (Test-ServiceRequested "grafana") {
+                Wait-HttpReady -Uri "http://127.0.0.1:3000/api/health"
+            }
+            if (Test-ServiceRequested "cortex-api") {
+                Wait-HttpReady -Uri "http://127.0.0.1:8080/v1/health/live" -TimeoutSeconds 180
+            }
         }
     }
     "down" {
         & docker @ComposeArgs down --remove-orphans
+        exit $LASTEXITCODE
     }
     "ps" {
         & docker @ComposeArgs ps
+        exit $LASTEXITCODE
     }
     "logs" {
         if ($Follow) {
@@ -93,17 +134,38 @@ switch ($Action) {
         } else {
             & docker @ComposeArgs logs @Services
         }
+        exit $LASTEXITCODE
     }
     "restart" {
         & docker @ComposeArgs restart @Services
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
         if (-not $NoWait) {
-            Wait-TcpReady -HostName "127.0.0.1" -Port 5432
-            Wait-HttpReady -Uri "http://127.0.0.1:9000/minio/health/ready"
-            Wait-TcpReady -HostName "127.0.0.1" -Port 6379
-            Wait-HttpReady -Uri "http://127.0.0.1:13133/"
-            Wait-HttpReady -Uri "http://127.0.0.1:16686/"
-            Wait-HttpReady -Uri "http://127.0.0.1:9090/-/ready"
-            Wait-HttpReady -Uri "http://127.0.0.1:3000/api/health"
+            if (Test-ServiceRequested "postgres") {
+                Wait-TcpReady -HostName "127.0.0.1" -Port 5432
+            }
+            if (Test-ServiceRequested "minio") {
+                Wait-HttpReady -Uri "http://127.0.0.1:9000/minio/health/ready"
+            }
+            if (Test-ServiceRequested "redis") {
+                Wait-TcpReady -HostName "127.0.0.1" -Port 6379
+            }
+            if (Test-ServiceRequested "otel-collector") {
+                Wait-HttpReady -Uri "http://127.0.0.1:13133/"
+            }
+            if (Test-ServiceRequested "jaeger-all-in-one") {
+                Wait-HttpReady -Uri "http://127.0.0.1:16686/"
+            }
+            if (Test-ServiceRequested "prometheus") {
+                Wait-HttpReady -Uri "http://127.0.0.1:9090/-/ready"
+            }
+            if (Test-ServiceRequested "grafana") {
+                Wait-HttpReady -Uri "http://127.0.0.1:3000/api/health"
+            }
+            if (Test-ServiceRequested "cortex-api") {
+                Wait-HttpReady -Uri "http://127.0.0.1:8080/v1/health/live" -TimeoutSeconds 180
+            }
         }
     }
 }

@@ -143,3 +143,30 @@ EOF
     return 1
   fi
 }
+
+cortex_invoke_runtime_prep() {
+  local install_if_missing="${1:-0}"
+  local with_deps="${2:-0}"
+  local no_probe="${3:-0}"
+
+  cortex_set_uv_environment
+  local python_path script_path
+  python_path="$(cortex_venv_command_path python)"
+  script_path="$(cortex_repo_root)/scripts/runtime/prepare_crawl4ai_runtime.py"
+  local args=("${script_path}")
+
+  if [[ "${install_if_missing}" == "1" ]]; then
+    args+=("--install-if-missing")
+  fi
+  if [[ "${with_deps}" == "1" ]]; then
+    args+=("--with-deps")
+  fi
+  if [[ "${no_probe}" == "1" ]]; then
+    args+=("--no-probe")
+  fi
+
+  (
+    cd "$(cortex_repo_root)"
+    "${python_path}" "${args[@]}"
+  )
+}

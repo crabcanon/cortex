@@ -1,7 +1,9 @@
 param(
     [switch]$Once,
     [switch]$ForceRecreate,
-    [int]$IntervalSeconds = 1
+    [int]$IntervalSeconds = 1,
+    [switch]$SkipBrowserBootstrap,
+    [switch]$NoBrowserInstall
 )
 
 $ErrorActionPreference = "Stop"
@@ -37,6 +39,13 @@ if (-not (Test-Path -LiteralPath $workerPath)) {
 
 if (-not (Test-Path -LiteralPath $workerPath)) {
     throw "Parse Worker executable was not found after repair: $workerPath"
+}
+
+if (-not $SkipBrowserBootstrap) {
+    $prepExitCode = Invoke-CortexRuntimePrep -InstallIfMissing:(-not $NoBrowserInstall)
+    if ($prepExitCode -ne 0) {
+        exit $prepExitCode
+    }
 }
 
 Push-Location (Get-CortexRepoRoot)

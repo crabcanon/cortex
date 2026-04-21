@@ -1,23 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-once=0
 force_recreate=0
-interval_seconds=1
 skip_browser_bootstrap=0
 no_browser_install=0
 
 while (($# > 0)); do
   case "$1" in
-    --once)
-      once=1
-      ;;
     --force-recreate)
       force_recreate=1
-      ;;
-    --interval)
-      shift
-      interval_seconds="${1:?missing interval value}"
       ;;
     --skip-browser-bootstrap)
       skip_browser_bootstrap=1
@@ -41,32 +32,32 @@ if ! cortex_test_venv_healthy; then
 [cortex] the project `.venv` is currently activated in this shell and cannot be repaired in place.
 Run `deactivate` (or open a fresh terminal), then rerun:
   bash scripts/dev/repair-venv.sh --force-recreate
-  bash scripts/dev/run-parse-worker.sh
+  bash scripts/dev/run-api.sh
 EOF
     exit 1
   fi
-  echo "[cortex] .venv is missing or unhealthy, repairing before launching Parse Worker..."
+  echo "[cortex] .venv is missing or unhealthy, repairing before launching API..."
   cortex_repair_venv "${force_recreate}"
 fi
 
-worker_path="$(cortex_venv_command_path cortex-parse-worker)"
-if [[ ! -f "${worker_path}" ]]; then
+api_path="$(cortex_venv_command_path cortex-api)"
+if [[ ! -f "${api_path}" ]]; then
   if cortex_is_project_venv_active; then
     cat >&2 <<'EOF'
-[cortex] Parse Worker entrypoint is missing from the currently activated project `.venv`.
+[cortex] API entrypoint is missing from the currently activated project `.venv`.
 Run `deactivate` (or open a fresh terminal), then rerun:
   bash scripts/dev/repair-venv.sh --force-recreate
-  bash scripts/dev/run-parse-worker.sh
+  bash scripts/dev/run-api.sh
 EOF
     exit 1
   fi
-  echo "[cortex] Parse Worker entrypoint is missing, syncing workspace first..."
+  echo "[cortex] API entrypoint is missing, syncing workspace first..."
   cortex_repair_venv "${force_recreate}"
-  worker_path="$(cortex_venv_command_path cortex-parse-worker)"
+  api_path="$(cortex_venv_command_path cortex-api)"
 fi
 
-if [[ ! -f "${worker_path}" ]]; then
-  echo "[cortex] Parse Worker executable was not found after repair: ${worker_path}" >&2
+if [[ ! -f "${api_path}" ]]; then
+  echo "[cortex] API executable was not found after repair: ${api_path}" >&2
   exit 1
 fi
 
@@ -79,12 +70,4 @@ if [[ "${skip_browser_bootstrap}" != "1" ]]; then
 fi
 
 cd "$(cortex_repo_root)"
-
-if [[ "${once}" == "1" ]]; then
-  exec "${worker_path}"
-fi
-
-while true; do
-  "${worker_path}"
-  sleep "${interval_seconds}"
-done
+exec "${api_path}"

@@ -8,7 +8,7 @@ dependencies = [
   "cortex-contracts",
   "cortex-db",
   "cortex-domain",
-  "cortex-knowledge",
+  "cortex-knowledge[runtime]",
 ]
 
 [project.scripts]

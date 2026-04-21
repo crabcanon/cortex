@@ -881,6 +881,7 @@ source = { editable = "packages/common" }
 dependencies = [
     { name = "pydantic" },
     { name = "pydantic-settings" },
+    { name = "python-dotenv" },
     { name = "pyyaml" },
 ]
 
@@ -888,6 +889,7 @@ dependencies = [
 requires-dist = [
     { name = "pydantic", specifier = ">=2.12,<3" },
     { name = "pydantic-settings", specifier = ">=2.10,<3" },
+    { name = "python-dotenv", specifier = ">=1.1,<2" },
     { name = "pyyaml", specifier = ">=6.0,<7" },
 ]
 
@@ -1046,7 +1048,7 @@ dependencies = [
     { name = "cortex-contracts" },
     { name = "cortex-db" },
     { name = "cortex-domain" },
-    { name = "cortex-knowledge" },
+    { name = "cortex-knowledge", extra = ["runtime"] },
 ]
 
 [package.metadata]
@@ -1055,7 +1057,7 @@ requires-dist = [
     { name = "cortex-contracts", editable = "packages/contracts" },
     { name = "cortex-db", editable = "packages/db" },
     { name = "cortex-domain", editable = "packages/domain" },
-    { name = "cortex-knowledge", editable = "packages/knowledge" },
+    { name = "cortex-knowledge", extras = ["runtime"], editable = "packages/knowledge" },
 ]
 
 [[package]]

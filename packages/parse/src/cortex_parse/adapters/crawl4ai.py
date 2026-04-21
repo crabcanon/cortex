@@ -107,6 +107,7 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
             raise ValidationError("Crawl4AI requires `source.url` or `source.uri`.")
 
         base_directory = self._ensure_base_directory()
+        self._ensure_playwright_browsers_path()
         sdk = _load_crawl4ai_sdk()
         browser_config = sdk.browser_config(**self._browser_kwargs(context, sdk.browser_config))
         run_config = sdk.crawler_run_config(**self._run_kwargs(context, sdk.cache_mode))
@@ -262,7 +263,12 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
 
     def _ensure_base_directory(self) -> str:
         configured = self._string_value(self._config.get("base_directory"))
-        selected = configured or os.getenv("CRAWL4_AI_BASE_DIRECTORY")
+        selected = (
+            os.getenv("CORTEX_CRAWL4AI_BASE_DIRECTORY")
+            or os.getenv("CRAWL4_AI_BASE_DIRECTORY")
+            or os.getenv("CRAWL4AI_BASE_DIRECTORY")
+            or configured
+        )
         if selected is None:
             selected = str((Path.cwd() / ".data" / "crawl4ai").resolve())
 
@@ -279,6 +285,30 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
         resolved = str(base_path)
         os.environ["CRAWL4_AI_BASE_DIRECTORY"] = resolved
         os.environ["CRAWL4AI_BASE_DIRECTORY"] = resolved
+        return resolved
+
+    def _ensure_playwright_browsers_path(self) -> str:
+        configured = self._string_value(self._config.get("playwright_browsers_path"))
+        selected = (
+            os.getenv("CORTEX_PLAYWRIGHT_BROWSERS_PATH")
+            or os.getenv("PLAYWRIGHT_BROWSERS_PATH")
+            or configured
+        )
+        if selected is None:
+            selected = str((Path.cwd() / ".data" / "playwright").resolve())
+
+        path = Path(selected).expanduser().resolve()
+        try:
+            path.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            raise ConfigError(
+                "Unable to initialize the Playwright browsers path for Crawl4AI. "
+                "Set `parse.engines.crawl4ai.playwright_browsers_path_ref` or "
+                "`PLAYWRIGHT_BROWSERS_PATH` to a writable path."
+            ) from exc
+
+        resolved = str(path)
+        os.environ["PLAYWRIGHT_BROWSERS_PATH"] = resolved
         return resolved
 
     def _run_kwargs(

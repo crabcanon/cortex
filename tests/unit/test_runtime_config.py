@@ -2,24 +2,22 @@
 
 from __future__ import annotations
 
+import os
 import time
 from pathlib import Path
 
 import pytest
-from cortex_common import CogneeSettings, ParseSettings, load_runtime_config
+from cortex_common import CogneeSettings, ConfigError, ParseSettings, load_runtime_config
 from cortex_knowledge.runtime import build_cognee_runtime
-from cortex_parse import build_parse_service
-from cortex_parse.adapters import (
-    crawl4ai as crawl4ai_adapter,
+from cortex_parse import (
+    bootstrap as parse_bootstrap,
 )
-from cortex_parse.adapters import (
-    docling as docling_adapter,
+from cortex_parse import (
+    build_parse_service,
+    prepare_crawl4ai_playwright_runtime,
 )
-from cortex_parse.adapters import (
-    llama_parse as llama_parse_adapter,
-)
-from cortex_parse.adapters import (
-    markitdown as markitdown_adapter,
+from cortex_parse import (
+    playwright_runtime as playwright_runtime_module,
 )
 
 
@@ -131,7 +129,11 @@ def test_build_parse_service_respects_runtime_engine_enablement(
                 "parse:",
                 "  default_profile_ref: auto_default",
                 "  engines:",
+                "    crawl4ai:",
+                "      enabled: false",
                 "    jina_reader:",
+                "      enabled: false",
+                "    llama_parse:",
                 "      enabled: false",
                 "    markitdown:",
                 "      enabled: true",
@@ -144,15 +146,138 @@ def test_build_parse_service_respects_runtime_engine_enablement(
         encoding="utf-8",
     )
 
-    monkeypatch.setattr(crawl4ai_adapter, "_crawl4ai_available", lambda: False)
-    monkeypatch.setattr(llama_parse_adapter, "_llama_parse_available", lambda: False)
-    monkeypatch.setattr(markitdown_adapter, "_markitdown_available", lambda: True)
-    monkeypatch.setattr(docling_adapter, "_docling_available", lambda: True)
-
     service = build_parse_service(ParseSettings(), load_runtime_config(config_path))
     engines = service._router.list_engines().engines
 
     assert [engine.engine_key for engine in engines] == ["markitdown"]
+
+
+def test_crawl4ai_runtime_skips_missing_optional_storage_state() -> None:
+    case_dir = _case_dir("unit-runtime-config-crawl4ai-missing-storage-state")
+    config_path = case_dir / "cortex.runtime.yaml"
+    config_path.write_text(
+        "\n".join(
+            [
+                "schema_version: cortex.runtime.v1",
+                "parse:",
+                "  engines:",
+                "    crawl4ai:",
+                "      enabled: true",
+                "      storage_state_ref: path:./secrets/storage_state.json",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    config = parse_bootstrap._crawl4ai_config(load_runtime_config(config_path))
+
+    assert "storage_state" not in config["browser_config"]
+
+
+def test_crawl4ai_runtime_uses_existing_storage_state_file() -> None:
+    case_dir = _case_dir("unit-runtime-config-crawl4ai-existing-storage-state")
+    storage_state = case_dir / "secrets" / "storage_state.json"
+    storage_state.parent.mkdir(parents=True, exist_ok=True)
+    storage_state.write_text('{"cookies":[],"origins":[]}', encoding="utf-8")
+    config_path = case_dir / "cortex.runtime.yaml"
+    config_path.write_text(
+        "\n".join(
+            [
+                "schema_version: cortex.runtime.v1",
+                "parse:",
+                "  engines:",
+                "    crawl4ai:",
+                "      enabled: true",
+                "      storage_state_ref: path:./secrets/storage_state.json",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    config = parse_bootstrap._crawl4ai_config(load_runtime_config(config_path))
+
+    assert config["browser_config"]["storage_state"] == str(storage_state.resolve())
+
+
+def test_prepare_crawl4ai_playwright_runtime_exports_configured_paths(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    case_dir = _case_dir("unit-runtime-config-crawl4ai-playwright")
+    config_path = case_dir / "cortex.runtime.yaml"
+    config_path.write_text(
+        "\n".join(
+            [
+                "schema_version: cortex.runtime.v1",
+                "parse:",
+                "  engines:",
+                "    crawl4ai:",
+                "      enabled: true",
+                "      base_directory_ref: path:./crawl4ai-state",
+                "      playwright_browsers_path_ref: path:./playwright-browsers",
+                "      playwright_validate_on_startup: false",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.delenv("CRAWL4_AI_BASE_DIRECTORY", raising=False)
+    monkeypatch.delenv("CRAWL4AI_BASE_DIRECTORY", raising=False)
+    monkeypatch.delenv("PLAYWRIGHT_BROWSERS_PATH", raising=False)
+
+    runtime = prepare_crawl4ai_playwright_runtime(load_runtime_config(config_path), probe=False)
+
+    expected_base = (case_dir / "crawl4ai-state").resolve()
+    expected_browsers = (case_dir / "playwright-browsers").resolve()
+    assert runtime.base_directory == expected_base
+    assert runtime.browsers_path == expected_browsers
+    assert Path(os.environ["CRAWL4_AI_BASE_DIRECTORY"]).resolve() == expected_base
+    assert Path(os.environ["CRAWL4AI_BASE_DIRECTORY"]).resolve() == expected_base
+    assert Path(os.environ["PLAYWRIGHT_BROWSERS_PATH"]).resolve() == expected_browsers
+    assert expected_base.exists()
+    assert expected_browsers.exists()
+
+
+def test_prepare_crawl4ai_playwright_runtime_installs_and_retries_when_requested(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    case_dir = _case_dir("unit-runtime-config-crawl4ai-playwright-retry")
+    config_path = case_dir / "cortex.runtime.yaml"
+    config_path.write_text(
+        "\n".join(
+            [
+                "schema_version: cortex.runtime.v1",
+                "parse:",
+                "  engines:",
+                "    crawl4ai:",
+                "      enabled: true",
+                "      playwright_validate_on_startup: true",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    events: list[str] = []
+    attempts = {"count": 0}
+
+    def _fake_probe(runtime) -> None:  # type: ignore[no-untyped-def]
+        events.append(f"probe:{runtime.browser_name}")
+        attempts["count"] += 1
+        if attempts["count"] == 1:
+            raise ConfigError("missing browser")
+
+    def _fake_install(runtime, *, python_executable=None, with_deps=False) -> None:  # type: ignore[no-untyped-def]
+        del runtime, python_executable
+        events.append(f"install:{with_deps}")
+
+    monkeypatch.setattr(playwright_runtime_module, "probe_playwright_browser", _fake_probe)
+    monkeypatch.setattr(playwright_runtime_module, "install_playwright_browser", _fake_install)
+
+    runtime = prepare_crawl4ai_playwright_runtime(
+        load_runtime_config(config_path),
+        install_if_missing=True,
+        probe=True,
+    )
+
+    assert runtime.enabled is True
+    assert events == ["probe:chromium", "install:False", "probe:chromium"]
 
 
 class _FakeCogneeConfig:

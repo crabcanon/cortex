@@ -13,7 +13,12 @@ from cortex_knowledge import (
     build_cognee_runtime,
 )
 from cortex_observability import configure_telemetry, install_logging_correlation
-from cortex_parse import ParseJobControlService, ParseRequestCompiler, build_parse_service
+from cortex_parse import (
+    ParseJobControlService,
+    ParseRequestCompiler,
+    build_parse_service,
+    prepare_crawl4ai_playwright_runtime,
+)
 from cortex_storage import StorageService
 from fastapi import FastAPI
 
@@ -23,6 +28,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Bootstrap runtime settings, telemetry, persistence, and auth services."""
     settings = load_settings()
     runtime_config = load_runtime_config(settings.runtime.path)
+    prepare_crawl4ai_playwright_runtime(runtime_config)
     telemetry = configure_telemetry("cortex-api", settings.telemetry)
     engine = create_database_engine(settings.database.dsn)
     session_factory = create_session_factory(engine)

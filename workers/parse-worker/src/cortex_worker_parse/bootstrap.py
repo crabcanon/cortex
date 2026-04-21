@@ -20,7 +20,12 @@ from cortex_db import (
     create_session_factory,
 )
 from cortex_domain import JobRecord
-from cortex_parse import ParseJobControlService, ParseService, build_parse_service
+from cortex_parse import (
+    ParseJobControlService,
+    ParseService,
+    build_parse_service,
+    prepare_crawl4ai_playwright_runtime,
+)
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 
@@ -182,6 +187,7 @@ class ParseWorkerRuntime:
 def build_worker(settings: CortexSettings | None = None) -> ParseWorkerRuntime:
     loaded_settings = settings or load_settings()
     runtime_config = load_runtime_config(loaded_settings.runtime.path)
+    prepare_crawl4ai_playwright_runtime(runtime_config)
     engine = create_database_engine(loaded_settings.database.dsn)
     session_factory = create_session_factory(engine)
     worker = ParseWorker(

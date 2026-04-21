@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from cortex_common import LoadedRuntimeConfig, ParseSettings, load_runtime_config
@@ -14,6 +15,7 @@ from .adapters import (
     LlamaParseEngine,
     MarkItDownParseEngine,
 )
+from .playwright_runtime import prepare_crawl4ai_playwright_runtime
 from .profile_loader import ParseProfileLoader
 from .registry import ParseEngineRegistry
 from .service import ParseService
@@ -25,6 +27,7 @@ def build_parse_service(
 ) -> ParseService:
     """Build the default parse runtime for the API process."""
     loaded_runtime = runtime_config or load_runtime_config()
+    prepare_crawl4ai_playwright_runtime(loaded_runtime, probe=False)
     parse_runtime = loaded_runtime.config.parse
     registry = ParseEngineRegistry()
     for engine in (
@@ -51,15 +54,35 @@ def _crawl4ai_config(runtime_config: LoadedRuntimeConfig) -> dict[str, Any]:
     proxy = runtime_config.resolve_reference(config.proxy_ref)
     if proxy and "proxy" not in browser_config:
         browser_config["proxy"] = proxy
-    storage_state = runtime_config.resolve_reference(config.storage_state_ref)
+    storage_state = _resolve_existing_storage_state(runtime_config, config.storage_state_ref)
     if storage_state and "storage_state" not in browser_config:
         browser_config["storage_state"] = storage_state
     return {
         "enabled": config.enabled,
         "base_directory": base_directory,
+        "playwright_browsers_path": runtime_config.resolve_reference(
+            config.playwright_browsers_path_ref
+        ),
+        "playwright_browser": config.playwright_browser,
         "browser_config": browser_config,
         "crawler_run_config": dict(config.crawler_run_config),
     }
+
+
+def _resolve_existing_storage_state(
+    runtime_config: LoadedRuntimeConfig,
+    reference: str | None,
+) -> str | None:
+    storage_state = runtime_config.resolve_reference(reference)
+    if not storage_state:
+        return None
+
+    storage_path = Path(storage_state)
+    if not storage_path.is_absolute():
+        storage_path = runtime_config.source_path.parent / storage_path
+    if storage_path.exists():
+        return str(storage_path.resolve())
+    return None
 
 
 def _jina_reader_config(runtime_config: LoadedRuntimeConfig) -> dict[str, Any]:

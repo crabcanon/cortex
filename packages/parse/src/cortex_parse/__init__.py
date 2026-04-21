@@ -10,6 +10,14 @@ from .models import (
     ParseEngineProtocol,
 )
 from .normalization.pipeline import NormalizationResult, ParseNormalizationPipeline
+from .playwright_runtime import (
+    Crawl4AIPlaywrightFailure,
+    Crawl4AIPlaywrightRuntime,
+    classify_crawl4ai_playwright_failure,
+    prepare_crawl4ai_playwright_runtime,
+    probe_playwright_browser,
+    resolve_crawl4ai_playwright_runtime,
+)
 from .profile_loader import ParseProfileLoader
 from .registry import ParseEngineRegistry
 from .request_compiler import ParseRequestCompiler, ParseScenePreset
@@ -27,11 +35,17 @@ __all__ = [
     "ParseEngineRegistry",
     "ParseJobControlService",
     "ParseNormalizationPipeline",
+    "Crawl4AIPlaywrightRuntime",
+    "Crawl4AIPlaywrightFailure",
     "ParsePersistenceService",
     "ParseProfileLoader",
     "ParseRequestCompiler",
     "ParseScenePreset",
     "ParseRouter",
     "ParseService",
+    "classify_crawl4ai_playwright_failure",
+    "prepare_crawl4ai_playwright_runtime",
+    "probe_playwright_browser",
+    "resolve_crawl4ai_playwright_runtime",
 ]
 PACKAGE_NAME = "cortex-parse"

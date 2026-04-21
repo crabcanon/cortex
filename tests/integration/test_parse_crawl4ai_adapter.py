@@ -440,6 +440,7 @@ async def test_crawl4ai_adapter_uses_repo_local_base_directory_when_unset(
     )
     monkeypatch.delenv("CRAWL4_AI_BASE_DIRECTORY", raising=False)
     monkeypatch.delenv("CRAWL4AI_BASE_DIRECTORY", raising=False)
+    monkeypatch.delenv("PLAYWRIGHT_BROWSERS_PATH", raising=False)
 
     engine = Crawl4AIParseEngine({"enabled": True})
     await engine.execute(
@@ -458,7 +459,56 @@ async def test_crawl4ai_adapter_uses_repo_local_base_directory_when_unset(
     )
 
     expected = (Path.cwd() / ".data" / "crawl4ai").resolve()
+    expected_browsers = (Path.cwd() / ".data" / "playwright").resolve()
     assert Path(os.environ["CRAWL4_AI_BASE_DIRECTORY"]).resolve() == expected
     assert Path(os.environ["CRAWL4AI_BASE_DIRECTORY"]).resolve() == expected
     assert Path(_FakeAsyncWebCrawler.last_base_directory or "").resolve() == expected
     assert expected.exists()
+    assert Path(os.environ["PLAYWRIGHT_BROWSERS_PATH"]).resolve() == expected_browsers
+    assert expected_browsers.exists()
+
+
+@pytest.mark.asyncio
+async def test_crawl4ai_adapter_prefers_container_browser_env_over_runtime_config(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        crawl4ai_adapter,
+        "_load_crawl4ai_sdk",
+        lambda: crawl4ai_adapter._Crawl4AISdk(
+            async_web_crawler=_FakeAsyncWebCrawler,
+            browser_config=_FakeBrowserConfig,
+            crawler_run_config=_FakeCrawlerRunConfig,
+            cache_mode=_FakeCacheMode,
+        ),
+    )
+    env_browsers_path = str((Path.cwd() / ".data" / "playwright" / "container-env").resolve())
+    configured_browsers_path = str(
+        (Path.cwd() / ".data" / "playwright" / "runtime-config").resolve()
+    )
+    monkeypatch.setenv("CORTEX_PLAYWRIGHT_BROWSERS_PATH", env_browsers_path)
+    monkeypatch.delenv("PLAYWRIGHT_BROWSERS_PATH", raising=False)
+
+    engine = Crawl4AIParseEngine(
+        {
+            "enabled": True,
+            "playwright_browsers_path": configured_browsers_path,
+        }
+    )
+    await engine.execute(
+        EngineExecutionContext(
+            request=ParseSyncRequest(
+                source=ParseSource(
+                    input_kind=ParseInputKind.URL,
+                    url="https://example.com/container-browser-path",
+                )
+            ),
+            source=ParseSource(
+                input_kind=ParseInputKind.URL,
+                url="https://example.com/container-browser-path",
+            ),
+        )
+    )
+
+    assert Path(os.environ["PLAYWRIGHT_BROWSERS_PATH"]).resolve() == Path(env_browsers_path)
+    assert Path(configured_browsers_path).exists() is False

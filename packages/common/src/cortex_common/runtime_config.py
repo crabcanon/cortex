@@ -39,6 +39,9 @@ class Crawl4AIRuntimeConfig(_RuntimeModel):
     browser_config: dict[str, Any] = Field(default_factory=dict)
     crawler_run_config: dict[str, Any] = Field(default_factory=dict)
     base_directory_ref: str | None = None
+    playwright_browsers_path_ref: str | None = None
+    playwright_browser: str = "chromium"
+    playwright_validate_on_startup: bool = True
     proxy_ref: str | None = None
     storage_state_ref: str | None = None
 

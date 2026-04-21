@@ -41,7 +41,7 @@ from cortex_domain import (
     StorageBucketRecord,
     TenantRecord,
 )
-from sqlalchemy import desc, or_, select, update
+from sqlalchemy import desc, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import (
@@ -1518,6 +1518,12 @@ class JobEventRepository:
             .limit(limit)
         )
         return [_job_event_from_model(model) for model in result.scalars().all()]
+
+    async def get_max_sequence_no(self, job_id: str) -> int:
+        result = await self._session.execute(
+            select(func.max(JobEventModel.sequence_no)).where(JobEventModel.job_id == job_id)
+        )
+        return result.scalar() or 0
 
 
 class ParseRunRepository:

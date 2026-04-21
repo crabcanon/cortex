@@ -1,5 +1,126 @@
 # Cortex Technical Design
 
+## 0.1 2026-04-19 Crawl4AI 容器运行时修正
+
+本节优先级高于前文较早版本中“本地 Compose 暂时跳过 Crawl4AI 浏览器准备”的说明。
+
+### 目标
+
+让 `crawl4ai` 在仓内交付的 API / Parse Worker 容器里真正可运行，而不是只在本地 Docker 联调时绕过浏览器启动。
+
+### 最终容器策略
+
+1. `cortex-api` 与 `cortex-parse-worker` 统一改为基于 Playwright 官方 Python 镜像构建：
+   `mcr.microsoft.com/playwright/python:v1.58.0-noble`
+2. 构建阶段不再执行 `playwright install --with-deps`；该基础镜像已经自带 Playwright 浏览器二进制与 Linux 系统依赖。
+3. 运行阶段继续保留 `prepare_crawl4ai_runtime.py` 的预检链路，因此容器启动时仍会真实验证浏览器是否可用。
+4. Crawl4AI 运行时解析新增显式容器覆盖变量：
+   - `CORTEX_PLAYWRIGHT_BROWSERS_PATH`
+   - `CORTEX_CRAWL4AI_BASE_DIRECTORY`
+5. Compose 默认设置 `CORTEX_PLAYWRIGHT_BROWSERS_PATH=/ms-playwright`，覆盖 `configs/cortex.runtime.*.yaml` 中面向宿主机的浏览器目录。
+6. `cortex-api` 与 `cortex-parse-worker` 默认启用 `init: true` 和 `shm_size: 1gb`，降低 Chromium 在 Docker 中的僵尸进程与共享内存问题。
+
+### 这样设计的原因
+
+- 既保持 API 与 runtime config 的厂商中立，又采用了 Playwright 官方文档推荐的容器化浏览器交付路径。
+- 去掉了此前 `docker compose up -Build` 依赖在线 Debian 镜像源健康度的脆弱点。
+- 保留了 Crawl4AI 的 fail-fast 运行时校验，而不是通过静默禁用浏览器能力来换取“看起来能启动”。
+
+## 0. 2026-04-17 Docker Compose 更新
+
+为避免“本地联调用 Compose 很顺手，但生产部署被顺手带偏”这种常见问题，当前技术方案正式将 Compose 拆分为两层：
+
+### 0.1 `compose.local.yaml`
+
+用途：开发机、本地联调、集成测试、冒烟验证。
+
+原则：
+- 一条命令同时启动依赖与 Cortex 核心服务。
+- 直接对齐仓库中的 `.env` 和 `configs/cortex.runtime.local.yaml`。
+- Cortex 容器内部统一改用服务名寻址，而不是继续使用宿主机 `127.0.0.1`。
+- 保留本地可观测性链路，方便直接联调 OTel / Jaeger / Prometheus / Grafana。
+
+当前本地栈包含：
+- `postgres`
+- `minio`
+- `redis`
+- `otel-collector`
+- `jaeger-all-in-one`
+- `prometheus`
+- `grafana`
+- `cortex-migrate`
+- `cortex-api`
+- `cortex-parse-worker`
+- `cortex-knowledge-worker`
+
+补充约定：
+- 本地 compose 默认不在镜像构建阶段预装 Crawl4AI 的 Playwright 浏览器与系统依赖。
+- 本地 compose 也默认跳过 API / Parse Worker 启动时的 Crawl4AI 浏览器预探针。
+- 目的不是关闭 `crawl4ai` 能力本身，而是避免开发机在调试通用 API 时被浏览器依赖下载或 Debian mirror 抖动阻塞。
+- 生产镜像与专用浏览器型解析环境仍应保留 fail-fast 的浏览器预装路径。
+
+推荐入口：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 up -Build
+```
+
+等价原生命令：
+
+```powershell
+docker compose -p cortex-local -f compose.local.yaml up -d --build
+```
+
+### 0.2 `compose.prod.yaml`
+
+用途：预发、自托管生产、云上容器运行时。
+
+原则：
+- 只编排 Cortex 核心容器，不内置本地开发依赖。
+- 默认假定 PostgreSQL、S3、Redis、OTel Collector、身份提供方由外部基础设施提供。
+- API、Parse Worker、Knowledge Worker 可独立部署和扩缩容。
+
+当前生产编排包含：
+- `cortex-migrate`
+- `cortex-api`
+- `cortex-parse-worker`
+- `cortex-knowledge-worker`
+
+推荐入口：
+
+```bash
+docker compose --env-file .env.prod -f compose.prod.yaml up -d
+```
+
+如需先做迁移：
+
+```bash
+docker compose --env-file .env.prod -f compose.prod.yaml --profile migrate up cortex-migrate
+docker compose --env-file .env.prod -f compose.prod.yaml up -d
+```
+
+### 0.3 为什么必须拆分 local / prod
+
+原因有三类：
+
+1. 本地方便的 MinIO / Postgres / Grafana 并不等于生产的最佳拓扑。
+2. 本地调试用的弱默认值、开放端口、内建 token issuer 不应直接进入生产。
+3. API、Parse Worker、Knowledge Worker 在生产中的容量模型不同，需要独立伸缩。
+
+因此本设计的正式结论是：
+- `compose.local.yaml` 负责“本地全栈可运行”
+- `compose.prod.yaml` 负责“核心服务可部署”
+- 更底层的云资源与托管中间件由 IaC、平台配置或独立运维编排接管
+
+### 0.4 与镜像构建的关系
+
+Compose 分层依赖于当前已经完成的多目标镜像策略：
+- `api`
+- `parse-worker`
+- `knowledge-worker`
+
+其中 `knowledge-worker` 现在显式依赖 `cortex-knowledge[runtime]`，避免出现镜像能构建、容器能启动，但运行时缺少 Cognee 主依赖的隐性错误。
+
 ## 1. 文档目标
 
 本文档给出 Cortex 的完整技术设计，覆盖：
@@ -1445,3 +1566,125 @@ Cortex 的关键升级不是“又支持了几个 parser”，而是把 Parse �
 - 输出永远收敛到统一 Markdown + 标准元数据模型。
 
 这使 Cortex 既能承接复杂动态网页，也能承接高保真文档解析，并为后续 Cognee、RAG 和 Agent 工作流提供稳定底座。
+## 16. Crawl4AI 浏览器运行时自动化
+
+### 16.1 设计目标
+
+`crawl4ai` 与 `jina_reader` / `markitdown` / `docling` 的最大差异，不在 API 合约，而在宿主机能力：
+
+1. 需要 Playwright 浏览器二进制
+2. 需要浏览器对应的系统依赖
+3. 需要宿主机允许 Node / Playwright 子进程与命名管道
+
+因此 Cortex 不再把浏览器准备视为“人工前置步骤”，而是纳入正式运行时自动化。
+
+### 16.2 统一运行时字段
+
+`parse.engines.crawl4ai` 已扩展如下统一字段：
+
+- `base_directory_ref`
+- `playwright_browsers_path_ref`
+- `playwright_browser`
+- `playwright_validate_on_startup`
+
+设计意图：
+
+- `base_directory_ref`：把 Crawl4AI 的缓存、日志、内部数据库与下载工件固定到 repo-local 或挂载卷，避免落到用户 Home 导致权限漂移
+- `playwright_browsers_path_ref`：固定 Playwright 浏览器安装目录，避免浏览器散落在全局用户目录
+- `playwright_browser`：允许在 `chromium` / 后续浏览器种类之间切换
+- `playwright_validate_on_startup`：控制 API / Worker 启动时是否做浏览器预检
+
+### 16.3 运行时准备链路
+
+当前正式链路如下：
+
+1. `prepare_crawl4ai_playwright_runtime()`
+   - 解析 runtime overlay
+   - 创建 base directory 与 browsers path
+   - 注入 `CRAWL4_AI_BASE_DIRECTORY` / `CRAWL4AI_BASE_DIRECTORY` / `PLAYWRIGHT_BROWSERS_PATH`
+2. `probe_playwright_browser()`
+   - 通过独立子进程执行 Playwright 探针
+   - 验证目标浏览器能否真实启动
+   - 避免把 Playwright 内部 future / event-loop 噪音污染主进程日志
+3. `install_playwright_browser()`
+   - 通过 `python -m playwright install <browser>` 安装浏览器
+   - 捕获 stdout / stderr 并纳入错误分类
+
+API 与 Parse Worker 在启动时默认执行预检；真正的懒安装行为只留给显式脚本，而不内嵌进 HTTP 请求路径。
+
+### 16.4 结构化失败分类
+
+为避免运维时只看到一段第三方堆栈，Cortex 将常见浏览器准备失败收敛为稳定错误码：
+
+- `browser_binary_missing`
+- `host_process_policy_blocked`
+- `host_browser_dependencies_missing`
+- `browser_download_tls_failed`
+- `playwright_runtime_preflight_failed`
+
+这些分类由 `classify_crawl4ai_playwright_failure()` 统一产出，供：
+
+- `scripts/runtime/prepare_crawl4ai_runtime.py`
+- API / Worker 启动前准备脚本
+- CI/CD 构建阶段日志
+
+共同复用。
+
+### 16.5 启动脚本分层
+
+仓库中的启动脚本分成两层：
+
+#### 开发态
+
+- `scripts/dev/run-api.ps1`
+- `scripts/dev/run-api.sh`
+- `scripts/dev/run-parse-worker.ps1`
+- `scripts/dev/run-parse-worker.sh`
+- `scripts/dev/prepare-crawl4ai.ps1`
+- `scripts/dev/prepare-crawl4ai.sh`
+
+用途是：
+
+- 固定 repo-local `.uv-python` 与 `.venv`
+- 避免激活中的 `.venv` 被 `uv sync` 锁死
+- 本地开发时允许自动修复环境
+
+#### 生产态 / 容器态
+
+- `scripts/runtime/start-api.sh`
+- `scripts/runtime/start-parse-worker.sh`
+- `scripts/runtime/start-knowledge-worker.sh`
+
+用途是：
+
+- 启动前执行 Crawl4AI 预检
+- Worker 采用“单次轮询 + 外层守护循环”
+- 非零退出直接冒泡给 supervisor / container runtime，而不是静默吞错
+
+### 16.6 容器化策略
+
+仓库新增正式 `Dockerfile`，目标是把浏览器安装前移到镜像构建阶段：
+
+1. build 阶段完成 `uv sync`
+2. 使用 `configs/cortex.runtime.prod.yaml`
+3. 执行 `prepare_crawl4ai_runtime.py --install-if-missing --with-deps --no-probe`
+4. 运行阶段只保留预检，不再现场下载浏览器
+
+这意味着生产环境可以把最常见的两类问题拆开治理：
+
+- 浏览器缺失：在镜像构建阶段失败
+- 宿主机策略拦截子进程：在部署探针阶段失败
+
+而不会等到业务请求打到 `/v1/parse` 才暴露。
+
+### 16.7 发布建议
+
+推荐约定：
+
+1. CI/CD 构建镜像时预装 Playwright 浏览器与 Linux 依赖
+2. API 与 Parse Worker 使用统一 runtime overlay
+3. 运行时关闭自动安装，只保留探针
+4. 若目标宿主机存在 `spawn EPERM` / `WinError 5` 这类策略拦截，优先把 `crawl4ai` 固定放到 Linux 容器中运行
+5. 若无法满足浏览器宿主机能力，则暂时禁用 `crawl4ai`，把 URL 解析路由到 `jina_reader` / `llama_parse`
+
+这样能把浏览器型解析引擎的失败从“线上请求时故障”前移成“构建或部署阶段故障”。

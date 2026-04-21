@@ -444,3 +444,61 @@ Goal: finish the next layer of real integration validation by moving Crawl4AI ru
 | CTX-20260416-062 | 2026-04-16 15:20:00 +08:00 | P0 | parse-runtime | Add a unified Crawl4AI base-directory control to runtime config/bootstrap and force the adapter to initialize provider cache/log state under a writable repo-local path instead of defaulting into the user home directory | CTX-20260416-061 | done |
 | CTX-20260416-063 | 2026-04-16 15:20:00 +08:00 | P0 | live-validation | Re-run real `/v1/parse/engines` and `/v1/parse/sync` validation for active engines, confirm non-browser adapters succeed end to end, and capture any remaining Crawl4AI host-runtime blockers in `specs/cortex-log.md` with exact environment evidence | CTX-20260416-062 | done |
 
+### Batch 2026-04-16 17:05:00 +08:00 | Phase AA Crawl4AI Runtime Automation And Production Hardening
+
+Goal: turn the newly isolated Crawl4AI host/runtime failures into a formal automation layer so browser preparation, preflight diagnostics, and production startup become repeatable and do not rely on first-request lazy installation.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260416-064 | 2026-04-16 17:05:00 +08:00 | P0 | parse-runtime | Add structured Crawl4AI Playwright runtime automation: repo-local browser path control, subprocess-based browser probe, captured installer output, and stable failure classification codes consumable by scripts and operators | CTX-20260416-063 | done |
+| CTX-20260416-065 | 2026-04-16 17:05:00 +08:00 | P0 | delivery | Add production-facing startup automation with runtime entrypoint scripts plus a multi-target Dockerfile that preinstalls Playwright during image build and keeps API / Worker startup fail-fast | CTX-20260416-064 | done |
+| CTX-20260416-066 | 2026-04-16 17:05:00 +08:00 | P0 | docs-validation | Update README and technical design for the new browser automation model, then run focused lint/type/test validation plus runtime prepare-script checks and record the exact outcomes in `specs/cortex-log.md` | CTX-20260416-065 | done |
+
+### Batch 2026-04-17 09:20:00 +08:00 | Phase AB Docker Build Network Hardening
+
+Goal: harden the production Docker build so uv does not pull unnecessary dependency groups, each image syncs only its own workspace package, and transient TLS / cache failures during large binary wheel downloads are less likely to break builds.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260417-067 | 2026-04-17 09:20:00 +08:00 | P0 | delivery | Refactor the Dockerfile to sync per-image workspace packages (`cortex-api`, `cortex-worker-parse`, `cortex-worker-knowledge`) instead of `--all-packages --all-groups`, reducing unnecessary downloads during production image builds | CTX-20260416-066 | done |
+| CTX-20260417-068 | 2026-04-17 09:20:00 +08:00 | P0 | delivery | Add uv Docker build hardening via cache mounts and conservative network settings (`UV_HTTP_RETRIES`, `UV_HTTP_TIMEOUT`, `UV_NATIVE_TLS`, lower concurrent downloads) to reduce transient TLS / EOF failures when downloading large wheels like `opencv-python` | CTX-20260417-067 | done |
+
+### Batch 2026-04-17 14:10:00 +08:00 | Phase AC One-Click Compose For Local And Production
+
+Goal: promote Docker Compose from a dependency-only helper into a true one-command runtime for Cortex local validation, while keeping production composition separate so managed Postgres/S3/Redis/OTel deployments are not forced to inherit local dev infrastructure assumptions.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260417-069 | 2026-04-17 14:10:00 +08:00 | P0 | delivery-design | Define the Compose environment split: a batteries-included local stack that brings up dependencies plus Cortex core services/workers, and a production compose template that only orchestrates Cortex containers against externalized infrastructure | CTX-20260417-068 | done |
+| CTX-20260417-070 | 2026-04-17 14:10:00 +08:00 | P0 | delivery | Rework `compose.local.yaml`, add `compose.prod.yaml`, and update startup/runtime packaging so API, parse worker, and knowledge worker can be launched together with migration/bootstrap wiring and container-safe environment defaults | CTX-20260417-069 | done |
+| CTX-20260417-071 | 2026-04-17 14:10:00 +08:00 | P0 | docs-validation | Validate the new Compose files and package sync paths, then update runbooks / technical design / logs so operators know when to use local vs production compose and how to start the full stack with rebuild support | CTX-20260417-070 | done |
+
+### Batch 2026-04-19 11:20:00 +08:00 | Phase AD Local Compose Crawl4AI Build Resilience
+
+Goal: prevent local `docker compose up -Build` from being blocked by transient Debian mirror failures during Crawl4AI/Playwright preinstall, while keeping production images fail-fast and making the local stack script stop immediately on compose build failures.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260419-072 | 2026-04-19 11:20:00 +08:00 | P0 | delivery | Make Docker image Crawl4AI preinstallation optional at build time so local compose can skip browser dependency bootstrapping while production targets keep the existing fail-fast preinstall path | CTX-20260417-071 | done |
+| CTX-20260419-073 | 2026-04-19 11:20:00 +08:00 | P0 | delivery | Update `compose.local.yaml` to use local runtime-config build args and skip Crawl4AI startup probing by default, so local API validation can proceed even when browser-backed parsing is not yet prepared inside containers | CTX-20260419-072 | done |
+| CTX-20260419-074 | 2026-04-19 11:20:00 +08:00 | P0 | devx | Make `scripts/dev/stack.ps1` fail fast when `docker compose up` or `restart` returns a non-zero exit code, and record the root cause plus operator guidance in docs/logs | CTX-20260419-073 | done |
+
+### Batch 2026-04-19 14:40:00 +08:00 | Phase AE Containerized Crawl4AI Runtime Enablement
+
+Goal: stop treating containerized Crawl4AI as a special-case fallback and make the shipped API / Parse Worker images capable of running real Playwright-backed crawling inside Docker without ad hoc post-build browser installation.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260419-075 | 2026-04-19 14:40:00 +08:00 | P0 | delivery | Rework the API / Parse Worker Docker targets to build from the official Playwright Python image, remove build-time `playwright install --with-deps`, and preserve repo-local uv sync behavior so Crawl4AI can run in-container without Debian mirror installs during build | CTX-20260419-074 | done |
+| CTX-20260419-076 | 2026-04-19 14:40:00 +08:00 | P0 | parse-runtime | Add explicit container override support for Crawl4AI runtime resolution (`CORTEX_PLAYWRIGHT_BROWSERS_PATH`, `CORTEX_CRAWL4AI_BASE_DIRECTORY`) so runtime YAML stays host-neutral while containers can bind to `/ms-playwright` cleanly | CTX-20260419-075 | done |
+| CTX-20260419-077 | 2026-04-19 14:40:00 +08:00 | P0 | compose-docs-validation | Update local/production compose defaults, sample env files, README, technical design, and focused runtime tests so containerized Crawl4AI startup expectations are explicit and validated | CTX-20260419-076 | done |
+
+### Batch 2026-04-20 10:05:00 +08:00 | Phase AF Docker uv Interpreter Resolution Hotfix
+
+Goal: make Docker image builds immune to repo-local `.python-version` patch-pin drift when a container image ships a compatible Python 3.12 interpreter that does not exactly match the pinned patch version.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260420-078 | 2026-04-20 10:05:00 +08:00 | P0 | delivery | Update Docker `uv sync` steps to bind explicitly to the container's active system Python interpreter path instead of relying on `.python-version` discovery, so Playwright-based images with non-3.12.12 patch releases still build successfully under `--frozen` | CTX-20260419-077 | done |
+| CTX-20260421-079 | 2026-04-21 09:35:00 +08:00 | P0 | parse-runtime | Fix the Crawl4AI adapter's browser-path precedence so container environment overrides such as `CORTEX_PLAYWRIGHT_BROWSERS_PATH=/ms-playwright` win over runtime YAML host paths like `/app/.data/playwright/local` during actual parse execution | CTX-20260420-078 | done |
+| CTX-20260421-080 | 2026-04-21 15:37:24 +08:00 | P0 | parse-runtime | Make the optional Crawl4AI `storage_state_ref` fail-open when the referenced cookies/localStorage file is absent, while still enabling it automatically once the file exists | CTX-20260421-079 | done |

@@ -6,7 +6,7 @@ developer loop stays fast.
 For real dependency validation against PostgreSQL + MinIO + the local observability stack:
 
 1. Start the stack:
-   `powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 up`
+   `powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 up -Build`
 2. Run the docker-backed integration slice:
    `powershell -ExecutionPolicy Bypass -File scripts\dev\check-runtime-stack.ps1`
 3. Inspect the stack when needed:
@@ -17,6 +17,7 @@ For real dependency validation against PostgreSQL + MinIO + the local observabil
 
 Useful local endpoints:
 
+- Cortex API: `http://127.0.0.1:8080`
 - PostgreSQL: `127.0.0.1:5432` (`cortex` / `cortex`, default database `cortex`)
 - MinIO S3 API: `http://127.0.0.1:9000`
 - MinIO Console: `http://127.0.0.1:9001`
@@ -31,3 +32,6 @@ The runtime-stack tests are marked with `@pytest.mark.runtime_stack` and stay sk
 
 - `tests/integration/test_runtime_stack.py`
 - `tests/integration/test_runtime_observability_stack.py`
+
+`compose.local.yaml` now starts the Cortex API plus both workers in addition to the dependency stack,
+so the same local Compose environment can serve as the default operator smoke-test baseline.

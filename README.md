@@ -1,5 +1,115 @@
 # Cortex
 
+## 2026-04-19 容器内 Crawl4AI 修正说明
+
+以下说明优先级高于前文较早版本中关于本地 Compose 的旧描述：
+
+- `compose.local.yaml` 不再通过“跳过 Crawl4AI 浏览器能力”来换取启动成功。
+- `cortex-api` 与 `cortex-parse-worker` 现在直接基于 Playwright 官方 Python 镜像 `mcr.microsoft.com/playwright/python:v1.58.0-noble` 构建。
+- 该镜像已经预装浏览器与系统依赖，因此构建阶段不再执行 `playwright install --with-deps`，避免因 Debian 镜像源短时故障导致本地整栈构建失败。
+- 容器运行时会继续执行 Crawl4AI 预检，真正验证 `crawl4ai` 在容器内可用，而不是仅把能力绕开。
+- 容器内统一通过 `CORTEX_PLAYWRIGHT_BROWSERS_PATH=/ms-playwright` 覆盖 runtime YAML 里的宿主机浏览器目录，确保 API、Parse Worker、Docker 镜像三者看到的是同一份 Playwright 浏览器安装。
+- `cortex-api` 与 `cortex-parse-worker` 默认启用 `init: true` 与 `shm_size: 1gb`，降低 Chromium 在容器内的僵尸进程与共享内存问题。
+
+推荐本地启动：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 up -Build
+```
+
+## Docker Compose 启动方式（2026-04-17 更新）
+
+仓库现在正式区分两套 Compose：
+
+### 1. 本地一键联调：`compose.local.yaml`
+
+用途：开发、集成测试、冒烟验证。
+
+会同时启动：
+- 基础依赖：`postgres`、`minio`、`redis`
+- 遥测栈：`otel-collector`、`jaeger-all-in-one`、`prometheus`、`grafana`
+- Cortex 核心服务：`cortex-migrate`、`cortex-api`、`cortex-parse-worker`、`cortex-knowledge-worker`
+
+说明：
+- 本地 compose 现在默认跳过 Crawl4AI 浏览器在镜像构建阶段的预安装。
+- 同时默认跳过容器启动时的 Crawl4AI 浏览器预探针。
+- 这样做是为了避免开发机在 `docker compose up -Build` 时因为 Debian / Playwright 镜像源抖动而整栈起不来。
+- 如果你本轮只是验证 API、Storage、Jobs、非浏览器型 Parse、Knowledge，这个默认值更稳。
+- 如果你要专门验证容器内的 `crawl4ai`，建议单独准备 Linux 浏览器依赖或走生产态镜像构建路径。
+
+推荐命令：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 up -Build
+```
+
+等价原生命令：
+
+```powershell
+docker compose -p cortex-local -f compose.local.yaml up -d --build
+```
+
+常用操作：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 ps
+powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 logs -Follow
+powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 down
+```
+
+本地关键入口：
+- API: `http://127.0.0.1:8080`
+- Swagger: `http://127.0.0.1:8080/docs`
+- MinIO Console: `http://127.0.0.1:9001`
+- Jaeger: `http://127.0.0.1:16686`
+- Prometheus: `http://127.0.0.1:9090`
+- Grafana: `http://127.0.0.1:3000`
+
+### 2. 生产/预发部署：`compose.prod.yaml`
+
+用途：自托管生产、预发、云上容器运行时。
+
+只编排 Cortex 核心容器：
+- `cortex-migrate`
+- `cortex-api`
+- `cortex-parse-worker`
+- `cortex-knowledge-worker`
+
+它默认假定以下能力由外部提供：
+- PostgreSQL
+- S3 兼容对象存储
+- Redis
+- OpenTelemetry Collector
+- 身份提供方 / OIDC / OAuth 2.0
+
+建议先基于 [`.env.prod.example`](.env.prod.example) 生成 `.env.prod`，再启动生产 compose。
+
+推荐命令：
+
+```bash
+docker compose --env-file .env.prod -f compose.prod.yaml up -d
+```
+
+如需先执行迁移：
+
+```bash
+docker compose --env-file .env.prod -f compose.prod.yaml --profile migrate up cortex-migrate
+docker compose --env-file .env.prod -f compose.prod.yaml up -d
+```
+
+### 3. 为什么要拆分 local / prod
+
+不拆分的话，最容易出现三类问题：
+
+1. 把本地开发用的 MinIO / Grafana / Jaeger 拓扑错误带入生产。
+2. 把调试态默认值、开放端口、内建 token issuer 错误带入生产。
+3. 让 API、Parse Worker、Knowledge Worker 失去独立伸缩能力。
+
+所以当前推荐策略是：
+- `compose.local.yaml` 负责“本地全栈可运行”
+- `compose.prod.yaml` 负责“核心服务可部署”
+- 更底层的数据库、对象存储、遥测和鉴权基础设施交给云平台、IaC 或独立运维编排
+
 面向内容解析、对象存储与知识流水线的一套厂商中立 RESTful API 平台。
 
 Cortex 基于 Python 3.12、`uv workspace`、FastAPI、标准 SQL、S3 兼容对象存储与 OpenTelemetry 构建，目标是把以下三类能力收敛到同一套控制面中：
@@ -1020,3 +1130,138 @@ powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 up
 - Worker 当前是单次轮询模型，适合由 loop 或外部 supervisor 托管
 - 运行时配置已经集中到 `configs/cortex.runtime*.yaml`
 - 线上部署推荐按 API / Parse Worker / Knowledge Worker 拆分为三个独立运行单元
+## 17. Crawl4AI 浏览器自动化与生产部署兜底
+
+本仓库已经把 Crawl4AI / Playwright 的准备流程收敛成统一自动化，不再依赖“先手工跑一次浏览器安装”这种脆弱前提。
+
+### 17.1 统一准备入口
+
+无论本地、systemd、容器还是 CI/CD，统一使用：
+
+```bash
+python scripts/runtime/prepare_crawl4ai_runtime.py --json
+```
+
+常用模式：
+
+```bash
+# 只解析运行时配置、创建 repo-local 目录、输出结果，不主动探测浏览器
+python scripts/runtime/prepare_crawl4ai_runtime.py --no-probe --json
+
+# 探测浏览器；若缺失则尝试自动安装
+python scripts/runtime/prepare_crawl4ai_runtime.py --install-if-missing --json
+
+# Linux 镜像构建阶段推荐：安装浏览器并补齐系统依赖
+python scripts/runtime/prepare_crawl4ai_runtime.py --install-if-missing --with-deps --no-probe
+```
+
+输出约定：
+
+- `status=ok`：运行时目录与浏览器路径已准备完成
+- `status=error`：返回结构化 `error_code` 与 `hints`
+
+当前已内置的错误分类：
+
+- `browser_binary_missing`
+- `host_process_policy_blocked`
+- `host_browser_dependencies_missing`
+- `browser_download_tls_failed`
+- `playwright_runtime_preflight_failed`
+
+### 17.2 生产入口脚本
+
+仓库新增了 Linux / 容器可直接复用的正式入口：
+
+- `scripts/runtime/start-api.sh`
+- `scripts/runtime/start-parse-worker.sh`
+- `scripts/runtime/start-knowledge-worker.sh`
+
+它们的行为约定如下：
+
+1. API 与 Parse Worker 启动前先执行 Crawl4AI 运行时准备。
+2. Knowledge Worker 不依赖浏览器，仅负责循环消费知识作业。
+3. Parse / Knowledge Worker 以“单次轮询 + 外层守护循环”运行：
+   - 正常空轮询或成功处理后继续下一轮
+   - 若进程非零退出，则容器 / supervisor 直接接管重启，而不是静默死循环吞错
+
+可调环境变量：
+
+| 变量 | 默认值 | 作用 |
+| --- | --- | --- |
+| `CORTEX_RUNTIME_CONFIG_PATH` | `configs/cortex.runtime.local.yaml` | 选择统一 runtime overlay |
+| `CORTEX_CRAWL4AI_INSTALL_IF_MISSING` | `0` | 启动前发现浏览器缺失时是否自动安装 |
+| `CORTEX_CRAWL4AI_WITH_DEPS` | `0` | 安装浏览器时是否追加 `--with-deps` |
+| `CORTEX_CRAWL4AI_SKIP_PROBE` | `0` | 是否跳过启动前浏览器探针 |
+| `CORTEX_PARSE_WORKER_LOOP_SLEEP_SECONDS` | `1` | Parse Worker 两次轮询之间的休眠秒数 |
+| `CORTEX_KNOWLEDGE_WORKER_LOOP_SLEEP_SECONDS` | `1` | Knowledge Worker 两次轮询之间的休眠秒数 |
+
+推荐生产约定：
+
+- 镜像构建阶段：`CORTEX_CRAWL4AI_INSTALL_IF_MISSING=1`
+- 运行阶段：`CORTEX_CRAWL4AI_INSTALL_IF_MISSING=0`，只保留探针
+
+这样可以把“浏览器没装好”前移到 build / deploy，而不是等线上第一个请求才暴雷。
+
+### 17.3 内置 Dockerfile
+
+仓库现已提供正式 `Dockerfile`，包含 3 个 target：
+
+- `api`
+- `parse-worker`
+- `knowledge-worker`
+
+构建示例：
+
+```bash
+docker build --target api -t cortex-api:local .
+docker build --target parse-worker -t cortex-parse-worker:local .
+docker build --target knowledge-worker -t cortex-knowledge-worker:local .
+```
+
+这个 Dockerfile 在构建阶段会：
+
+1. `uv sync --all-packages --all-groups --frozen`
+2. 读取 `configs/cortex.runtime.prod.yaml`
+3. 执行 `prepare_crawl4ai_runtime.py --install-if-missing --with-deps --no-probe`
+4. 把 Playwright 浏览器预装到仓内约定路径
+
+因此，`crawl4ai` 最常见的 “Executable doesn't exist ... chrome.exe” 这类问题，会在镜像构建阶段暴露，而不会留到在线请求阶段。
+
+运行示例：
+
+```bash
+docker run --rm \
+  --env-file .env \
+  -e CORTEX_RUNTIME_CONFIG_PATH=configs/cortex.runtime.prod.yaml \
+  -p 8080:8080 \
+  cortex-api:local
+```
+
+```bash
+docker run --rm \
+  --env-file .env \
+  -e CORTEX_RUNTIME_CONFIG_PATH=configs/cortex.runtime.prod.yaml \
+  cortex-parse-worker:local
+```
+
+```bash
+docker run --rm \
+  --env-file .env \
+  -e CORTEX_RUNTIME_CONFIG_PATH=configs/cortex.runtime.prod.yaml \
+  cortex-knowledge-worker:local
+```
+
+### 17.4 对当前问题的直接结论
+
+如果你看到的是：
+
+- `Executable doesn't exist ... chrome.exe`：说明浏览器二进制缺失，走预装即可解决
+- `spawn EPERM` / `WinError 5` / `拒绝访问`：说明不是 Cortex 代码逻辑错，而是当前宿主机阻止了 Playwright / Node 子进程或命名管道
+
+后一类场景最稳妥的做法不是继续在受限宿主机硬扛，而是：
+
+1. 在 Linux 容器镜像中预装浏览器
+2. 使用 `scripts/runtime/start-api.sh` 与 `scripts/runtime/start-parse-worker.sh`
+3. 让运行阶段只做探针，不再执行现场下载
+
+这也是后续生产上线最推荐的方式。

@@ -1024,3 +1024,231 @@
     - `POST /v1/parse/sync` with `engine_id=docling` -> `200`
     - `POST /v1/parse/sync` with `engine_id=crawl4ai` -> adapter/runtime path reached Playwright startup, then failed with host-level `PermissionError: [WinError 5]`
 - Prevention: Treat browser-backed adapters as having an additional host capability requirement: writable working directories plus permission to spawn Playwright child processes and named pipes. Keep that requirement explicit in runtime docs and deployment runbooks, and validate browser-engine availability in the target shell/host where the service actually runs instead of assuming parity with pure-HTTP or pure-local file adapters.
+### 2026-04-16 17:05:00 +08:00 | Crawl4AI Host Runtime Failure Was Folded Into A Formal Automation Layer
+
+- Stage: `CTX-20260416-064 ~ CTX-20260416-066`
+- Event: The remaining Crawl4AI issue was no longer a parser-contract defect but an operator problem: browser binaries and host child-process permissions were still too easy to discover only after the service had already started. The runtime-prep helper also surfaced raw third-party stack traces that were difficult to act on.
+- Cause: Browser-backed parsing had not yet been promoted to a first-class deployment concern. The code could now route and execute Crawl4AI correctly, but browser installation, system dependencies, startup probing, failure categorization, and production entrypoints were still partially manual.
+- Action:
+  - Extended `cortex_parse.playwright_runtime` with stable failure classification (`browser_binary_missing`, `host_process_policy_blocked`, `host_browser_dependencies_missing`, `browser_download_tls_failed`, `playwright_runtime_preflight_failed`) and captured installer / probe subprocess output so operator tooling can reason about the true root cause instead of only a nonzero exit code.
+  - Changed the Playwright probe to run in an isolated subprocess, which avoids leaking Playwright internal future / event-loop noise into the parent startup process and more closely matches real deployment preflight behavior.
+  - Added production-facing entrypoint scripts:
+    - `scripts/runtime/start-api.sh`
+    - `scripts/runtime/start-parse-worker.sh`
+    - `scripts/runtime/start-knowledge-worker.sh`
+    These scripts make Crawl4AI preflight explicit for API and Parse Worker startup, while keeping worker loops fail-fast on nonzero process exits.
+  - Added a multi-target `Dockerfile` (`api`, `parse-worker`, `knowledge-worker`) plus `.dockerignore`. The image build now preinstalls Playwright with `prepare_crawl4ai_runtime.py --install-if-missing --with-deps --no-probe`, pushing the “browser missing” class of failures into build time instead of first-request time.
+  - Updated `README.md` and `specs/cortex-tech.md` with the new runtime-automation model, startup environment variables, Docker targets, and production guidance.
+- Validation:
+  - Focused code validation passed:
+    - `python -m ruff check packages/parse/src/cortex_parse/__init__.py packages/parse/src/cortex_parse/playwright_runtime.py scripts/runtime/prepare_crawl4ai_runtime.py tests/unit/test_playwright_runtime.py tests/unit/test_runtime_config.py apps/api/src/cortex_api/lifespan.py workers/parse-worker/src/cortex_worker_parse/bootstrap.py`
+    - `pyright packages/parse/src/cortex_parse/__init__.py packages/parse/src/cortex_parse/playwright_runtime.py scripts/runtime/prepare_crawl4ai_runtime.py tests/unit/test_playwright_runtime.py tests/unit/test_runtime_config.py apps/api/src/cortex_api/lifespan.py workers/parse-worker/src/cortex_worker_parse/bootstrap.py`
+    - `python -m pytest tests/unit/test_playwright_runtime.py tests/unit/test_runtime_config.py tests/integration/test_parse_crawl4ai_adapter.py tests/unit/test_parse_request_compiler.py -q`
+  - Runtime-prep verification passed in two modes:
+    - `python scripts/runtime/prepare_crawl4ai_runtime.py --runtime-config configs/cortex.runtime.local.yaml --no-probe --json`
+      -> returned `status=ok` with repo-local `base_directory` and `playwright_browsers_path`
+    - `python scripts/runtime/prepare_crawl4ai_runtime.py --runtime-config configs/cortex.runtime.local.yaml --install-if-missing --json`
+      -> returned structured `status=error`, `error_code=host_process_policy_blocked`, and remediation hints instead of an opaque stack trace, because the current Codex Windows session still blocks Playwright / Node child-process creation (`spawn EPERM`)
+  - Docker image build was not executed inside this Codex session because the local `docker` client remained unable to reach the daemon here (`permission denied while trying to connect to the docker API at npipe:////./pipe/docker_engine`). The repository nevertheless now contains the concrete build recipe and runtime entrypoints for operator-side validation in a native shell.
+- Prevention: Browser-backed parsers must be treated as part of deployment automation, not as a best-effort library detail. Keep browser install, system dependencies, startup probe, and host-policy diagnostics in a single explicit path (`prepare_crawl4ai_runtime.py` + runtime entrypoints + Dockerfile), and prefer Linux container deployment whenever the host cannot reliably permit Playwright child processes.
+
+### 2026-04-17 09:20:00 +08:00 | Docker Build Failed On A Transient TLS EOF While Downloading `opencv-python`
+
+- Stage: `CTX-20260417-067`, `CTX-20260417-068`
+- Event: The new Docker build progressed past Python selection but then failed during `uv sync` when downloading `opencv-python`, with `peer closed connection without sending TLS close_notify`. The failure surfaced while resolving the API image, even though the actual heavyweight dependency came from `docling -> rapidocr -> opencv-python`.
+- Cause: Two build-time issues were amplifying each other:
+  - The Dockerfile still synced `--all-packages --all-groups`, which meant production image builds were downloading many packages unrelated to the final runtime role, increasing network pressure and build fragility.
+  - The uv Docker invocation used no cache mount and no explicit network hardening, so a transient TLS EOF while fetching a large binary wheel caused the whole build to fail immediately.
+- Action:
+  - Refactored the Dockerfile so each target syncs only its own workspace package:
+    - `cortex-api`
+    - `cortex-worker-parse`
+    - `cortex-worker-knowledge`
+  - Removed `--all-groups` from production image syncs and switched to `--no-default-groups`, so lint / test / docs dependencies are no longer dragged into release builds.
+  - Added uv Docker hardening:
+    - `UV_CACHE_DIR=/root/.cache/uv`
+    - `UV_HTTP_RETRIES=8`
+    - `UV_HTTP_TIMEOUT=120`
+    - `UV_NATIVE_TLS=true`
+    - `UV_CONCURRENT_DOWNLOADS=1`
+    - `RUN --mount=type=cache,target=/root/.cache/uv uv sync ...`
+  These changes align with uv's official Docker guidance around cache mounts and reduce the probability that a single transient wheel-download interruption kills the whole image build.
+- Validation:
+  - Local command-shape validation passed with:
+    - `uv sync --package cortex-api --no-default-groups --frozen --dry-run`
+    - `uv sync --package cortex-worker-parse --no-default-groups --frozen --dry-run`
+    - `uv sync --package cortex-worker-knowledge --no-default-groups --frozen --dry-run`
+  - A full Docker image rebuild was not executed inside this Codex session because the Docker daemon remains inaccessible here, but the new Dockerfile is syntactically aligned with uv's official workspace/Docker integration patterns.
+- Prevention: Production images should never be built with workspace-wide dev/test/docs dependency groups unless the image explicitly needs them. For binary-heavy Python stacks, always prefer cache-mounted package downloads, a stable TLS/certificate strategy, and lower parallel download pressure inside Docker builds.
+
+### 2026-04-17 14:10:00 +08:00 | Docker Compose Was Promoted From Dependency Stack To Full Local Runtime, With Production Composition Split Out Explicitly
+
+- Stage: `CTX-20260417-069 ~ CTX-20260417-071`
+- Event: The repository previously had only a dependency-oriented `compose.local.yaml`, which meant operators still had to start the Cortex API and workers separately after Docker brought up PostgreSQL / MinIO / Redis / OTel. That was good enough for infrastructure checks but not for a true one-command local runtime or a reusable delivery story.
+- Cause: Local developer ergonomics and production deployment safety pull in different directions. A single Compose file that always bundles Postgres, MinIO, Grafana, Jaeger, and Cortex services together is convenient for laptops, but it becomes the wrong abstraction for production where those dependencies are often managed services or separate infrastructure layers.
+- Action:
+  - Reworked `compose.local.yaml` into a batteries-included stack that now starts:
+    - `postgres`
+    - `minio`
+    - `redis`
+    - `otel-collector`
+    - `jaeger-all-in-one`
+    - `prometheus`
+    - `grafana`
+    - `cortex-migrate`
+    - `cortex-api`
+    - `cortex-parse-worker`
+    - `cortex-knowledge-worker`
+  - Added `compose.prod.yaml` as a separate production-oriented template that only orchestrates Cortex core containers against externally supplied Postgres / S3 / Redis / OTel endpoints, instead of baking local infra assumptions into production.
+  - Updated local container wiring so Cortex services use container-safe defaults (`0.0.0.0`, service-name DNS such as `postgres`, `minio`, `redis`, `otel-collector`) while the checked-in runtime overlays remain vendor-neutral.
+  - Added a one-shot `cortex-migrate` service so schema upgrades happen inside the same Compose topology before the API and workers start.
+  - Updated `workers/knowledge-worker/pyproject.toml` to depend on `cortex-knowledge[runtime]`, ensuring the Docker knowledge-worker target resolves the Cognee runtime dependency instead of silently building a worker image without its primary runtime.
+  - Extended `scripts/dev/stack.ps1` with service-aware readiness waits plus a `-Build` switch so local operators can do `stack.ps1 up -Build` when they want Compose to rebuild Cortex images from the current workspace before launch.
+  - Updated `tests/integration/README.md` to reflect that the local Compose stack now includes the Cortex API and workers in addition to the supporting infrastructure.
+- Validation:
+  - `docker compose -p cortex-local -f compose.local.yaml config`
+  - `docker compose -f compose.prod.yaml config`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 sync --package cortex-api --no-default-groups --frozen --dry-run`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 sync --package cortex-worker-parse --no-default-groups --frozen --dry-run`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 sync --package cortex-worker-knowledge --no-default-groups --frozen --dry-run`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 run python scripts/ci/validate_yaml.py compose.local.yaml compose.prod.yaml`
+- Notes:
+  - In this Codex session, `docker compose config` succeeded but still emitted warnings about an unreadable Docker CLI config file under `C:\Users\hy\.docker\config.json`. That warning did not block Compose rendering, but actual `up/build/ps` execution still depends on the user shell having normal Docker Desktop / daemon access.
+  - Because the Docker daemon is not reliably reachable from this Codex session, the full `docker compose up --build` path was validated structurally and through package-resolution dry-runs, not by running the live containers here.
+- Prevention: Keep local and production Compose concerns separate. The local stack should optimize for fast all-in-one validation, while production Compose should stay narrowly focused on Cortex containers and assume managed or independently operated infrastructure. This prevents the common failure mode where a convenient laptop topology quietly becomes an accidental production architecture.
+
+### 2026-04-19 11:20:00 +08:00 | Local Compose Was Too Eager To Preinstall Crawl4AI Browser Dependencies During Image Build
+
+- Stage: `CTX-20260419-072 ~ CTX-20260419-074`
+- Event: `powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 up -Build` failed before any meaningful local runtime validation could begin. The API image build ran `prepare_crawl4ai_runtime.py --install-if-missing --with-deps`, which delegated to `python -m playwright install --with-deps chromium`; that in turn hit transient Debian mirror `502 Bad Gateway` responses while fetching Linux packages. After the compose build failed, `stack.ps1` still continued into readiness waits and eventually reported a misleading PostgreSQL timeout.
+- Cause:
+  - The Dockerfile treated local and production image builds identically, always preinstalling Crawl4AI browser/system dependencies at build time.
+  - Local compose is often used for broad API validation, not specifically for browser-backed parsing, so forcing Crawl4AI preinstallation into every local build made the whole stack fragile.
+  - `scripts/dev/stack.ps1` did not exit immediately when `docker compose up` failed, so the first actionable error was buried under a later port-wait timeout.
+- Action:
+  - Added an optional Docker build argument `CORTEX_PREPARE_CRAWL4AI_RUNTIME` and guarded the API / Parse Worker build-time runtime-prep step with it.
+  - Updated `compose.local.yaml` to:
+    - pass `CORTEX_RUNTIME_CONFIG_PATH=configs/cortex.runtime.local.yaml` as a build arg
+    - set `CORTEX_PREPARE_CRAWL4AI_RUNTIME=0` for local API / Parse Worker image builds
+    - set `CORTEX_CRAWL4AI_SKIP_PROBE=1` in local container runtime env so the local stack can start without forcing immediate browser startup validation
+  - Updated `scripts/dev/stack.ps1` to exit immediately when `docker compose up`, `down`, `ps`, `logs`, or `restart` returns a non-zero exit code instead of continuing into unrelated readiness waits.
+- Validation:
+  - `docker compose -p cortex-local -f compose.local.yaml config`
+  - `powershell -NoProfile -Command "[void][ScriptBlock]::Create((Get-Content 'scripts/dev/stack.ps1' -Raw)); Write-Output 'stack.ps1 syntax ok'"`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 run python scripts/ci/validate_yaml.py compose.local.yaml`
+- Operator guidance:
+  - For local API testing, rerun `powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 up -Build`. The stack will now skip Crawl4AI browser preinstall during image build and should no longer be blocked by transient Debian mirror failures.
+  - If the goal is specifically to validate `crawl4ai` inside containers, treat that as a separate browser-runtime preparation step and prefer a Linux environment or a stable mirror/proxy path for Playwright system packages.
+
+### 2026-04-19 14:40:00 +08:00 | Containerized Crawl4AI Was Switched From Lazy-Avoidance To A Real Playwright Runtime Path
+
+- Stage: `CTX-20260419-075 ~ CTX-20260419-077`
+- Event: After the earlier local-compose resilience patch, the remaining gap was that local Docker validation could start the stack but still did not prove `crawl4ai` itself worked inside the shipped containers. The user explicitly asked to “把 crawl4ai 容器内也打通”.
+- Cause:
+  - The first workaround solved only the mirror-instability problem by skipping browser preparation, not the actual in-container browser-runtime path.
+  - The runtime config still resolved Playwright browsers into repo-local `.data/...` paths, which is correct for host-mode execution but wrong once the container already ships browsers under `/ms-playwright`.
+  - The API / Parse Worker containers also lacked explicit `init` / shared-memory tuning for Chromium.
+- Action:
+  - Reworked `Dockerfile` so `api` and `parse-worker` now build from Playwright's official Python image `mcr.microsoft.com/playwright/python:v1.58.0-noble`, while `knowledge-worker` stays on the slim Python base image.
+  - Removed build-time `playwright install --with-deps` from the Cortex image flow. The official image already contains browser binaries and Linux system dependencies, so image builds no longer depend on live Debian mirror health.
+  - Kept build-time runtime preparation in `--no-probe` mode to validate config wiring without forcing a browser launch during Docker build, and left the real browser preflight to container startup.
+  - Extended `cortex_parse.playwright_runtime.resolve_crawl4ai_playwright_runtime()` to respect container-specific overrides:
+    - `CORTEX_PLAYWRIGHT_BROWSERS_PATH`
+    - `CORTEX_CRAWL4AI_BASE_DIRECTORY`
+    This preserves vendor-neutral runtime YAML while allowing Docker to bind the browser path to `/ms-playwright`.
+  - Updated `compose.local.yaml` and `compose.prod.yaml` to set `CORTEX_PLAYWRIGHT_BROWSERS_PATH=/ms-playwright`, re-enable Crawl4AI startup probing, and add `init: true` plus `shm_size: 1gb` for `cortex-api` and `cortex-parse-worker`.
+  - Updated `.env.example`, `.env.prod.example`, `README.md`, and `specs/cortex-tech.md` so operators can see the new container runtime contract directly in the repo.
+  - Added a focused unit regression test proving the runtime resolver prefers container env overrides over the host-oriented runtime YAML browser path.
+- Validation:
+  - `docker compose -p cortex-local -f compose.local.yaml config`
+  - `docker compose -f compose.prod.yaml config`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 run python scripts/ci/validate_yaml.py compose.local.yaml compose.prod.yaml`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 run python -m pytest tests/unit/test_playwright_runtime.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 run python -m ruff check packages/parse/src/cortex_parse/playwright_runtime.py tests/unit/test_playwright_runtime.py`
+- Notes:
+  - In this Codex session the Docker daemon is still not directly callable, so the live `docker compose up -Build` browser launch could not be executed here. The repository was instead updated to the documented Playwright container pattern from the official docs, and the Compose/rendered-config path plus focused runtime tests were revalidated locally.
+  - Official references used for this correction:
+    - Playwright Docker docs: https://playwright.dev/python/docs/docker
+    - Crawl4AI installation/runtime docs: https://docs.crawl4ai.com/core/installation/
+- Prevention: For browser-backed parsers, treat the browser runtime as part of the image contract, not an optional runtime side effect. Host-mode overlays may still point to repo-local directories, but container deployments should always override the browser path explicitly and rely on prebuilt browser images instead of first-boot installation.
+
+### 2026-04-19 15:05:00 +08:00 | Focused Validation Exposed Two Corrupted `.venv` Packages
+
+- Stage: `CTX-20260419-077`
+- Event: Focused validation initially failed during import, first on `python-dotenv` and then on `google.protobuf`, even though both packages appeared in `.venv` metadata.
+- Cause:
+  - The active `.venv` contained stale / partial installs where only `.dist-info` remained but the importable module packages were missing.
+  - `cortex-common` also relied on `python-dotenv` transitively through `pydantic-settings` without declaring it as a direct runtime dependency, which made the missing package harder to reason about in minimal-sync environments.
+- Action:
+  - Declared `python-dotenv>=1.1,<2` explicitly in `packages/common/pyproject.toml`.
+  - Re-locked the workspace and re-synced the repo-managed `.venv`.
+  - Reinstalled the corrupted local packages in place for validation:
+    - `python-dotenv==1.2.2`
+    - `protobuf==6.33.6`
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 run python -c "import dotenv; print(dotenv.__file__)"`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 run python -c "import google.protobuf; print(google.protobuf.__file__)"`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 run python -m pytest tests/unit/test_playwright_runtime.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 run pyright packages/parse/src/cortex_parse/playwright_runtime.py tests/unit/test_playwright_runtime.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 run python -m ruff check packages/parse/src/cortex_parse/playwright_runtime.py tests/unit/test_playwright_runtime.py`
+- Prevention: When a package shows up in `pip show` but import still fails, inspect `.venv\\Lib\\site-packages` directly before assuming the repo dependency graph is wrong. For Cortex itself, keep transitive imports like `python-dotenv` declared in the owning runtime package instead of relying on toolchain or dev-group coincidence.
+
+### 2026-04-20 10:05:00 +08:00 | Docker Build Failed Because `.python-version` Was More Specific Than The Container Python
+
+- Stage: `CTX-20260420-078`
+- Event: Docker image builds for `cortex-api` and `cortex-parse-worker` failed during `uv sync` with `error: No interpreter found for Python 3.12.12 in search path`.
+- Cause:
+  - The repository pins local development Python with `.python-version=3.12.12`.
+  - `uv` treats `.python-version` as an explicit Python version request.
+  - The Playwright Python base image ships a compatible Python 3.12 interpreter, but not necessarily patch `3.12.12`.
+  - Because the Docker build also sets `UV_PYTHON_PREFERENCE=only-system` and `UV_PYTHON_DOWNLOADS=never`, `uv` cannot download a matching managed interpreter and therefore fails fast.
+- Action:
+  - Updated each Docker `uv sync` invocation to pass `--python "$(command -v python)"`, forcing `uv` to use the container's active system interpreter path instead of resolving against `.python-version`.
+  - Applied the same fix consistently to `api`, `parse-worker`, and `knowledge-worker` targets so all build targets follow one rule.
+- Validation:
+  - Structural validation only in this Codex session: the Dockerfile now resolves the interpreter from the running image shell instead of relying on version-file discovery.
+  - Recommended operator recheck:
+    - `powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 up -Build`
+    - or `docker compose -p cortex-local -f compose.local.yaml build --no-cache cortex-api cortex-parse-worker`
+- Prevention: Keep `.python-version` as the local developer pin, but do not let container builds discover Python indirectly from project files when the image already provides a system interpreter. In Docker, prefer explicit interpreter binding (`--python <path>`) over version-file discovery.
+
+### 2026-04-21 09:35:00 +08:00 | Crawl4AI Adapter Overrode Container Browser Path Back To `.data`
+
+- Stage: `CTX-20260421-079`
+- Event: Docker started successfully, but live `crawl4ai` parse failed with `BrowserType.launch: Executable doesn't exist at /app/.data/playwright/local/chromium-1208/chrome-linux64/chrome`.
+- Cause:
+  - The container had `CORTEX_PLAYWRIGHT_BROWSERS_PATH=/ms-playwright`, and runtime preflight resolution already understood that override.
+  - During actual parse execution, `Crawl4AIParseEngine._ensure_playwright_browsers_path()` independently preferred `self._config["playwright_browsers_path"]` over `PLAYWRIGHT_BROWSERS_PATH`.
+  - `_crawl4ai_config()` populated that config from `configs/cortex.runtime.local.yaml`, so the adapter reset Playwright back to `/app/.data/playwright/local`, where no browser exists in the container.
+- Action:
+  - Changed the adapter precedence to:
+    - `CORTEX_PLAYWRIGHT_BROWSERS_PATH`
+    - `PLAYWRIGHT_BROWSERS_PATH`
+    - runtime config `playwright_browsers_path`
+    - repo-local default
+  - Applied the same environment-first pattern to Crawl4AI base-directory resolution through `CORTEX_CRAWL4AI_BASE_DIRECTORY`, `CRAWL4_AI_BASE_DIRECTORY`, and `CRAWL4AI_BASE_DIRECTORY`.
+  - Added an integration regression test proving `CORTEX_PLAYWRIGHT_BROWSERS_PATH` wins over a conflicting runtime-config browser path.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 run python -m pytest tests/integration/test_parse_crawl4ai_adapter.py tests/unit/test_playwright_runtime.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 run python -m ruff check packages/parse/src/cortex_parse/adapters/crawl4ai.py tests/integration/test_parse_crawl4ai_adapter.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 run pyright packages/parse/src/cortex_parse/adapters/crawl4ai.py tests/integration/test_parse_crawl4ai_adapter.py`
+- Prevention: Runtime preflight and adapter execution must share the same precedence model. Container overrides must always win over host-oriented YAML paths, otherwise startup validation and request-time behavior can diverge.
+
+### 2026-04-21 15:37:24 +08:00 | Crawl4AI Failed On Missing Optional `storage_state.json`
+
+- Stage: `CTX-20260421-080`
+- Event: After starting `cortex-api`, live `crawl4ai` parsing failed with `No such file or directory: ...secrets\\crawl4ai\\local\\storage_state.json`.
+- Cause:
+  - The local runtime overlay defines `parse.engines.crawl4ai.storage_state_ref` as a conventional path for authenticated crawling.
+  - `LoadedRuntimeConfig.resolve_reference("path:...")` correctly resolves the path even if the file does not exist.
+  - `_crawl4ai_config()` treated that optional path as an active `BrowserConfig.storage_state`, so Playwright tried to open a non-existent cookie/localStorage state file during ordinary public-page crawling.
+- Action:
+  - Added `_resolve_existing_storage_state()` to Crawl4AI parse bootstrap.
+  - Runtime `storage_state_ref` now injects `browser_config.storage_state` only when the referenced file exists.
+  - Existing authenticated crawling behavior is preserved: once the operator creates the JSON state file at the configured path, Cortex automatically passes it to Crawl4AI.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests/unit/test_runtime_config.py tests/integration/test_parse_crawl4ai_adapter.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m ruff check packages/parse/src/cortex_parse/bootstrap.py tests/unit/test_runtime_config.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright packages/parse/src/cortex_parse/bootstrap.py tests/unit/test_runtime_config.py`
+- Prevention: Optional runtime references that point to operator-managed secrets must fail open when absent and fail closed only when an explicit API/profile request requires them. Default public crawling should never be blocked by a missing authentication-state placeholder.
+- Prevention: The local compose path should optimize for “start the API and the platform around it” rather than “prove every optional browser dependency can be installed from the public internet right now.” Keep production images fail-fast, but make local builds resilient by deferring optional browser preparation until the operator actually needs browser-backed parsing.

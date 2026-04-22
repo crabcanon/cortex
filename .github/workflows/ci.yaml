@@ -35,6 +35,11 @@ jobs:
       - name: Sync workspace
         run: uv sync --all-packages --all-groups --frozen
 
+      - name: Install Playwright browsers
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.data/playwright/local
+        run: uv run python -m playwright install chromium
+
       - name: Run repository validation
         run: uv run --all-packages --all-groups python scripts/ci/check.py
 
@@ -70,6 +75,11 @@ jobs:
 
       - name: Wait for runtime stack
         run: uv run --all-packages --all-groups python scripts/ci/wait_for_runtime_stack.py
+
+      - name: Install Playwright browsers
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.data/playwright/local
+        run: uv run python -m playwright install chromium
 
       - name: Run docker-backed integration tests
         env:

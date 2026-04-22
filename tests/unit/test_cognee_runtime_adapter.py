@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+import warnings
 from enum import Enum
 
 import pytest
 from cortex_common import ConfigError
+from cortex_knowledge import runtime as runtime_module
 from cortex_knowledge.runtime import PythonCogneeRuntime
 
 
@@ -46,7 +48,9 @@ class _FakeCogneeModule:
         ]
 
 
-def _build_runtime(monkeypatch: pytest.MonkeyPatch) -> tuple[PythonCogneeRuntime, _FakeCogneeModule]:
+def _build_runtime(
+    monkeypatch: pytest.MonkeyPatch,
+) -> tuple[PythonCogneeRuntime, _FakeCogneeModule]:
     fake_module = _FakeCogneeModule()
     monkeypatch.setattr("cortex_knowledge.runtime._cognee_available", lambda: True)
     monkeypatch.setattr("cortex_knowledge.runtime._cognee_version", lambda: "0.5.test")
@@ -109,6 +113,61 @@ def test_python_cognee_runtime_rejects_unresolved_object_inputs(
         )
 
 
+def test_load_cognee_module_suppresses_known_upstream_deprecation_warnings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    try:
+        from pydantic.warnings import PydanticDeprecatedSince20
+    except Exception:  # pragma: no cover - fallback for older/newer pydantic
+        PydanticDeprecatedSince20 = DeprecationWarning
+
+    fake_module = object()
+
+    def _fake_import(name: str) -> object:
+        assert name == "cognee"
+        warnings.warn_explicit(
+            (
+                "'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. "
+                "Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead."
+            ),
+            DeprecationWarning,
+            filename="cognee/exceptions/exceptions.py",
+            lineno=52,
+            module="cognee.exceptions.exceptions",
+        )
+        warnings.warn_explicit(
+            (
+                "Using extra keyword arguments on `Field` is deprecated and will be removed. "
+                "Use `json_schema_extra` instead."
+            ),
+            PydanticDeprecatedSince20,
+            filename="cognee/infrastructure/databases/graph/config.py",
+            lineno=38,
+            module="cognee.infrastructure.databases.graph.config",
+        )
+        warnings.warn_explicit(
+            (
+                "`json_encoders` is deprecated. See "
+                "https://docs.pydantic.dev/2.12/concepts/serialization/"
+                "#custom-serializers for alternatives."
+            ),
+            PydanticDeprecatedSince20,
+            filename="pydantic/_internal/_generate_schema.py",
+            lineno=319,
+            module="pydantic._internal._generate_schema",
+        )
+        return fake_module
+
+    monkeypatch.setattr(runtime_module.importlib, "import_module", _fake_import)
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        loaded = runtime_module._load_cognee_module()
+
+    assert loaded is fake_module
+    assert caught == []
+
+
 def test_python_cognee_runtime_translates_memify_and_search(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -118,7 +177,11 @@ def test_python_cognee_runtime_translates_memify_and_search(
     async def _fake_triplet_pipeline(**kwargs: object) -> dict[str, object]:
         return {"pipeline": "triplet_embeddings", **kwargs}
 
-    monkeypatch.setattr(runtime, "_resolve_memify_callable", lambda pipeline: _fake_triplet_pipeline)
+    monkeypatch.setattr(
+        runtime,
+        "_resolve_memify_callable",
+        lambda pipeline: _fake_triplet_pipeline,
+    )
     monkeypatch.setattr(runtime, "_resolve_cognee_user", lambda: asyncio.sleep(0, result=fake_user))
 
     memify_result = asyncio.run(

@@ -6,7 +6,9 @@ import asyncio
 import importlib
 import importlib.metadata
 import inspect
+import warnings
 from collections.abc import Awaitable, Callable
+from contextlib import contextmanager
 from enum import Enum
 from pathlib import Path
 from typing import Any, cast
@@ -16,10 +18,51 @@ from cortex_common import CogneeSettings, ConfigError, LoadedRuntimeConfig, load
 
 from .models import CogneeRuntimeDescriptor, CogneeRuntimeProtocol
 
+try:  # pragma: no cover - import path depends on installed pydantic version
+    from pydantic.warnings import PydanticDeprecatedSince20
+except Exception:  # pragma: no cover - fallback for older/newer pydantic
+    PydanticDeprecatedSince20 = DeprecationWarning
+
+
+@contextmanager
+def _suppress_known_cognee_import_warnings() -> Any:
+    """Suppress known upstream Cognee/Pydantic deprecations during optional imports."""
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message=(
+                r"'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated\. "
+                r"Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead\."
+            ),
+            category=DeprecationWarning,
+            module=r"cognee\.exceptions\.exceptions",
+        )
+        warnings.filterwarnings(
+            "ignore",
+            message=(
+                r"Using extra keyword arguments on `Field` is deprecated "
+                r"and will be removed\..*"
+            ),
+            category=PydanticDeprecatedSince20,
+            module=r"cognee\.infrastructure\.databases\.graph\.config",
+        )
+        warnings.filterwarnings(
+            "ignore",
+            message=r"`json_encoders` is deprecated\..*",
+            category=PydanticDeprecatedSince20,
+            module=r"pydantic\._internal\._generate_schema",
+        )
+        yield
+
+
+def _import_cognee_module(module_name: str) -> Any:
+    with _suppress_known_cognee_import_warnings():
+        return importlib.import_module(module_name)
+
 
 def _load_cognee_module() -> Any:
     try:
-        return importlib.import_module("cognee")
+        return _import_cognee_module("cognee")
     except ImportError as exc:  # pragma: no cover - depends on optional dependency
         raise ConfigError(
             "Cognee runtime is not installed. Install `cognee` to enable knowledge operations."
@@ -166,7 +209,8 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
                 value = raw_input.get("uri")
             else:
                 raise ConfigError(
-                    "Cognee add currently supports only `text` and `uri` inputs for live runtime execution."
+                    "Cognee add currently supports only `text` and `uri` inputs "
+                    "for live runtime execution."
                 )
             if not isinstance(value, str) or not value.strip():
                 raise ConfigError(f"Cognee add input `{input_type}` is missing its content.")
@@ -209,7 +253,9 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
             "session_id": payload.get("session_id"),
         }
         search_type_name = str(payload.get("search_type", "GRAPH_COMPLETION"))
-        search_type_enum = getattr(self._module, "SearchType", None) if self._module is not None else None
+        search_type_enum = (
+            getattr(self._module, "SearchType", None) if self._module is not None else None
+        )
         if isinstance(search_type_enum, type) and issubclass(search_type_enum, Enum):
             try:
                 kwargs["query_type"] = search_type_enum[search_type_name]
@@ -272,13 +318,13 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
 
     def _resolve_memify_callable(self, pipeline: str) -> Callable[..., Any]:
         if pipeline == "triplet_embeddings":
-            module = importlib.import_module("cognee.memify_pipelines.create_triplet_embeddings")
-            return getattr(module, "create_triplet_embeddings")
+            module = _import_cognee_module("cognee.memify_pipelines.create_triplet_embeddings")
+            return module.create_triplet_embeddings  # type: ignore[attr-defined]
         if pipeline == "session_persistence":
-            module = importlib.import_module(
+            module = _import_cognee_module(
                 "cognee.memify_pipelines.persist_sessions_in_knowledge_graph"
             )
-            return getattr(module, "persist_sessions_in_knowledge_graph_pipeline")
+            return module.persist_sessions_in_knowledge_graph_pipeline  # type: ignore[attr-defined]
         raise ConfigError(f"Unknown Cognee memify pipeline `{pipeline}`.")
 
     @staticmethod
@@ -307,10 +353,12 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
         return payload
 
     async def _resolve_cognee_user(self) -> Any:
-        methods_module = importlib.import_module("cognee.modules.users.methods")
+        methods_module = _import_cognee_module("cognee.modules.users.methods")
         getter = getattr(methods_module, "get_default_user", None)
         if getter is None:
-            raise ConfigError("Cognee runtime does not expose `get_default_user` for memify execution.")
+            raise ConfigError(
+                "Cognee runtime does not expose `get_default_user` for memify execution."
+            )
         if asyncio.iscoroutinefunction(getter):
             return await cast(Callable[..., Awaitable[Any]], getter)()
         return await asyncio.to_thread(cast(Callable[..., Any], getter))
@@ -473,7 +521,11 @@ def _translate_db_url(db_url: str, *, provider: str, migration: bool) -> dict[st
     parsed = urlparse(db_url)
     scheme = provider or parsed.scheme.split("+", 1)[0].lower()
     if scheme in {"sqlite"}:
-        raw_path = db_url.split("sqlite:///", 1)[1] if db_url.startswith("sqlite:///") else parsed.path
+        raw_path = (
+            db_url.split("sqlite:///", 1)[1]
+            if db_url.startswith("sqlite:///")
+            else parsed.path
+        )
         path = Path(unquote(raw_path))
         if not path.is_absolute():
             path = (Path.cwd() / path).resolve()

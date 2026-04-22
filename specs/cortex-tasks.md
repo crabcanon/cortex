@@ -502,3 +502,15 @@ Goal: make Docker image builds immune to repo-local `.python-version` patch-pin 
 | CTX-20260420-078 | 2026-04-20 10:05:00 +08:00 | P0 | delivery | Update Docker `uv sync` steps to bind explicitly to the container's active system Python interpreter path instead of relying on `.python-version` discovery, so Playwright-based images with non-3.12.12 patch releases still build successfully under `--frozen` | CTX-20260419-077 | done |
 | CTX-20260421-079 | 2026-04-21 09:35:00 +08:00 | P0 | parse-runtime | Fix the Crawl4AI adapter's browser-path precedence so container environment overrides such as `CORTEX_PLAYWRIGHT_BROWSERS_PATH=/ms-playwright` win over runtime YAML host paths like `/app/.data/playwright/local` during actual parse execution | CTX-20260420-078 | done |
 | CTX-20260421-080 | 2026-04-21 15:37:24 +08:00 | P0 | parse-runtime | Make the optional Crawl4AI `storage_state_ref` fail-open when the referenced cookies/localStorage file is absent, while still enabling it automatically once the file exists | CTX-20260421-079 | done |
+
+### Batch 2026-04-21 18:10:00 +08:00 | Phase AG Docker Image Slimming And Heavy Parser Split
+
+Goal: remove Docling/Torch from default API and Parse Worker images, keep default parser coverage usable, and expose Docling as an explicitly enabled heavy worker profile while ensuring Knowledge Worker remains part of the build/deploy topology.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260421-081 | 2026-04-21 18:10:00 +08:00 | P0 | delivery | Split `docling`, `torch`, `opencv-python`, and full `markitdown[all]` out of the default `cortex-parse` dependency path so `cortex-api` and default `cortex-parse-worker` no longer download heavyweight document/OCR dependencies during normal image builds | CTX-20260421-080 | done |
+| CTX-20260421-082 | 2026-04-21 18:10:00 +08:00 | P0 | delivery | Add a dedicated `parse-worker-docling` Docker target plus local/production Compose profile services, while keeping `knowledge-worker` as an explicit build target/service in the standard topology | CTX-20260421-081 | done |
+| CTX-20260421-083 | 2026-04-21 18:10:00 +08:00 | P0 | validation-docs | Re-lock dependencies, validate default and Docling package plans, run focused parser tests plus lint/type/Compose/YAML validation, then update README, tech design, and issue log with the packaging strategy and operator commands | CTX-20260421-082 | done |
+| CTX-20260421-084 | 2026-04-21 19:05:00 +08:00 | P0 | delivery | Replace the remaining Docker Hub `python:3.12.12-slim` base-image dependency in the `knowledge-worker` build with a GHCR uv Python slim baseline, copy pinned uv binaries from the official uv image, and expose compose build-arg overrides for enterprise mirrors | CTX-20260421-083 | done |
+| CTX-20260421-085 | 2026-04-21 21:05:00 +08:00 | P0 | database | Widen `jobs.target_id` from UUID-sized storage to URL/object-locator storage, add an Alembic migration for existing PostgreSQL deployments, update schema docs/init SQL, and add Parse Job regression coverage for long URL targets | CTX-20260421-084 | done |

@@ -1,5 +1,37 @@
 # Cortex
 
+## 2026-04-21 镜像瘦身与 Docling 拆分说明
+
+以下说明优先级高于较早版本中“默认镜像包含全部解析引擎依赖”的描述：
+
+- `cortex-api` 与默认 `cortex-parse-worker` 现在只安装默认解析引擎集：`crawl4ai`、`jina_reader`、`llama_parse`、`markitdown` 基础包。
+- `docling`、`torch`、`opencv-python`、完整 `markitdown[all]` 等重型文档依赖已经拆到独立镜像 target：`parse-worker-docling`。
+- 本地和生产 Compose 都新增了 `cortex-parse-worker-docling` 服务，并通过 `--profile docling` 显式启用。
+- `knowledge-worker` 已经是独立 Docker target 和 Compose 服务，不再遗漏在一键启动链路之外。
+- 默认 API 镜像不再因为 `docling -> torch` 下载失败而阻断构建；需要 Docling 高保真文档解析时，单独构建和扩缩容 Docling Worker。
+- `knowledge-worker` 的 Python slim 基础镜像默认改为 `ghcr.io/astral-sh/uv:python3.12-bookworm-slim`，不再依赖 Docker Hub 的 `python:3.12.12-slim`；`uv` 二进制从 `ghcr.io/astral-sh/uv:0.7.22` 复制，减少构建阶段网络故障点。
+
+默认本地启动：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 up -Build
+```
+
+需要 Docling Worker 时再额外启用：
+
+```powershell
+docker compose -p cortex-local -f compose.local.yaml --profile docling up -d --build cortex-parse-worker-docling
+```
+
+如果企业网络对 GHCR / MCR 也做了代理或镜像加速，可通过环境变量覆盖构建基线：
+
+```powershell
+$env:CORTEX_PYTHON_BASE_IMAGE="your-registry.example.com/astral-sh/uv:python3.12-bookworm-slim"
+$env:CORTEX_UV_IMAGE="your-registry.example.com/astral-sh/uv:0.7.22"
+$env:CORTEX_PLAYWRIGHT_PYTHON_BASE_IMAGE="your-registry.example.com/playwright/python:v1.58.0-noble"
+powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 up -Build
+```
+
 ## 2026-04-19 容器内 Crawl4AI 修正说明
 
 以下说明优先级高于前文较早版本中关于本地 Compose 的旧描述：
@@ -139,7 +171,7 @@ Cortex 基于 Python 3.12、`uv workspace`、FastAPI、标准 SQL、S3 兼容对
   - MarkItDown
   - Docling
 - 对外采用极简 `sources + engine_id (+ scene)` 契约，`engine_id=auto` 时由系统自动为每个来源选择最佳激活引擎，内部通过请求编译器绑定 scene preset、parser profile、回退策略和引擎默认配置
-- `/v1/parse/engines` 会直接暴露当前 runtime config 中启用的解析引擎目录；默认本地配置会一次性激活 `crawl4ai`、`jina_reader`、`llama_parse`、`markitdown`、`docling`
+- `/v1/parse/engines` 会直接暴露当前 runtime config 与镜像安装集共同可用的解析引擎目录；默认镜像激活 `crawl4ai`、`jina_reader`、`llama_parse`、`markitdown`，`docling` 由独立 `parse-worker-docling` 镜像承载，避免默认 API / Parse Worker 被 `torch` 这类重型依赖拖大。
 
 ### 1.2 Storage API
 
@@ -1204,10 +1236,11 @@ python scripts/runtime/prepare_crawl4ai_runtime.py --install-if-missing --with-d
 
 ### 17.3 内置 Dockerfile
 
-仓库现已提供正式 `Dockerfile`，包含 3 个 target：
+仓库现已提供正式 `Dockerfile`，包含 4 个 target：
 
 - `api`
 - `parse-worker`
+- `parse-worker-docling`
 - `knowledge-worker`
 
 构建示例：
@@ -1215,17 +1248,26 @@ python scripts/runtime/prepare_crawl4ai_runtime.py --install-if-missing --with-d
 ```bash
 docker build --target api -t cortex-api:local .
 docker build --target parse-worker -t cortex-parse-worker:local .
+docker build --target parse-worker-docling -t cortex-parse-worker-docling:local .
 docker build --target knowledge-worker -t cortex-knowledge-worker:local .
 ```
 
 这个 Dockerfile 在构建阶段会：
 
-1. `uv sync --all-packages --all-groups --frozen`
-2. 读取 `configs/cortex.runtime.prod.yaml`
-3. 执行 `prepare_crawl4ai_runtime.py --install-if-missing --with-deps --no-probe`
-4. 把 Playwright 浏览器预装到仓内约定路径
+1. 按镜像 target 精确执行 `uv sync --package ... --no-default-groups --frozen`
+2. `api` 与默认 `parse-worker` 只安装默认解析引擎集，不安装 `docling` / `torch`
+3. `parse-worker-docling` 通过 `cortex-worker-parse[docling]` 单独安装 Docling、Torch、OCR 与完整文档转换依赖
+4. `knowledge-worker` 独立安装 `cortex-worker-knowledge`，用于 Cognee / Knowledge 作业
+5. API 与 Parse Worker 基于 Playwright 官方 Python 镜像，容器内浏览器路径统一为 `/ms-playwright`
 
-因此，`crawl4ai` 最常见的 “Executable doesn't exist ... chrome.exe” 这类问题，会在镜像构建阶段暴露，而不会留到在线请求阶段。
+因此，`crawl4ai` 最常见的 “Executable doesn't exist ... chrome.exe” 这类问题会由容器镜像的 Playwright 基线兜住；`docling -> torch` 这类超大依赖下载失败，也不会再拖垮默认 API / Parse Worker 镜像构建。
+
+基础镜像策略：
+
+- `api` / `parse-worker` / `parse-worker-docling`：默认使用 `mcr.microsoft.com/playwright/python:v1.58.0-noble`
+- `knowledge-worker`：默认使用 `ghcr.io/astral-sh/uv:python3.12-bookworm-slim`
+- `uv`：从 `ghcr.io/astral-sh/uv:0.7.22` 复制 `/uv` 和 `/uvx`，不在镜像构建阶段额外执行 `pip install uv`
+- 如需改为企业内网镜像，覆盖 `CORTEX_PYTHON_BASE_IMAGE`、`CORTEX_UV_IMAGE`、`CORTEX_PLAYWRIGHT_PYTHON_BASE_IMAGE`
 
 运行示例：
 
@@ -1242,6 +1284,13 @@ docker run --rm \
   --env-file .env \
   -e CORTEX_RUNTIME_CONFIG_PATH=configs/cortex.runtime.prod.yaml \
   cortex-parse-worker:local
+```
+
+```bash
+docker run --rm \
+  --env-file .env \
+  -e CORTEX_RUNTIME_CONFIG_PATH=configs/cortex.runtime.prod.yaml \
+  cortex-parse-worker-docling:local
 ```
 
 ```bash

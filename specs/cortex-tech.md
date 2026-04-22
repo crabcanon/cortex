@@ -117,9 +117,19 @@ docker compose --env-file .env.prod -f compose.prod.yaml up -d
 Compose 分层依赖于当前已经完成的多目标镜像策略：
 - `api`
 - `parse-worker`
+- `parse-worker-docling`
 - `knowledge-worker`
 
 其中 `knowledge-worker` 现在显式依赖 `cortex-knowledge[runtime]`，避免出现镜像能构建、容器能启动，但运行时缺少 Cognee 主依赖的隐性错误。
+
+`parse-worker-docling` 是面向 Docling / OCR / 高保真文档转换的重型可选镜像。默认 `api` 与 `parse-worker` 不再安装 `docling`、`torch`、`opencv-python` 和完整 `markitdown[all]` 依赖，避免所有在线服务都承担 10GB 级镜像体积和大 wheel 下载失败风险。需要 Docling 能力时，通过 Compose profile 或生产编排单独启用该 worker，并按作业路由/队列策略独立扩缩容。
+
+基础镜像按运行角色拆分：
+
+- 浏览器型运行单元（`api`、`parse-worker`、`parse-worker-docling`）默认基于 `mcr.microsoft.com/playwright/python:v1.58.0-noble`，避免构建阶段现场安装 Chromium 与 Linux 依赖。
+- 非浏览器型运行单元（`knowledge-worker`）默认基于 `ghcr.io/astral-sh/uv:python3.12-bookworm-slim`，避免本地一键构建被 Docker Hub `python:*` 拉取波动阻断。
+- `uv` 不再通过 `pip install` 安装，而是从 `ghcr.io/astral-sh/uv:0.7.22` 复制 `/uv` 与 `/uvx`，减少 PyPI 网络故障点。
+- 本地 Compose 暴露 `CORTEX_PYTHON_BASE_IMAGE`、`CORTEX_UV_IMAGE`、`CORTEX_PLAYWRIGHT_PYTHON_BASE_IMAGE` 覆盖点，方便企业内网镜像仓库、镜像加速器或离线制品库接管。
 
 ## 1. 文档目标
 
@@ -460,16 +470,22 @@ src/cortex_parse/
 引擎依赖不建议全部写死在 API 包中，推荐由 `cortex_parse` 通过 extras 控制：
 
 - `parse[crawl4ai]`
-- `parse[jina]`
 - `parse[llamaparse]`
 - `parse[markitdown]`
+- `parse[markitdown-all]`
 - `parse[docling]`
+- `parse[document-engines]`
+- `parse[default-engines]`
+- `parse[all-engines]`
+
+`jina_reader` 仅依赖 `httpx` 与运行时 API Key，不需要额外 wheel 组。
 
 这样 Parse Worker 可按部署角色裁剪安装集：
 
-- 仅网页抓取节点安装 `crawl4ai`
-- 仅本地文档节点安装 `markitdown` / `docling`
-- 混合节点再叠加云端引擎适配器
+- 默认 API / Parse Worker 安装 `default-engines`：`crawl4ai`、`llama_parse`、`markitdown` 基础包。
+- 仅高保真文档节点安装 `document-engines`：`docling` 与完整 `markitdown[all]`。
+- 需要所有能力的混合节点安装 `all-engines`，但不建议作为默认 API 镜像基线。
+- Docling 节点建议独立镜像、独立 worker、独立扩缩容，避免 `docling -> torch`、`rapidocr -> opencv-python` 等重型链路影响默认在线服务构建和发布。
 
 ### 4.8 配置与环境模型
 

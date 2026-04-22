@@ -1252,3 +1252,86 @@
   - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright packages/parse/src/cortex_parse/bootstrap.py tests/unit/test_runtime_config.py`
 - Prevention: Optional runtime references that point to operator-managed secrets must fail open when absent and fail closed only when an explicit API/profile request requires them. Default public crawling should never be blocked by a missing authentication-state placeholder.
 - Prevention: The local compose path should optimize for “start the API and the platform around it” rather than “prove every optional browser dependency can be installed from the public internet right now.” Keep production images fail-fast, but make local builds resilient by deferring optional browser preparation until the operator actually needs browser-backed parsing.
+
+### 2026-04-21 18:10:00 +08:00 | Docker Images Were Bloated By Docling/Torch Being On The Default Parse Path
+
+- Stage: `CTX-20260421-081 ~ CTX-20260421-083`
+- Event: Docker image builds failed while downloading `torch==2.11.0`, pulled through `cortex-api -> cortex-parse -> docling -> torch`. The same dependency path also made `cortex-api` and `cortex-parse-worker` images grow to roughly 12GB, and the build/deploy story was still not explicit enough about the `knowledge-worker` image.
+- Cause:
+  - `docling` was a hard runtime dependency of `cortex-parse`, so every API and Parse Worker image inherited the heaviest document/OCR/ML stack even when the deployment only needed Crawl4AI, Jina Reader, LlamaParse, or basic MarkItDown parsing.
+  - `markitdown[all]` was also installed by default, pulling optional converters that are useful for document nodes but too broad for the default online API image.
+  - Docker Compose already had a Knowledge Worker service/target, but the runbook did not clearly present it alongside the API / Parse Worker / optional heavy parser split.
+- Action:
+  - Moved `docling` out of `cortex-parse` base dependencies and into optional extras.
+  - Split parse extras into `default-engines`, `document-engines`, `markitdown-all`, and `all-engines`.
+  - Changed `cortex-api` and default `cortex-worker-parse` to depend on `cortex-parse[default-engines]`, which keeps `crawl4ai`, `llama_parse`, and base `markitdown` without installing `docling` or `torch`.
+  - Made the Docling adapter mark itself disabled when the optional dependency is absent, instead of failing at import time.
+  - Added a dedicated Docker target `parse-worker-docling` and local/production Compose profile service `cortex-parse-worker-docling`.
+  - Kept `knowledge-worker` as a first-class Docker target and Compose service, with documentation updated to show it in the standard topology.
+- Validation:
+  - Default API package-plan validation used a clean temporary uv environment and confirmed `docling=False`, `torch=False`, `markitdown=True`, `speech_recognition=False`, `crawl4ai=True`, and `llama_parse=True`.
+  - Docling worker package-plan dry-run confirmed the heavy dependencies are isolated behind the optional Docling worker profile, including `docling==2.88.0`, `torch==2.11.0`, and `opencv-python==4.13.0.92`.
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 lock`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\integration\\test_parse_additional_adapters.py tests\\unit\\test_runtime_config.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m ruff check packages\\parse\\src\\cortex_parse\\adapters\\docling.py tests\\integration\\test_parse_additional_adapters.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright packages\\parse\\src\\cortex_parse\\adapters\\docling.py tests\\integration\\test_parse_additional_adapters.py`
+  - `docker compose -p cortex-local -f compose.local.yaml config`
+  - `docker compose -p cortex-local -f compose.local.yaml --profile docling config --services`
+  - `docker compose -f compose.prod.yaml config`
+  - `docker compose -f compose.prod.yaml --profile docling config --services`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py compose.local.yaml compose.prod.yaml`
+- Notes:
+  - The Compose config commands still emitted a local Docker CLI warning about `C:\\Users\\hy\\.docker\\config.json` access. Config rendering succeeded; the warning belongs to the operator shell's Docker config permissions, not Cortex YAML.
+  - The validation intentionally avoided building the Docling image in this session because it is expected to download the large Docling/Torch stack; the important invariant is that the default API / Parse Worker images no longer do so.
+- Prevention: Heavy parser runtimes must be opt-in deployment units. Keep the default API image focused on the control plane and common online parsers, and scale ML/OCR-heavy document parsing through dedicated worker images, profiles, queues, and release cadence.
+
+### 2026-04-21 19:05:00 +08:00 | Knowledge Worker Build Still Depended On Docker Hub Python Base
+
+- Stage: `CTX-20260421-084`
+- Event: `docker compose up -Build` failed while resolving the `knowledge-worker` base image: `python:3.12.12-slim: failed to do request ... EOF`.
+- Cause:
+  - API and Parse Worker images had already moved to the MCR Playwright Python base, but `knowledge-worker` still used Docker Hub `python:3.12.12-slim`.
+  - The Dockerfile also installed `uv` with `pip install`, adding another runtime network dependency during image build.
+- Action:
+  - Changed the default non-browser Python base to `ghcr.io/astral-sh/uv:python3.12-bookworm-slim`.
+  - Added an explicit `uv-bin` stage from `ghcr.io/astral-sh/uv:0.7.22` and copied `/uv` plus `/uvx` into both Python and Playwright bases.
+  - Removed `pip install "uv>=0.7,<0.8"` from image builds.
+  - Exposed local Compose build-arg overrides:
+    - `CORTEX_PYTHON_BASE_IMAGE`
+    - `CORTEX_UV_IMAGE`
+    - `CORTEX_PLAYWRIGHT_PYTHON_BASE_IMAGE`
+  - Updated README and technical design with the new image-source strategy and mirror override guidance.
+- Validation:
+  - `docker manifest inspect ghcr.io/astral-sh/uv:0.7.22`
+  - `docker manifest inspect ghcr.io/astral-sh/uv:python3.12-bookworm-slim`
+  - `docker compose -p cortex-local -f compose.local.yaml config --quiet`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py compose.local.yaml compose.prod.yaml`
+- Notes:
+  - A live `docker build --target knowledge-worker` could not be executed from this Codex process because the Docker daemon pipe returned `Access is denied`. Retrying with a repo-local `DOCKER_CONFIG` bypassed the CLI config read issue but still could not connect to the daemon from this process.
+  - The operator shell that can already run Docker should retry the build directly; the rendered Compose config and remote manifests now avoid the failing Docker Hub Python base.
+- Prevention: Every build-stage network dependency should be an explicit, overrideable artifact source. For local and CI reliability, avoid mixing Docker Hub, PyPI bootstrap installs, and runtime package syncs when a pinned official image can provide the same toolchain baseline.
+
+### 2026-04-21 21:05:00 +08:00 | Parse Job Submission Failed Because `jobs.target_id` Was UUID-Sized
+
+- Stage: `CTX-20260421-085`
+- Event: Calling `/v1/parse/jobs` with `https://docs.cognee.ai/core-concepts/overview` failed in PostgreSQL with `asyncpg.exceptions.StringDataRightTruncationError: value too long for type character varying(36)`.
+- Cause:
+  - `jobs.target_id` was modeled as `VARCHAR(36)`, which only fits UUID-like object IDs.
+  - Parse jobs store a human-readable target locator in that field, and URL/S3/file locators routinely exceed 36 characters.
+  - The full request was already preserved in `jobs.request_json`, but the indexed target summary column still needed to support real-world locator lengths.
+- Action:
+  - Changed ORM metadata `JobModel.target_id` from `String(36)` to `String(2048)`.
+  - Updated `specs/cortex-init.sql` so fresh databases create `jobs.target_id VARCHAR(2048)`.
+  - Added Alembic migration `20260421_191500_widen_jobs_target_id.py` to widen existing databases.
+  - Updated `specs/cortex-schema.md` to document that `target_id` may contain URL, S3 locator, object ID, or file URI summaries.
+  - Added a schema regression test and changed the async Parse Job integration test to submit a long URL target.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\unit\\test_db_schema.py tests\\integration\\test_api_parse.py::test_async_parse_job_submit_worker_and_result -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\integration\\test_api_parse.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m ruff check packages\\db\\src\\cortex_db\\models.py packages\\db\\migrations\\versions\\20260421_191500_widen_jobs_target_id.py tests\\unit\\test_db_schema.py tests\\integration\\test_api_parse.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright packages\\db\\src\\cortex_db\\models.py packages\\db\\migrations\\versions\\20260421_191500_widen_jobs_target_id.py tests\\unit\\test_db_schema.py tests\\integration\\test_api_parse.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml specs\\cortex-init.sql specs\\cortex-schema.md compose.local.yaml compose.prod.yaml`
+- Notes:
+  - The focused integration test confirmed Alembic applies the new migration after the baseline schema before submitting the long-URL Parse Job.
+  - Test startup had to bypass live Crawl4AI browser probing because this regression targets database/job-control behavior rather than Playwright host availability.
+- Prevention: Any job target summary column must be sized for the public API locator contract, not for internal UUIDs only. Keep canonical request state in JSON, but make indexed summary columns tolerant of URL/S3/file locator lengths.

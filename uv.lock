@@ -831,7 +831,7 @@ dependencies = [
     { name = "cortex-db" },
     { name = "cortex-knowledge" },
     { name = "cortex-observability" },
-    { name = "cortex-parse" },
+    { name = "cortex-parse", extra = ["default-engines"] },
     { name = "cortex-storage" },
     { name = "fastapi" },
     { name = "uvicorn" },
@@ -845,7 +845,7 @@ requires-dist = [
     { name = "cortex-db", editable = "packages/db" },
     { name = "cortex-knowledge", editable = "packages/knowledge" },
     { name = "cortex-observability", editable = "packages/observability" },
-    { name = "cortex-parse", editable = "packages/parse" },
+    { name = "cortex-parse", extras = ["default-engines"], editable = "packages/parse" },
     { name = "cortex-storage", editable = "packages/storage" },
     { name = "fastapi", specifier = ">=0.115,<1" },
     { name = "uvicorn", specifier = ">=0.35,<0.36" },
@@ -992,12 +992,40 @@ dependencies = [
     { name = "cortex-domain" },
     { name = "cortex-observability" },
     { name = "cortex-storage" },
+    { name = "httpx" },
+    { name = "pyyaml" },
+]
+
+[package.optional-dependencies]
+all-engines = [
     { name = "crawl4ai" },
     { name = "docling" },
-    { name = "httpx" },
     { name = "llama-parse" },
     { name = "markitdown", extra = ["all"] },
-    { name = "pyyaml" },
+]
+crawl4ai = [
+    { name = "crawl4ai" },
+]
+default-engines = [
+    { name = "crawl4ai" },
+    { name = "llama-parse" },
+    { name = "markitdown" },
+]
+docling = [
+    { name = "docling" },
+]
+document-engines = [
+    { name = "docling" },
+    { name = "markitdown", extra = ["all"] },
+]
+llamaparse = [
+    { name = "llama-parse" },
+]
+markitdown = [
+    { name = "markitdown" },
+]
+markitdown-all = [
+    { name = "markitdown", extra = ["all"] },
 ]
 
 [package.metadata]
@@ -1008,13 +1036,24 @@ requires-dist = [
     { name = "cortex-domain", editable = "packages/domain" },
     { name = "cortex-observability", editable = "packages/observability" },
     { name = "cortex-storage", editable = "packages/storage" },
-    { name = "crawl4ai", specifier = ">=0.7,<0.9" },
-    { name = "docling", specifier = ">=2.70,<3" },
+    { name = "crawl4ai", marker = "extra == 'all-engines'", specifier = ">=0.7,<0.9" },
+    { name = "crawl4ai", marker = "extra == 'crawl4ai'", specifier = ">=0.7,<0.9" },
+    { name = "crawl4ai", marker = "extra == 'default-engines'", specifier = ">=0.7,<0.9" },
+    { name = "docling", marker = "extra == 'all-engines'", specifier = ">=2.70,<3" },
+    { name = "docling", marker = "extra == 'docling'", specifier = ">=2.70,<3" },
+    { name = "docling", marker = "extra == 'document-engines'", specifier = ">=2.70,<3" },
     { name = "httpx", specifier = ">=0.28,<0.29" },
-    { name = "llama-parse", specifier = ">=0.6,<0.7" },
-    { name = "markitdown", extras = ["all"], specifier = ">=0.1,<0.2" },
+    { name = "llama-parse", marker = "extra == 'all-engines'", specifier = ">=0.6,<0.7" },
+    { name = "llama-parse", marker = "extra == 'default-engines'", specifier = ">=0.6,<0.7" },
+    { name = "llama-parse", marker = "extra == 'llamaparse'", specifier = ">=0.6,<0.7" },
+    { name = "markitdown", marker = "extra == 'default-engines'", specifier = ">=0.1,<0.2" },
+    { name = "markitdown", marker = "extra == 'markitdown'", specifier = ">=0.1,<0.2" },
+    { name = "markitdown", extras = ["all"], marker = "extra == 'all-engines'", specifier = ">=0.1,<0.2" },
+    { name = "markitdown", extras = ["all"], marker = "extra == 'document-engines'", specifier = ">=0.1,<0.2" },
+    { name = "markitdown", extras = ["all"], marker = "extra == 'markitdown-all'", specifier = ">=0.1,<0.2" },
     { name = "pyyaml", specifier = ">=6.0,<7" },
 ]
+provides-extras = ["crawl4ai", "llamaparse", "markitdown", "markitdown-all", "docling", "document-engines", "default-engines", "all-engines"]
 
 [[package]]
 name = "cortex-storage"
@@ -1069,7 +1108,15 @@ dependencies = [
     { name = "cortex-contracts" },
     { name = "cortex-db" },
     { name = "cortex-domain" },
-    { name = "cortex-parse" },
+    { name = "cortex-parse", extra = ["default-engines"] },
+]
+
+[package.optional-dependencies]
+all-engines = [
+    { name = "cortex-parse", extra = ["all-engines"] },
+]
+docling = [
+    { name = "cortex-parse", extra = ["document-engines"] },
 ]
 
 [package.metadata]
@@ -1078,8 +1125,11 @@ requires-dist = [
     { name = "cortex-contracts", editable = "packages/contracts" },
     { name = "cortex-db", editable = "packages/db" },
     { name = "cortex-domain", editable = "packages/domain" },
-    { name = "cortex-parse", editable = "packages/parse" },
+    { name = "cortex-parse", extras = ["all-engines"], marker = "extra == 'all-engines'", editable = "packages/parse" },
+    { name = "cortex-parse", extras = ["default-engines"], editable = "packages/parse" },
+    { name = "cortex-parse", extras = ["document-engines"], marker = "extra == 'docling'", editable = "packages/parse" },
 ]
+provides-extras = ["docling", "all-engines"]
 
 [[package]]
 name = "cortex-workspace"

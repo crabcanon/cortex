@@ -149,6 +149,16 @@ class _FakeDocumentConverter:
         return _FakeDoclingResult()
 
 
+def test_docling_adapter_is_disabled_when_optional_dependency_is_absent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(docling_adapter, "_docling_available", lambda: False)
+
+    engine = DoclingParseEngine({"enabled": True})
+
+    assert engine.descriptor.status.value == "disabled"
+
+
 @pytest.mark.asyncio
 async def test_docling_adapter_uses_optional_converter(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
@@ -156,6 +166,7 @@ async def test_docling_adapter_uses_optional_converter(monkeypatch: pytest.Monke
         "_load_document_converter_cls",
         lambda: _FakeDocumentConverter,
     )
+    monkeypatch.setattr(docling_adapter, "_docling_available", lambda: True)
     monkeypatch.setattr(docling_adapter, "_docling_version", lambda: "2.0.test")
 
     engine = DoclingParseEngine(

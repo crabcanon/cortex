@@ -8,7 +8,15 @@ dependencies = [
   "cortex-contracts",
   "cortex-db",
   "cortex-domain",
-  "cortex-parse",
+  "cortex-parse[default-engines]",
+]
+
+[project.optional-dependencies]
+docling = [
+  "cortex-parse[document-engines]",
+]
+all-engines = [
+  "cortex-parse[all-engines]",
 ]
 
 [project.scripts]

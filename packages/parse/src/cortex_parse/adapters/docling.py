@@ -38,18 +38,25 @@ def _docling_version() -> str | None:
         return None
 
 
+def _docling_available() -> bool:
+    return _docling_version() is not None
+
+
 class DoclingParseEngine(ParseEngineProtocol):
     """Use Docling for higher-fidelity local document conversion."""
 
     def __init__(self, config: dict[str, object] | None = None) -> None:
         self._config = dict(config) if isinstance(config, dict) else {}
         enabled = bool(self._config.get("enabled", True))
+        available = _docling_available()
         self._descriptor = ParseEngineDescriptor(
             engine_key="docling",
             display_name="Docling",
             engine_family="document_local",
             deployment_mode=ParseEngineDeploymentMode.LOCAL,
-            status=ParseEngineStatus.ACTIVE if enabled else ParseEngineStatus.DISABLED,
+            status=ParseEngineStatus.ACTIVE
+            if enabled and available
+            else ParseEngineStatus.DISABLED,
             supported_source_types=[
                 ParseInputKind.URI.value,
                 ParseInputKind.URL.value,

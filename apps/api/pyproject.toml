@@ -10,7 +10,7 @@ dependencies = [
   "cortex-db",
   "cortex-knowledge",
   "cortex-observability",
-  "cortex-parse",
+  "cortex-parse[default-engines]",
   "cortex-storage",
   "fastapi>=0.115,<1",
   "uvicorn>=0.35,<0.36",

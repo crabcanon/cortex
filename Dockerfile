@@ -1,7 +1,10 @@
 # syntax=docker/dockerfile:1.7
 
-ARG PYTHON_BASE_IMAGE=python:3.12.12-slim
+ARG PYTHON_BASE_IMAGE=ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 ARG PLAYWRIGHT_PYTHON_BASE_IMAGE=mcr.microsoft.com/playwright/python:v1.58.0-noble
+ARG UV_IMAGE=ghcr.io/astral-sh/uv:0.7.22
+
+FROM ${UV_IMAGE} AS uv-bin
 
 FROM ${PYTHON_BASE_IMAGE} AS python-base
 
@@ -23,7 +26,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends bash ca-certificates curl \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir "uv>=0.7,<0.8"
+COPY --from=uv-bin /uv /uvx /usr/local/bin/
 
 COPY . .
 
@@ -51,7 +54,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends bash ca-certificates curl \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir "uv>=0.7,<0.8"
+COPY --from=uv-bin /uv /uvx /usr/local/bin/
 
 COPY . .
 
@@ -90,6 +93,23 @@ RUN if [ "${CORTEX_PREPARE_CRAWL4AI_RUNTIME}" = "1" ]; then \
       --no-probe; \
     else \
       echo "[cortex] skipping Crawl4AI runtime preparation during parse-worker image build"; \
+    fi
+
+ENTRYPOINT ["bash", "scripts/runtime/start-parse-worker.sh"]
+
+FROM browser-base AS parse-worker-docling
+
+ARG CORTEX_PREPARE_CRAWL4AI_RUNTIME=1
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --python "$(command -v python)" --package cortex-worker-parse --extra docling --no-default-groups --frozen
+
+RUN if [ "${CORTEX_PREPARE_CRAWL4AI_RUNTIME}" = "1" ]; then \
+      ./.venv/bin/python scripts/runtime/prepare_crawl4ai_runtime.py \
+      --runtime-config "${CORTEX_RUNTIME_CONFIG_PATH}" \
+      --no-probe; \
+    else \
+      echo "[cortex] skipping Crawl4AI runtime preparation during docling parse-worker image build"; \
     fi
 
 ENTRYPOINT ["bash", "scripts/runtime/start-parse-worker.sh"]

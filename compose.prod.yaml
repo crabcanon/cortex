@@ -85,6 +85,17 @@ services:
     volumes:
       - cortex-data:/app/.data
 
+  cortex-parse-worker-docling:
+    image: ${CORTEX_PARSE_WORKER_DOCLING_IMAGE:-ghcr.io/crabcanon/cortex-parse-worker-docling:latest}
+    profiles: ["docling"]
+    init: true
+    shm_size: "1gb"
+    environment:
+      <<: *cortex-prod-env
+    restart: unless-stopped
+    volumes:
+      - cortex-data:/app/.data
+
   cortex-knowledge-worker:
     image: ${CORTEX_KNOWLEDGE_WORKER_IMAGE:-ghcr.io/crabcanon/cortex-knowledge-worker:latest}
     environment:

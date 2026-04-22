@@ -2,6 +2,8 @@ x-cortex-build-api: &cortex-build-api
   context: .
   target: api
   args:
+    PLAYWRIGHT_PYTHON_BASE_IMAGE: ${CORTEX_PLAYWRIGHT_PYTHON_BASE_IMAGE:-mcr.microsoft.com/playwright/python:v1.58.0-noble}
+    UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
     CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
     CORTEX_PREPARE_CRAWL4AI_RUNTIME: "1"
 
@@ -9,6 +11,17 @@ x-cortex-build-parse-worker: &cortex-build-parse-worker
   context: .
   target: parse-worker
   args:
+    PLAYWRIGHT_PYTHON_BASE_IMAGE: ${CORTEX_PLAYWRIGHT_PYTHON_BASE_IMAGE:-mcr.microsoft.com/playwright/python:v1.58.0-noble}
+    UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
+    CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
+    CORTEX_PREPARE_CRAWL4AI_RUNTIME: "1"
+
+x-cortex-build-parse-worker-docling: &cortex-build-parse-worker-docling
+  context: .
+  target: parse-worker-docling
+  args:
+    PLAYWRIGHT_PYTHON_BASE_IMAGE: ${CORTEX_PLAYWRIGHT_PYTHON_BASE_IMAGE:-mcr.microsoft.com/playwright/python:v1.58.0-noble}
+    UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
     CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
     CORTEX_PREPARE_CRAWL4AI_RUNTIME: "1"
 
@@ -16,6 +29,8 @@ x-cortex-build-knowledge-worker: &cortex-build-knowledge-worker
   context: .
   target: knowledge-worker
   args:
+    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-ghcr.io/astral-sh/uv:python3.12-bookworm-slim}
+    UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
     CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
 
 x-cortex-env: &cortex-env
@@ -202,6 +217,29 @@ services:
   cortex-parse-worker:
     image: cortex-parse-worker:local
     build: *cortex-build-parse-worker
+    init: true
+    shm_size: "1gb"
+    environment:
+      <<: *cortex-env
+    depends_on:
+      cortex-migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - cortex-data:/app/.data
+
+  cortex-parse-worker-docling:
+    image: cortex-parse-worker-docling:local
+    build: *cortex-build-parse-worker-docling
+    profiles: ["docling"]
     init: true
     shm_size: "1gb"
     environment:

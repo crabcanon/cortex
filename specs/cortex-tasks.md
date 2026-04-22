@@ -514,3 +514,22 @@ Goal: remove Docling/Torch from default API and Parse Worker images, keep defaul
 | CTX-20260421-083 | 2026-04-21 18:10:00 +08:00 | P0 | validation-docs | Re-lock dependencies, validate default and Docling package plans, run focused parser tests plus lint/type/Compose/YAML validation, then update README, tech design, and issue log with the packaging strategy and operator commands | CTX-20260421-082 | done |
 | CTX-20260421-084 | 2026-04-21 19:05:00 +08:00 | P0 | delivery | Replace the remaining Docker Hub `python:3.12.12-slim` base-image dependency in the `knowledge-worker` build with a GHCR uv Python slim baseline, copy pinned uv binaries from the official uv image, and expose compose build-arg overrides for enterprise mirrors | CTX-20260421-083 | done |
 | CTX-20260421-085 | 2026-04-21 21:05:00 +08:00 | P0 | database | Widen `jobs.target_id` from UUID-sized storage to URL/object-locator storage, add an Alembic migration for existing PostgreSQL deployments, update schema docs/init SQL, and add Parse Job regression coverage for long URL targets | CTX-20260421-084 | done |
+
+### Batch 2026-04-22 10:20:00 +08:00 | Phase AH Storage Upload Swagger Ergonomics
+
+Goal: remove unnecessary friction from the Swagger-driven single-part upload flow by allowing `size_bytes` to be omitted for direct PUT uploads, while keeping multipart initiation explicit and strongly validated.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260422-086 | 2026-04-22 10:20:00 +08:00 | P1 | storage-api | Make `POST /v1/storage/uploads` accept single-part sessions without `size_bytes`, resolve actual object size during completion, add a targeted multipart validation error, and refresh Swagger/OpenAPI/README guidance plus regression coverage | CTX-20260421-085 | done |
+
+### Batch 2026-04-22 14:40:00 +08:00 | Phase AI Auth Surface Simplification And Storage Contract Minimization
+
+Goal: remove non-essential public auth surface, keep idempotency only where the server truly deduplicates work, and shrink the Storage upload-init API down to caller-owned inputs while preserving the explicit upload-finalization boundary.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260422-087 | 2026-04-22 14:40:00 +08:00 | P0 | auth-api | Remove the optional built-in `/v1/auth/token` issuer from the public API surface, delete Bootstrap issuer secrets from runtime/config examples, and realign auth docs around Cortex as a resource server that consumes externally provided bearer tokens | CTX-20260422-086 | done |
+| CTX-20260422-088 | 2026-04-22 14:40:00 +08:00 | P0 | api-contract | Keep `Idempotency-Key` only on async job-submission APIs that actually deduplicate persisted jobs, remove it from synchronous parse, dataset creation, and storage upload-init routes, and update DFD/OpenAPI wording accordingly | CTX-20260422-087 | done |
+| CTX-20260422-089 | 2026-04-22 14:40:00 +08:00 | P0 | storage-api | Further minimize `POST /v1/storage/uploads` by removing service-owned routing knobs (`upload_mode`, `part_size_bytes`, `bucket_ref`, `object_prefix`) and making `content_type` inferable, while explicitly documenting and testing why `completeUploadSession` remains required | CTX-20260422-088 | done |
+| CTX-20260422-090 | 2026-04-22 15:35:00 +08:00 | P1 | test-hygiene | Suppress known upstream Cognee/Pydantic deprecation warnings through a narrow runtime import wrapper plus pytest-only filters, add regression coverage for warning-free optional imports, and keep knowledge/runtime contract tests green under `-W always` | CTX-20260422-089 | done |

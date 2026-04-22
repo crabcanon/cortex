@@ -1335,3 +1335,66 @@
   - The focused integration test confirmed Alembic applies the new migration after the baseline schema before submitting the long-URL Parse Job.
   - Test startup had to bypass live Crawl4AI browser probing because this regression targets database/job-control behavior rather than Playwright host availability.
 - Prevention: Any job target summary column must be sized for the public API locator contract, not for internal UUIDs only. Keep canonical request state in JSON, but make indexed summary columns tolerant of URL/S3/file locator lengths.
+
+### 2026-04-22 10:20:00 +08:00 | Swagger Storage Upload Rejected Minimal Single-Part Requests
+
+- Stage: `CTX-20260422-086`
+- Event: Calling `POST /v1/storage/uploads` from Swagger UI with a minimal single-part body failed with `422 validation_error` because `body.size_bytes` was required.
+- Cause:
+  - `StorageUploadCreateRequest.size_bytes` was modeled as mandatory for every upload, even though single-part uploads only need a signed PUT URL and can discover the final object size later.
+  - Swagger examples and route descriptions reinforced that stricter contract, so users were pushed toward unnecessary bookkeeping before they could even start a basic upload.
+- Action:
+  - Made `size_bytes` optional for `single_part` uploads while keeping it mandatory for explicit `multipart` initialization.
+  - Added a targeted business-validation error for `upload_mode=multipart` without `size_bytes`, including a `body.size_bytes` field error with operator-friendly guidance.
+  - Completed single-part uploads now issue an object-store `head_object` call to recover the final `ContentLength`, `ETag`, and `ContentType` when available before committing object metadata.
+  - Updated Swagger/OpenAPI examples, the storage route description, schema notes, README examples, and regression coverage so the recommended single-part flow is minimal and directly reusable.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\contract\\test_foundation_models.py tests\\integration\\test_api_storage.py tests\\integration\\test_api_e2e.py tests\\contract\\test_openapi_contract.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m ruff check apps\\api\\src\\cortex_api\\lifespan.py apps\\api\\src\\cortex_api\\routers\\storage.py packages\\contracts\\src\\cortex_contracts\\storage.py packages\\contracts\\src\\cortex_contracts\\openapi_examples.py packages\\storage\\src\\cortex_storage\\client.py packages\\storage\\src\\cortex_storage\\service.py tests\\contract\\test_foundation_models.py tests\\integration\\test_api_storage.py tests\\integration\\test_api_e2e.py tests\\contract\\test_openapi_contract.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright apps\\api\\src\\cortex_api\\lifespan.py apps\\api\\src\\cortex_api\\routers\\storage.py packages\\contracts\\src\\cortex_contracts\\storage.py packages\\contracts\\src\\cortex_contracts\\openapi_examples.py packages\\storage\\src\\cortex_storage\\client.py packages\\storage\\src\\cortex_storage\\service.py tests\\contract\\test_foundation_models.py tests\\integration\\test_api_storage.py tests\\integration\\test_api_e2e.py tests\\contract\\test_openapi_contract.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml`
+- Prevention: Keep the public upload contract aligned with the actual transfer primitive. Single-part signed PUT flows should optimize for minimal required input, while multipart flows should fail with explicit, field-level guidance only when the server genuinely needs precomputed size information.
+
+### 2026-04-22 14:40:00 +08:00 | Auth Surface Simplified, Idempotency Scoped, Storage Init Minimized
+
+- Stage: `CTX-20260422-087`, `CTX-20260422-088`, `CTX-20260422-089`
+- Event: Reviewed whether `BootstrapIssuerSecret`, broad `Idempotency-Key` exposure, and the current Storage upload-init contract were actually necessary for the public API.
+- Analysis:
+  - The built-in bootstrap issuer made Cortex look like a token-minting service even though the platform is intentionally designed as a resource server; the extra secret and endpoint added operator burden without being required for the core product workflow.
+  - `Idempotency-Key` only had real deduplication semantics on async job submission (`jobs` rows are uniquely keyed by tenant/job type/idempotency key). On synchronous parse, dataset creation, and storage upload-init it was merely documented, then ignored.
+  - `completeUploadSession` is still required because bytes move directly to object storage; Cortex needs an explicit finalize step to verify object visibility, recover provider metadata, and commit durable object/version state.
+  - For `createUploadSession`, `upload_mode`, `part_size_bytes`, `bucket_ref`, and `object_prefix` are server-owned routing knobs rather than caller-owned business inputs. `content_type` is inferable from `filename` and can be reconciled again during completion.
+- Action:
+  - Removed the public `/v1/auth/token` route, bootstrap issuer models, Bootstrap issuer secret header/scheme, and the related runtime/config examples from code, OpenAPI, README, compose, and `.env` templates.
+  - Kept bearer-token authentication support in `dev`, `jwt`, `introspection`, and `hybrid` modes, but clarified that tokens now come from local dev tooling, CI secret injection, or external IdPs rather than a Cortex-owned minting API.
+  - Removed `Idempotency-Key` from sync parse, dataset creation, and storage upload-init routes; kept it only on async Parse / Add / Cognify / Memify job submission APIs where the repository layer actually enforces deduplication.
+  - Simplified `StorageUploadCreateRequest` so callers send only filename, optional known size, and business metadata. Cortex now infers `content_type`, decides single-part vs multipart from the known size, and owns bucket/object-key routing and multipart part sizing.
+  - Added regression coverage proving filename-based `content_type` inference and the default single-part behavior when upload size is unknown.
+  - Fixed a repeated test-harness pitfall by setting `CORTEX_CRAWL4AI_SKIP_PROBE=1` in the knowledge API integration client, preventing unrelated Playwright browser preflight failures from masking business/API regressions.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\unit\\test_common_auth.py tests\\contract\\test_foundation_models.py tests\\contract\\test_openapi_contract.py tests\\integration\\test_api_storage.py tests\\integration\\test_api_e2e.py tests\\integration\\test_api_parse.py tests\\integration\\test_api_knowledge.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m ruff check apps\\api\\src\\cortex_api\\main.py apps\\api\\src\\cortex_api\\lifespan.py apps\\api\\src\\cortex_api\\dependencies\\auth.py apps\\api\\src\\cortex_api\\dependencies\\runtime.py apps\\api\\src\\cortex_api\\routers\\parse.py apps\\api\\src\\cortex_api\\routers\\knowledge.py apps\\api\\src\\cortex_api\\routers\\storage.py packages\\auth\\src\\cortex_auth\\__init__.py packages\\common\\src\\cortex_common\\settings.py packages\\contracts\\src\\cortex_contracts\\__init__.py packages\\contracts\\src\\cortex_contracts\\headers.py packages\\contracts\\src\\cortex_contracts\\openapi_examples.py packages\\contracts\\src\\cortex_contracts\\storage.py packages\\storage\\src\\cortex_storage\\service.py tests\\contract\\test_foundation_models.py tests\\contract\\test_openapi_contract.py tests\\integration\\test_api_storage.py tests\\integration\\test_api_e2e.py tests\\integration\\test_api_knowledge.py tests\\unit\\test_common_auth.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright apps\\api\\src\\cortex_api\\main.py apps\\api\\src\\cortex_api\\lifespan.py apps\\api\\src\\cortex_api\\dependencies\\auth.py apps\\api\\src\\cortex_api\\dependencies\\runtime.py apps\\api\\src\\cortex_api\\routers\\parse.py apps\\api\\src\\cortex_api\\routers\\knowledge.py apps\\api\\src\\cortex_api\\routers\\storage.py packages\\auth\\src\\cortex_auth\\__init__.py packages\\common\\src\\cortex_common\\settings.py packages\\contracts\\src\\cortex_contracts\\__init__.py packages\\contracts\\src\\cortex_contracts\\headers.py packages\\contracts\\src\\cortex_contracts\\openapi_examples.py packages\\contracts\\src\\cortex_contracts\\storage.py packages\\storage\\src\\cortex_storage\\service.py tests\\contract\\test_foundation_models.py tests\\contract\\test_openapi_contract.py tests\\integration\\test_api_storage.py tests\\integration\\test_api_e2e.py tests\\integration\\test_api_knowledge.py tests\\unit\\test_common_auth.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml`
+  - `git diff --check` (passed; CRLF normalization warnings only)
+- Prevention: Keep public APIs aligned with real server semantics. If a feature has no durable state transition or no repository-backed deduplication behind it, do not expose it as a first-class public contract just because it feels “enterprise”. Let the server own routing policy, and reserve public fields for caller-owned intent.
+
+### 2026-04-22 15:35:00 +08:00 | Suppressed Known Upstream Cognee/Pydantic Deprecation Noise
+
+- Stage: `CTX-20260422-090`
+- Event: Even after the auth/storage contract cleanup passed, pytest still printed a small set of third-party deprecation warnings from `cognee==0.5.8` and its Pydantic v2 integration, which polluted local verification output.
+- Cause:
+  - Importing `cognee` currently triggers three known upstream deprecations: the deprecated FastAPI status constant `HTTP_422_UNPROCESSABLE_ENTITY`, a `Field(..., env=...)` Pydantic warning, and repeated `json_encoders` deprecation warnings from Pydantic schema generation.
+  - These warnings are upstream package hygiene issues rather than Cortex behavior regressions, but they still make test output noisier and harder to scan.
+- Action:
+  - Added a narrow warning-suppression context inside `cortex_knowledge.runtime` so optional `cognee` imports ignore only those known upstream deprecations.
+  - Wrapped Cognee submodule imports used by memify/user helpers with the same suppression helper so follow-on imports stay clean.
+  - Added `tests/conftest.py` with pytest-only warning filters for the same three patterns, keeping the test runner quiet without muting unrelated deprecations.
+  - Added a focused regression test proving `_load_cognee_module()` can import a warning-emitting module without leaking those known warnings.
+- Validation:
+  - `.\\.venv\\Scripts\\python.exe -m pytest tests\\unit\\test_cognee_runtime_adapter.py tests\\contract\\test_openapi_contract.py::test_metrics_endpoint_returns_prometheus_text -q -W always`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\unit\\test_cognee_runtime_adapter.py tests\\unit\\test_knowledge_helpers.py tests\\unit\\test_runtime_config.py tests\\contract\\test_openapi_contract.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m ruff check packages\\knowledge\\src\\cortex_knowledge\\runtime.py tests\\conftest.py tests\\unit\\test_cognee_runtime_adapter.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright packages\\knowledge\\src\\cortex_knowledge\\runtime.py tests\\conftest.py tests\\unit\\test_cognee_runtime_adapter.py`
+  - `git diff --check` (passed; CRLF normalization warnings only)
+- Prevention: Treat noisy upstream deprecations as a test-hygiene problem, not a reason to globally mute warnings. Keep suppression patterns message- and module-specific, and delete them once Cognee/Pydantic upstreams ship compatible releases.

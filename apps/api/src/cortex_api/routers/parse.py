@@ -164,19 +164,7 @@ async def parse_content_sync(
     ],
     storage_service: Annotated[StorageService, Depends(get_storage_service)],
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
-    idempotency_key: Annotated[
-        str | None,
-        Header(
-            alias="Idempotency-Key",
-            description=(
-                "Optional idempotency key for safely retrying synchronous parse submissions. "
-                "Best default: omit unless the caller may retry the same request."
-            ),
-            examples=[IDEMPOTENCY_KEY_EXAMPLE],
-        ),
-    ] = None,
 ) -> ParseBatchResult:
-    del idempotency_key
     await auth_service.authorize(
         uow=uow,
         caller=caller,

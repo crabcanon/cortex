@@ -108,6 +108,7 @@ def _dev_bearer_token(*, tenant_id: str, actor_id: str, scopes: list[str]) -> st
 class _FakeObjectStoreClient:
     def __init__(self) -> None:
         self.buckets: set[str] = set()
+        self.single_part_objects: dict[tuple[str, str], dict[str, Any]] = {}
 
     def ensure_bucket(self, bucket_name: str) -> None:
         self.buckets.add(bucket_name)
@@ -120,6 +121,10 @@ class _FakeObjectStoreClient:
         content_type: str,
         expires_in: int,
     ) -> PresignedRequestDescriptor:
+        self.single_part_objects[(bucket_name, object_key)] = {
+            "ContentType": content_type,
+            "ETag": f"etag-{object_key}",
+        }
         return PresignedRequestDescriptor(
             method="PUT",
             url=f"https://storage.test/{bucket_name}/{object_key}?expires={expires_in}",
@@ -178,7 +183,7 @@ class _FakeObjectStoreClient:
         object_key: str,
         disposition: str,
         expires_in: int,
-    ) -> PresignedRequestDescriptor:
+        ) -> PresignedRequestDescriptor:
         return PresignedRequestDescriptor(
             method="GET",
             url=(
@@ -187,6 +192,14 @@ class _FakeObjectStoreClient:
             ),
             headers={},
         )
+
+    def head_object(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+    ) -> dict[str, Any]:
+        return dict(self.single_part_objects.get((bucket_name, object_key), {}))
 
 
 class _E2EParseEngine(ParseEngineProtocol):
@@ -366,6 +379,7 @@ def _build_client(
     monkeypatch.setenv("CORTEX_AUTH_MODE", "dev")
     monkeypatch.setenv("CORTEX_OTEL_ENABLED", "false")
     monkeypatch.setenv("CORTEX_COGNEE_ENABLED", "false")
+    monkeypatch.setenv("CORTEX_CRAWL4AI_SKIP_PROBE", "1")
     load_settings.cache_clear()
     app = create_app()
     fake_runtime = _FakeKnowledgeRuntime()
@@ -487,7 +501,6 @@ def test_e2e_upload_parse_add_search_round_trip(monkeypatch: pytest.MonkeyPatch)
             headers=headers,
             json={
                 "filename": "guide.md",
-                "content_type": "text/markdown",
                 "size_bytes": 768,
                 "metadata": {"workflow": "main-path", "source": "e2e"},
                 "tags": ["guide", "e2e"],
@@ -611,6 +624,7 @@ def test_e2e_upload_parse_add_search_round_trip(monkeypatch: pytest.MonkeyPatch)
 
     assert upload_response.status_code == 201
     assert upload_response.json()["upload_mode"] == "single_part"
+    assert upload_response.json()["single_part"]["headers"]["Content-Type"] == "text/markdown"
     assert complete_response.status_code == 200
     assert complete_response.json()["status"] == "available"
     assert object_response.status_code == 200

@@ -53,6 +53,13 @@ class ObjectStoreClientProtocol(Protocol):
         parts: Sequence[dict[str, Any]],
     ) -> dict[str, Any]: ...
 
+    def head_object(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+    ) -> dict[str, Any]: ...
+
     def create_download_request(
         self,
         *,
@@ -213,6 +220,24 @@ class Boto3ObjectStoreClient:
             self._raise_client_error("complete_multipart_upload", exc)
         except BotoCoreError as exc:
             self._raise_provider_unavailable("complete_multipart_upload", exc)
+
+    def head_object(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+    ) -> dict[str, Any]:
+        try:
+            return self._client.head_object(
+                Bucket=bucket_name,
+                Key=object_key,
+            )
+        except EndpointConnectionError as exc:
+            self._raise_endpoint_unreachable("head_object", exc)
+        except ClientError as exc:
+            self._raise_client_error("head_object", exc)
+        except BotoCoreError as exc:
+            self._raise_provider_unavailable("head_object", exc)
 
     def create_download_request(
         self,

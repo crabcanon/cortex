@@ -178,18 +178,7 @@ async def create_knowledge_dataset(
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     knowledge_service: Annotated[KnowledgeDatasetService, Depends(get_knowledge_service)],
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
-    idempotency_key: Annotated[
-        str | None,
-        Header(
-            alias="Idempotency-Key",
-            description=(
-                "Optional idempotency key for safely retrying dataset creation. Best default: omit."
-            ),
-            examples=[IDEMPOTENCY_KEY_EXAMPLE],
-        ),
-    ] = None,
 ) -> KnowledgeDataset:
-    del idempotency_key
     await auth_service.authorize(
         uow=uow,
         caller=caller,

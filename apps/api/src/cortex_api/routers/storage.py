@@ -12,7 +12,6 @@ from cortex_contracts import (
     StorageUploadSession,
 )
 from cortex_contracts.openapi_examples import (
-    IDEMPOTENCY_KEY_EXAMPLE,
     OBJECT_ID_EXAMPLE,
     STORAGE_UPLOAD_COMPLETE_REQUEST_EXAMPLES,
     STORAGE_UPLOAD_CREATE_REQUEST_EXAMPLES,
@@ -21,7 +20,7 @@ from cortex_contracts.openapi_examples import (
 )
 from cortex_db import CortexUnitOfWork
 from cortex_storage import StorageService
-from fastapi import APIRouter, Body, Depends, Header, Path, Query, Request, status
+from fastapi import APIRouter, Body, Depends, Path, Query, Request, status
 
 from ..dependencies.auth import get_current_caller
 from ..dependencies.runtime import get_auth_service, get_storage_service, get_uow
@@ -38,8 +37,8 @@ router = APIRouter(prefix="/v1/storage", tags=["Storage"])
     summary="Initiate an upload session",
     description=(
         "Create a signed upload session for a new object. "
-        "Use the `recommended_single_part` example "
-        "for most files and switch to `multipart_large_file` for large uploads."
+        "The caller supplies file identity plus business metadata, while Cortex infers "
+        "content type when possible and decides whether multipart is needed."
     ),
 )
 async def create_upload_session(
@@ -49,8 +48,10 @@ async def create_upload_session(
         Body(
             openapi_examples=STORAGE_UPLOAD_CREATE_REQUEST_EXAMPLES,
             description=(
-                "Upload session creation request. `filename`, `content_type`, and `size_bytes` are "
-                "required; most other fields are optional with documented defaults."
+                "Upload session creation request. `filename` is required. Cortex infers "
+                "`content_type` from `filename` when omitted, uses `size_bytes` when available "
+                "to decide single-part vs multipart, and manages bucket/object-key routing "
+                "internally."
             ),
         ),
     ],
@@ -58,19 +59,7 @@ async def create_upload_session(
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     storage_service: Annotated[StorageService, Depends(get_storage_service)],
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
-    idempotency_key: Annotated[
-        str | None,
-        Header(
-            alias="Idempotency-Key",
-            description=(
-                "Optional idempotency key for safely retrying upload-session creation. "
-                "Best default: omit unless the client may retry."
-            ),
-            examples=[IDEMPOTENCY_KEY_EXAMPLE],
-        ),
-    ] = None,
 ) -> StorageUploadSession:
-    del idempotency_key
     await auth_service.authorize(
         uow=uow,
         caller=caller,
@@ -86,8 +75,9 @@ async def create_upload_session(
     operation_id="completeUploadSession",
     summary="Complete an upload session",
     description=(
-        "Finalize a single-part or multipart upload session "
-        "after the object store upload has succeeded."
+        "Finalize a single-part or multipart upload session after the object-store transfer has "
+        "succeeded. This step is required because Cortex must verify the uploaded object, recover "
+        "provider metadata, and commit the final object/version records."
     ),
 )
 async def complete_upload_session(

@@ -58,7 +58,6 @@ from cortex_contracts import (
     StorageObject,
     StorageObjectStatus,
     StorageUploadCreateRequest,
-    UploadMode,
 )
 from cortex_domain import (
     AccessLevel,
@@ -189,11 +188,8 @@ def test_decision_effect_enum_stability() -> None:
 def test_storage_contract_models_capture_upload_and_object_metadata() -> None:
     create_request = StorageUploadCreateRequest(
         filename="sample.pdf",
-        content_type="application/pdf",
-        size_bytes=1024,
         metadata={"source": "user"},
         tags=["finance"],
-        upload_mode=UploadMode.SINGLE_PART,
         access_policy=ContractAccessPolicy(access_level=ContractAccessLevel.RESTRICTED),
     )
     storage_object = StorageObject(
@@ -213,6 +209,8 @@ def test_storage_contract_models_capture_upload_and_object_metadata() -> None:
 
     assert create_request.access_policy is not None
     assert create_request.access_policy.access_level is ContractAccessLevel.RESTRICTED
+    assert create_request.content_type is None
+    assert create_request.size_bytes is None
     assert storage_object.status is StorageObjectStatus.AVAILABLE
     assert storage_object.tags == ["finance"]
 

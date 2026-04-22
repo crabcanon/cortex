@@ -7,7 +7,6 @@ from fastapi import FastAPI
 from .errors import register_exception_handlers
 from .lifespan import lifespan
 from .middleware.request_context import request_context_middleware
-from .routers.auth import router as auth_router
 from .routers.health import router as health_router
 from .routers.jobs import router as jobs_router
 from .routers.knowledge import router as knowledge_router
@@ -28,7 +27,6 @@ def create_app() -> FastAPI:
     )
     app.middleware("http")(request_context_middleware)
     register_exception_handlers(app)
-    app.include_router(auth_router)
     app.include_router(health_router)
     app.include_router(jobs_router)
     app.include_router(knowledge_router)

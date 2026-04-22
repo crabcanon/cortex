@@ -30,13 +30,22 @@ class StorageUploadCreateRequest(BaseModel):
         description="Required original filename presented to storage and downstream parsers.",
         examples=["product-overview.md"],
     )
-    content_type: str = Field(
-        description="Required MIME type of the uploaded object.",
+    content_type: str | None = Field(
+        default=None,
+        description=(
+            "Optional MIME type of the uploaded object. Best default: omit and let Cortex infer "
+            "it from `filename`, then reconcile it with the object store during completion."
+        ),
         examples=["text/markdown"],
     )
-    size_bytes: int = Field(
+    size_bytes: int | None = Field(
+        default=None,
         ge=0,
-        description="Required total size of the upload in bytes.",
+        description=(
+            "Optional total size of the upload in bytes. Best default: omit when unknown before "
+            "upload; provide it when the client already knows the file size so Cortex can choose "
+            "single-part vs multipart more accurately."
+        ),
         examples=[20480],
     )
     checksum_sha256: str | None = Field(
@@ -62,30 +71,6 @@ class StorageUploadCreateRequest(BaseModel):
         default_factory=list,
         description="Optional tags used for filtering or governance. Best default: empty list.",
         examples=[["docs", "product"]],
-    )
-    upload_mode: UploadMode = Field(
-        default=UploadMode.SINGLE_PART,
-        description="Upload strategy. Best default: `single_part` for small or medium files.",
-    )
-    part_size_bytes: int = Field(
-        default=8_388_608,
-        ge=5_242_880,
-        description="Multipart part size in bytes. Best default: 8388608 (8 MiB).",
-        examples=[8388608],
-    )
-    bucket_ref: str | None = Field(
-        default=None,
-        description=(
-            "Optional logical bucket reference from runtime "
-            "config. Best default: omit to use the service "
-            "default bucket."
-        ),
-        examples=["default"],
-    )
-    object_prefix: str | None = Field(
-        default=None,
-        description="Optional object-key prefix for the upload. Best default: omit.",
-        examples=["uploads/docs/"],
     )
 
 

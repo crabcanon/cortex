@@ -84,7 +84,7 @@
 关键字段：
 
 - `bucket_id` + `object_key`：物理定位。
-- `filename` / `content_type` / `size_bytes`：下载与审计所需的基础元数据。
+- `filename` / `content_type` / `size_bytes`：下载与审计所需的基础元数据，其中 `content_type` 可在上传创建阶段由文件名推断、在完成上传时再用对象存储返回值校正；`size_bytes` 在单段上传初始化时可暂缺，完成上传后应回填为真实对象大小。
 - `checksum_sha256`：跨厂商迁移时的校验基准。
 - `source_uri`：如果来自 URL、S3 URI、上传会话等，则记录其上游来源。
 - `access_level` / `access_policy_json`：对象级数据权限控制与下载授权依据。
@@ -326,8 +326,8 @@ Cortex 的授权模型分成四层：
 - 功能权限以标准 scope / permission key 为主，适合放入 token。
 - 数据权限以 role binding + policy evaluation 为主，避免把大规模资源白名单塞进 token。
 - `authorization_decisions` 是审计表，不承担在线实时 PDP 的主存储职责。
-- 内建 token issuer 的 bootstrap secret、JWT shared secret、introspection client secret 等敏感凭据不进入业务 SQL 表，而是保留在环境变量、secret file 或外部 secret manager。
-- `/v1/auth/token` 这类 bootstrap issuance 只负责生成 bearer token，不引入额外的 user/password 凭据表，避免把 Cortex 扩展成完整身份目录系统。
+- JWT shared secret、introspection client secret 等敏感凭据不进入业务 SQL 表，而是保留在环境变量、secret file 或外部 secret manager。
+- Cortex 当前不提供内建 token minting API，也不引入额外的 user/password 凭据表，避免把系统扩展成完整身份目录系统。
 
 ## 5. 关系图
 

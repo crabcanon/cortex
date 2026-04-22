@@ -6,70 +6,6 @@ from typing import cast
 
 from fastapi.openapi.models import Example
 
-TOKEN_ISSUE_REQUEST_EXAMPLES: dict[str, Example] = cast(
-    dict[str, Example],
-    {
-        "tenant_admin_bootstrap": {
-            "summary": "Recommended admin bootstrap token",
-            "description": "A minimal but practical bootstrap request for a tenant administrator.",
-            "value": {
-                "grant_type": "urn:cortex:params:oauth:grant-type:bootstrap",
-                "subject": "alice",
-                "tenant_id": "tenant_demo",
-                "actor_id": "alice",
-                "actor_ref": "alice@example.com",
-                "actor_type": "user",
-                "display_name": "Alice",
-                "client_id": "swagger-ui",
-                "scopes": [
-                    "health:read",
-                    "parse:read",
-                    "parse:write",
-                    "storage:write",
-                    "storage:read",
-                    "storage:download",
-                    "knowledge:read",
-                    "knowledge:write",
-                    "jobs:read",
-                    "jobs:cancel",
-                ],
-                "roles": ["tenant_admin"],
-                "groups": ["platform-ops"],
-                "expires_in": 3600,
-                "additional_claims": {
-                    "region": "cn-shanghai",
-                    "environment": "local",
-                },
-            },
-        },
-        "service_principal": {
-            "summary": "Service principal token",
-            "description": "A non-human token for parse and storage automation.",
-            "value": {
-                "grant_type": "urn:cortex:params:oauth:grant-type:bootstrap",
-                "subject": "svc_ingest_pipeline",
-                "tenant_id": "tenant_demo",
-                "actor_id": "svc_ingest_pipeline",
-                "actor_type": "service",
-                "client_id": "cortex-worker",
-                "scopes": [
-                    "parse:read",
-                    "parse:write",
-                    "storage:write",
-                    "storage:read",
-                    "jobs:read",
-                ],
-                "roles": ["tenant_operator"],
-                "groups": ["automation"],
-                "expires_in": 1800,
-                "additional_claims": {
-                    "run_purpose": "nightly_ingest",
-                },
-            },
-        },
-    },
-)
-
 PARSE_SYNC_REQUEST_EXAMPLES: dict[str, Example] = cast(
     dict[str, Example],
     {
@@ -128,14 +64,12 @@ STORAGE_UPLOAD_CREATE_REQUEST_EXAMPLES: dict[str, Example] = cast(
         "recommended_single_part": {
             "summary": "Recommended single-part upload",
             "description": (
-                "Best for small and medium files that "
-                "comfortably fit in one signed PUT request."
+                "Best for small and medium files that fit in one signed PUT request. "
+                "You can omit `size_bytes`; Cortex will finalize the actual object size when "
+                "the upload is completed."
             ),
             "value": {
-                "filename": "product-overview.md",
-                "content_type": "text/markdown",
-                "size_bytes": 20480,
-                "checksum_sha256": "a" * 64,
+                "filename": "README.md",
                 "metadata": {
                     "source": "swagger-demo",
                     "document_type": "guide",
@@ -149,31 +83,22 @@ STORAGE_UPLOAD_CREATE_REQUEST_EXAMPLES: dict[str, Example] = cast(
                     "constraints": {},
                 },
                 "tags": ["docs", "product"],
-                "upload_mode": "single_part",
-                "part_size_bytes": 8388608,
-                "bucket_ref": "default",
-                "object_prefix": "uploads/docs/",
             },
         },
         "multipart_large_file": {
             "summary": "Multipart upload for large files",
             "description": (
-                "Recommended when the file is large enough "
-                "that you want chunked upload and retry at "
-                "the part level."
+                "Recommended when the client already knows the file is large enough "
+                "that Cortex should initialize multipart upload and return part URLs."
             ),
             "value": {
                 "filename": "quarterly-report.pdf",
-                "content_type": "application/pdf",
                 "size_bytes": 67108864,
                 "metadata": {
                     "source": "finance-portal",
                     "department": "fpna",
                 },
                 "tags": ["finance", "quarterly"],
-                "upload_mode": "multipart",
-                "part_size_bytes": 16777216,
-                "object_prefix": "uploads/reports/",
             },
         },
     },

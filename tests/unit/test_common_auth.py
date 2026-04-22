@@ -8,7 +8,6 @@ import json
 
 import pytest
 from cortex_auth.errors import AuthenticationError
-from cortex_auth.issuer import TokenIssuanceUnavailableError, TokenIssueInput, TokenIssuerService
 from cortex_auth.models import CallerContext
 from cortex_auth.tokens import (
     DevTokenValidator,
@@ -120,81 +119,3 @@ def test_token_validator_chain_raises_last_error() -> None:
         asyncio.run(chain.validate("alice"))
 
     assert excinfo.value.code == "inactive_token"
-
-
-@pytest.mark.asyncio
-async def test_token_issuer_service_mints_dev_token_accepted_by_validator() -> None:
-    settings = AuthSettings(
-        CORTEX_AUTH_MODE="dev",
-        CORTEX_AUTH_TOKEN_ISSUER_ENABLED=True,
-        CORTEX_AUTH_TOKEN_ISSUER_BOOTSTRAP_SECRET="bootstrap-secret",
-    )
-    issuer = TokenIssuerService(settings)
-    token = issuer.issue_token(
-        bootstrap_secret="bootstrap-secret",
-        token_input=TokenIssueInput(
-            subject="alice",
-            tenant_id="tenant_auth",
-            scopes=("parse:read", "jobs:read"),
-            roles=("admin",),
-        ),
-    )
-    validator = build_token_validator(settings)
-
-    caller = await validator.validate(token.access_token)
-
-    assert token.issued_token_format == "dev"
-    assert caller.subject == "alice"
-    assert caller.scopes == frozenset({"parse:read", "jobs:read"})
-    assert caller.roles == frozenset({"admin"})
-
-
-@pytest.mark.asyncio
-async def test_token_issuer_service_mints_jwt_accepted_by_validator() -> None:
-    settings = AuthSettings(
-        CORTEX_AUTH_MODE="jwt",
-        CORTEX_AUTH_TOKEN_ISSUER_ENABLED=True,
-        CORTEX_AUTH_TOKEN_ISSUER_BOOTSTRAP_SECRET="bootstrap-secret",
-        CORTEX_AUTH_JWT_SHARED_SECRET="jwt-shared-secret-0123456789abcdef",
-    )
-    issuer = TokenIssuerService(settings)
-    token = issuer.issue_token(
-        bootstrap_secret="bootstrap-secret",
-        token_input=TokenIssueInput(
-            subject="svc-parser",
-            tenant_id="tenant_auth",
-            scopes=("parse:write",),
-            client_id="parser-client",
-        ),
-    )
-    validator = build_token_validator(settings)
-
-    caller = await validator.validate(token.access_token)
-
-    assert token.issued_token_format == "jwt"
-    assert caller.subject == "svc-parser"
-    assert caller.client_id == "parser-client"
-    assert caller.scopes == frozenset({"parse:write"})
-
-
-def test_token_issuer_service_rejects_introspection_mode() -> None:
-    issuer = TokenIssuerService(
-        AuthSettings(
-            CORTEX_AUTH_MODE="introspection",
-            CORTEX_AUTH_TOKEN_ISSUER_ENABLED=True,
-            CORTEX_AUTH_TOKEN_ISSUER_BOOTSTRAP_SECRET="bootstrap-secret",
-        )
-    )
-
-    with pytest.raises(
-        TokenIssuanceUnavailableError,
-        match="unavailable when auth mode is `introspection`",
-    ):
-        issuer.issue_token(
-            bootstrap_secret="bootstrap-secret",
-            token_input=TokenIssueInput(
-                subject="alice",
-                tenant_id="tenant_auth",
-                scopes=("health:read",),
-            ),
-        )

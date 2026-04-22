@@ -525,8 +525,8 @@ sequenceDiagram
 
 ### 12.1 幂等
 
-- 所有创建型 API 支持 `Idempotency-Key`。
-- 关键落库动作应以 `(tenant_id, endpoint_family, idempotency_key)` 去重。
+- 仅异步作业提交 API 支持 `Idempotency-Key`，包括 Parse Job、Add Job、Cognify Job、Memify Job。
+- 关键落库动作应以 `(tenant_id, job_type, idempotency_key)` 去重。
 
 ### 12.2 重试
 

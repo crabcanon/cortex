@@ -45,20 +45,18 @@ info:
     - Functional permissions are expressed through OAuth scopes such as `parse:write`, `storage:download`, and `knowledge:read`.
     - Data permissions are evaluated separately against tenant boundary, role bindings, `access_level`, and resource policies.
     - Authentication failures return `401`; authorization failures return `403` with decision context.
-    - An optional built-in bootstrap token issuer may be enabled for `dev`, `jwt`, or `hybrid` deployments; `introspection` mode still depends on an external authorization server.
+    - Cortex acts as a resource server and expects bearer tokens from dev tooling, CI secret injection, or an external authorization server; it does not publish a built-in token minting API.
     - 认证兼容 OAuth 2.0 / OIDC，优先使用 JWT access token，必要时兼容 opaque token introspection。
     - 功能权限通过 OAuth scope 表达，例如 `parse:write`、`storage:download`、`knowledge:read`。
     - 数据权限独立于 scope 求值，基于租户边界、角色绑定、`access_level` 和资源策略判断。
     - 认证失败返回 `401`，授权失败返回 `403` 并给出决策上下文。
-    - 可选的内建 bootstrap token 签发接口可用于 `dev`、`jwt`、`hybrid` 部署；`introspection` 模式仍依赖外部授权服务器。
+    - Cortex 作为资源服务器运行，bearer token 应来自本地调试脚本、CI 密钥注入或外部授权服务器；系统不再暴露内建 token minting API。
 servers:
   - url: https://api.cortex.example.com
     description: Production / 生产环境
   - url: https://sandbox.cortex.example.com
     description: Sandbox / 沙箱环境
 tags:
-  - name: Auth
-    description: Optional bootstrap token issuance for local or self-hosted deployments. / 面向本地或自托管部署的可选 bootstrap token 签发接口。
   - name: Health
     description: Runtime liveness and dependency readiness probes. / 运行存活与依赖就绪探针。
   - name: Observability
@@ -74,80 +72,6 @@ tags:
 security:
   - OAuth2: []
 paths:
-  /v1/auth/token:
-    post:
-      tags:
-        - Auth
-      summary: Issue access token / 签发访问令牌
-      description: |
-        Issues a bearer token through Cortex's optional built-in bootstrap issuer. This endpoint is intended for local,
-        self-hosted, or operator-driven bootstrap flows and is not a replacement for a full external OAuth 2.0 / OIDC
-        authorization server. It is available only when the deployment enables the token issuer and protects it with
-        `X-Cortex-Issuer-Secret`. In `dev` mode the returned token uses Cortex's `dev:` payload format; in `jwt` or
-        `hybrid` mode the returned token is a signed shared-secret JWT. `introspection` mode does not support local
-        issuance. /
-        通过 Cortex 可选的内建 bootstrap 签发器生成 bearer token。该接口面向本地、自托管或运维 bootstrap 场景，
-        并不替代完整的外部 OAuth 2.0 / OIDC 授权服务器。只有在部署显式启用 token issuer 且使用
-        `X-Cortex-Issuer-Secret` 保护时才可用。在 `dev` 模式下返回 Cortex 的 `dev:` 令牌格式；在 `jwt`
-        或 `hybrid` 模式下返回共享密钥签名的 JWT；`introspection` 模式不支持本地签发。
-      operationId: issueAccessToken
-      security:
-        - BootstrapIssuerSecret: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TokenIssueRequest'
-            example:
-              grant_type: urn:cortex:params:oauth:grant-type:bootstrap
-              subject: alice
-              tenant_id: tenant_demo
-              actor_id: alice
-              actor_ref: alice@example.com
-              actor_type: user
-              display_name: Alice
-              client_id: swagger-ui
-              scopes:
-                - health:read
-                - parse:read
-                - parse:write
-                - storage:read
-                - storage:write
-                - knowledge:read
-                - knowledge:write
-                - jobs:read
-              roles:
-                - tenant_admin
-              groups:
-                - platform-ops
-              expires_in: 3600
-              additional_claims:
-                environment: local
-      responses:
-        '200':
-          description: Access token issued successfully. / 已成功签发访问令牌。
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TokenIssueResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '422':
-          description: Invalid token issuance request. / token 签发请求无效。
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-        '503':
-          description: Built-in token issuer unavailable in the current deployment or auth mode. / 当前部署或鉴权模式下内建 token issuer 不可用。
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-        default:
-          $ref: '#/components/responses/ErrorResponse'
-
   /v1/health/live:
     get:
       tags:
@@ -376,8 +300,6 @@ paths:
       security:
         - OAuth2:
             - parse:write
-      parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -516,14 +438,16 @@ paths:
       summary: Initiate an upload session / 初始化上传会话
       description: |
         Creates metadata first, then returns pre-signed upload instructions for direct-to-object-store transfer.
-        Small files may use a single-part upload; large files should use multipart mode. /
-        先创建元数据，再返回直传对象存储的预签名上传指令。小文件可使用单段上传，大文件应使用 multipart 模式。
+        The caller provides only file identity plus business metadata; Cortex infers `content_type`
+        from `filename` when possible, chooses single-part vs multipart from `size_bytes` when
+        available, and keeps bucket/object-key routing server-owned. /
+        先创建元数据，再返回直传对象存储的预签名上传指令。调用方只提供文件标识与业务元数据；Cortex
+        会尽量从 `filename` 推断 `content_type`，并在已知 `size_bytes` 时自动决定 single-part
+        还是 multipart，同时把 bucket 与 object key 路由收敛到服务端管理。
       operationId: createUploadSession
       security:
         - OAuth2:
             - storage:write
-      parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -531,10 +455,7 @@ paths:
             schema:
               $ref: '#/components/schemas/StorageUploadCreateRequest'
             example:
-              filename: product-overview.md
-              content_type: text/markdown
-              size_bytes: 20480
-              checksum_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+              filename: README.md
               metadata:
                 source: swagger-demo
                 document_type: guide
@@ -552,10 +473,6 @@ paths:
               tags:
                 - docs
                 - product
-              upload_mode: single_part
-              part_size_bytes: 8388608
-              bucket_ref: default
-              object_prefix: uploads/docs/
       responses:
         '201':
           description: Upload session created. / 上传会话已创建。
@@ -577,6 +494,13 @@ paths:
       tags:
         - Storage
       summary: Complete an upload session / 完成上传会话
+      description: |
+        Finalizes a direct-to-object-store upload after the file transfer succeeds. Cortex must
+        still verify object visibility, recover provider metadata, and commit the final
+        object/version records, so this step is required for both single-part and multipart
+        uploads. /
+        在文件直传对象存储成功后完成上传收口。由于 Cortex 仍需验证对象是否可见、回收对象存储返回的元数据，
+        并提交最终的对象/版本记录，因此无论 single-part 还是 multipart，这一步都必须保留。
       operationId: completeUploadSession
       security:
         - OAuth2:
@@ -688,8 +612,6 @@ paths:
       security:
         - OAuth2:
             - knowledge:write
-      parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -994,14 +916,6 @@ webhooks:
 
 components:
   securitySchemes:
-    BootstrapIssuerSecret:
-      type: apiKey
-      in: header
-      name: X-Cortex-Issuer-Secret
-      description: |
-        Bootstrap secret required to call Cortex's optional built-in token issuer. This secret should be configured
-        only for local, self-hosted, or tightly controlled operational bootstrap scenarios. /
-        调用 Cortex 可选内建 token issuer 时所需的 bootstrap secret。该密钥应只用于本地、自托管或受控的运维 bootstrap 场景。
     OAuth2:
       type: oauth2
       description: |
@@ -1085,9 +999,9 @@ components:
       in: header
       required: false
       description: |
-        Optional idempotency key for safely retrying create operations. The server should scope keys by tenant,
-        endpoint family, and authenticated principal. /
-        可选的幂等键，用于安全重试创建类操作。服务端应按租户、接口族和认证主体进行作用域隔离。
+        Optional idempotency key for safely retrying asynchronous job-submission APIs. The server scopes keys by
+        tenant, job type, and authenticated principal. /
+        可选的幂等键，仅用于安全重试异步作业提交接口。服务端应按租户、作业类型和认证主体进行作用域隔离。
       schema:
         type: string
         maxLength: 255
@@ -1282,110 +1196,6 @@ components:
         field:
           type: string
         message:
-          type: string
-
-    TokenIssueRequest:
-      type: object
-      required:
-        - subject
-        - tenant_id
-        - scopes
-      properties:
-        grant_type:
-          type: string
-          enum:
-            - urn:cortex:params:oauth:grant-type:bootstrap
-        subject:
-          type: string
-          minLength: 1
-          maxLength: 255
-        tenant_id:
-          type: string
-          minLength: 1
-          maxLength: 255
-        actor_id:
-          type: string
-          minLength: 1
-          maxLength: 255
-        actor_ref:
-          type: string
-          minLength: 1
-          maxLength: 320
-        actor_type:
-          type: string
-          minLength: 1
-          maxLength: 64
-        display_name:
-          type: string
-          maxLength: 255
-        client_id:
-          type: string
-          minLength: 1
-          maxLength: 255
-        scopes:
-          type: array
-          minItems: 1
-          items:
-            type: string
-        roles:
-          type: array
-          items:
-            type: string
-        groups:
-          type: array
-          items:
-            type: string
-        expires_in:
-          type: integer
-          minimum: 60
-          maximum: 86400
-        additional_claims:
-          type: object
-          additionalProperties: true
-
-    TokenIssueResponse:
-      type: object
-      required:
-        - access_token
-        - issued_token_format
-        - expires_in
-        - issued_at
-        - expires_at
-        - scope
-        - subject
-        - tenant_id
-        - issuer
-        - audience
-      properties:
-        access_token:
-          type: string
-        token_type:
-          type: string
-          enum:
-            - Bearer
-        issued_token_format:
-          type: string
-          enum:
-            - dev
-            - jwt
-        expires_in:
-          type: integer
-          minimum: 1
-        issued_at:
-          type: string
-          format: date-time
-        expires_at:
-          type: string
-          format: date-time
-        scope:
-          type: string
-        subject:
-          type: string
-        tenant_id:
-          type: string
-        issuer:
-          type: string
-        audience:
           type: string
 
     HealthResponse:
@@ -2736,16 +2546,21 @@ components:
       type: object
       required:
         - filename
-        - content_type
-        - size_bytes
       properties:
         filename:
           type: string
         content_type:
           type: string
+          description: Optional MIME type. Cortex infers it from `filename` when omitted and may
+            reconcile it with the object store during completion. / 可选 MIME type；省略时 Cortex
+            会从 `filename` 推断，并在完成上传时尝试用对象存储返回值校正。
         size_bytes:
           type: integer
           minimum: 0
+          description: Optional total size in bytes. Provide it when the client already knows the
+            file size so Cortex can choose multipart for large uploads; omit it when the size is
+            unknown before upload. / 可选文件总大小；若客户端已知文件大小，建议提供以便 Cortex
+            为大文件自动选择 multipart；若上传前未知则可省略。
         checksum_sha256:
           type: string
           pattern: '^[0-9a-f]{64}$'
@@ -2759,20 +2574,6 @@ components:
           type: array
           items:
             type: string
-        upload_mode:
-          type: string
-          enum:
-            - single_part
-            - multipart
-          default: single_part
-        part_size_bytes:
-          type: integer
-          minimum: 5242880
-          default: 8388608
-        bucket_ref:
-          type: string
-        object_prefix:
-          type: string
 
     StorageUploadSession:
       type: object

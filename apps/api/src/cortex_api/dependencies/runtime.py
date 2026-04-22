@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncIterator
 
-from cortex_auth import AuthorizationService, TokenIssuerService
+from cortex_auth import AuthorizationService
 from cortex_common import CortexSettings
 from cortex_db import CortexUnitOfWork, SessionFactory
 from cortex_knowledge import (
@@ -25,10 +25,6 @@ def get_session_factory(request: Request) -> SessionFactory:
 
 def get_auth_service(request: Request) -> AuthorizationService:
     return request.app.state.auth_service  # type: ignore[no-any-return]
-
-
-def get_token_issuer_service(request: Request) -> TokenIssuerService:
-    return request.app.state.token_issuer_service  # type: ignore[no-any-return]
 
 
 def get_storage_service(request: Request) -> StorageService:

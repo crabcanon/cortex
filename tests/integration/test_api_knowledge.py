@@ -175,6 +175,7 @@ def _build_client(
     monkeypatch.setenv("CORTEX_AUTH_MODE", "dev")
     monkeypatch.setenv("CORTEX_OTEL_ENABLED", "false")
     monkeypatch.setenv("CORTEX_COGNEE_ENABLED", "false")
+    monkeypatch.setenv("CORTEX_CRAWL4AI_SKIP_PROBE", "1")
     load_settings.cache_clear()
     app = create_app()
     fake_runtime = runtime or _FakeKnowledgeRuntime()

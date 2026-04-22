@@ -59,6 +59,7 @@ def _dev_bearer_token(
 class FakeObjectStoreClient:
     def __init__(self) -> None:
         self.buckets: set[str] = set()
+        self.single_part_objects: dict[tuple[str, str], dict[str, Any]] = {}
 
     def ensure_bucket(self, bucket_name: str) -> None:
         self.buckets.add(bucket_name)
@@ -71,6 +72,10 @@ class FakeObjectStoreClient:
         content_type: str,
         expires_in: int,
     ) -> PresignedRequestDescriptor:
+        self.single_part_objects[(bucket_name, object_key)] = {
+            "ContentType": content_type,
+            "ETag": f"etag-{object_key}",
+        }
         return PresignedRequestDescriptor(
             method="PUT",
             url=f"https://storage.test/{bucket_name}/{object_key}?expires={expires_in}",
@@ -127,7 +132,7 @@ class FakeObjectStoreClient:
         object_key: str,
         disposition: str,
         expires_in: int,
-    ) -> PresignedRequestDescriptor:
+        ) -> PresignedRequestDescriptor:
         return PresignedRequestDescriptor(
             method="GET",
             url=(
@@ -137,12 +142,21 @@ class FakeObjectStoreClient:
             headers={},
         )
 
+    def head_object(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+    ) -> dict[str, Any]:
+        return dict(self.single_part_objects.get((bucket_name, object_key), {}))
+
 
 @contextmanager
 def _build_client(monkeypatch: pytest.MonkeyPatch, db_path: Path) -> Iterator[TestClient]:
     monkeypatch.setenv("CORTEX_DB_DSN", _async_sqlite_url(db_path))
     monkeypatch.setenv("CORTEX_AUTH_MODE", "dev")
     monkeypatch.setenv("CORTEX_OTEL_ENABLED", "false")
+    monkeypatch.setenv("CORTEX_CRAWL4AI_SKIP_PROBE", "1")
     load_settings.cache_clear()
     app = create_app()
     with TestClient(app) as client:
@@ -171,8 +185,6 @@ def test_storage_single_part_round_trip(monkeypatch: pytest.MonkeyPatch) -> None
             headers=headers,
             json={
                 "filename": "sample.md",
-                "content_type": "text/markdown",
-                "size_bytes": 1024,
                 "metadata": {"source": "user"},
                 "tags": ["docs"],
                 "access_policy": {"access_level": "tenant_private"},
@@ -195,12 +207,15 @@ def test_storage_single_part_round_trip(monkeypatch: pytest.MonkeyPatch) -> None
     assert create_response.status_code == 201
     assert create_response.json()["upload_mode"] == "single_part"
     assert create_response.json()["single_part"]["method"] == "PUT"
+    assert create_response.json()["single_part"]["headers"]["Content-Type"] == "text/markdown"
     assert complete_response.status_code == 200
     assert complete_response.json()["status"] == "available"
     assert complete_response.json()["current_version_id"].startswith("objver_")
     assert object_response.status_code == 200
+    assert object_response.json()["content_type"] == "text/markdown"
     assert object_response.json()["metadata"]["source"] == "user"
     assert object_response.json()["tags"] == ["docs"]
+    assert object_response.json()["size_bytes"] == 0
     assert download_response.status_code == 200
     assert download_response.json()["method"] == "GET"
     assert X_REQUEST_ID_HEADER in download_response.headers
@@ -223,7 +238,6 @@ def test_large_upload_uses_multipart(monkeypatch: pytest.MonkeyPatch) -> None:
             headers=headers,
             json={
                 "filename": "archive.bin",
-                "content_type": "application/octet-stream",
                 "size_bytes": 20_000_000,
                 "metadata": {"source": "batch"},
             },
@@ -232,6 +246,32 @@ def test_large_upload_uses_multipart(monkeypatch: pytest.MonkeyPatch) -> None:
     assert response.status_code == 201
     assert response.json()["upload_mode"] == "multipart"
     assert len(response.json()["multipart_parts"]) == 3
+
+
+def test_unknown_size_defaults_to_single_part(monkeypatch: pytest.MonkeyPatch) -> None:
+    db_path = _case_db_path("api-storage-unknown-size")
+    db_migrate_main(["upgrade", "head", "--db-url", _sync_sqlite_url(db_path)])
+    headers = {
+        "Authorization": _dev_bearer_token(
+            tenant_id="tenant_storage",
+            actor_id="alice",
+            scopes=["storage:write"],
+        )
+    }
+
+    with _build_client(monkeypatch, db_path) as client:
+        response = client.post(
+            "/v1/storage/uploads",
+            headers=headers,
+            json={
+                "filename": "archive.bin",
+                "metadata": {"source": "unknown-size"},
+            },
+        )
+
+    assert response.status_code == 201
+    assert response.json()["upload_mode"] == "single_part"
+    assert response.json()["single_part"]["headers"]["Content-Type"] == "application/octet-stream"
 
 
 def test_download_without_scope_returns_forbidden(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -258,7 +298,6 @@ def test_download_without_scope_returns_forbidden(monkeypatch: pytest.MonkeyPatc
             headers=full_headers,
             json={
                 "filename": "secret.txt",
-                "content_type": "text/plain",
                 "size_bytes": 128,
                 "access_policy": {"access_level": "tenant_private"},
             },

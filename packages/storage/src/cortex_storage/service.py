@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import math
+import mimetypes
 import re
 import time
 from dataclasses import dataclass
@@ -87,17 +88,13 @@ class BucketResolver:
         *,
         uow: CortexUnitOfWork,
         tenant_id: str,
-        bucket_ref: str | None,
     ) -> StorageBucketRecord:
-        bucket_name = bucket_ref or self.settings.bucket
+        bucket_name = self.settings.bucket
         bucket = None
-        if bucket_ref:
-            bucket = await uow.buckets.get(bucket_ref)
-        if bucket is None:
-            bucket = await uow.buckets.get_by_name(tenant_id, bucket_name)
+        bucket = await uow.buckets.get_by_name(tenant_id, bucket_name)
         if bucket is None:
             default_bucket = await uow.buckets.get_default(tenant_id)
-            if bucket_ref is None and default_bucket is not None:
+            if default_bucket is not None:
                 bucket = default_bucket
         if bucket is None:
             if not self.settings.auto_create_bucket:
@@ -110,7 +107,7 @@ class BucketResolver:
                     endpoint_url=self.settings.endpoint,
                     region_name=self.settings.region,
                     provider_hint="s3-compatible",
-                    is_default=bucket_ref is None,
+                    is_default=True,
                 )
             )
         if self.settings.auto_create_bucket:
@@ -145,11 +142,11 @@ class StorageService:
         started = time.perf_counter()
         with self._tracer.start_as_current_span("storage.upload.initialize") as span:
             upload_mode = self._select_upload_mode(request)
-            part_size = request.part_size_bytes
+            part_size = self._settings.default_part_size_bytes
+            content_type = self._resolve_content_type(request)
             bucket = await self._bucket_resolver.resolve(
                 uow=uow,
                 tenant_id=caller.tenant_id,
-                bucket_ref=request.bucket_ref,
             )
             object_id = new_prefixed_id("obj")
             expires_at = utc_now() + timedelta(seconds=self._settings.upload_url_ttl_seconds)
@@ -157,7 +154,6 @@ class StorageService:
                 tenant_id=caller.tenant_id,
                 object_id=object_id,
                 filename=request.filename,
-                object_prefix=request.object_prefix,
             )
             access_level = self._resolve_access_level(request.access_policy)
             access_policy = self._serialize_access_policy(request.access_policy, access_level)
@@ -167,19 +163,23 @@ class StorageService:
                 "upload_mode": upload_mode.value,
                 "expires_at": expires_at.isoformat(),
                 "part_size_bytes": part_size,
+                "size_bytes_pending": request.size_bytes is None,
             }
             single_part = None
             multipart_parts = []
             if upload_mode is UploadMode.MULTIPART:
+                size_bytes = request.size_bytes
+                if size_bytes is None:
+                    raise RuntimeError("multipart uploads must provide size_bytes")
                 provider_upload_id = await asyncio.to_thread(
                     self._object_store.create_multipart_upload,
                     bucket_name=bucket.bucket_name,
                     object_key=object_key,
-                    content_type=request.content_type,
+                    content_type=content_type,
                     metadata=request.metadata,
                 )
                 upload_state["provider_upload_id"] = provider_upload_id
-                part_count = max(1, math.ceil(request.size_bytes / part_size))
+                part_count = max(1, math.ceil(size_bytes / part_size))
                 multipart_parts = [
                     self._object_store.create_multipart_part_upload(
                         bucket_name=bucket.bucket_name,
@@ -194,7 +194,7 @@ class StorageService:
                 single_part = self._object_store.create_single_part_upload(
                     bucket_name=bucket.bucket_name,
                     object_key=object_key,
-                    content_type=request.content_type,
+                    content_type=content_type,
                     expires_in=self._settings.upload_url_ttl_seconds,
                 )
 
@@ -205,8 +205,8 @@ class StorageService:
                     bucket_id=bucket.bucket_id,
                     object_key=object_key,
                     filename=request.filename,
-                    content_type=request.content_type,
-                    size_bytes=request.size_bytes,
+                    content_type=content_type,
+                    size_bytes=request.size_bytes or 0,
                     checksum_sha256=checksum_sha256,
                     access_level=access_level,
                     access_policy=access_policy,
@@ -272,6 +272,7 @@ class StorageService:
             provider_version_ref = None
             etag = stored_object.etag
             storage_class = stored_object.storage_class
+            bucket_name = await self._bucket_name(uow, stored_object.bucket_id)
             if upload_mode is UploadMode.MULTIPART:
                 provider_upload_id = str(upload_state.get("provider_upload_id") or "")
                 if not provider_upload_id:
@@ -284,7 +285,7 @@ class StorageService:
                     raise ValidationError("Multipart upload completion requires at least one part.")
                 response = await asyncio.to_thread(
                     self._object_store.complete_multipart_upload,
-                    bucket_name=await self._bucket_name(uow, stored_object.bucket_id),
+                    bucket_name=bucket_name,
                     object_key=stored_object.object_key,
                     provider_upload_id=provider_upload_id,
                     parts=[
@@ -295,6 +296,37 @@ class StorageService:
                 provider_version_ref = self._coerce_string(response.get("VersionId"))
                 etag = self._coerce_string(response.get("ETag"))
                 storage_class = self._coerce_string(response.get("StorageClass"))
+            else:
+                try:
+                    response = await asyncio.to_thread(
+                        self._object_store.head_object,
+                        bucket_name=bucket_name,
+                        object_key=stored_object.object_key,
+                    )
+                except CortexError as exc:
+                    provider_error_code = str(exc.extra.get("provider_error_code", ""))
+                    if exc.code == "storage_provider_error" and provider_error_code in {
+                        "404",
+                        "NoSuchKey",
+                        "NotFound",
+                    }:
+                        raise CortexError(
+                            code="upload_session_incomplete",
+                            detail=(
+                                "The uploaded object is not yet visible in object storage. "
+                                "Upload the file to the signed URL before calling complete."
+                            ),
+                            status_code=409,
+                        ) from exc
+                    raise
+                etag = self._coerce_string(response.get("ETag")) or etag
+                storage_class = self._coerce_string(response.get("StorageClass")) or storage_class
+                detected_content_type = self._coerce_string(response.get("ContentType"))
+                actual_size_bytes = self._coerce_int(response.get("ContentLength"))
+                if detected_content_type:
+                    stored_object.content_type = detected_content_type
+                if actual_size_bytes is not None:
+                    stored_object.size_bytes = actual_size_bytes
 
             stored_object.checksum_sha256 = checksum_sha256
             stored_object.etag = etag
@@ -389,8 +421,8 @@ class StorageService:
     def _select_upload_mode(self, request: StorageUploadCreateRequest) -> UploadMode:
         if request.size_bytes == 0:
             return UploadMode.SINGLE_PART
-        if request.upload_mode is UploadMode.MULTIPART:
-            return UploadMode.MULTIPART
+        if request.size_bytes is None:
+            return UploadMode.SINGLE_PART
         if request.size_bytes > self._settings.multipart_threshold_bytes:
             return UploadMode.MULTIPART
         return UploadMode.SINGLE_PART
@@ -401,17 +433,18 @@ class StorageService:
         tenant_id: str,
         object_id: str,
         filename: str,
-        object_prefix: str | None,
     ) -> str:
         parts = [_sanitize_segment(tenant_id, fallback="tenant")]
-        if object_prefix:
-            parts.extend(
-                _sanitize_segment(segment, fallback="part")
-                for segment in object_prefix.split("/")
-                if segment.strip()
-            )
         parts.extend([object_id, _sanitize_segment(filename, fallback="object.bin")])
         return "/".join(parts)
+
+    def _resolve_content_type(self, request: StorageUploadCreateRequest) -> str:
+        if request.content_type:
+            normalized = request.content_type.strip()
+            if normalized:
+                return normalized
+        guessed, _ = mimetypes.guess_type(request.filename)
+        return guessed or "application/octet-stream"
 
     def _resolve_access_level(self, access_policy: AccessPolicy | None) -> AccessLevel:
         if access_policy is None or access_policy.access_level is None:
@@ -473,3 +506,12 @@ class StorageService:
     @staticmethod
     def _coerce_string(value: Any) -> str | None:
         return str(value) if value is not None else None
+
+    @staticmethod
+    def _coerce_int(value: Any) -> int | None:
+        if value is None:
+            return None
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None

@@ -28,16 +28,12 @@ from cortex_contracts import (
     StorageUploadCompleteRequest,
     StorageUploadCreateRequest,
     StorageUploadSession,
-    TokenIssueRequest,
-    TokenIssueResponse,
 )
 from fastapi.testclient import TestClient
 
 SPEC_PATH = Path("specs/cortex-api.yaml")
 SCHEMA_MODELS: dict[str, type] = {
     "HealthResponse": HealthResponse,
-    "TokenIssueRequest": TokenIssueRequest,
-    "TokenIssueResponse": TokenIssueResponse,
     "JobAccepted": JobAccepted,
     "JobStatus": JobStatusDetail,
     "ParseSubmitRequest": ParseSubmitRequest,
@@ -188,6 +184,7 @@ def test_metrics_endpoint_returns_prometheus_text(
     monkeypatch.setenv("CORTEX_DB_DSN", "sqlite+aiosqlite:///./runtime-test-data/openapi.db")
     monkeypatch.setenv("CORTEX_AUTH_MODE", "dev")
     monkeypatch.setenv("CORTEX_OTEL_ENABLED", "false")
+    monkeypatch.setenv("CORTEX_CRAWL4AI_SKIP_PROBE", "1")
     load_settings.cache_clear()
     app = create_app()
 
@@ -222,7 +219,6 @@ def test_runtime_openapi_exposes_bearer_security_scheme_for_protected_routes() -
 
 
 REQUEST_EXAMPLE_OPERATIONS: tuple[tuple[str, str], ...] = (
-    ("/v1/auth/token", "post"),
     ("/v1/parse/sync", "post"),
     ("/v1/parse/jobs", "post"),
     ("/v1/storage/uploads", "post"),

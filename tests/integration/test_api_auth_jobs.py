@@ -94,6 +94,7 @@ def _build_client(monkeypatch: pytest.MonkeyPatch, db_path: Path) -> TestClient:
     monkeypatch.setenv("CORTEX_DB_DSN", _async_sqlite_url(db_path))
     monkeypatch.setenv("CORTEX_AUTH_MODE", "dev")
     monkeypatch.setenv("CORTEX_OTEL_ENABLED", "false")
+    monkeypatch.setenv("CORTEX_CRAWL4AI_PLAYWRIGHT_VALIDATE_ON_STARTUP", "false")
     load_settings.cache_clear()
     return TestClient(create_app())
 

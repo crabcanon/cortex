@@ -248,6 +248,8 @@ Profile 是 Cortex 实现“策略模式 + 配置模板”最关键的控制面�
 
 `request_json` 和 `result_json` 负责保存 API 请求快照与摘要结果，便于重放、审计与故障排查。
 
+`target_id` 保存作业目标的可读定位符。对于 Parse Job，它可能是 URL、S3 locator、对象 ID 或文件 URI，因此字段长度不能按 UUID 处理；当前基线使用 `VARCHAR(2048)`，完整请求仍以 `request_json` 为准。
+
 对于极简 Parse API，建议在 `jobs.request_json` 中明确保留：
 
 - 原始 `sources`

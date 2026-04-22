@@ -421,7 +421,7 @@ class JobModel(Base):
     priority: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
     idempotency_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
     target_type: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    target_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    target_id: Mapped[str | None] = mapped_column(String(2048), nullable=True)
     correlation_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     span_id: Mapped[str | None] = mapped_column(String(32), nullable=True)

@@ -338,7 +338,7 @@ CREATE TABLE jobs (
     priority              INTEGER      NOT NULL DEFAULT 5,
     idempotency_key       VARCHAR(255),
     target_type           VARCHAR(64),
-    target_id             VARCHAR(36),
+    target_id             VARCHAR(2048),
     correlation_id        VARCHAR(128),
     trace_id              VARCHAR(64),
     span_id               VARCHAR(32),

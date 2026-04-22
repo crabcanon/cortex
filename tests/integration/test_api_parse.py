@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from cortex_api import lifespan as api_lifespan
 from cortex_api.main import create_app
 from cortex_common import CortexError, load_settings, utc_now
 from cortex_contracts import (
@@ -192,6 +193,11 @@ def _build_client(
     monkeypatch.setenv("CORTEX_DB_DSN", _async_sqlite_url(db_path))
     monkeypatch.setenv("CORTEX_AUTH_MODE", "dev")
     monkeypatch.setenv("CORTEX_OTEL_ENABLED", "false")
+    monkeypatch.setattr(
+        api_lifespan,
+        "prepare_crawl4ai_playwright_runtime",
+        lambda *args, **kwargs: None,
+    )
     load_settings.cache_clear()
     app = create_app()
     with TestClient(app) as client:
@@ -240,7 +246,7 @@ def test_parse_api_lists_catalog_and_runs_sync_parse(monkeypatch: pytest.MonkeyP
             "/v1/parse/sync",
             headers=headers,
             json={
-                "sources": ["https://example.com/docs"],
+                "sources": ["https://docs.cognee.ai/core-concepts/overview"],
                 "engine_id": "auto",
             },
         )
@@ -297,7 +303,7 @@ def test_parse_sync_requires_parse_write_scope(monkeypatch: pytest.MonkeyPatch) 
             "/v1/parse/sync",
             headers=headers,
             json={
-                "sources": ["https://example.com/docs"],
+                "sources": ["https://docs.cognee.ai/core-concepts/overview"],
                 "engine_id": "api_test_engine",
             },
         )
@@ -403,7 +409,7 @@ def test_async_parse_job_submit_worker_and_result(monkeypatch: pytest.MonkeyPatc
             "/v1/parse/jobs",
             headers=headers,
             json={
-                "sources": ["https://example.com/docs"],
+                "sources": ["https://docs.cognee.ai/core-concepts/overview"],
                 "engine_id": "auto",
                 "priority": 7,
             },
@@ -412,7 +418,7 @@ def test_async_parse_job_submit_worker_and_result(monkeypatch: pytest.MonkeyPatc
             "/v1/parse/jobs",
             headers=headers,
             json={
-                "sources": ["https://example.com/docs"],
+                "sources": ["https://docs.cognee.ai/core-concepts/overview"],
                 "engine_id": "auto",
                 "priority": 7,
             },

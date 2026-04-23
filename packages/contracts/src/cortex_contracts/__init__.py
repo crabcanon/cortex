@@ -1,5 +1,6 @@
 """Contract models for Cortex APIs."""
 
+from .dev_auth import LocalDevTokenIssueRequest, LocalDevTokenIssueResponse
 from .enums import (
     AccessLevel,
     ChunkingStrategy,
@@ -128,6 +129,8 @@ __all__ = [
     "CrawlOptions",
     "DatasetCounters",
     "DatasetRetentionClass",
+    "LocalDevTokenIssueRequest",
+    "LocalDevTokenIssueResponse",
     "DocumentProvenance",
     "CompletedUploadPart",
     "CorrelationHeaders",

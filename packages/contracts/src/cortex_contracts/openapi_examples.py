@@ -6,6 +6,41 @@ from typing import cast
 
 from fastapi.openapi.models import Example
 
+LOCAL_DEV_TOKEN_REQUEST_EXAMPLES: dict[str, Example] = cast(
+    dict[str, Example],
+    {
+        "recommended_swagger_token": {
+            "summary": "Recommended Swagger dev token / 推荐的 Swagger 开发令牌",
+            "description": (
+                "Creates a local development bearer token that can be pasted directly into "
+                "Swagger UI's `Authorize` dialog. / 生成一个可直接粘贴到 Swagger UI "
+                "`Authorize` 弹窗中的本地开发 Bearer token。"
+            ),
+            "value": {
+                "subject": "alice",
+                "tenant_id": "tenant_demo",
+                "display_name": "Alice",
+                "client_id": "swagger-ui",
+                "roles": ["tenant_admin"],
+                "groups": ["platform-ops"],
+                "expires_in": 3600,
+            },
+        },
+        "minimal_local_token": {
+            "summary": "Minimal local token request / 最小化本地令牌请求",
+            "description": (
+                "Only `subject` and `tenant_id` are required. Cortex fills in the standard "
+                "local developer scopes automatically. / 只需要 `subject` 和 "
+                "`tenant_id`，其余标准本地开发 scope 由 Cortex 自动补齐。"
+            ),
+            "value": {
+                "subject": "smoke-test",
+                "tenant_id": "tenant_demo",
+            },
+        },
+    },
+)
+
 PARSE_SYNC_REQUEST_EXAMPLES: dict[str, Example] = cast(
     dict[str, Example],
     {

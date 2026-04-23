@@ -90,10 +90,18 @@ async def _seed_api_fixture(db_path: Path) -> None:
         await engine.dispose()
 
 
-def _build_client(monkeypatch: pytest.MonkeyPatch, db_path: Path) -> TestClient:
+def _build_client(
+    monkeypatch: pytest.MonkeyPatch,
+    db_path: Path,
+    *,
+    environment: str = "local",
+    auth_mode: str = "dev",
+) -> TestClient:
     monkeypatch.setenv("CORTEX_DB_DSN", _async_sqlite_url(db_path))
-    monkeypatch.setenv("CORTEX_AUTH_MODE", "dev")
+    monkeypatch.setenv("CORTEX_ENV", environment)
+    monkeypatch.setenv("CORTEX_AUTH_MODE", auth_mode)
     monkeypatch.setenv("CORTEX_OTEL_ENABLED", "false")
+    monkeypatch.setenv("CORTEX_CRAWL4AI_SKIP_PROBE", "1")
     load_settings.cache_clear()
     return TestClient(create_app())
 
@@ -171,3 +179,69 @@ def test_missing_bearer_token_returns_unauthorized(monkeypatch: pytest.MonkeyPat
 
     assert response.status_code == 401
     assert response.json()["error_code"] == "missing_authorization"
+
+
+def test_local_dev_token_endpoint_issues_swagger_ready_token(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db_path = _case_db_path("api-dev-token-local")
+    db_migrate_main(["upgrade", "head", "--db-url", _sync_sqlite_url(db_path)])
+
+    with _build_client(monkeypatch, db_path, environment="local", auth_mode="dev") as client:
+        token_response = client.post(
+            "/v1/dev/auth/token",
+            json={
+                "subject": "alice",
+                "tenant_id": "tenant_api",
+                "display_name": "Alice",
+                "client_id": "swagger-ui",
+            },
+        )
+        access_token = token_response.json()["access_token"]
+        protected_response = client.get(
+            "/v1/health/live",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        openapi = client.get("/openapi.json").json()
+
+    load_settings.cache_clear()
+
+    assert token_response.status_code == 200
+    assert token_response.json()["token_format"] == "dev"
+    assert token_response.json()["swagger_authorize_value"] == access_token
+    assert token_response.json()["authorization_header"] == f"Bearer {access_token}"
+    assert protected_response.status_code == 200
+    assert "/v1/dev/auth/token" in openapi["paths"]
+
+
+@pytest.mark.parametrize(
+    ("environment", "auth_mode"),
+    [
+        ("prod", "dev"),
+        ("local", "jwt"),
+    ],
+)
+def test_local_dev_token_endpoint_is_not_mounted_outside_local_dev(
+    monkeypatch: pytest.MonkeyPatch,
+    environment: str,
+    auth_mode: str,
+) -> None:
+    db_path = _case_db_path(f"api-dev-token-disabled-{environment}-{auth_mode}")
+    db_migrate_main(["upgrade", "head", "--db-url", _sync_sqlite_url(db_path)])
+
+    with _build_client(
+        monkeypatch,
+        db_path,
+        environment=environment,
+        auth_mode=auth_mode,
+    ) as client:
+        response = client.post(
+            "/v1/dev/auth/token",
+            json={"subject": "alice", "tenant_id": "tenant_api"},
+        )
+        openapi = client.get("/openapi.json").json()
+
+    load_settings.cache_clear()
+
+    assert response.status_code == 404
+    assert "/v1/dev/auth/token" not in openapi["paths"]

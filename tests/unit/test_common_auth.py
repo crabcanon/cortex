@@ -10,12 +10,15 @@ import pytest
 from cortex_auth.errors import AuthenticationError
 from cortex_auth.models import CallerContext
 from cortex_auth.tokens import (
+    DEFAULT_LOCAL_DEV_SCOPES,
     DevTokenValidator,
+    LocalDevTokenIssueInput,
     TokenValidatorChain,
     _normalize_values,
     build_token_validator,
+    issue_local_dev_token,
 )
-from cortex_common import AuthSettings, load_settings
+from cortex_common import AuthSettings, ValidationError, load_settings
 
 
 def _encode_dev_token(payload: dict[str, object]) -> str:
@@ -57,7 +60,7 @@ def test_normalize_values_accepts_string_sequence_and_scalar() -> None:
 
 @pytest.mark.asyncio
 async def test_dev_token_validator_maps_scopes_roles_and_groups() -> None:
-    validator = DevTokenValidator()
+    validator = DevTokenValidator(AuthSettings())
     caller = await validator.validate(
         _encode_dev_token(
             {
@@ -119,3 +122,48 @@ def test_token_validator_chain_raises_last_error() -> None:
         asyncio.run(chain.validate("alice"))
 
     assert excinfo.value.code == "inactive_token"
+
+
+def test_issue_local_dev_token_uses_standard_scope_bundle_by_default() -> None:
+    result = issue_local_dev_token(
+        AuthSettings(),
+        LocalDevTokenIssueInput(
+            subject="alice",
+            tenant_id="tenant_demo",
+        ),
+    )
+
+    assert result.access_token.startswith("dev:")
+    assert result.scope == " ".join(DEFAULT_LOCAL_DEV_SCOPES)
+    assert result.authorization_header == f"Bearer {result.access_token}"
+
+
+@pytest.mark.asyncio
+async def test_dev_token_validator_rejects_expired_token() -> None:
+    settings = AuthSettings()
+    token = _encode_dev_token(
+        {
+            "sub": "alice",
+            "tenant_id": "tenant_demo",
+            "actor_id": "alice",
+            "exp": 1,
+            "iss": settings.oidc_issuer,
+            "aud": settings.oidc_audience,
+        }
+    )
+    validator = DevTokenValidator(settings)
+
+    with pytest.raises(AuthenticationError, match="expired"):
+        await validator.validate(token)
+
+
+def test_issue_local_dev_token_rejects_reserved_claim_overrides() -> None:
+    with pytest.raises(ValidationError, match="reserved token fields"):
+        issue_local_dev_token(
+            AuthSettings(),
+            LocalDevTokenIssueInput(
+                subject="alice",
+                tenant_id="tenant_demo",
+                additional_claims={"sub": "mallory"},
+            ),
+        )

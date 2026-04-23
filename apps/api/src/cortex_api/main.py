@@ -1,12 +1,13 @@
 """FastAPI entrypoint for Cortex."""
 
 import uvicorn
-from cortex_common import load_settings
+from cortex_common import CortexSettings, load_settings
 from fastapi import FastAPI
 
 from .errors import register_exception_handlers
 from .lifespan import lifespan
 from .middleware.request_context import request_context_middleware
+from .routers.dev_auth import router as dev_auth_router
 from .routers.health import router as health_router
 from .routers.jobs import router as jobs_router
 from .routers.knowledge import router as knowledge_router
@@ -15,8 +16,16 @@ from .routers.parse import router as parse_router
 from .routers.storage import router as storage_router
 
 
+def _local_dev_token_route_enabled(settings: CortexSettings) -> bool:
+    return (
+        settings.app.environment.strip().lower() == "local"
+        and settings.auth.mode.strip().lower() == "dev"
+    )
+
+
 def create_app() -> FastAPI:
     """Create the FastAPI application instance."""
+    settings = load_settings()
     app = FastAPI(
         title="Cortex API",
         version="1.0.0-draft",
@@ -33,6 +42,8 @@ def create_app() -> FastAPI:
     app.include_router(observability_router)
     app.include_router(parse_router)
     app.include_router(storage_router)
+    if _local_dev_token_route_enabled(settings):
+        app.include_router(dev_auth_router)
     return app
 
 

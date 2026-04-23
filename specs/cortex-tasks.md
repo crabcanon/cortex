@@ -533,3 +533,31 @@ Goal: remove non-essential public auth surface, keep idempotency only where the 
 | CTX-20260422-088 | 2026-04-22 14:40:00 +08:00 | P0 | api-contract | Keep `Idempotency-Key` only on async job-submission APIs that actually deduplicate persisted jobs, remove it from synchronous parse, dataset creation, and storage upload-init routes, and update DFD/OpenAPI wording accordingly | CTX-20260422-087 | done |
 | CTX-20260422-089 | 2026-04-22 14:40:00 +08:00 | P0 | storage-api | Further minimize `POST /v1/storage/uploads` by removing service-owned routing knobs (`upload_mode`, `part_size_bytes`, `bucket_ref`, `object_prefix`) and making `content_type` inferable, while explicitly documenting and testing why `completeUploadSession` remains required | CTX-20260422-088 | done |
 | CTX-20260422-090 | 2026-04-22 15:35:00 +08:00 | P1 | test-hygiene | Suppress known upstream Cognee/Pydantic deprecation warnings through a narrow runtime import wrapper plus pytest-only filters, add regression coverage for warning-free optional imports, and keep knowledge/runtime contract tests green under `-W always` | CTX-20260422-089 | done |
+
+### Batch 2026-04-22 18:20:00 +08:00 | Phase AJ Local Dev Token Helper
+
+Goal: restore a Swagger-friendly token generation path for local development without reopening the public production auth surface or reintroducing bootstrap secrets.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260422-091 | 2026-04-22 18:20:00 +08:00 | P1 | auth-api | Add a `/v1/dev/auth/token` helper that is mounted only when `CORTEX_ENV=local` and `CORTEX_AUTH_MODE=dev`, remove any secret requirement, return Swagger-ready paste values, and keep it absent from non-local deployments | CTX-20260422-090 | done |
+| CTX-20260422-092 | 2026-04-22 18:20:00 +08:00 | P1 | auth-contract | Add local-dev token request/response schemas, bilingual Swagger examples, runtime OpenAPI coverage, and documentation updates that explain how to obtain Bearer tokens after the public issuer removal | CTX-20260422-091 | done |
+
+### Batch 2026-04-22 18:55:00 +08:00 | Phase AK Storage Presign Endpoint Split
+
+Goal: make local and container-backed storage uploads return host-reachable presigned URLs, while keeping the API and workers free to talk to MinIO through container-internal service names.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260422-093 | 2026-04-22 18:55:00 +08:00 | P1 | storage-runtime | Split object-storage control-plane access from the public presign host via `CORTEX_S3_ENDPOINT` and `CORTEX_S3_PUBLIC_ENDPOINT`, update compose/env defaults, and ensure presigned upload/download URLs stay host-reachable during local Docker runs | CTX-20260422-089 | done |
+| CTX-20260422-094 | 2026-04-22 18:55:00 +08:00 | P1 | storage-docs | Clarify in README / tech / DFD / OpenAPI that MinIO `9000` is the S3 API, `9001` is only the console, `tenant_demo/...` is an object key prefix rather than a bucket, and provide a complete local upload verification walkthrough | CTX-20260422-093 | done |
+
+### Batch 2026-04-23 09:30:00 +08:00 | Phase AL Small File Direct Upload
+
+Goal: add a Swagger-friendly one-step small-file upload endpoint without weakening the production presigned upload-session flow.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260423-095 | 2026-04-23 09:30:00 +08:00 | P1 | storage-design | Define `POST /v1/storage/files` as a multipart/form-data convenience endpoint for Swagger/local/small files, document size limits, metadata semantics, and the boundary with the production presigned flow across API / PRD / DFD / schema / tech docs | CTX-20260422-094 | done |
+| CTX-20260423-096 | 2026-04-23 09:30:00 +08:00 | P1 | storage-api | Implement direct small-file upload by reusing StorageService, object-store facade, authorization, object metadata, versions, checksums, and telemetry | CTX-20260423-095 | done |
+| CTX-20260423-097 | 2026-04-23 09:30:00 +08:00 | P1 | testing | Add integration/unit coverage for successful direct upload, size-limit rejection, checksum mismatch, and runtime/static OpenAPI alignment | CTX-20260423-096 | done |

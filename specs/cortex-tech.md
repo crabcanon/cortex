@@ -546,6 +546,8 @@ src/cortex_parse/
 推荐约定：
 
 - `.env` 只放 secret、endpoint、或 `CORTEX_RUNTIME_CONFIG_PATH` 这类 coarse override
+- 对象存储在容器/服务网格内部地址与外部调用方可达地址不一致时，必须拆分
+  `CORTEX_S3_ENDPOINT`（控制面直连地址）与 `CORTEX_S3_PUBLIC_ENDPOINT`（预签名 URL 对外地址）
 - `configs/cortex.runtime.yaml` 放 provider 行为与运行时模板
 - `configs/cortex.runtime.<env>.yaml` 放可直接切换的环境化运行时配置
 - `packages/parse/profiles/*.yaml` 放 route / fallback / normalization 策略
@@ -1141,6 +1143,30 @@ Storage API 延续当前设计，但要与 Parse 平台更紧密联动。
 - 原始文件先入对象存储。
 - Parse 对文件输入主要消费 `object_id`。
 - Markdown、HTML、截图、PDF、网络日志等产物也统一入对象存储。
+- bucket 与 object key 路由保持服务端拥有。客户端只提供文件身份与业务元数据，不直接决定 bucket、prefix、multipart 分片策略。
+- 本地、容器、反向代理等场景下，对象存储需要区分两个地址：
+  - `CORTEX_S3_ENDPOINT`：API / Worker 用于 `head_object`、`create_bucket`、`complete_multipart_upload` 的控制面直连地址
+  - `CORTEX_S3_PUBLIC_ENDPOINT`：写入预签名 URL 给浏览器、Swagger、curl、Postman 的外部可达地址
+- `tenant_demo/obj_xxx/README.md` 这类值是 object key 前缀，不是 bucket；真实 bucket 仍然是 `cortex-local` 这类单独字段。
+- `completeUploadSession` 必须保留，因为文件数据面是客户端直传对象存储，Cortex 仍需在完成阶段确认对象已可见、回填 provider 元数据、并提交最终 object/version 记录。
+
+### 7.1.1 小文件便捷上传
+
+为降低 Swagger UI、本地联调、演示和小文件测试的使用门槛，Storage API 新增：
+
+```http
+POST /v1/storage/files
+Content-Type: multipart/form-data
+```
+
+该接口的边界如下：
+
+- 仅用于小文件和人工测试场景，默认大小上限由 `CORTEX_STORAGE_DIRECT_UPLOAD_MAX_BYTES` 控制，默认 50MiB。
+- 用户只上传 `file`，可选提供 `metadata_json`、`access_policy_json`、`tags`、`checksum_sha256`。
+- `filename`、`content_type`、`size_bytes` 由上传文件和实际字节流动态获得，不要求调用方手填。
+- API 进程会短暂承担文件数据面代理职责，因此该接口不作为大文件、高吞吐、批量导入或断点续传的推荐路径。
+- 成功后直接返回 `StorageObject`，内部仍然写入同一套 `objects` 与 `object_versions`，不会引入新表或第二套元数据模型。
+- 生产主路径仍然是 `POST /v1/storage/uploads` -> `PUT presigned_url` -> `POST /v1/storage/uploads/{uploadId}/complete`。
 
 ### 7.2 统一对象类型
 
@@ -1438,6 +1464,8 @@ Cortex 的认证层保持厂商中立，但应遵循行业通用标准：
 - 如果接入企业统一身份平台，token 的签发应完全交给外部 IdP。
 - 如果处于本地、自托管、CI 或无外部 IdP 的早期阶段，可直接手工构造 `dev:` token，或由外围脚本 / CI 安全地注入 JWT。
 - `introspection` 模式不提供本地签发，因为那会把 Cortex 推向“自己实现一套 opaque token authorization server”的范畴，不符合当前范围控制。
+
+?????????? Swagger ?????Cortex ??? `CORTEX_ENV=local` ? `CORTEX_AUTH_MODE=dev` ????? `POST /v1/dev/auth/token`????????? `dev:` token??? Swagger?curl ??????????????????????????????? Cortex ??????????????? IdP ???????????????
 
 ### 13.2 功能权限模型
 

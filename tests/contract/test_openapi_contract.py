@@ -1,5 +1,6 @@
 """OpenAPI contract tests against the published specification."""
 
+import os
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -16,6 +17,8 @@ from cortex_contracts import (
     JobStatusDetail,
     KnowledgeDataset,
     KnowledgeDatasetCreateRequest,
+    LocalDevTokenIssueRequest,
+    LocalDevTokenIssueResponse,
     MemifyJobRequest,
     ParseBatchJobAccepted,
     ParseBatchResult,
@@ -36,6 +39,8 @@ SCHEMA_MODELS: dict[str, type] = {
     "HealthResponse": HealthResponse,
     "JobAccepted": JobAccepted,
     "JobStatus": JobStatusDetail,
+    "LocalDevTokenIssueRequest": LocalDevTokenIssueRequest,
+    "LocalDevTokenIssueResponse": LocalDevTokenIssueResponse,
     "ParseSubmitRequest": ParseSubmitRequest,
     "ParseJobSubmitRequest": ParseJobSubmitRequest,
     "ParseBatchJobAccepted": ParseBatchJobAccepted,
@@ -63,8 +68,24 @@ def _load_documented_openapi() -> dict[str, object]:
 
 
 def _runtime_openapi() -> dict[str, object]:
-    app = create_app()
-    return app.openapi()  # type: ignore[no-any-return]
+    previous_env = os.environ.get("CORTEX_ENV")
+    previous_auth_mode = os.environ.get("CORTEX_AUTH_MODE")
+    os.environ["CORTEX_ENV"] = "local"
+    os.environ["CORTEX_AUTH_MODE"] = "dev"
+    load_settings.cache_clear()
+    try:
+        app = create_app()
+        return app.openapi()  # type: ignore[no-any-return]
+    finally:
+        if previous_env is None:
+            os.environ.pop("CORTEX_ENV", None)
+        else:
+            os.environ["CORTEX_ENV"] = previous_env
+        if previous_auth_mode is None:
+            os.environ.pop("CORTEX_AUTH_MODE", None)
+        else:
+            os.environ["CORTEX_AUTH_MODE"] = previous_auth_mode
+        load_settings.cache_clear()
 
 
 def _english_summary(value: str | None) -> str | None:
@@ -219,6 +240,7 @@ def test_runtime_openapi_exposes_bearer_security_scheme_for_protected_routes() -
 
 
 REQUEST_EXAMPLE_OPERATIONS: tuple[tuple[str, str], ...] = (
+    ("/v1/dev/auth/token", "post"),
     ("/v1/parse/sync", "post"),
     ("/v1/parse/jobs", "post"),
     ("/v1/storage/uploads", "post"),
@@ -278,3 +300,19 @@ def test_documented_parameter_examples_cover_common_request_inputs() -> None:
         schema = parameter["schema"]
         assert isinstance(schema, dict)
         assert "example" in schema
+
+
+def test_runtime_openapi_hides_local_dev_token_route_when_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CORTEX_ENV", "prod")
+    monkeypatch.setenv("CORTEX_AUTH_MODE", "jwt")
+    load_settings.cache_clear()
+    app = create_app()
+
+    openapi = app.openapi()
+
+    load_settings.cache_clear()
+    paths = openapi["paths"]
+    assert isinstance(paths, dict)
+    assert "/v1/dev/auth/token" not in paths

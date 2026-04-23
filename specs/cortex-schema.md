@@ -88,6 +88,10 @@
 - `checksum_sha256`：跨厂商迁移时的校验基准。
 - `source_uri`：如果来自 URL、S3 URI、上传会话等，则记录其上游来源。
 - `access_level` / `access_policy_json`：对象级数据权限控制与下载授权依据。
+
+`POST /v1/storage/files` 的小文件便捷上传不会引入新表。它在对象写入成功后直接生成
+`available` 状态的 `objects` 记录和第一条 `object_versions` 记录；预签名上传会话仍然先生成
+`pending_upload`，再由 `completeUploadSession` 推进到 `available`。
 - `metadata_json`：用户自定义元数据与系统扩展字段。
 
 设计取舍：
@@ -504,6 +508,9 @@ erDiagram
 ### 7.1 Object
 
 `pending_upload -> available -> archived -> deleted`
+
+小文件便捷上传可以直接创建 `available` 对象；预签名上传会话必须从 `pending_upload`
+进入，并在完成上传后转换为 `available`。
 
 ### 7.2 Document
 

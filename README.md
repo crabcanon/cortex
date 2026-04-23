@@ -92,6 +92,7 @@ powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 down
 本地关键入口：
 - API: `http://127.0.0.1:8080`
 - Swagger: `http://127.0.0.1:8080/docs`
+- MinIO S3 API: `http://127.0.0.1:9000`
 - MinIO Console: `http://127.0.0.1:9001`
 - Jaeger: `http://127.0.0.1:16686`
 - Prometheus: `http://127.0.0.1:9090`
@@ -236,6 +237,7 @@ Cortex 基于 Python 3.12、`uv workspace`、FastAPI、标准 SQL、S3 兼容对
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
+| `POST` | `/v1/storage/files` | Swagger / 本地测试 / 小文件一步上传 |
 | `POST` | `/v1/storage/uploads` | 创建上传会话 |
 | `POST` | `/v1/storage/uploads/{uploadId}/complete` | 完成上传 |
 | `GET` | `/v1/storage/objects/{objectId}` | 读取对象元数据 |
@@ -332,7 +334,9 @@ flowchart LR
 | --- | --- |
 | `CORTEX_DB_DSN` | 主业务数据库 DSN，支持 SQLite / PostgreSQL |
 | `CORTEX_S3_ENDPOINT` | S3 兼容存储端点 |
+| `CORTEX_S3_PUBLIC_ENDPOINT` | 可选。用于生成给浏览器、Swagger、curl、Postman 的预签名 URL 外部地址；当 API 通过容器内 DNS（例如 `http://minio:9000`）访问对象存储时，建议显式设置为宿主机或网关可达地址（例如 `http://127.0.0.1:9000`） |
 | `CORTEX_S3_BUCKET` | 默认 bucket |
+| `CORTEX_STORAGE_DIRECT_UPLOAD_MAX_BYTES` | `/v1/storage/files` 一步上传接口的文件大小上限，默认 50MiB |
 | `CORTEX_AUTH_MODE` | `dev` / `jwt` / `introspection` / `hybrid` |
 | `CORTEX_AUTH_JWT_SHARED_SECRET` | `jwt` / `hybrid` 模式下验证外部 JWT 的共享密钥 |
 | `CORTEX_AUTH_INTROSPECTION_URL` | `introspection` / `hybrid` 模式下的外部 token introspection 地址 |
@@ -473,6 +477,7 @@ knowledge:
 如果你通过本地 Swagger UI (`/docs`) 调试受保护接口，请使用右上角的 `Authorize` 按钮，并填入一个已有的 bearer token。
 
 - `dev` 模式：可直接使用下文 `9.1` 的本地脚本生成 `Bearer dev:...`
+- `dev` 模式：当 `CORTEX_ENV=local` 且 `CORTEX_AUTH_MODE=dev` 时，也可以先调用 `POST /v1/dev/auth/token` 生成本地开发 token；把响应中的 `swagger_authorize_value` 原样粘贴到 Swagger 右上角 `Authorize` 弹窗即可。
 - `jwt` / `hybrid` 模式：请填入外部系统签发的 JWT
 - `introspection` 模式：请填入外部授权服务器签发的 opaque token
 
@@ -695,6 +700,23 @@ powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 down
 
 ### 9.1 生成 dev token
 
+当 `CORTEX_ENV=local` 且 `CORTEX_AUTH_MODE=dev` 时，推荐优先直接调用本地开发 token 接口：
+
+```bash
+curl -X POST http://127.0.0.1:8080/v1/dev/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "subject": "alice",
+    "tenant_id": "tenant_demo",
+    "display_name": "Alice",
+    "client_id": "swagger-ui"
+  }'
+```
+
+将响应里的 `swagger_authorize_value` 粘贴到 Swagger UI 的 `Authorize` 弹窗时，不要手动再加 `Bearer ` 前缀。
+
+如果你更想手工构造 `dev:` token，依然可以使用下面的脚本：
+
 ```bash
 python - <<'PY'
 import base64, json
@@ -781,6 +803,32 @@ curl -H "Authorization: $TOKEN" \
 
 ### 9.5 Storage 上传与下载
 
+#### 9.5.0 小文件一步上传
+
+`POST /v1/storage/files` 面向 Swagger UI、本地测试和小文件。它直接接收
+`multipart/form-data`，成功后返回 `StorageObject`，对象状态已经是 `available`。
+
+这个接口默认限制为 50MiB，可通过 `CORTEX_STORAGE_DIRECT_UPLOAD_MAX_BYTES` 调整。大文件、
+批量上传、断点续传和生产高吞吐场景仍然建议使用下面的三步预签名上传会话。
+
+```bash
+curl -X POST http://127.0.0.1:8080/v1/storage/files \
+  -H "Authorization: $TOKEN" \
+  -F "file=@README.md;type=text/markdown" \
+  -F 'metadata_json={"source":"local-direct-demo"}' \
+  -F 'access_policy_json={"access_level":"tenant_shared"}' \
+  -F "tags=docs,product"
+```
+
+可选表单字段：
+
+- `metadata_json`：JSON object 字符串，默认 `{}`
+- `access_policy_json`：`AccessPolicy` JSON object 字符串，默认省略并使用 `tenant_private`
+- `tags`：逗号分隔字符串或 JSON 数组字符串，默认空
+- `checksum_sha256`：小写 SHA-256；提供时 Cortex 会校验文件内容
+
+#### 9.5.1 生产级预签名上传会话
+
 1. 创建上传会话
 
 ```bash
@@ -796,6 +844,22 @@ curl -X POST http://127.0.0.1:8080/v1/storage/uploads \
 ```
 
 默认单文件上传可以省略 `content_type` 和 `size_bytes`。Cortex 会优先从 `filename` 推断 MIME type；如果上传前不知道文件大小，也会默认先走 single-part。只有当客户端已经知道文件较大，希望 Cortex 直接初始化 multipart 时，才需要提供 `size_bytes`。
+
+返回结果里的 `bucket` 才是真实 bucket；`object_key` 是该 bucket 下的完整对象路径，所以像 `tenant_demo/obj_xxx/README.md` 这样的值只是 key 前缀，不是第二个 bucket。
+
+本地 Docker 调试时要特别区分两个 MinIO 地址：
+
+- `http://127.0.0.1:9000` 是 S3 API，真正执行 `PUT` / `GET` 上传下载要走它
+- `http://127.0.0.1:9001` 是 MinIO Console，只用于查看 bucket 和对象，不能拿来做预签名上传
+
+如果 `/v1/storage/uploads` 返回的 `single_part.url` 还是 `http://minio:9000/...`，说明当前 API 仍在用容器内地址给宿主机调用方签名。请在本地环境配置：
+
+```env
+CORTEX_S3_ENDPOINT=http://minio:9000
+CORTEX_S3_PUBLIC_ENDPOINT=http://127.0.0.1:9000
+```
+
+然后重启 `cortex-api`（以及需要复用同一配置的 worker）。
 
 2. 使用响应中的 `single_part.url` 执行 `PUT` 上传；如果是 `multipart`，则依次调用返回的 `multipart_parts`
 
@@ -818,6 +882,79 @@ curl -H "Authorization: $TOKEN" \
 
 curl -H "Authorization: $TOKEN" \
   "http://127.0.0.1:8080/v1/storage/objects/<object_id>/download-url?ttl_seconds=300&disposition=attachment"
+```
+
+#### 9.5.2 本地完整验证示例
+
+1. 先生成一个本地开发 token（仅当 `CORTEX_ENV=local` 且 `CORTEX_AUTH_MODE=dev` 时可用）
+
+```bash
+curl -X POST http://127.0.0.1:8080/v1/dev/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "subject": "alice",
+    "tenant_id": "tenant_demo",
+    "display_name": "Alice",
+    "client_id": "swagger-ui",
+    "scopes": ["storage:write", "storage:read", "storage:download"],
+    "roles": ["tenant_admin"]
+  }'
+```
+
+把响应里的 `authorization_header` 保存成 `TOKEN`，或在 Swagger 里直接粘贴 `swagger_authorize_value`。
+
+2. 创建上传会话
+
+```bash
+curl -X POST http://127.0.0.1:8080/v1/storage/uploads \
+  -H "Authorization: $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "filename": "README.md",
+    "content_type": "text/markdown",
+    "metadata": {"source": "local-demo"},
+    "tags": ["docs", "product"],
+    "access_policy": {"access_level": "tenant_shared"}
+  }'
+```
+
+预期：
+
+- `bucket` = `cortex-local`
+- `object_key` 形如 `tenant_demo/obj_xxx/README.md`
+- `single_part.url` 应该是 `http://127.0.0.1:9000/cortex-local/...`
+
+3. 直接把文件内容 `PUT` 到返回的 `single_part.url`
+
+```bash
+curl -X PUT "<single_part.url>" \
+  -H "Content-Type: text/markdown" \
+  --data-binary "@README.md"
+```
+
+4. 通知 Cortex 完成上传
+
+```bash
+curl -X POST http://127.0.0.1:8080/v1/storage/uploads/<upload_id>/complete \
+  -H "Authorization: $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+5. 校验对象元数据与下载 URL
+
+```bash
+curl -H "Authorization: $TOKEN" \
+  http://127.0.0.1:8080/v1/storage/objects/<object_id>
+
+curl -H "Authorization: $TOKEN" \
+  "http://127.0.0.1:8080/v1/storage/objects/<object_id>/download-url?ttl_seconds=300&disposition=attachment"
+```
+
+6. 在 MinIO Console 打开 `http://127.0.0.1:9001`，进入 bucket `cortex-local`，你应该会看到对象路径：
+
+```text
+tenant_demo/obj_xxx/README.md
 ```
 
 ### 9.6 Knowledge 数据集、Add、Search

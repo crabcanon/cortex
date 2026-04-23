@@ -1398,3 +1398,64 @@
   - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright packages\\knowledge\\src\\cortex_knowledge\\runtime.py tests\\conftest.py tests\\unit\\test_cognee_runtime_adapter.py`
   - `git diff --check` (passed; CRLF normalization warnings only)
 - Prevention: Treat noisy upstream deprecations as a test-hygiene problem, not a reason to globally mute warnings. Keep suppression patterns message- and module-specific, and delete them once Cognee/Pydantic upstreams ship compatible releases.
+
+### 2026-04-22 18:20:00 +08:00 | Restored A Local-Only Swagger Token Helper Without Reopening Public Auth
+
+- Stage: `CTX-20260422-091`, `CTX-20260422-092`
+- Event: After removing the public `/v1/auth/token` issuer, local Swagger testing became less convenient because operators had to handcraft `dev:` tokens even in the default `local + dev` workflow.
+- Cause:
+  - The earlier cleanup intentionally removed the bootstrap issuer and secret-based token minting API from every deployment mode, but it also removed the easiest discoverable path for Swagger users who only needed a short-lived local Bearer token.
+  - The replacement guidance lived in README snippets and tests, which was correct but still too indirect for the interactive `/docs` flow.
+- Action:
+  - Added `POST /v1/dev/auth/token`, mounted only when `CORTEX_ENV=local` and `CORTEX_AUTH_MODE=dev`.
+  - The new helper issues only local `dev:` tokens, requires no bootstrap secret, and returns both `swagger_authorize_value` and `authorization_header` so users can paste directly into Swagger or curl/Postman.
+  - Kept production/public auth posture unchanged by not mounting the route outside `local + dev`, and by leaving the main auth contract centered on resource-server token consumption.
+  - Added request/response DTOs, bilingual OpenAPI examples, runtime OpenAPI coverage, and docs updates across README / tech / DFD / API spec.
+  - Tightened `DevTokenValidator` so locally issued dev tokens now honor temporal claims (`exp` / `nbf` / `iat`) and validate issuer/audience when present.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\unit\\test_common_auth.py tests\\integration\\test_api_auth_jobs.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\contract\\test_openapi_contract.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m ruff check apps\\api\\src\\cortex_api\\main.py apps\\api\\src\\cortex_api\\routers\\dev_auth.py packages\\auth\\src\\cortex_auth\\__init__.py packages\\auth\\src\\cortex_auth\\tokens.py packages\\contracts\\src\\cortex_contracts\\__init__.py packages\\contracts\\src\\cortex_contracts\\dev_auth.py packages\\contracts\\src\\cortex_contracts\\openapi_examples.py tests\\contract\\test_openapi_contract.py tests\\integration\\test_api_auth_jobs.py tests\\unit\\test_common_auth.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright apps\\api\\src\\cortex_api\\main.py apps\\api\\src\\cortex_api\\routers\\dev_auth.py packages\\auth\\src\\cortex_auth\\__init__.py packages\\auth\\src\\cortex_auth\\tokens.py packages\\contracts\\src\\cortex_contracts\\__init__.py packages\\contracts\\src\\cortex_contracts\\dev_auth.py tests\\contract\\test_openapi_contract.py tests\\integration\\test_api_auth_jobs.py tests\\unit\\test_common_auth.py`
+- Prevention: When removing a public convenience feature for production-hardening reasons, preserve a clearly namespaced local-development path if the feature materially improves day-to-day operator workflows. Keep the route visibly scoped (`/v1/dev/...`), conditionally mounted, and absent from non-local deployments.
+
+## 2026-04-22 18:55:00 +08:00
+
+- Event: Local `POST /v1/storage/uploads` calls returned presigned URLs with `http://minio:9000/...`, which is correct inside Docker Compose but unreachable from Swagger, browsers, curl, or Postman running on the host.
+- Cause: The storage client previously used a single `CORTEX_S3_ENDPOINT` for both control-plane S3 calls (`head_object`, `complete_multipart_upload`, bucket checks) and presigned URL generation. In local Docker runs the internal endpoint must stay `http://minio:9000`, while callers need a host-visible S3 API endpoint such as `http://127.0.0.1:9000`.
+- Action:
+  - Added `CORTEX_S3_PUBLIC_ENDPOINT` and split the boto3 object store facade into an internal control-plane client plus a signing client.
+  - Kept bucket creation, multipart completion, and `head_object` on the internal endpoint, while moving single-part upload, multipart part upload, and download URL signing onto the public endpoint when configured.
+  - Updated local and production compose/env examples plus README / technical design / DFD / OpenAPI documentation so operators can distinguish MinIO S3 API (`:9000`) from MinIO Console (`:9001`).
+  - Clarified that values such as `tenant_demo/obj_xxx/README.md` are object key prefixes inside bucket `cortex-local`, not additional buckets.
+  - Added unit regression coverage for constructor wiring and signing-client usage on both upload and download URL paths.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\unit\\test_storage_client.py tests\\integration\\test_api_storage.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m ruff check packages\\common\\src\\cortex_common\\settings.py packages\\storage\\src\\cortex_storage\\client.py tests\\unit\\test_storage_client.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright packages\\common\\src\\cortex_common\\settings.py packages\\storage\\src\\cortex_storage\\client.py tests\\unit\\test_storage_client.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml`
+- Prevention: Treat object-store addressing as a two-sided contract. One endpoint may be optimal for service-to-service control traffic, but presigned URLs must always be signed against an address reachable from the eventual caller.
+
+## 2026-04-23 09:30:00 +08:00
+
+- Stage: `CTX-20260423-095`, `CTX-20260423-096`, `CTX-20260423-097`
+- Event: Added a one-step `POST /v1/storage/files` upload path for Swagger UI, local testing, and small files.
+- Cause:
+  - The production-grade three-step storage flow is still correct for high performance and large files, but it is cumbersome for quick Swagger validation because the caller must create a session, upload to the presigned URL, then complete the session.
+  - A convenience route is acceptable as long as it is clearly size-limited and does not replace the direct-to-object-store presigned flow for large/batch/resumable uploads.
+- Action:
+  - Designed the endpoint in OpenAPI / PRD / DFD / schema / technical docs before implementation.
+  - Added `CORTEX_STORAGE_DIRECT_UPLOAD_MAX_BYTES` with a 50MiB default and propagated it through `.env` examples and compose files.
+  - Added `python-multipart` to the API runtime dependencies and refreshed `uv.lock`.
+  - Added `ObjectStoreClientProtocol.put_object` plus a boto3-backed implementation that uses the internal control-plane S3 endpoint.
+  - Added `StorageService.upload_small_file`, which verifies optional SHA-256 checksums, writes the object, creates an `available` object record, and creates the first `object_versions` row.
+  - Added the FastAPI multipart route with `file`, `metadata_json`, `access_policy_json`, `tags`, and `checksum_sha256` form inputs.
+  - Added integration coverage for successful direct upload, oversized upload rejection, checksum mismatch, and runtime/static OpenAPI alignment.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\integration\\test_api_storage.py tests\\unit\\test_storage_client.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\contract\\test_openapi_contract.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m ruff check apps\\api\\src\\cortex_api\\routers\\storage.py packages\\common\\src\\cortex_common\\settings.py packages\\storage\\src\\cortex_storage\\client.py packages\\storage\\src\\cortex_storage\\service.py tests\\integration\\test_api_storage.py tests\\unit\\test_storage_client.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright apps\\api\\src\\cortex_api\\routers\\storage.py packages\\common\\src\\cortex_common\\settings.py packages\\storage\\src\\cortex_storage\\client.py packages\\storage\\src\\cortex_storage\\service.py tests\\integration\\test_api_storage.py tests\\unit\\test_storage_client.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml`
+- Prevention: Keep direct upload explicitly framed as a convenience path. Any future increase in size limits or use in production workloads should be reviewed against API memory pressure, ingress timeout, horizontal scaling, and object-store direct upload capabilities.

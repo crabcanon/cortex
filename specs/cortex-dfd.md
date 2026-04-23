@@ -323,12 +323,33 @@ sequenceDiagram
 
     C->>A: POST /v1/storage/uploads
     A->>DB: create pending object record
-    A-->>C: upload session + presigned URLs
+    A-->>C: upload session + presigned URLs (host-visible object-store endpoint)
+    Note over A,O: Control-plane access may use an internal endpoint such as `http://minio:9000`, while presigned URLs returned to callers must use an externally reachable address such as `http://127.0.0.1:9000`
     C->>O: PUT file parts directly
     C->>A: POST /v1/storage/uploads/{uploadId}/complete
     A->>O: complete multipart or verify single-part object
     A->>DB: finalize object metadata + version
     A-->>C: object metadata
+```
+
+### 7.2.1 Small-file convenience upload flow
+
+This flow is only for Swagger UI, local testing, and small files. It temporarily routes file bytes
+through the Cortex API process to provide a one-step upload experience; production large-file flows
+should continue using the presigned upload session in section 7.2.
+
+```mermaid
+sequenceDiagram
+    participant C as Client / Swagger UI
+    participant A as Cortex API
+    participant DB as Relational DB
+    participant O as Object Storage
+
+    C->>A: POST /v1/storage/files (multipart/form-data)
+    A->>A: authorize storage:write + enforce direct upload size limit
+    A->>O: PUT object through internal object-store endpoint
+    A->>DB: insert available object + object_version
+    A-->>C: StorageObject
 ```
 
 ### 7.3 下载流
@@ -464,6 +485,7 @@ sequenceDiagram
 
     C->>IdP: obtain access token
     C->>A: request + bearer token
+    Note over A: When `CORTEX_ENV=local` and `CORTEX_AUTH_MODE=dev`, Swagger or local tools may first call `POST /v1/dev/auth/token` to mint a short-lived `dev:` token for local testing only.
     A->>A: validate token / audience / expiry
     A->>P: check functional permission + data permission
     P->>DB: load role bindings / policies / resource context

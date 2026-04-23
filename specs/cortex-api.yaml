@@ -45,7 +45,7 @@ info:
     - Functional permissions are expressed through OAuth scopes such as `parse:write`, `storage:download`, and `knowledge:read`.
     - Data permissions are evaluated separately against tenant boundary, role bindings, `access_level`, and resource policies.
     - Authentication failures return `401`; authorization failures return `403` with decision context.
-    - Cortex acts as a resource server and expects bearer tokens from dev tooling, CI secret injection, or an external authorization server; it does not publish a built-in token minting API.
+    - Cortex acts as a resource server and expects bearer tokens from dev tooling, CI secret injection, or an external authorization server; production deployments do not publish a built-in token minting API, while local `dev` deployments may expose `/v1/dev/auth/token` as a Swagger-friendly helper.
     - 认证兼容 OAuth 2.0 / OIDC，优先使用 JWT access token，必要时兼容 opaque token introspection。
     - 功能权限通过 OAuth scope 表达，例如 `parse:write`、`storage:download`、`knowledge:read`。
     - 数据权限独立于 scope 求值，基于租户边界、角色绑定、`access_level` 和资源策略判断。
@@ -69,6 +69,8 @@ tags:
     description: Upload, complete, inspect, and download S3-backed objects. / 上传、完成、查询和下载 S3 后端对象。
   - name: Knowledge
     description: Dataset lifecycle plus Cognee-backed Add, Cognify, Memify, and Search operations. / 数据集生命周期与基于 Cognee 的 Add、Cognify、Memify、Search 操作。
+  - name: Dev Auth
+    description: Local-development-only token issuance helper. / 仅本地开发环境启用的 token 生成辅助接口。
 security:
   - OAuth2: []
 paths:
@@ -142,6 +144,63 @@ paths:
             text/plain:
               schema:
                 type: string
+          default:
+            $ref: '#/components/responses/ErrorResponse'
+
+  /v1/dev/auth/token:
+    post:
+      tags:
+        - Dev Auth
+      summary: Issue local development access token / 签发本地开发访问令牌
+      description: |
+        Available only when `CORTEX_ENV=local` and `CORTEX_AUTH_MODE=dev`. Issues a local `dev:`
+        bearer token for Swagger UI, curl, and smoke tests. This route is not mounted in non-local
+        deployments. /
+        仅当 `CORTEX_ENV=local` 且 `CORTEX_AUTH_MODE=dev` 时才会暴露。该接口用于生成本地 `dev:` Bearer token，
+        便于 Swagger、curl 和冒烟测试使用；在非本地部署中不会挂载。
+      operationId: issueLocalDevAccessToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocalDevTokenIssueRequest'
+            examples:
+              recommended_swagger_token:
+                summary: Recommended Swagger dev token / 推荐的 Swagger 开发令牌
+                description: |
+                  Creates a local development bearer token that can be pasted directly into Swagger
+                  UI's `Authorize` dialog. /
+                  生成一个可直接粘贴到 Swagger UI `Authorize` 弹窗中的本地开发 Bearer token。
+                value:
+                  subject: alice
+                  tenant_id: tenant_demo
+                  display_name: Alice
+                  client_id: swagger-ui
+                  roles:
+                    - tenant_admin
+                  groups:
+                    - platform-ops
+                  expires_in: 3600
+              minimal_local_token:
+                summary: Minimal local token request / 最小化本地令牌请求
+                description: |
+                  Only `subject` and `tenant_id` are required. Cortex fills in the standard local
+                  developer scopes automatically. /
+                  只需要 `subject` 和 `tenant_id`，其余标准本地开发 scope 由 Cortex 自动补齐。
+                value:
+                  subject: smoke-test
+                  tenant_id: tenant_demo
+      responses:
+        '200':
+          description: Local development token issued. / 已签发本地开发令牌。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalDevTokenIssueResponse'
+        '422':
+          $ref: '#/components/responses/ErrorResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
 
@@ -440,10 +499,14 @@ paths:
         Creates metadata first, then returns pre-signed upload instructions for direct-to-object-store transfer.
         The caller provides only file identity plus business metadata; Cortex infers `content_type`
         from `filename` when possible, chooses single-part vs multipart from `size_bytes` when
-        available, and keeps bucket/object-key routing server-owned. /
+        available, and keeps bucket/object-key routing server-owned. In local or containerized
+        deployments, the pre-signed URL host should be driven by `CORTEX_S3_PUBLIC_ENDPOINT`
+        whenever the API reaches object storage through an internal address such as `http://minio:9000`. /
         先创建元数据，再返回直传对象存储的预签名上传指令。调用方只提供文件标识与业务元数据；Cortex
         会尽量从 `filename` 推断 `content_type`，并在已知 `size_bytes` 时自动决定 single-part
-        还是 multipart，同时把 bucket 与 object key 路由收敛到服务端管理。
+        还是 multipart，同时把 bucket 与 object key 路由收敛到服务端管理。在本地或容器化部署中，
+        如果 API 通过 `http://minio:9000` 这类内部地址访问对象存储，则返回给调用方的预签名 URL
+        主机名应通过 `CORTEX_S3_PUBLIC_ENDPOINT` 显式切换到外部可达地址。
       operationId: createUploadSession
       security:
         - OAuth2:
@@ -486,6 +549,86 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/storage/files:
+    post:
+      tags:
+        - Storage
+      summary: Upload a small file / 上传小文件
+      description: |
+        Convenience endpoint for Swagger UI, local testing, and small files. The API accepts
+        `multipart/form-data`, streams the file through the Cortex API process into object
+        storage, and immediately commits the final object/version metadata. This endpoint is
+        intentionally size-limited and should not replace the presigned upload-session flow for
+        production large-file, batch, resumable, or high-throughput uploads. /
+        面向 Swagger UI、本地测试和小文件的便捷接口。API 接收 `multipart/form-data`，由 Cortex API
+        进程把文件写入对象存储，并立即提交最终对象/版本元数据。该接口有明确大小上限，不应替代生产环境中
+        大文件、批量、断点续传或高吞吐场景使用的预签名上传会话流程。
+      operationId: uploadSmallFile
+      security:
+        - OAuth2:
+            - storage:write
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: |
+                    File content to upload. / 要上传的文件内容。
+                metadata_json:
+                  type: string
+                  description: |
+                    Optional JSON object string for business metadata. Best default `{}`. /
+                    可选业务元数据 JSON 对象字符串，最佳默认值 `{}`。
+                  example: '{"source":"swagger-demo","document_type":"guide"}'
+                access_policy_json:
+                  type: string
+                  description: |
+                    Optional JSON object string matching `AccessPolicy`. Best default: omit for `tenant_private`. /
+                    可选 `AccessPolicy` JSON 对象字符串，最佳默认值为省略并使用 `tenant_private`。
+                  example: '{"access_level":"tenant_shared"}'
+                tags:
+                  type: string
+                  description: |
+                    Optional comma-separated tags or JSON array string. Best default: empty. /
+                    可选逗号分隔标签或 JSON 数组字符串，最佳默认值为空。
+                  example: docs,product
+                checksum_sha256:
+                  type: string
+                  pattern: '^[0-9a-f]{64}$'
+                  description: |
+                    Optional lowercase SHA-256 checksum. If provided, Cortex verifies it before writing metadata. /
+                    可选小写 SHA-256 校验和；提供时 Cortex 会在写入元数据前校验。
+            example:
+              metadata_json: '{"source":"swagger-demo","document_type":"guide"}'
+              access_policy_json: '{"access_level":"tenant_shared"}'
+              tags: docs,product
+      responses:
+        '201':
+          description: Small file uploaded and object metadata committed. / 小文件已上传且对象元数据已提交。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageObject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          description: File exceeds the configured direct upload size limit. / 文件超过直接上传大小上限。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
         default:
           $ref: '#/components/responses/ErrorResponse'
 
@@ -2542,6 +2685,186 @@ components:
         telemetry:
           $ref: '#/components/schemas/TelemetryContext'
 
+    LocalDevTokenIssueRequest:
+      properties:
+        subject:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Subject
+          description: "Required subject identifier for the local development caller. / ???????????????"
+          examples:
+          - alice
+        tenant_id:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Tenant Id
+          description: "Required tenant boundary that Cortex will apply to the issued token. / Cortex ???????????????"
+          examples:
+          - tenant_demo
+        actor_id:
+          anyOf:
+          - type: string
+            maxLength: 255
+            minLength: 1
+          - type: 'null'
+          title: Actor Id
+          description: "Optional actor identifier when it differs from `subject`. Best default: omit and let Cortex fall back to `subject`. / ?? actor ????? `subject` ????????????"
+          examples:
+          - alice
+        actor_ref:
+          anyOf:
+          - type: string
+            maxLength: 320
+            minLength: 1
+          - type: 'null'
+          title: Actor Ref
+          description: "Optional external reference such as email or employee number. Best default: omit when no external directory reference exists. / ??????????????????????????????????"
+          examples:
+          - alice@example.com
+        actor_type:
+          type: string
+          maxLength: 64
+          minLength: 1
+          title: Actor Type
+          description: "Optional actor category. Best default: `user`. / ?? actor ????????? `user`?"
+          default: user
+          examples:
+          - user
+          - service
+        display_name:
+          anyOf:
+          - type: string
+            maxLength: 255
+          - type: 'null'
+          title: Display Name
+          description: "Optional human-friendly display name copied into the dev token. / ?????????? dev token ??"
+          examples:
+          - Alice
+        client_id:
+          anyOf:
+          - type: string
+            maxLength: 255
+            minLength: 1
+          - type: 'null'
+          title: Client Id
+          description: "Optional client identifier for the local tool or UI issuing requests. / ??????? UI ? client ???"
+          examples:
+          - swagger-ui
+        scopes:
+          items:
+            type: string
+          type: array
+          title: Scopes
+          description: "Optional scopes granted to the local dev token. Best default: omit and let Cortex issue the standard local developer scope bundle. / ?? scope ????????????? Cortex ?????????? scope ??"
+          examples:
+          - - health:read
+            - parse:write
+            - jobs:read
+        roles:
+          items:
+            type: string
+          type: array
+          title: Roles
+          description: "Optional role keys attached to the caller. Best default: empty list. / ??????????????????"
+          examples:
+          - - tenant_admin
+        groups:
+          items:
+            type: string
+          type: array
+          title: Groups
+          description: "Optional group memberships used by downstream policy logic. / ?????????????????"
+          examples:
+          - - platform-ops
+        expires_in:
+          type: integer
+          maximum: 604800.0
+          minimum: 60.0
+          title: Expires In
+          description: "Optional token TTL in seconds. Best default: `3600` for local Swagger and smoke tests. / ????????????? Swagger ???????????? `3600`?"
+          default: 3600
+          examples:
+          - 3600
+        additional_claims:
+          additionalProperties: true
+          type: object
+          title: Additional Claims
+          description: "Optional extra claims copied into the dev token payload. / ???? claim????? dev token ????"
+          examples:
+          - environment: local
+      additionalProperties: false
+      type: object
+      required:
+      - subject
+      - tenant_id
+      title: LocalDevTokenIssueRequest
+    LocalDevTokenIssueResponse:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+        token_type:
+          type: string
+          const: Bearer
+          title: Token Type
+          default: Bearer
+        token_format:
+          type: string
+          const: dev
+          title: Token Format
+          default: dev
+        expires_in:
+          type: integer
+          minimum: 1.0
+          title: Expires In
+        issued_at:
+          type: string
+          format: date-time
+          title: Issued At
+        expires_at:
+          type: string
+          format: date-time
+          title: Expires At
+        scope:
+          type: string
+          title: Scope
+        subject:
+          type: string
+          title: Subject
+        tenant_id:
+          type: string
+          title: Tenant Id
+        issuer:
+          type: string
+          title: Issuer
+        audience:
+          type: string
+          title: Audience
+        swagger_authorize_value:
+          type: string
+          title: Swagger Authorize Value
+          description: "Paste this exact value into Swagger UI's `Authorize` dialog. Do not prepend `Bearer ` manually. / ????????? Swagger UI ? `Authorize` ?????????? `Bearer ` ???"
+        authorization_header:
+          type: string
+          title: Authorization Header
+          description: "Ready-to-use HTTP Authorization header value for curl, Postman, or SDK tests. / ????? curl?Postman ? SDK ????? Authorization ??"
+      type: object
+      required:
+      - access_token
+      - expires_in
+      - issued_at
+      - expires_at
+      - scope
+      - subject
+      - tenant_id
+      - issuer
+      - audience
+      - swagger_authorize_value
+      - authorization_header
+      title: LocalDevTokenIssueResponse
+
     StorageUploadCreateRequest:
       type: object
       required:
@@ -2599,8 +2922,10 @@ components:
             - multipart
         bucket:
           type: string
+          description: Target S3 bucket name; prefixes such as `tenant_demo/...` belong in `object_key`, not here. / 真实对象存储 bucket 名称；`tenant_demo/...` 这类前缀属于 `object_key`，不是 bucket。
         object_key:
           type: string
+          description: Full object key inside the bucket. For local uploads this commonly looks like `tenant_demo/obj_xxx/README.md`. / bucket 内的完整对象 key；本地上传时常见形态为 `tenant_demo/obj_xxx/README.md`。
         expires_at:
           type: string
           format: date-time
@@ -2690,8 +3015,10 @@ components:
           type: string
         bucket:
           type: string
+          description: Stored object bucket. / 对象所在 bucket。
         object_key:
           type: string
+          description: Stored object key within the bucket. / 对象在 bucket 中的完整 key。
         filename:
           type: string
         content_type:

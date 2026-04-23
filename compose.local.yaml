@@ -39,12 +39,14 @@ x-cortex-env: &cortex-env
   CORTEX_PORT: "8080"
   CORTEX_DB_DSN: postgresql+asyncpg://cortex:cortex@postgres:5432/cortex
   CORTEX_S3_ENDPOINT: http://minio:9000
+  CORTEX_S3_PUBLIC_ENDPOINT: http://127.0.0.1:9000
   CORTEX_S3_REGION: us-east-1
   CORTEX_S3_BUCKET: cortex-local
   CORTEX_S3_ACCESS_KEY: minioadmin
   CORTEX_S3_SECRET_KEY: minioadmin
   CORTEX_S3_FORCE_PATH_STYLE: "true"
   CORTEX_S3_AUTO_CREATE_BUCKET: "true"
+  CORTEX_STORAGE_DIRECT_UPLOAD_MAX_BYTES: "52428800"
   CORTEX_QUEUE_URL: redis://redis:6379/0
   CORTEX_AUTH_MODE: dev
   CORTEX_AUTH_JWT_ALGORITHM: HS256

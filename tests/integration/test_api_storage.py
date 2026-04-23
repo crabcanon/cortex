@@ -60,6 +60,7 @@ class FakeObjectStoreClient:
     def __init__(self) -> None:
         self.buckets: set[str] = set()
         self.single_part_objects: dict[tuple[str, str], dict[str, Any]] = {}
+        self.put_objects: dict[tuple[str, str], bytes] = {}
 
     def ensure_bucket(self, bucket_name: str) -> None:
         self.buckets.add(bucket_name)
@@ -81,6 +82,27 @@ class FakeObjectStoreClient:
             url=f"https://storage.test/{bucket_name}/{object_key}?expires={expires_in}",
             headers={"Content-Type": content_type},
         )
+
+    def put_object(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+        body: bytes,
+        content_type: str,
+        metadata: dict[str, str],
+    ) -> dict[str, Any]:
+        self.put_objects[(bucket_name, object_key)] = body
+        self.single_part_objects[(bucket_name, object_key)] = {
+            "ContentType": content_type,
+            "ContentLength": len(body),
+            "ETag": f"etag-{object_key}",
+            "Metadata": metadata,
+        }
+        return {
+            "ETag": f"etag-{object_key}",
+            "VersionId": "version-direct-001",
+        }
 
     def create_multipart_upload(
         self,
@@ -132,7 +154,7 @@ class FakeObjectStoreClient:
         object_key: str,
         disposition: str,
         expires_in: int,
-        ) -> PresignedRequestDescriptor:
+    ) -> PresignedRequestDescriptor:
         return PresignedRequestDescriptor(
             method="GET",
             url=(
@@ -152,11 +174,21 @@ class FakeObjectStoreClient:
 
 
 @contextmanager
-def _build_client(monkeypatch: pytest.MonkeyPatch, db_path: Path) -> Iterator[TestClient]:
+def _build_client(
+    monkeypatch: pytest.MonkeyPatch,
+    db_path: Path,
+    *,
+    direct_upload_max_bytes: int | None = None,
+) -> Iterator[TestClient]:
     monkeypatch.setenv("CORTEX_DB_DSN", _async_sqlite_url(db_path))
     monkeypatch.setenv("CORTEX_AUTH_MODE", "dev")
     monkeypatch.setenv("CORTEX_OTEL_ENABLED", "false")
     monkeypatch.setenv("CORTEX_CRAWL4AI_SKIP_PROBE", "1")
+    if direct_upload_max_bytes is not None:
+        monkeypatch.setenv(
+            "CORTEX_STORAGE_DIRECT_UPLOAD_MAX_BYTES",
+            str(direct_upload_max_bytes),
+        )
     load_settings.cache_clear()
     app = create_app()
     with TestClient(app) as client:
@@ -219,6 +251,91 @@ def test_storage_single_part_round_trip(monkeypatch: pytest.MonkeyPatch) -> None
     assert download_response.status_code == 200
     assert download_response.json()["method"] == "GET"
     assert X_REQUEST_ID_HEADER in download_response.headers
+
+
+def test_storage_small_file_direct_upload(monkeypatch: pytest.MonkeyPatch) -> None:
+    db_path = _case_db_path("api-storage-file")
+    db_migrate_main(["upgrade", "head", "--db-url", _sync_sqlite_url(db_path)])
+    headers = {
+        "Authorization": _dev_bearer_token(
+            tenant_id="tenant_storage",
+            actor_id="alice",
+            scopes=["storage:write", "storage:read"],
+        )
+    }
+
+    with _build_client(monkeypatch, db_path) as client:
+        response = client.post(
+            "/v1/storage/files",
+            headers=headers,
+            files={"file": ("README.md", b"# Cortex\n", "application/octet-stream")},
+            data={
+                "metadata_json": '{"source":"swagger-demo"}',
+                "access_policy_json": '{"access_level":"tenant_shared"}',
+                "tags": "docs,product",
+            },
+        )
+
+    payload = response.json()
+    assert response.status_code == 201
+    assert payload["status"] == "available"
+    assert payload["filename"] == "README.md"
+    assert payload["content_type"] == "text/markdown"
+    assert payload["size_bytes"] == len(b"# Cortex\n")
+    assert payload["metadata"] == {"source": "swagger-demo"}
+    assert payload["tags"] == ["docs", "product"]
+    assert payload["access_policy"]["access_level"] == "tenant_shared"
+    assert payload["current_version_id"].startswith("objver_")
+
+
+def test_storage_small_file_direct_upload_rejects_oversized_file(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db_path = _case_db_path("api-storage-file-too-large")
+    db_migrate_main(["upgrade", "head", "--db-url", _sync_sqlite_url(db_path)])
+    headers = {
+        "Authorization": _dev_bearer_token(
+            tenant_id="tenant_storage",
+            actor_id="alice",
+            scopes=["storage:write"],
+        )
+    }
+
+    with _build_client(monkeypatch, db_path, direct_upload_max_bytes=3) as client:
+        response = client.post(
+            "/v1/storage/files",
+            headers=headers,
+            files={"file": ("tiny.txt", b"abcd", "text/plain")},
+        )
+
+    assert response.status_code == 413
+    assert response.json()["error_code"] == "direct_upload_too_large"
+
+
+def test_storage_small_file_direct_upload_rejects_checksum_mismatch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db_path = _case_db_path("api-storage-file-checksum")
+    db_migrate_main(["upgrade", "head", "--db-url", _sync_sqlite_url(db_path)])
+    headers = {
+        "Authorization": _dev_bearer_token(
+            tenant_id="tenant_storage",
+            actor_id="alice",
+            scopes=["storage:write"],
+        )
+    }
+
+    with _build_client(monkeypatch, db_path) as client:
+        response = client.post(
+            "/v1/storage/files",
+            headers=headers,
+            files={"file": ("tiny.txt", b"hello", "text/plain")},
+            data={"checksum_sha256": "0" * 64},
+        )
+
+    assert response.status_code == 422
+    assert response.json()["error_code"] == "validation_error"
+    assert "checksum_sha256" in response.json()["detail"]
 
 
 def test_large_upload_uses_multipart(monkeypatch: pytest.MonkeyPatch) -> None:

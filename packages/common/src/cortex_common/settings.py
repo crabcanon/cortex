@@ -30,6 +30,7 @@ class DatabaseSettings(_BaseEnvSettings):
 
 class S3Settings(_BaseEnvSettings):
     endpoint: str = Field(default="http://127.0.0.1:9000", alias="CORTEX_S3_ENDPOINT")
+    public_endpoint: str | None = Field(default=None, alias="CORTEX_S3_PUBLIC_ENDPOINT")
     region: str = Field(default="us-east-1", alias="CORTEX_S3_REGION")
     bucket: str = Field(default="cortex-local", alias="CORTEX_S3_BUCKET")
     access_key: str = Field(default="minioadmin", alias="CORTEX_S3_ACCESS_KEY")
@@ -48,6 +49,10 @@ class S3Settings(_BaseEnvSettings):
     default_part_size_bytes: int = Field(
         default=8_388_608,
         alias="CORTEX_S3_DEFAULT_PART_SIZE_BYTES",
+    )
+    direct_upload_max_bytes: int = Field(
+        default=52_428_800,
+        alias="CORTEX_STORAGE_DIRECT_UPLOAD_MAX_BYTES",
     )
 
 

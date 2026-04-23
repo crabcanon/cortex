@@ -16,6 +16,16 @@ from cortex_contracts import MultipartPartUpload, PresignedRequestDescriptor
 class ObjectStoreClientProtocol(Protocol):
     def ensure_bucket(self, bucket_name: str) -> None: ...
 
+    def put_object(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+        body: bytes,
+        content_type: str,
+        metadata: dict[str, str],
+    ) -> dict[str, Any]: ...
+
     def create_single_part_upload(
         self,
         *,
@@ -76,19 +86,32 @@ class Boto3ObjectStoreClient:
     def __init__(self, settings: S3Settings) -> None:
         addressing_style = "path" if settings.force_path_style else "auto"
         config = Config(signature_version="s3v4", s3={"addressing_style": addressing_style})
-        self._client: BaseClient = boto3.client(
+        self._settings = settings
+        self._control_client = self._build_client(config=config, endpoint_url=settings.endpoint)
+        signing_endpoint = settings.public_endpoint or settings.endpoint
+        if signing_endpoint == settings.endpoint:
+            self._signing_client = self._control_client
+        else:
+            self._signing_client = self._build_client(config=config, endpoint_url=signing_endpoint)
+
+    def _build_client(
+        self,
+        *,
+        config: Config,
+        endpoint_url: str,
+    ) -> BaseClient:
+        return boto3.client(
             "s3",
-            endpoint_url=settings.endpoint,
-            region_name=settings.region,
-            aws_access_key_id=settings.access_key,
-            aws_secret_access_key=settings.secret_key,
+            endpoint_url=endpoint_url,
+            region_name=self._settings.region,
+            aws_access_key_id=self._settings.access_key,
+            aws_secret_access_key=self._settings.secret_key,
             config=config,
         )
-        self._settings = settings
 
     def ensure_bucket(self, bucket_name: str) -> None:
         try:
-            self._client.head_bucket(Bucket=bucket_name)
+            self._control_client.head_bucket(Bucket=bucket_name)
             return
         except EndpointConnectionError as exc:
             self._raise_endpoint_unreachable("head_bucket", exc)
@@ -105,7 +128,7 @@ class Boto3ObjectStoreClient:
                 "LocationConstraint": self._settings.region,
             }
         try:
-            self._client.create_bucket(**params)
+            self._control_client.create_bucket(**params)
         except EndpointConnectionError as exc:
             self._raise_endpoint_unreachable("create_bucket", exc)
         except ClientError as exc:
@@ -122,7 +145,7 @@ class Boto3ObjectStoreClient:
         expires_in: int,
     ) -> PresignedRequestDescriptor:
         try:
-            url = self._client.generate_presigned_url(
+            url = self._signing_client.generate_presigned_url(
                 "put_object",
                 Params={
                     "Bucket": bucket_name,
@@ -144,6 +167,30 @@ class Boto3ObjectStoreClient:
             headers={"Content-Type": content_type},
         )
 
+    def put_object(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+        body: bytes,
+        content_type: str,
+        metadata: dict[str, str],
+    ) -> dict[str, Any]:
+        try:
+            return self._control_client.put_object(
+                Bucket=bucket_name,
+                Key=object_key,
+                Body=body,
+                ContentType=content_type,
+                Metadata=metadata,
+            )
+        except EndpointConnectionError as exc:
+            self._raise_endpoint_unreachable("put_object", exc)
+        except ClientError as exc:
+            self._raise_client_error("put_object", exc)
+        except BotoCoreError as exc:
+            self._raise_provider_unavailable("put_object", exc)
+
     def create_multipart_upload(
         self,
         *,
@@ -153,7 +200,7 @@ class Boto3ObjectStoreClient:
         metadata: dict[str, str],
     ) -> str:
         try:
-            response = self._client.create_multipart_upload(
+            response = self._control_client.create_multipart_upload(
                 Bucket=bucket_name,
                 Key=object_key,
                 ContentType=content_type,
@@ -180,7 +227,7 @@ class Boto3ObjectStoreClient:
         expires_in: int,
     ) -> MultipartPartUpload:
         try:
-            url = self._client.generate_presigned_url(
+            url = self._signing_client.generate_presigned_url(
                 "upload_part",
                 Params={
                     "Bucket": bucket_name,
@@ -208,7 +255,7 @@ class Boto3ObjectStoreClient:
         parts: Sequence[dict[str, Any]],
     ) -> dict[str, Any]:
         try:
-            return self._client.complete_multipart_upload(
+            return self._control_client.complete_multipart_upload(
                 Bucket=bucket_name,
                 Key=object_key,
                 UploadId=provider_upload_id,
@@ -228,7 +275,7 @@ class Boto3ObjectStoreClient:
         object_key: str,
     ) -> dict[str, Any]:
         try:
-            return self._client.head_object(
+            return self._control_client.head_object(
                 Bucket=bucket_name,
                 Key=object_key,
             )
@@ -248,7 +295,7 @@ class Boto3ObjectStoreClient:
         expires_in: int,
     ) -> PresignedRequestDescriptor:
         try:
-            url = self._client.generate_presigned_url(
+            url = self._signing_client.generate_presigned_url(
                 "get_object",
                 Params={
                     "Bucket": bucket_name,

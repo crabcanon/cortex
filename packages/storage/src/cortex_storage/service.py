@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import math
 import mimetypes
 import re
@@ -132,6 +133,10 @@ class StorageService:
         self._tracer = trace.get_tracer("cortex.storage")
         self._metrics = MetricsFacade("cortex.storage")
 
+    @property
+    def direct_upload_max_bytes(self) -> int:
+        return self._settings.direct_upload_max_bytes
+
     async def create_upload_session(
         self,
         *,
@@ -244,6 +249,117 @@ class StorageService:
                 single_part=single_part,
                 multipart_parts=multipart_parts,
             )
+
+    async def upload_small_file(
+        self,
+        *,
+        uow: CortexUnitOfWork,
+        caller: Any,
+        filename: str,
+        content: bytes,
+        content_type: str | None = None,
+        checksum_sha256: str | None = None,
+        metadata: dict[str, str] | None = None,
+        access_policy: AccessPolicy | None = None,
+        tags: list[str] | None = None,
+    ) -> StorageObject:
+        if len(content) > self._settings.direct_upload_max_bytes:
+            raise CortexError(
+                code="direct_upload_too_large",
+                detail=(
+                    "Direct file upload exceeds the configured small-file limit. "
+                    "Use the presigned upload-session flow for larger files."
+                ),
+                status_code=413,
+                extra={
+                    "max_size_bytes": self._settings.direct_upload_max_bytes,
+                    "actual_size_bytes": len(content),
+                },
+            )
+
+        normalized_filename = filename.strip() or "object.bin"
+        resolved_content_type = self._resolve_direct_content_type(
+            filename=normalized_filename,
+            content_type=content_type,
+        )
+        actual_checksum = hashlib.sha256(content).hexdigest()
+        requested_checksum = self._checksums.normalize_sha256(checksum_sha256)
+        if requested_checksum is not None and requested_checksum != actual_checksum:
+            raise ValidationError("checksum_sha256 does not match uploaded file content.")
+        final_checksum = requested_checksum or actual_checksum
+        object_metadata = dict(metadata or {})
+        object_tags = list(tags or [])
+
+        with self._tracer.start_as_current_span("storage.file.upload") as span:
+            bucket = await self._bucket_resolver.resolve(
+                uow=uow,
+                tenant_id=caller.tenant_id,
+            )
+            object_id = new_prefixed_id("obj")
+            object_key = self._build_object_key(
+                tenant_id=caller.tenant_id,
+                object_id=object_id,
+                filename=normalized_filename,
+            )
+            access_level = self._resolve_access_level(access_policy)
+            serialized_access_policy = self._serialize_access_policy(access_policy, access_level)
+            response = await asyncio.to_thread(
+                self._object_store.put_object,
+                bucket_name=bucket.bucket_name,
+                object_key=object_key,
+                body=content,
+                content_type=resolved_content_type,
+                metadata=object_metadata,
+            )
+            etag = self._coerce_string(response.get("ETag"))
+            storage_class = self._coerce_string(response.get("StorageClass"))
+            provider_version_ref = self._coerce_string(response.get("VersionId"))
+            stored_object = await uow.objects.add(
+                ObjectRecord(
+                    object_id=object_id,
+                    tenant_id=caller.tenant_id,
+                    bucket_id=bucket.bucket_id,
+                    object_key=object_key,
+                    filename=normalized_filename,
+                    content_type=resolved_content_type,
+                    size_bytes=len(content),
+                    checksum_sha256=final_checksum,
+                    etag=etag,
+                    storage_class=storage_class,
+                    source_uri=f"s3://{bucket.bucket_name}/{object_key}",
+                    access_level=access_level,
+                    access_policy=serialized_access_policy,
+                    status=ObjectStatus.AVAILABLE,
+                    metadata=object_metadata,
+                    tags=object_tags,
+                    upload_state={},
+                    created_by=caller.actor_id or caller.subject,
+                )
+            )
+            version = await uow.object_versions.add(
+                ObjectVersionRecord(
+                    object_version_id=new_prefixed_id("objver"),
+                    object_id=stored_object.object_id,
+                    version_no=1,
+                    provider_version_ref=provider_version_ref,
+                    size_bytes=stored_object.size_bytes,
+                    checksum_sha256=stored_object.checksum_sha256,
+                    etag=stored_object.etag,
+                )
+            )
+            span.set_attribute("cortex.storage.bucket", bucket.bucket_name)
+            span.set_attribute("cortex.storage.object_id", object_id)
+            span.set_attribute("cortex.storage.upload_mode", "direct")
+            self._metrics.counter(
+                "cortex.storage.upload.files",
+                description="Direct small-file uploads completed through the API.",
+            ).add(1, {"cortex.storage.upload_mode": "direct"})
+            self._metrics.histogram(
+                "cortex.storage.upload.bytes",
+                unit="By",
+                description="Direct small-file upload payload size.",
+            ).record(len(content), {"cortex.storage.upload_mode": "direct"})
+            return await self._to_storage_object(uow=uow, record=stored_object, version=version)
 
     async def complete_upload_session(
         self,
@@ -445,6 +561,18 @@ class StorageService:
                 return normalized
         guessed, _ = mimetypes.guess_type(request.filename)
         return guessed or "application/octet-stream"
+
+    def _resolve_direct_content_type(
+        self,
+        *,
+        filename: str,
+        content_type: str | None,
+    ) -> str:
+        normalized = content_type.strip() if content_type else ""
+        if normalized and normalized != "application/octet-stream":
+            return normalized
+        guessed, _ = mimetypes.guess_type(filename)
+        return guessed or normalized or "application/octet-stream"
 
     def _resolve_access_level(self, access_policy: AccessPolicy | None) -> AccessLevel:
         if access_policy is None or access_policy.access_level is None:

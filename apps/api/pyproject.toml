@@ -13,6 +13,7 @@ dependencies = [
   "cortex-parse[default-engines]",
   "cortex-storage",
   "fastapi>=0.115,<1",
+  "python-multipart>=0.0.26,<0.0.27",
   "uvicorn>=0.35,<0.36",
 ]
 

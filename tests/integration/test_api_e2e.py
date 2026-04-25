@@ -113,6 +113,18 @@ class _FakeObjectStoreClient:
     def ensure_bucket(self, bucket_name: str) -> None:
         self.buckets.add(bucket_name)
 
+    def put_object(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+        body: bytes,
+        content_type: str,
+        metadata: dict[str, str],
+    ) -> dict[str, Any]:
+        self.ensure_bucket(bucket_name)
+        return {}
+
     def create_single_part_upload(
         self,
         *,

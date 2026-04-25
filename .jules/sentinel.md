@@ -1,0 +1,4 @@
+## 2024-04-25 - Alembic Migration SQL Injection
+**Vulnerability:** Found string interpolation used inside `sa.text()` to construct SQL queries (`op.execute(sa.text(f"DROP TABLE IF EXISTS {table_name}"))`) in the baseline migration's `downgrade()` function.
+**Learning:** Using f-strings with `sa.text()` creates a SQL injection vector, even if inputs are currently hardcoded, as it sets a poor pattern. Furthermore, Alembic's built-in `op.drop_table` does not fully support `if_exists=True`, causing people to mistakenly use string interpolated SQL instead.
+**Prevention:** Always use Alembic's built-in schema operations (e.g., `op.drop_table`) over manual raw SQL when possible. When needing to drop tables conditionally (if they exist), you must first check existence using `sa.inspect(op.get_bind()).get_table_names()` and then call `op.drop_table` only on existing tables.

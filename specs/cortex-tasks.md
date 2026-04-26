@@ -561,3 +561,95 @@ Goal: add a Swagger-friendly one-step small-file upload endpoint without weakeni
 | CTX-20260423-095 | 2026-04-23 09:30:00 +08:00 | P1 | storage-design | Define `POST /v1/storage/files` as a multipart/form-data convenience endpoint for Swagger/local/small files, document size limits, metadata semantics, and the boundary with the production presigned flow across API / PRD / DFD / schema / tech docs | CTX-20260422-094 | done |
 | CTX-20260423-096 | 2026-04-23 09:30:00 +08:00 | P1 | storage-api | Implement direct small-file upload by reusing StorageService, object-store facade, authorization, object metadata, versions, checksums, and telemetry | CTX-20260423-095 | done |
 | CTX-20260423-097 | 2026-04-23 09:30:00 +08:00 | P1 | testing | Add integration/unit coverage for successful direct upload, size-limit rejection, checksum mismatch, and runtime/static OpenAPI alignment | CTX-20260423-096 | done |
+
+### Batch 2026-04-24 10:30:00 +08:00 | Phase AM Evaluation And Synthesis Domain Design
+
+Goal: add Evaluation and Synthesis as first-class Cortex domains with unified contracts, vendor-neutral SQL models, pluggable engine routing, and executable delivery tasks before implementation starts.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260424-098 | 2026-04-24 10:30:00 +08:00 | P0 | specs-api | Extend `specs/cortex-api.yaml` with `/v1/eval/*` and `/v1/synthesis/*` endpoints, bilingual summaries/descriptions, scope additions, job-type extensions, and complete component schemas for requests, results, engines, and metric catalogs | CTX-20260423-097 | completed |
+| CTX-20260424-099 | 2026-04-24 10:30:00 +08:00 | P0 | specs-prd | Expand `specs/cortex-prd.md` with product goals, user value, functional scope, acceptance criteria, and non-functional requirements for Evaluation and Synthesis domains | CTX-20260424-098 | completed |
+| CTX-20260424-100 | 2026-04-24 10:30:00 +08:00 | P0 | specs-tech | Expand `specs/cortex-tech.md` with Evaluation / Synthesis architecture, double-router design, routing defaults, worker execution model, uv package layout, and Pydantic code model guidance | CTX-20260424-098 | completed |
+| CTX-20260424-101 | 2026-04-24 10:30:00 +08:00 | P0 | specs-schema | Extend `specs/cortex-schema.md` with `eval_engines`, `eval_metric_definitions`, `eval_runs`, `eval_run_metrics`, `synthesis_engines`, and `synthesis_runs` logical entities plus their relationships | CTX-20260424-098 | completed |
+| CTX-20260424-102 | 2026-04-24 10:30:00 +08:00 | P0 | specs-sql | Extend `specs/cortex-init.sql` with vendor-neutral SQL DDL and indexes for Evaluation and Synthesis metadata persistence | CTX-20260424-101 | completed |
+| CTX-20260424-103 | 2026-04-24 10:30:00 +08:00 | P1 | specs-dfd | Extend `specs/cortex-dfd.md` with Evaluation and Synthesis data flows, failure paths, and OTel trace propagation diagrams | CTX-20260424-100 | completed |
+| CTX-20260424-104 | 2026-04-24 10:30:00 +08:00 | P1 | eval-domain | Implement `packages/evaluation` domain models, registry, metric catalog, routing policy, service layer, and persistence contracts | CTX-20260424-098, CTX-20260424-102 | completed |
+| CTX-20260424-105 | 2026-04-24 10:30:00 +08:00 | P1 | eval-api | Add Evaluation API routers, auth scopes, sync/async submission handlers, result endpoints, and runtime OpenAPI exposure | CTX-20260424-104 | completed |
+| CTX-20260424-106 | 2026-04-24 10:30:00 +08:00 | P1 | eval-worker | Implement evaluation workers plus pluggable DeepEval / EvalScope adapters, result normalizers, artifact persistence, retries, and heartbeats | CTX-20260424-104 | completed |
+| CTX-20260424-107 | 2026-04-24 10:30:00 +08:00 | P1 | synthesis-domain | Implement `packages/synthesis` domain models, router, schema translators, quality gate evaluator, and persistence contracts | CTX-20260424-098, CTX-20260424-102 | completed |
+| CTX-20260424-108 | 2026-04-24 10:30:00 +08:00 | P1 | synthesis-api | Add Synthesis API routers, sync/async submission handlers, result endpoints, and runtime OpenAPI exposure | CTX-20260424-107 | completed |
+| CTX-20260424-109 | 2026-04-24 10:30:00 +08:00 | P1 | synthesis-worker | Implement synthesis workers plus SDV / DeepEval Synthesizer adapters, output persistence, quality summaries, and artifact generation | CTX-20260424-107 | completed |
+| CTX-20260424-110 | 2026-04-24 10:30:00 +08:00 | P1 | observability | Add Evaluation / Synthesis job spans, metric labels, experiment baggage propagation, and dashboard-ready result dimensions | CTX-20260424-105, CTX-20260424-108 | completed |
+| CTX-20260424-111 | 2026-04-24 10:30:00 +08:00 | P1 | validation | Add unit / integration / contract coverage for new DTOs, SQL schema, OpenAPI paths, and result normalization; validate `specs/cortex-api.yaml` after each batch | CTX-20260424-105, CTX-20260424-108 | completed |
+
+### Batch 2026-04-25 18:40:00 +08:00 | Phase AN Evaluation And Synthesis Runtime Slimming
+
+Goal: remove misleading Evaluation / Synthesis API-key knobs and keep Docker default workers slim while preserving explicit heavy runtime images for local SDK engines.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260425-112 | 2026-04-25 18:40:00 +08:00 | P1 | runtime-config | Remove Evaluation / Synthesis `api_key_ref` fields from runtime schema and overlays, and rely on worker environment or service headers for provider credentials | CTX-20260424-111 | done |
+| CTX-20260425-113 | 2026-04-25 18:40:00 +08:00 | P1 | adapters | Remove DeepEval adapter API-key injection paths and keep EvalScope as an HTTP service adapter without the `evalscope` Python package dependency | CTX-20260425-112 | done |
+| CTX-20260425-114 | 2026-04-25 18:40:00 +08:00 | P0 | docker | Split Evaluation / Synthesis worker images into slim default targets and explicit `*-runtime` targets for DeepEval / SDV heavy dependencies | CTX-20260425-113 | done |
+| CTX-20260425-115 | 2026-04-25 18:40:00 +08:00 | P1 | validation-docs | Re-lock dependencies, validate package exports, compose configs, lint/type/tests, and update README / tech design / logs with the credential and image-size strategy | CTX-20260425-114 | done |
+
+### Batch 2026-04-25 19:20:00 +08:00 | Phase AO Swagger UI Offline Asset Fix
+
+Goal: make Swagger UI work in Docker and restricted-network environments by removing the default CDN dependency.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260425-116 | 2026-04-25 19:20:00 +08:00 | P1 | api-docs | Self-host Swagger UI assets inside the Cortex API image and serve `/docs` from local static files instead of FastAPI's CDN-backed default page | CTX-20260425-115 | done |
+| CTX-20260425-117 | 2026-04-25 19:20:00 +08:00 | P1 | validation-docs | Add regression coverage for `/docs` and local Swagger assets, then update README / logs with the Docker troubleshooting guidance | CTX-20260425-116 | done |
+
+### Batch 2026-04-25 19:55:00 +08:00 | Phase AP Swagger UI OpenAPI 3.1 Support
+
+Goal: keep Cortex's runtime contract on OpenAPI 3.1.0 and make the built-in Swagger UI capable of rendering it.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260425-118 | 2026-04-25 19:55:00 +08:00 | P0 | api-docs | Replace the old Python `swagger-ui-bundle` asset package with vendored Swagger UI 5.32.4 assets that support OpenAPI 3.1.0 | CTX-20260425-116 | done |
+| CTX-20260425-119 | 2026-04-25 19:55:00 +08:00 | P1 | validation-docs | Add regression coverage that `/openapi.json` stays on 3.1.0 and `/docs` serves the OpenAPI 3.1-capable local Swagger UI bundle | CTX-20260425-118 | done |
+
+### Batch 2026-04-25 20:25:00 +08:00 | Phase AQ Heavy Build And Swagger Cache Bust
+
+Goal: make the local build script cover heavy worker profiles and ensure browsers cannot reuse the old Swagger UI 4.x asset path.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260425-120 | 2026-04-25 20:25:00 +08:00 | P0 | api-docs | Move built-in Swagger UI assets to a versioned `/_docs/swagger-ui/5.32.4` runtime path, add `Cache-Control: no-store` for `/docs`, and explicitly pin FastAPI runtime OpenAPI to 3.1.0 | CTX-20260425-119 | done |
+| CTX-20260425-121 | 2026-04-25 20:25:00 +08:00 | P1 | docker-dev | Extend `scripts/dev/stack.ps1` with `build`, `-Profile`, and `-Heavy` so local checks can build docling, eval-runtime, synthesis-runtime, and all default workers through one command | CTX-20260425-115 | done |
+| CTX-20260425-122 | 2026-04-25 20:25:00 +08:00 | P1 | validation-docs | Validate runtime docs, OpenAPI 3.1 rendering prerequisites, package data inclusion, Compose heavy profile configuration, and update README / tech / logs | CTX-20260425-120, CTX-20260425-121 | done |
+
+### Batch 2026-04-25 21:05:00 +08:00 | Phase AR Runtime Engine Activation
+
+Goal: make every configured core engine visible from the API catalog while keeping heavyweight SDK execution in dedicated runtime workers.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260425-123 | 2026-04-25 21:05:00 +08:00 | P0 | runtime-config | Enable local/base DeepEval evaluation and SDV / DeepEval synthesis runtime catalog entries so `/v1/eval/engines` and `/v1/synthesis/engines` are not empty in local heavy mode | CTX-20260425-114 | done |
+| CTX-20260425-124 | 2026-04-25 21:05:00 +08:00 | P0 | engine-catalog | Split engine routability from in-process SDK availability: Docling stays parse-catalog `active`, while DeepEval and SDV report `degraded` when routed to runtime workers from a slim API image | CTX-20260425-123 | done |
+| CTX-20260425-125 | 2026-04-25 21:05:00 +08:00 | P1 | validation-docs | Add regression tests, heavy-stack startup guardrails, and README / tech / log guidance for heavy-worker engine activation, catalog expectations, and sync-vs-async execution boundaries | CTX-20260425-124 | done |
+
+### Batch 2026-04-25 22:05:00 +08:00 | Phase AS EvalScope Dual Runtime Mode
+
+Goal: keep the existing external EvalScope HTTP adapter while adding an in-process Python SDK self-hosted service mode for local and runtime-worker deployments.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260425-126 | 2026-04-25 22:05:00 +08:00 | P0 | runtime-config | Extend `evaluation.engines.evalscope` with `mode`, self-hosted host/port/debug/startup-timeout fields, and local/base defaults that avoid the MinIO `9000` host-port conflict | CTX-20260425-125 | done |
+| CTX-20260425-127 | 2026-04-25 22:05:00 +08:00 | P0 | evalscope-adapter | Preserve the external HTTP adapter and add a self-hosted SDK adapter that launches `evalscope.service.run_service`, probes `/health`, and normalizes `/api/v1/eval` and `/api/v1/perf` responses | CTX-20260425-126 | done |
+| CTX-20260425-128 | 2026-04-25 22:05:00 +08:00 | P1 | packaging-validation | Add `evalscope[service]` to the Evaluation runtime extra, validate runtime catalog states, lock dependencies, and cover missing-SDK degraded behavior in unit/integration tests | CTX-20260425-127 | done |
+
+### Batch 2026-04-26 10:55:00 +08:00 | Phase AT Swagger Runtime Fixes For Parse, Eval, And Synthesis
+
+Goal: fix Swagger-discovered runtime issues for Docling parse routing, explicit engine pinning, MinIO/S3 object locators, and synthesis defaults, then expand Try-it-out examples.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260426-129 | 2026-04-26 10:55:00 +08:00 | P0 | parse-worker-routing | Add parse worker engine-affinity filtering so slim workers do not claim `docling` jobs and Docling jobs route to `cortex-parse-worker-docling` | CTX-20260425-125 | done |
+| CTX-20260426-130 | 2026-04-26 10:55:00 +08:00 | P0 | parse-compiler | Preserve explicit `engine_id` across batch parse jobs, disable fallback for explicit engines, and support Cortex-managed MinIO/S3 object keys containing `obj_...` | CTX-20260426-129 | done |
+| CTX-20260426-131 | 2026-04-26 10:55:00 +08:00 | P0 | synthesis-adapter | Fix DeepEval synthesis requests that omit `max_contexts_per_case` by applying a safe `max_contexts_per_case -> sample_count -> 1` default | CTX-20260424-109 | done |
+| CTX-20260426-132 | 2026-04-26 10:55:00 +08:00 | P1 | swagger-docs | Add Swagger/OpenAPI examples for MinIO parse, sync/async SDV and DeepEval synthesis, and sync/async DeepEval/EvalScope evaluation | CTX-20260426-130, CTX-20260426-131 | done |
+| CTX-20260426-133 | 2026-04-26 10:55:00 +08:00 | P1 | validation | Run focused unit/integration tests plus YAML/OpenAPI validation and record the regression notes | CTX-20260426-132 | done |

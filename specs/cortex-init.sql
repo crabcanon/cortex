@@ -555,4 +555,138 @@ CREATE INDEX idx_parse_runs_trace_id
 CREATE INDEX idx_parse_run_attempts_engine
     ON parse_run_attempts (engine_id, status);
 
+-- Evaluation domain
+CREATE TABLE eval_engines (
+    engine_id             VARCHAR(36)   PRIMARY KEY,
+    engine_key            VARCHAR(128)  NOT NULL UNIQUE,
+    display_name          VARCHAR(256)  NOT NULL,
+    engine_kind           VARCHAR(64)   NOT NULL,
+    capability_flags_json TEXT          NOT NULL DEFAULT '[]',
+    metric_prefixes_json  TEXT          NOT NULL DEFAULT '[]',
+    supported_modes_json  TEXT          NOT NULL DEFAULT '[]',
+    runtime_config_json   TEXT          NOT NULL DEFAULT '{}',
+    status                VARCHAR(32)   NOT NULL DEFAULT 'active',
+    created_at            TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE eval_metric_definitions (
+    metric_key            VARCHAR(128)  PRIMARY KEY,
+    display_name          VARCHAR(256)  NOT NULL,
+    category              VARCHAR(64)   NOT NULL,
+    description           TEXT,
+    unit                  VARCHAR(64),
+    score_direction       VARCHAR(32)   NOT NULL,
+    eval_types_json       TEXT          NOT NULL DEFAULT '[]',
+    engine_bindings_json  TEXT          NOT NULL DEFAULT '[]',
+    threshold_hint        DECIMAL(12, 6),
+    created_at            TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE eval_runs (
+    eval_run_id           VARCHAR(36)   PRIMARY KEY,
+    job_id                VARCHAR(36)   NOT NULL UNIQUE,
+    tenant_id             VARCHAR(36)   NOT NULL,
+    dataset_id            VARCHAR(36),
+    eval_type             VARCHAR(32)   NOT NULL,
+    engine_id             VARCHAR(36)   NOT NULL,
+    profile_key           VARCHAR(128),
+    input_ref_json        TEXT          NOT NULL DEFAULT '{}',
+    target_ref_json       TEXT          NOT NULL DEFAULT '{}',
+    metrics_config_json   TEXT          NOT NULL DEFAULT '[]',
+    summary_results_json  TEXT          NOT NULL DEFAULT '{}',
+    sample_summary_json   TEXT          NOT NULL DEFAULT '{}',
+    report_object_id      VARCHAR(36),
+    result_dataset_id     VARCHAR(36),
+    trace_id              VARCHAR(64),
+    span_id               VARCHAR(32),
+    created_by            VARCHAR(36),
+    created_at            TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (job_id) REFERENCES jobs (job_id) ON DELETE CASCADE,
+    FOREIGN KEY (tenant_id) REFERENCES tenants (tenant_id),
+    FOREIGN KEY (dataset_id) REFERENCES datasets (dataset_id),
+    FOREIGN KEY (engine_id) REFERENCES eval_engines (engine_id),
+    FOREIGN KEY (report_object_id) REFERENCES objects (object_id),
+    FOREIGN KEY (result_dataset_id) REFERENCES datasets (dataset_id),
+    FOREIGN KEY (created_by) REFERENCES actors (actor_id)
+);
+
+CREATE TABLE eval_run_metrics (
+    eval_run_id           VARCHAR(36)   NOT NULL,
+    metric_index          INTEGER       NOT NULL,
+    metric_key            VARCHAR(128)  NOT NULL,
+    engine_id             VARCHAR(36)   NOT NULL,
+    native_metric_key     VARCHAR(128),
+    status                VARCHAR(32)   NOT NULL,
+    score                 DECIMAL(12, 6),
+    threshold             DECIMAL(12, 6),
+    unit                  VARCHAR(64),
+    sample_size           INTEGER,
+    details_json          TEXT          NOT NULL DEFAULT '{}',
+    PRIMARY KEY (eval_run_id, metric_index),
+    FOREIGN KEY (eval_run_id) REFERENCES eval_runs (eval_run_id) ON DELETE CASCADE,
+    FOREIGN KEY (engine_id) REFERENCES eval_engines (engine_id)
+);
+
+-- Synthesis domain
+CREATE TABLE synthesis_engines (
+    engine_id                   VARCHAR(36)   PRIMARY KEY,
+    engine_key                  VARCHAR(128)  NOT NULL UNIQUE,
+    display_name                VARCHAR(256)  NOT NULL,
+    engine_kind                 VARCHAR(64)   NOT NULL,
+    capability_flags_json       TEXT          NOT NULL DEFAULT '[]',
+    supported_source_types_json TEXT          NOT NULL DEFAULT '[]',
+    output_formats_json         TEXT          NOT NULL DEFAULT '[]',
+    runtime_config_json         TEXT          NOT NULL DEFAULT '{}',
+    status                      VARCHAR(32)   NOT NULL DEFAULT 'active',
+    created_at                  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE synthesis_runs (
+    synthesis_run_id       VARCHAR(36)   PRIMARY KEY,
+    job_id                 VARCHAR(36)   NOT NULL UNIQUE,
+    tenant_id              VARCHAR(36)   NOT NULL,
+    dataset_id             VARCHAR(36),
+    synthesis_type         VARCHAR(64)   NOT NULL,
+    engine_id              VARCHAR(36)   NOT NULL,
+    profile_key            VARCHAR(128),
+    source_ref_json        TEXT          NOT NULL DEFAULT '{}',
+    config_json            TEXT          NOT NULL DEFAULT '{}',
+    quality_summary_json   TEXT          NOT NULL DEFAULT '{}',
+    output_summary_json    TEXT          NOT NULL DEFAULT '{}',
+    output_object_id       VARCHAR(36),
+    output_dataset_id      VARCHAR(36),
+    trace_id               VARCHAR(64),
+    span_id                VARCHAR(32),
+    created_by             VARCHAR(36),
+    created_at             TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (job_id) REFERENCES jobs (job_id) ON DELETE CASCADE,
+    FOREIGN KEY (tenant_id) REFERENCES tenants (tenant_id),
+    FOREIGN KEY (dataset_id) REFERENCES datasets (dataset_id),
+    FOREIGN KEY (engine_id) REFERENCES synthesis_engines (engine_id),
+    FOREIGN KEY (output_object_id) REFERENCES objects (object_id),
+    FOREIGN KEY (output_dataset_id) REFERENCES datasets (dataset_id),
+    FOREIGN KEY (created_by) REFERENCES actors (actor_id)
+);
+
+CREATE INDEX idx_eval_runs_tenant_created_at
+    ON eval_runs (tenant_id, created_at);
+
+CREATE INDEX idx_eval_runs_engine_type
+    ON eval_runs (engine_id, eval_type);
+
+CREATE INDEX idx_eval_runs_trace_id
+    ON eval_runs (trace_id, created_at);
+
+CREATE INDEX idx_eval_run_metrics_metric_key
+    ON eval_run_metrics (metric_key, status);
+
+CREATE INDEX idx_synthesis_runs_tenant_created_at
+    ON synthesis_runs (tenant_id, created_at);
+
+CREATE INDEX idx_synthesis_runs_engine_type
+    ON synthesis_runs (engine_id, synthesis_type);
+
+CREATE INDEX idx_synthesis_runs_trace_id
+    ON synthesis_runs (trace_id, created_at);
+
 COMMIT;

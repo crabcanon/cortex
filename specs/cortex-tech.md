@@ -119,15 +119,21 @@ Compose 分层依赖于当前已经完成的多目标镜像策略：
 - `parse-worker`
 - `parse-worker-docling`
 - `knowledge-worker`
+- `evaluation-worker`
+- `evaluation-worker-runtime`
+- `synthesis-worker`
+- `synthesis-worker-runtime`
 
 其中 `knowledge-worker` 现在显式依赖 `cortex-knowledge[runtime]`，避免出现镜像能构建、容器能启动，但运行时缺少 Cognee 主依赖的隐性错误。
 
 `parse-worker-docling` 是面向 Docling / OCR / 高保真文档转换的重型可选镜像。默认 `api` 与 `parse-worker` 不再安装 `docling`、`torch`、`opencv-python` 和完整 `markitdown[all]` 依赖，避免所有在线服务都承担 10GB 级镜像体积和大 wheel 下载失败风险。需要 Docling 能力时，通过 Compose profile 或生产编排单独启用该 worker，并按作业路由/队列策略独立扩缩容。
 
+`evaluation-worker` 与 `synthesis-worker` 默认同样走轻量镜像，只安装 Cortex 自身编排、队列、DB、Storage 与 HTTP service adapter 所需依赖。DeepEval、SDV 及其可能拉入的模型/数据科学依赖只进入 `evaluation-worker-runtime`、`synthesis-worker-runtime` 这两个显式重型 target。这样默认 `docker compose up --build` 不会因为本地 SDK 类评测/合成引擎拉取大 wheel 而把 API 和核心 worker 镜像放大。
+
 基础镜像按运行角色拆分：
 
 - 浏览器型运行单元（`api`、`parse-worker`、`parse-worker-docling`）默认基于 `mcr.microsoft.com/playwright/python:v1.58.0-noble`，避免构建阶段现场安装 Chromium 与 Linux 依赖。
-- 非浏览器型运行单元（`knowledge-worker`）默认基于 `ghcr.io/astral-sh/uv:python3.12-bookworm-slim`，避免本地一键构建被 Docker Hub `python:*` 拉取波动阻断。
+- 非浏览器型运行单元（`knowledge-worker`、`evaluation-worker`、`synthesis-worker` 及其 runtime 变体）默认基于 `ghcr.io/astral-sh/uv:python3.12-bookworm-slim`，避免本地一键构建被 Docker Hub `python:*` 拉取波动阻断。
 - `uv` 不再通过 `pip install` 安装，而是从 `ghcr.io/astral-sh/uv:0.7.22` 复制 `/uv` 与 `/uvx`，减少 PyPI 网络故障点。
 - 本地 Compose 暴露 `CORTEX_PYTHON_BASE_IMAGE`、`CORTEX_UV_IMAGE`、`CORTEX_PLAYWRIGHT_PYTHON_BASE_IMAGE` 覆盖点，方便企业内网镜像仓库、镜像加速器或离线制品库接管。
 
@@ -1727,3 +1733,352 @@ API 与 Parse Worker 在启动时默认执行预检；真正的懒安装行为�
 5. 若无法满足浏览器宿主机能力，则暂时禁用 `crawl4ai`，把 URL 解析路由到 `jina_reader` / `llama_parse`
 
 这样能把浏览器型解析引擎的失败从“线上请求时故障”前移成“构建或部署阶段故障”。
+
+## 17. Evaluation 平台化设计
+
+### 17.1 目标
+
+Evaluation 域不是单个引擎的薄封装，而是 Cortex 内部的统一评测平面。API 面向业务暴露稳定的评测类型、输入源、目标与指标键；引擎差异由 Router、Adapter、Profile 与 Result Normalizer 吞掉。
+
+### 17.2 核心组件
+
+1. Eval Engine Registry
+   - 注册可用引擎，如 deepeval、evalscope、未来的 agas、内部 benchmark runner。
+   - 暴露引擎能力、默认 profile、健康状态、可执行模式（sync / async）与 metric 前缀。
+2. Eval Metric Catalog
+   - 用 Cortex 标准 metric_key 统一描述业务侧指标，例如 ag.faithfulness、perf.ttft、dialog.coherence。
+   - 保存到引擎原生 metric 的映射，例如 FaithfulnessMetric、EvalScope stress/perf 指标、未来自定义指标实现。
+3. Eval Router
+   - 根据 eval_type、目标类型、样本规模、profile、引擎可用性与策略权重选择最佳引擎。
+   - 典型默认路由：perf -> evalscope，ag/agentic/multi_turn/custom -> deepeval，当指定 engine_id 时按显式优先。
+4. Eval Runner
+   - 负责编译请求、准备输入、调用引擎、聚合分片结果、生成统一报告。
+5. Eval Report Builder
+   - 将原生结果转为统一 EvalRunResult、ScoreCard、artifact 引用和失败样本摘要。
+
+### 17.3 统一请求模型
+
+Evaluation API 业务面坚持“稳定核心字段 + 可扩展附加配置”的模式：
+
+- 核心字段：
+ame、eval_type、engine_id、input、	arget、metrics
+- 扩展字段：profile_key、engine_options、output、webhook
+- 原则：
+  - 业务方先选评测类型和指标，不需要先理解底层引擎参数。
+  - 通用设置优先进入一层稳定字段；只有引擎专属能力才下沉到 engine_options。
+  - 当 engine_id=auto 时，由 Router 自动选择最优可用引擎。
+
+### 17.4 统一结果模型
+
+所有评测引擎都必须输出统一结构：
+
+- summary: 总体是否通过、综合分、按命名空间聚合的分数
+- metrics[]: 单指标结果、阈值、样本规模、底层原生 metric 键
+- samples: 总样本数、通过/失败/跳过统计
+- rtifacts[]: 详细报告、失败样本、原始日志、截图或 HTML 等对象引用
+- 	elemetry: 	race_id、span_id、equest_id
+
+### 17.5 执行模型
+
+- Sync：只适用于小样本校验、profile 调参、接口冒烟。
+- Async：默认推荐模式。API 写入 Job 后立即返回 job_id，Worker 负责运行、重试、心跳与结果落盘。
+- 并行：同一次运行中的多个 metric 可以并行执行；大样本集可按分片并发后再做 summary reduce。
+- Artifact：报告正文、失败样本、原始 benchmark 输出统一落到 Storage，对应对象 ID 回写到 eval_runs。
+
+### 17.6 OTel 与实验支持
+
+- 每个评测作业创建根 span，例如 cortex.eval.run。
+- 引擎调用、目标 API 调用、分片聚合、artifact 写入都记录子 span。
+- 支持将 deployment.environment.name、service.version、cortex.experiment.id、cortex.experiment.variant 打入 trace / metric labels，便于 A/B、蓝绿、金丝雀分析。
+
+### 17.7 凭证与运行时依赖边界
+
+- `evalscope` 在 Cortex 中支持两种模式：
+  - `mode: external_http`: 调用已经部署好的 EvalScope HTTP service，Cortex 只需要 `base_url`、`timeout_seconds` 和可选 `headers`。
+  - `mode: self_hosted_sdk`: 由 Cortex runtime worker 安装 `evalscope[service]`，并通过 `evalscope.service.run_service(host, port, debug)` 启动本地 EvalScope Flask service，再调用 `/api/v1/eval` 与 `/api/v1/perf`。
+- EvalScope 不存在必须配置的 `EVALSCOPE_API_KEY`；如果外部 EvalScope Service 被 API Gateway、Ingress 或 sidecar 保护，应在 `evaluation.engines.evalscope.headers` 中通过 `env:` 引用注入服务访问 header，例如 `Authorization: env:EVALSCOPE_SERVICE_AUTH_HEADER`。
+- 本地 self-hosted 默认端口为 `19000`，避免与 MinIO S3 API 的宿主机 `9000` 端口冲突；容器内由 evaluation runtime worker 私有启动，无需暴露给宿主机。
+- `deepeval` 不再从 `cortex.runtime.*.yaml` 读取 API Key。模型供应商凭证由 Worker 运行环境提供，例如 `OPENAI_API_KEY`、云厂商模型 key 或企业模型网关 token。
+- 默认 `evaluation-worker` 不安装 `deepeval` 或 `evalscope[service]`，只保留 Cortex 编排和 EvalScope external HTTP 调用能力。需要本地 DeepEval 或 EvalScope self-hosted SDK 时使用 `evaluation-worker-runtime` 镜像或安装 `cortex-worker-evaluation[runtime]`。
+
+## 18. Synthesis 平台化设计
+
+### 18.1 目标
+
+Synthesis 域负责生成可复用、可审计、可落盘的数据资产。结构化合成优先对接 SDV；非结构化合成优先对接 DeepEval Synthesizer；但 API 层保持统一的数据模型与运行方式。
+
+### 18.2 核心组件
+
+1. Synthesis Engine Registry
+   - 管理 sdv、deepeval_synth 与未来内部引擎。
+2. Synthesis Router
+   - 根据 synthesis_type、输入源、样本规模、输出格式和 profile 选择引擎。
+   - 典型默认路由：
+     - structured_single_table / structured_relational -> sdv
+     - ag_goldens / qa_pairs / conversation_goldens / gent_trajectories -> deepeval_synth
+3. Schema Translator
+   - 将 Cortex 侧 source / mapping / profile 转译为 SDV metadata、DeepEval synthesizer config 或未来引擎配置。
+4. Quality Gate Evaluator
+   - 对输出数据集做统计质量、隐私检查、业务规则检查，并统一写回结果。
+
+### 18.3 统一请求模型
+
+Synthesis API 业务面字段保持稳定：
+
+- 核心字段：
+ame、synthesis_type、engine_id、source
+- 扩展字段：profile_key、config、output、webhook
+- 原则：
+  - 来源统一用 source 描述，不要求调用方理解 SDV metadata 和 DeepEval seed dataset 的内部结构。
+  - 产物统一落到 Dataset / Storage，不由调用方直接处理引擎原始文件结构。
+
+### 18.4 统一结果模型
+
+统一输出包含：
+
+- summary: 请求样本数、实际输出样本数、质量分、隐私分、说明
+- quality_gates[]: 每个质量门禁的阈值与结果
+- outputs[]: 结果对象、报告对象、日志对象引用
+- output_dataset_id: 当产物被持久化为 Dataset 时返回
+- 	elemetry: 	race_id、span_id、equest_id
+
+### 18.5 执行与回环
+
+- 结构化合成结果可以直接进入 Storage / Dataset，被后续 Add、Cognify 或下游训练流程复用。
+- 非结构化合成结果可以直接成为 Evaluation 的输入数据集，实现“先合成、再评测、再修复”的闭环。
+- 对失败或质量不达标的任务保留 artifact 和原因，便于人工复盘和再次执行。
+
+### 18.6 凭证与运行时依赖边界
+
+- `sdv` 是本地 SDK 型引擎，不需要 Cortex runtime API Key；数据源权限由 Cortex Storage / Dataset / DB 权限模型控制。
+- DeepEval Synthesizer 与 Evaluation 的 DeepEval 策略一致：不在 runtime YAML 中配置 API Key，模型供应商凭证由 Worker 进程环境提供。
+- 默认 `synthesis-worker` 不安装 `sdv` 或 `deepeval`，避免把数据科学和 LLM 评测依赖拖进所有镜像。需要本地合成 SDK 时使用 `synthesis-worker-runtime` 镜像或安装 `cortex-worker-synthesis[runtime]`。
+
+## 19. 代码模型与 uv 包布局
+
+### 19.1 推荐包结构
+
+- packages/evaluation
+  - 领域模型、Router、Registry、Result Normalizer、Service
+- packages/evaluation-engines
+  - DeepEval / EvalScope / future adapters
+- packages/synthesis
+  - 领域模型、Router、Translator、Quality Gate、Service
+- packages/synthesis-engines
+  - SDV / DeepEval Synthesizer / future adapters
+- workers/worker-eval
+  - 长耗时评测执行器
+- workers/worker-synthesis
+  - 长耗时合成执行器
+
+### 19.2 uv 依赖策略
+
+- cortex-evaluation[deepeval]
+- cortex-synthesis[sdv]
+- cortex-synthesis[deepeval]
+
+默认安装只带基础 contract / service / router。EvalScope external HTTP mode 不需要安装 `evalscope` Python 包；EvalScope self-hosted SDK、DeepEval 与 SDV 这类重型第三方引擎通过 extra 或独立 runtime worker 镜像启用，避免 API 主镜像和默认 worker 无限膨胀。
+
+### 19.3 Pydantic 代码模型示意
+
+`python
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from enum import StrEnum
+from typing import Any
+
+from pydantic import BaseModel, Field
+
+
+class EvalType(StrEnum):
+    PERF = "perf"
+    RAG = "rag"
+    AGENTIC = "agentic"
+    MULTI_TURN = "multi_turn"
+    CUSTOM = "custom"
+
+
+class SynthesisType(StrEnum):
+    STRUCTURED_SINGLE_TABLE = "structured_single_table"
+    STRUCTURED_RELATIONAL = "structured_relational"
+    RAG_GOLDENS = "rag_goldens"
+    QA_PAIRS = "qa_pairs"
+    CONVERSATION_GOLDENS = "conversation_goldens"
+    AGENT_TRAJECTORIES = "agent_trajectories"
+    CUSTOM = "custom"
+
+
+class MetricConfig(BaseModel):
+    metric_key: str
+    threshold: float | None = None
+    params: dict[str, Any] = Field(default_factory=dict)
+
+
+class EvalJobRequest(BaseModel):
+    name: str | None = None
+    eval_type: EvalType
+    engine_id: str = "auto"
+    profile_key: str | None = None
+    input: dict[str, Any]
+    target: dict[str, Any] | None = None
+    metrics: list[MetricConfig] = Field(default_factory=list)
+    engine_options: dict[str, Any] = Field(default_factory=dict)
+    output: dict[str, Any] = Field(default_factory=dict)
+
+
+class EvalRunReport(BaseModel):
+    eval_run_id: str
+    engine_id: str
+    eval_type: EvalType
+    summary: dict[str, Any]
+    metrics: list[dict[str, Any]]
+    artifacts: list[dict[str, Any]] = Field(default_factory=list)
+    trace_id: str | None = None
+
+
+class SynthesisJobRequest(BaseModel):
+    name: str | None = None
+    synthesis_type: SynthesisType
+    engine_id: str = "auto"
+    profile_key: str | None = None
+    source: dict[str, Any]
+    config: dict[str, Any] = Field(default_factory=dict)
+    output: dict[str, Any] = Field(default_factory=dict)
+
+
+class SynthesisRunReport(BaseModel):
+    synthesis_run_id: str
+    engine_id: str
+    synthesis_type: SynthesisType
+    summary: dict[str, Any]
+    outputs: list[dict[str, Any]] = Field(default_factory=list)
+    trace_id: str | None = None
+
+
+class BaseEvalEngine(ABC):
+    engine_id: str
+
+    @abstractmethod
+    async def run(self, request: EvalJobRequest) -> EvalRunReport:
+        raise NotImplementedError
+
+
+class BaseSynthesisEngine(ABC):
+    engine_id: str
+
+    @abstractmethod
+    async def run(self, request: SynthesisJobRequest) -> SynthesisRunReport:
+        raise NotImplementedError
+`
+
+## 20. 开发建议顺序
+
+1. 先补充 contract、SQL、OpenAPI 与任务清单，冻结领域语义。
+2. 再实现 Registry / Router / DTO / Service，保持 API 与 Worker 共享同一套领域模型。
+3. 先接入最有代表性的引擎组合：DeepEval + EvalScope + SDV + DeepEval Synthesizer。
+4. 最后补齐异步 Worker、artifact 落盘、质量门禁、E2E 验证与 README 操作文档。
+
+## 21. Evaluation / Synthesis Worker Hydration And Artifact Runtime
+
+### 21.1 输入水合边界
+
+Evaluation 与 Synthesis 的 API 允许调用方引用 `dataset_id`、`object_id` 或 `object_ids`。这些引用不会在 API 入口层被提前展开，原因是：
+
+- API 请求必须保持轻量，避免同步读取大对象或大数据集。
+- Worker 才拥有长任务预算、重试、心跳、错误记录和可观测上下文。
+- 引擎适配器只消费规范化后的 inline cases / records / documents，不直接依赖 Cortex 数据库或对象存储。
+
+当前实现约定：
+
+- Evaluation Worker 会把 dataset item metadata 或 JSON / JSONL / CSV object 转换为 `EvalTestCase[]`。
+- `field_mapping` 优先级最高；未配置时使用稳定兜底字段名，如 `question`、`answer`、`expected`、`contexts`。
+- Synthesis Worker 会把 dataset item metadata 转成 `inline_records`，把 document item / text object 转成 `documents`。
+- Storage object 内容通过 `StorageService.read_object_bytes` 读取，底层仍是 S3-compatible facade，保持厂商中立。
+
+### 21.2 Artifact 持久化策略
+
+异步 Evaluation / Synthesis 作业完成后，Worker 必须生成一个规范产物：
+
+- Evaluation: `evaluation_report`，JSON 格式，写入 Storage，并将 object_id 回写到 `eval_runs.report_object_id`。
+- Synthesis: `synthesis_output`，JSON 格式，写入 Storage，并将 object_id 回写到 `synthesis_runs.output_object_id`。
+
+关系型数据库只保存摘要、指标、质量门禁和对象引用，不保存大体积报告正文。这样可以避免 SQL 表膨胀，也方便后续把 S3-compatible 存储无缝迁移到 MinIO、AWS S3、Ceph RGW、OSS 或其他兼容实现。
+
+### 21.3 Observability
+
+Evaluation 与 Synthesis 运行路径增加以下 OTel 语义：
+
+- `cortex.eval.run` span: `cortex.eval.type`、`cortex.eval.engine_id`、`cortex.eval.profile_key`、`cortex.eval.input_type`、`cortex.eval.metric_count`、`cortex.eval.status`。
+- `cortex.synthesis.run` span: `cortex.synthesis.type`、`cortex.synthesis.engine_id`、`cortex.synthesis.profile_key`、`cortex.synthesis.source_type`、`cortex.synthesis.output_format`、`cortex.synthesis.status`。
+- Prometheus-ready counters / histograms:
+  - `cortex.eval.runs`
+  - `cortex.eval.run.duration`
+  - `cortex.synthesis.runs`
+  - `cortex.synthesis.run.duration`
+
+这些 labels 可以直接用于 Grafana 按评测类型、合成类型、引擎、状态切片；失败 span 会记录 exception，便于从 API 返回的 trace_id 追到 Jaeger。
+
+## 22. Runtime API Docs And OpenAPI 3.1
+
+Cortex 的运行时 OpenAPI contract 固定为 OpenAPI `3.1.0`，用于表达 JSON Schema 2020-12、nullable/union schema、复杂 examples 与后续 AI 原生扩展字段。内置 `/docs` 不能依赖 FastAPI 默认 CDN 页面，也不能使用不支持 OpenAPI 3.1 的旧版 Swagger UI。
+
+当前实现采用以下策略：
+
+- `FastAPI(docs_url=None, openapi_url="/openapi.json", openapi_version="3.1.0")` 禁用默认 CDN-backed docs，并显式锁定运行时 OpenAPI 版本。
+- `cortex_api.docs.register_docs_routes` 注册 Cortex 自有 `/docs` 与 `/docs/oauth2-redirect`。
+- Swagger UI `5.32.4` 静态资源 vendored 在 `apps/api/src/cortex_api/static/swagger-ui`，由 `/_docs/swagger-ui/5.32.4/*` 提供。
+- `/docs` 返回 `Cache-Control: no-store`，并使用版本化静态资源路径，避免浏览器继续命中旧的 Swagger UI 4.x bundle。
+- `swagger-ui-bundle.js`、`swagger-ui.css`、favicon 与 license/notice 一起随 API 包进入镜像，容器运行时不访问外部 CDN。
+- Contract smoke test 同时验证 `/openapi.json.openAPI == 3.1.0`、`/docs` 引用本地资源，以及本地 bundle 含有 `SwaggerUIBundle`。
+
+运维排查顺序：
+
+1. 访问 `http://127.0.0.1:8080/openapi.json`，确认 `openapi` 为 `3.1.0`。
+2. 访问 `http://127.0.0.1:8080/_docs/swagger-ui/5.32.4/swagger-ui-bundle.js`，确认返回 200。
+3. 若浏览器仍报 OpenAPI version invalid，强制刷新或清理缓存，并重新构建 API 镜像。
+
+本地重型构建模式由 `scripts/dev/stack.ps1 -Heavy` 看护，会启用 `docling`、`eval-runtime`、`synthesis-runtime` 三个 Compose profile，用于构建 Docling Parse Worker、DeepEval Evaluation Worker、SDV / DeepEval Synthesis Worker 等重依赖镜像：
+
+`powershell -ExecutionPolicy Bypass -File scripts\dev\stack.ps1 build -Heavy`
+
+## 23. Engine Availability Semantics
+
+Cortex 将 engine 状态拆成两层：
+
+- Runtime enabled: 由 `cortex.runtime.*.yaml` 控制，表示该 engine 被纳入控制面 catalog 和异步作业路由。
+- Local executable: 当前进程是否安装了该 engine 的 SDK / 浏览器 / 模型运行依赖，表示 `/sync` 是否能在 API 进程内直接执行。
+
+因此本地/生产的轻量 API 镜像可以展示并接受重型 engine 的异步作业，但不需要把 Docling、DeepEval、SDV、Torch 等重依赖装进 API 镜像：
+
+- Parse `docling`: runtime enabled 时 catalog 显示 `active`，异步 `/v1/parse/jobs` 可路由到 `cortex-parse-worker-docling`；若直接调用 API `/v1/parse/sync` 且 API 进程未安装 Docling，会返回明确的 in-process runtime missing 错误。
+- Evaluation `deepeval`: runtime enabled 但 API 进程未安装 SDK 时，engine status 为 `degraded`；`/v1/eval/jobs` 可路由到 `cortex-evaluation-worker-runtime`，`/v1/eval/sync` 需要 API 自身安装 `cortex-evaluation[runtime]`。
+- Synthesis `sdv` / `deepeval`: runtime enabled 但 API 进程未安装 SDK 时，engine status 为 `degraded`；`/v1/synthesis/jobs` 可路由到 `cortex-synthesis-worker-runtime`，`/v1/synthesis/sync` 需要 API 自身安装 `cortex-synthesis[runtime]`。
+
+`degraded` 在这里不是故障态，而是控制面/执行面拆分后的健康降级信号：可排队、可调度，但不可在当前 API 进程同步执行。
+## 2026-04-26 Runtime Routing 补充：Parse Worker Engine Affinity
+
+Swagger 实测暴露出一个重要边界：API 进程可以把 `docling` 显示为可路由的 active engine，但默认轻量 `cortex-parse-worker` 不能安装 `docling -> torch -> opencv-python` 这条重依赖链。如果所有 parse worker 都无差别领取 `parse` 队列中的作业，显式 `engine_id=docling` 的任务会被轻量 worker 抢到，随后在执行阶段报 `Docling is enabled ... but is not installed in this process`。
+
+修正后的执行模型：
+
+- `ParseRequestCompiler` 负责把用户极简请求 `sources + engine_id + scene` 编译为内部 `ParseJobRequest`。
+- 当 `engine_id != auto` 时，`allowed_engines=[engine_id]`，`fallback_policy.enabled=false`，批量 sources 中每个 job 都固定到同一个显式引擎。
+- 当 `engine_id=auto` 时，才按 scene、source kind、文件扩展名和当前激活 engine 生成 ordered fallback 列表。
+- `ParseJobControlService` 在 job 的 `deployment_context.parse_worker` 中记录 `preferred_engine_key` 与 `engine_keys`。
+- `cortex-parse-worker` 启动时读取 `CORTEX_PARSE_WORKER_ENGINE_KEYS`，只领取与自身能力集合相交的 queued job。
+- 本地默认轻量 worker 声明 `crawl4ai,jina_reader,llama_parse,markitdown`；`cortex-parse-worker-docling` 声明 `docling`。
+
+本地 MinIO / S3 Cortex Storage 对象支持三种用户可读 locator：
+
+- `cortex://objects/{object_id}`
+- `{object_id}`
+- `s3://{bucket}/{tenant_id}/{object_id}/{filename}` 或原始 `{bucket}/{tenant_id}/{object_id}/{filename}`
+
+编译器只把包含 `obj_...` 段的 S3/bucket key 解析为 Cortex managed object。随后 API 层通过 StorageService 按数据权限校验、签发短期 download URL，并把文件名与 MIME 交给路由策略。
+
+部署含义：
+
+- API catalog 的 active/degraded 表示“控制面可见与可路由”，不等同于 API 进程一定能同步执行重 SDK。
+- 需要 Docling 的生产环境必须部署独立 `parse-worker-docling` 或等价 worker pool，并配置 engine affinity。
+- 同一队列可以容纳不同 engine job，但 worker 领取必须按能力过滤，避免轻量 worker 消耗重型任务的重试预算。

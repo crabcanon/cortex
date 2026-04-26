@@ -1459,3 +1459,319 @@
   - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright apps\\api\\src\\cortex_api\\routers\\storage.py packages\\common\\src\\cortex_common\\settings.py packages\\storage\\src\\cortex_storage\\client.py packages\\storage\\src\\cortex_storage\\service.py tests\\integration\\test_api_storage.py tests\\unit\\test_storage_client.py`
   - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml`
 - Prevention: Keep direct upload explicitly framed as a convenience path. Any future increase in size limits or use in production workloads should be reviewed against API memory pressure, ingress timeout, horizontal scaling, and object-store direct upload capabilities.
+
+## 2026-04-24 10:30:00 +08:00
+
+- Stage: `CTX-20260424-098` ~ `CTX-20260424-103`
+- Event: Extending Cortex specs with Evaluation and Synthesis domains initially left the design incomplete because the new path skeleton lacked a full result model, scope coverage, SQL entities, and execution-task decomposition.
+- Cause:
+  - The first draft only added partial OpenAPI paths and examples, but did not propagate the design consistently into PRD, technical design, schema, DFD, SQL, and task ledger.
+  - The intermediate YAML editing flow also introduced malformed lines where `description`, `content`, and `operationId` were collapsed onto single lines, which would have broken downstream validation.
+- Action:
+  - Rebuilt the `/v1/eval/*` and `/v1/synthesis/*` path section, added `eval:*` and `synthesis:*` scopes, and extended `JobAccepted.job_type` with `eval` and `synthesis`.
+  - Added component schemas for engine catalogs, metric catalogs, sync/async requests, result payloads, artifacts, and quality gates.
+  - Expanded PRD / tech / schema / DFD / SQL docs so Evaluation and Synthesis are documented as first-class domains instead of isolated endpoints.
+  - Added a dedicated planned task batch covering contract design, SQL modeling, domain implementation, API routers, workers, observability, and validation.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml`
+- Prevention: When adding a new Cortex domain, update the public contract, data model, execution design, telemetry story, and task ledger in the same change set; do not stop at path stubs.
+
+## 2026-04-24 01:44:48 +08:00
+
+- Stage: `CTX-20260424-104` ~ `CTX-20260424-111`
+- Event: While implementing the Evaluation and Synthesis runtime layers, several contract and migration mismatches surfaced together: fresh databases could create eval/synthesis tables twice, async job result endpoints across domains exposed inconsistent pending semantics, and the storage response model drifted away from the published OpenAPI contract.
+- Cause:
+  - The baseline Alembic migration reads the current `specs/cortex-init.sql`, so once the SQL spec started including eval/synthesis tables, a later dedicated migration attempted to create tables that already existed on fresh databases.
+  - Runtime FastAPI routers for parse / evaluation / synthesis still returned `202` for pending result polling, while the published contract had already converged on `200` for completed results plus a non-success status payload for incomplete jobs.
+  - `StorageObject` in code still exposed `source_uri`, but the published API contract had moved to a version-centric shape with `version` / `current_version_id`.
+  - The end-to-end object store test double had not been updated after `ObjectStoreClientProtocol` gained `put_object`, so static typing no longer matched the storage runtime contract.
+- Action:
+  - Made `packages/db/migrations/versions/20260424_120000_add_eval_and_synthesis_tables.py` idempotent by short-circuiting when the target tables already exist, which preserves `upgrade head` on fresh databases without weakening incremental upgrades.
+  - Implemented `packages/evaluation` and `packages/synthesis` domain packages, job-control services, worker entrypoints, runtime config wiring, API routers, auth scopes, and startup catalog sync so the new domains are exposed as first-class REST APIs.
+  - Normalized `/v1/parse/jobs/{jobId}/result`, `/v1/eval/jobs/{jobId}/result`, and `/v1/synthesis/jobs/{jobId}/result` to return `409` with `JobStatus` while work is still running, and `200` with the final result after completion.
+  - Added `StorageObjectVersion`, updated `StorageObject` to expose `version`, and mapped version metadata from `object_versions` in the storage service so runtime OpenAPI, documented OpenAPI, and actual API responses now agree.
+  - Extended integration / contract coverage for evaluation, synthesis, parse polling, and the upload-parse-add-search e2e flow; updated the e2e fake object-store client with `put_object` to match the current storage protocol.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run ruff check apps\\api\\src\\cortex_api\\routers\\evaluation.py apps\\api\\src\\cortex_api\\routers\\synthesis.py packages\\contracts\\src\\cortex_contracts\\storage.py packages\\contracts\\src\\cortex_contracts\\__init__.py packages\\storage\\src\\cortex_storage\\service.py tests\\integration\\test_api_eval_synthesis.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright apps\\api\\src\\cortex_api\\routers\\evaluation.py apps\\api\\src\\cortex_api\\routers\\synthesis.py packages\\contracts\\src\\cortex_contracts\\storage.py packages\\contracts\\src\\cortex_contracts\\__init__.py packages\\storage\\src\\cortex_storage\\service.py tests\\integration\\test_api_eval_synthesis.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\contract\\test_openapi_contract.py tests\\integration\\test_api_eval_synthesis.py tests\\integration\\test_api_parse.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run ruff check apps\\api\\src\\cortex_api\\routers\\parse.py tests\\integration\\test_api_parse.py tests\\integration\\test_api_e2e.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright apps\\api\\src\\cortex_api\\routers\\parse.py tests\\integration\\test_api_parse.py tests\\integration\\test_api_e2e.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\integration\\test_api_e2e.py -k upload_parse_add_search_round_trip -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml`
+- Prevention:
+  - When a SQL spec is consumed by bootstrap migrations, treat any later table-creation migration as potentially overlapping and make fresh-install paths explicitly idempotent.
+  - Keep all async job result endpoints on one polling contract across domains so client SDKs and Swagger examples do not need per-domain branching.
+  - When the published API moves from location metadata to version metadata, update DTOs, service mappers, and contract tests in the same batch instead of relying on gradual drift.
+
+## 2026-04-24 02:10:00 +08:00
+
+- Stage: `CTX-20260424-106`, `CTX-20260424-109`, `CTX-20260424-111`
+- Event: The first Evaluation / Synthesis worker batch initially exposed only structural integration; runtime adapters existed, but `deepeval`, `deepeval.synthesizer`, and `sdv` execution still returned scaffold placeholders instead of real engine output.
+- Cause:
+  - Earlier work prioritized REST contracts, DB schema, job control, and worker lifecycles so the platform surface would stabilize first.
+  - That left the actual engine bridges intentionally thin: `DeepEvalEvaluationEngine` raised `501`, `SDVSynthesisEngine` raised `501`, and `DeepEvalSynthesisEngine` returned a fixed scaffold payload.
+  - Optional third-party dependencies also make this area easy to regress because import availability, runtime signatures, and local test environments can drift independently.
+- Action:
+  - Implemented inline `deepeval` execution for `EvalSyncRequest.input.test_cases`, including direct RAG metrics, conversational metrics, GEval-based fallbacks, namespace score aggregation, and automatic default metric selection when the caller omits `metrics`.
+  - Implemented inline `sdv` execution for `structured_single_table` and `structured_relational` synthesis requests using metadata auto-detection plus `GaussianCopulaSynthesizer` / `HMASynthesizer`.
+  - Implemented inline `deepeval` synthetic-data generation for context/document-based single-turn and conversational goldens via `Synthesizer.generate_*_from_contexts`.
+  - Wired bootstrap to pass runtime-resolved API keys, model refs, and engine options into evaluation / synthesis adapters.
+  - Added adapter-focused unit tests with fake `deepeval`, `deepeval.synthesizer`, `pandas`, and `sdv` modules so we can validate runtime behavior without forcing heavy optional packages into the default test environment.
+  - Kept current scope explicit: direct runtime execution now supports inline inputs and inline previews, while dataset/object-backed hydration and artifact persistence remain in the next implementation batch.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run ruff check packages\\evaluation\\src\\cortex_evaluation\\adapters.py packages\\evaluation\\src\\cortex_evaluation\\bootstrap.py packages\\synthesis\\src\\cortex_synthesis\\adapters.py packages\\synthesis\\src\\cortex_synthesis\\bootstrap.py tests\\unit\\test_eval_synthesis_adapters.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright packages\\evaluation\\src\\cortex_evaluation\\adapters.py packages\\evaluation\\src\\cortex_evaluation\\bootstrap.py packages\\synthesis\\src\\cortex_synthesis\\adapters.py packages\\synthesis\\src\\cortex_synthesis\\bootstrap.py tests\\unit\\test_eval_synthesis_adapters.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\unit\\test_eval_synthesis_adapters.py tests\\integration\\test_api_eval_synthesis.py tests\\contract\\test_openapi_contract.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml`
+- Prevention:
+  - Treat adapter scaffolds as a temporary milestone only. Once a domain has public REST endpoints, the next batch should either connect a real runtime path or downgrade the engine status so operators do not discover placeholder behavior at execution time.
+  - For optional-dependency adapters, keep a fake-module unit-test seam in place so signature drift in third-party libraries is caught before it breaks local development or CI.
+
+## 2026-04-25 15:20:00 +08:00
+
+- Stage: `CTX-20260424-106`, `CTX-20260424-109`, `CTX-20260424-110`, `CTX-20260424-111`
+- Event: Evaluation / Synthesis async workers could execute inline requests, but dataset/object-backed jobs still lacked an end-to-end runtime path and completed runs did not persist canonical report/output artifacts.
+- Cause:
+  - The first implementation stabilized public REST contracts, job lifecycle, and real engine adapters before adding reference hydration.
+  - `StorageService` supported presigned download URLs and direct uploads, but did not yet expose an internal object-read helper for workers.
+  - Worker result persistence was not wired back into `eval_runs.report_object_id` or `synthesis_runs.output_object_id`, leaving detailed reports dependent on inline job payloads.
+- Action:
+  - Added `ObjectStoreClientProtocol.get_object_bytes`, a boto3-backed implementation, and `StorageService.read_object_bytes` for internal worker hydration.
+  - Added Evaluation Worker hydration that expands dataset items or JSON/JSONL/CSV storage objects into `EvalTestCase` payloads using explicit `field_mapping` or stable fallback field names.
+  - Added Synthesis Worker hydration that expands datasets, document chunks, JSON/JSONL/CSV/text storage objects into inline records or documents for SDV / DeepEval Synthesizer execution.
+  - Added worker artifact persistence: evaluation reports are uploaded as `evaluation_report` storage objects and synthesis outputs as `synthesis_output` objects, then linked back to run metadata.
+  - Added OTel spans and Prometheus-ready counters/histograms for `cortex.eval.run` and `cortex.synthesis.run`, labeled by type, engine, status, profile/input/source dimensions.
+  - Updated integration tests so async jobs verify dataset hydration and persisted artifact references instead of only testing queue transitions.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run ruff check packages\\storage\\src\\cortex_storage workers\\evaluation-worker\\src\\cortex_worker_evaluation workers\\synthesis-worker\\src\\cortex_worker_synthesis packages\\evaluation\\src\\cortex_evaluation packages\\synthesis\\src\\cortex_synthesis tests\\integration\\test_api_eval_synthesis.py tests\\integration\\test_api_storage.py tests\\integration\\test_api_e2e.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright packages\\storage\\src\\cortex_storage workers\\evaluation-worker\\src\\cortex_worker_evaluation workers\\synthesis-worker\\src\\cortex_worker_synthesis packages\\evaluation\\src\\cortex_evaluation packages\\synthesis\\src\\cortex_synthesis tests\\integration\\test_api_eval_synthesis.py tests\\integration\\test_api_storage.py tests\\integration\\test_api_e2e.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\integration\\test_api_eval_synthesis.py tests\\integration\\test_api_storage.py tests\\integration\\test_api_e2e.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\unit\\test_eval_synthesis_adapters.py tests\\integration\\test_api_eval_synthesis.py tests\\contract\\test_openapi_contract.py -q`
+- Follow-up:
+  - `rg.exe` is still intermittently blocked with `拒绝访问` in this Windows workspace; use PowerShell `Select-String` as the safe fallback until the host permission issue is resolved.
+  - The next validation batch should run the static OpenAPI YAML validator after documentation edits and then close `CTX-20260424-111` if the full contract matrix remains green.
+- Prevention:
+  - Treat any API field that references `dataset_id` or `object_id` as incomplete until a worker hydration test proves the referenced data is actually consumed by the engine.
+  - Always persist canonical async reports to object storage and store only object references plus summaries in relational tables, keeping large artifacts outside SQL.
+
+## 2026-04-25 16:05:00 +08:00
+
+- Stage: `CTX-20260424-111`
+- Event: Evaluation / Synthesis workers were implemented, but the Docker/Compose runtime topology still only launched API, Parse Worker, and Knowledge Worker.
+- Cause:
+  - The earlier compose topology predated the new Evaluation / Synthesis domains.
+  - Without dedicated worker services, `/v1/eval/jobs` and `/v1/synthesis/jobs` could enqueue jobs but a one-command local stack would not consume them.
+- Action:
+  - Added `evaluation-worker` and `synthesis-worker` Dockerfile targets.
+  - Added runtime loop entrypoints `scripts/runtime/start-evaluation-worker.sh` and `scripts/runtime/start-synthesis-worker.sh`.
+  - Added local and production Compose services for `cortex-evaluation-worker` and `cortex-synthesis-worker`.
+  - Added worker runtime extras so production worker images can install DeepEval / EvalScope or SDV / DeepEval Synthesizer runtime dependencies without bloating unrelated service images.
+  - Rewrote `README.md` as a complete Chinese project guide covering features, local startup, Docker/production deployment, Swagger token flow, API examples, and validation commands.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 lock`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml`
+- Prevention: Whenever a new async job domain is added, update API contracts, worker packages, Dockerfile targets, compose services, README startup paths, and validation commands in the same batch.
+
+## 2026-04-25 18:40:00 +08:00
+
+- Stage: `CTX-20260425-112`, `CTX-20260425-113`, `CTX-20260425-114`, `CTX-20260425-115`
+- Event: Evaluation / Synthesis runtime config still exposed `api_key_ref` knobs and default Docker worker targets installed heavy local-engine extras.
+- Cause:
+  - EvalScope had been modeled like a vendor API, even though Cortex calls it as an HTTP service and only needs service headers when a gateway protects it.
+  - DeepEval and DeepEval Synthesizer were receiving model-provider keys through runtime YAML, which duplicated the worker process environment and created unnecessary secret sprawl.
+  - `evaluation-worker` and `synthesis-worker` Docker targets used `--extra runtime`, pulling DeepEval / SDV dependency chains into default images; SDV in particular brings `ctgan -> torch`.
+- Action:
+  - Removed Evaluation / Synthesis `api_key_ref` fields from runtime config models and all runtime overlays.
+  - Removed DeepEval adapter API-key constructor arguments and temporary `OPENAI_API_KEY` environment injection; provider credentials now come from the worker process environment.
+  - Removed the `cortex-evaluation[evalscope]` optional dependency because EvalScope is implemented through the HTTP service adapter and `httpx`.
+  - Split Docker targets into slim defaults (`evaluation-worker`, `synthesis-worker`) and explicit heavy targets (`evaluation-worker-runtime`, `synthesis-worker-runtime`).
+  - Added local and production Compose profile services for the heavy runtime workers, and documented that operators should not run slim and heavy workers against the same queue for SDK-only jobs.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 lock`
+  - `docker compose -f compose.local.yaml config --quiet`
+  - `docker compose -f compose.prod.yaml config --quiet`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 export --package cortex-api --no-dev --no-hashes --format requirements-txt`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 export --package cortex-worker-evaluation --no-dev --no-hashes --format requirements-txt`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 export --package cortex-worker-synthesis --no-dev --no-hashes --format requirements-txt`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 export --package cortex-worker-evaluation --extra runtime --no-dev --no-hashes --format requirements-txt`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 export --package cortex-worker-synthesis --extra runtime --no-dev --no-hashes --format requirements-txt`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run ruff check packages\\common\\src\\cortex_common\\runtime_config.py packages\\evaluation\\src\\cortex_evaluation packages\\synthesis\\src\\cortex_synthesis tests\\unit\\test_eval_synthesis_adapters.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright packages\\common\\src\\cortex_common\\runtime_config.py packages\\evaluation\\src\\cortex_evaluation packages\\synthesis\\src\\cortex_synthesis tests\\unit\\test_eval_synthesis_adapters.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\unit\\test_eval_synthesis_adapters.py tests\\unit\\test_runtime_config.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml`
+- Follow-up:
+  - A direct Docker build smoke check was attempted with `docker build --target evaluation-worker --progress=plain -t cortex-evaluation-worker:slim-check .`, but the host Docker CLI failed before build execution with `CreateFile C:\\Users\\hy\\.docker\\buildx\\instances: Access is denied`.
+  - The build issue is local Docker config ACL state, not a dependency-resolution failure. Re-run the build after fixing `.docker/buildx` permissions or from a shell/user that can read the Docker config directory.
+- Prevention:
+  - Treat service adapters and SDK adapters differently in runtime config: service adapters use endpoint plus headers; SDK adapters inherit process-level provider credentials.
+  - Keep heavy SDK extras out of default API / worker Docker targets and require an explicit `*-runtime` target or Compose profile when the deployment needs local SDK execution.
+
+## 2026-04-25 19:20:00 +08:00
+
+- Stage: `CTX-20260425-116`, `CTX-20260425-117`
+- Event: Docker-started Swagger UI rendered a page but the browser console raised `SwaggerUIBundle is not defined`.
+- Cause:
+  - FastAPI's default `/docs` HTML loads Swagger UI JavaScript and CSS from an external CDN.
+  - In local Docker, restricted-network, proxy, or offline environments, the CDN asset request can fail while the HTML still executes the `SwaggerUIBundle(...)` initializer.
+- Action:
+  - Added the `swagger-ui-bundle` Python package to `cortex-api`.
+  - Disabled FastAPI's CDN-backed default docs route and registered a Cortex-owned `/docs` route.
+  - Mounted bundled Swagger UI assets at `/_docs/swagger-ui/*`.
+  - Added regression coverage proving `/docs` references local assets and `/_docs/swagger-ui/swagger-ui-bundle.js` returns the script containing `SwaggerUIBundle`.
+  - Updated README troubleshooting guidance for stale images and proxy/static-route failures.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 lock`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run --package cortex-api python -c "from swagger_ui_bundle import swagger_ui_path; import os; print(os.path.exists(os.path.join(str(swagger_ui_path),'swagger-ui-bundle.js'))); print(os.path.exists(os.path.join(str(swagger_ui_path),'swagger-ui.css')))"`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run ruff check apps\\api\\src\\cortex_api\\docs.py apps\\api\\src\\cortex_api\\main.py tests\\contract\\test_workspace_smoke.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright apps\\api\\src\\cortex_api\\docs.py apps\\api\\src\\cortex_api\\main.py tests\\contract\\test_workspace_smoke.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\contract\\test_workspace_smoke.py tests\\contract\\test_openapi_contract.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 build --package cortex-api --wheel --out-dir .tmp-build-check`
+  - `tar -tf .tmp-build-check/cortex_api-0.1.0-py3-none-any.whl | Select-String -Pattern 'static/swagger-ui'`
+- Prevention:
+  - Avoid CDN-backed developer tooling in container images intended for local, intranet, or production validation.
+  - Add smoke tests for any HTML page that depends on bundled static assets, not just the OpenAPI JSON contract.
+
+## 2026-04-25 19:55:00 +08:00
+
+- Stage: `CTX-20260425-118`, `CTX-20260425-119`
+- Event: The built-in Swagger UI loaded successfully, but the browser reported that the OpenAPI definition did not specify a supported version field.
+- Cause:
+  - Cortex intentionally emits OpenAPI `3.1.0`.
+  - The first self-hosted implementation used the `swagger-ui-bundle` Python package, whose bundled Swagger UI assets are `4.15.5` and do not support OpenAPI 3.1.
+- Action:
+  - Removed the `swagger-ui-bundle` Python dependency from `cortex-api`.
+  - Vendored `swagger-ui-dist` `5.32.4` assets into `apps/api/src/cortex_api/static/swagger-ui`.
+  - Updated the `/docs` route to serve the vendored asset directory through `importlib.resources`.
+  - Added regression coverage proving runtime `/openapi.json` remains `3.1.0` and `/docs` references the local Swagger UI 5.32.4 bundle.
+  - Updated README troubleshooting guidance for stale images, browser cache, and static asset routing.
+- Validation:
+  - `npm.cmd --cache .\\.npm-cache view swagger-ui-dist version`
+  - `npm.cmd --cache .\\.npm-cache pack swagger-ui-dist@5.32.4 --pack-destination .\\.tmp-swagger-ui`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 lock`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run --package cortex-api python -c "from cortex_api.main import create_app; from fastapi.testclient import TestClient; c=TestClient(create_app()); print(c.get('/openapi.json').json()['openapi']); print(c.get('/docs').status_code); print(c.get('/_docs/swagger-ui/swagger-ui-bundle.js').status_code)"`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run ruff check apps\\api\\src\\cortex_api\\docs.py apps\\api\\src\\cortex_api\\main.py tests\\contract\\test_workspace_smoke.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright apps\\api\\src\\cortex_api\\docs.py apps\\api\\src\\cortex_api\\main.py tests\\contract\\test_workspace_smoke.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\contract\\test_workspace_smoke.py tests\\contract\\test_openapi_contract.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml`
+- Prevention:
+  - When Cortex uses OpenAPI 3.1, pin the embedded documentation UI to a Swagger UI 5.x or newer distribution.
+  - Keep a runtime contract test that rejects accidental OpenAPI downgrades or stale docs bundles.
+
+## 2026-04-25 20:25:00 +08:00
+
+- Stage: `CTX-20260425-120`, `CTX-20260425-121`, `CTX-20260425-122`
+- Event: After moving to Swagger UI 5.x, the service could still show the old "supported openapi: 3.0.n" error in a browser.
+- Cause:
+  - The old and new implementations initially used the same `/_docs/swagger-ui/swagger-ui-bundle.js` URL, so a browser or proxy could keep serving the old Swagger UI 4.x asset even after the image was rebuilt.
+  - The local stack helper also did not have a first-class heavy build mode, making it too easy to forget the Docling, Evaluation runtime, or Synthesis runtime worker targets during build verification.
+- Action:
+  - Changed the built-in Swagger UI asset route to `/_docs/swagger-ui/5.32.4/*`.
+  - Added `Cache-Control: no-store` to `/docs` and explicitly pinned FastAPI runtime OpenAPI generation to `3.1.0`.
+  - Extended `scripts/dev/stack.ps1` with a `build` action plus `-Profile` and `-Heavy`; `-Heavy` expands to `docling`, `eval-runtime`, and `synthesis-runtime`.
+  - Updated README and tech design with heavy build commands and the versioned Swagger UI verification URL.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run --package cortex-api python -c "from cortex_api.main import create_app; from fastapi.testclient import TestClient; c=TestClient(create_app()); d=c.get('/docs'); print(c.get('/openapi.json').json()['openapi']); print(d.status_code); print(d.headers.get('cache-control')); print('/_docs/swagger-ui/5.32.4/swagger-ui-bundle.js' in d.text); print(c.get('/_docs/swagger-ui/5.32.4/swagger-ui-bundle.js').status_code)"`
+  - PowerShell AST parse of `scripts\\dev\\stack.ps1`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run ruff check apps\\api\\src\\cortex_api\\docs.py apps\\api\\src\\cortex_api\\main.py tests\\contract\\test_workspace_smoke.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright apps\\api\\src\\cortex_api\\docs.py apps\\api\\src\\cortex_api\\main.py tests\\contract\\test_workspace_smoke.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\contract\\test_workspace_smoke.py tests\\contract\\test_openapi_contract.py -q`
+  - `docker compose -p cortex-local -f compose.local.yaml --profile docling --profile eval-runtime --profile synthesis-runtime config --quiet`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 build --package cortex-api --wheel --out-dir .tmp-build-check`
+  - `tar -tf .tmp-build-check/cortex_api-0.1.0-py3-none-any.whl | Select-String -Pattern 'static/swagger-ui'`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 export --package cortex-worker-evaluation --extra runtime --no-dev --no-hashes --format requirements-txt | Select-String -Pattern 'deepeval|torch|sdv|ctgan'`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 export --package cortex-worker-synthesis --extra runtime --no-dev --no-hashes --format requirements-txt | Select-String -Pattern 'deepeval|torch|sdv|ctgan'`
+  - Direct Docker daemon access from Codex is still blocked by Windows pipe permissions: `permission denied while trying to connect to the docker API at npipe:////./pipe/docker_engine`; heavy image build must be rerun from the user's PowerShell session where Docker access is available.
+- Prevention:
+  - Use versioned URLs for browser-facing vendored developer tooling assets.
+  - Keep a one-command heavy build path for every optional worker profile so production-like build checks do not depend on hand-composed Docker commands.
+
+## 2026-04-25 21:05:00 +08:00
+
+- Stage: `CTX-20260425-123`, `CTX-20260425-124`, `CTX-20260425-125`
+- Event: After the Docker stack started, API calls reported `Parse engine docling is not currently available`, `Synthesis Engine Not Available`, and `No evaluation engines are currently available`.
+- Cause:
+  - Local/base runtime overlays had DeepEval evaluation and SDV / DeepEval synthesis engines disabled, so the API catalog could be empty even when heavy worker services existed.
+  - The API process also treated missing heavyweight local SDKs as engine unavailability, which hid engines that are meant to execute in dedicated runtime workers.
+  - Docling was configured as a heavy parse worker path, but its descriptor was disabled when the lightweight API image did not install the Docling SDK.
+- Action:
+  - Enabled the local/base DeepEval evaluation and SDV / DeepEval synthesis runtime catalog entries.
+  - Changed Docling catalog semantics so a runtime-enabled Docling engine remains `active` and async jobs can route to `cortex-parse-worker-docling`; sync execution now returns a clear in-process runtime-missing error if the API image lacks `cortex-parse[docling]`.
+  - Changed Evaluation and Synthesis adapters to distinguish runtime-enabled routing from local SDK availability: DeepEval and SDV report `degraded` in the slim API control plane, but remain selectable for async jobs handled by `cortex-evaluation-worker-runtime` and `cortex-synthesis-worker-runtime`.
+  - Updated `scripts/dev/stack.ps1 up -Heavy` to start the runtime Evaluation / Synthesis workers by default and avoid also starting the slim workers that cannot execute DeepEval / SDV SDK jobs.
+  - Updated README and technical design with the `active` / `degraded` interpretation and the sync-vs-async execution boundary.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run ruff check packages\\parse\\src\\cortex_parse\\adapters\\docling.py packages\\evaluation\\src\\cortex_evaluation\\adapters.py packages\\evaluation\\src\\cortex_evaluation\\bootstrap.py packages\\synthesis\\src\\cortex_synthesis\\adapters.py packages\\synthesis\\src\\cortex_synthesis\\bootstrap.py tests\\unit\\test_eval_synthesis_adapters.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run pyright packages\\parse\\src\\cortex_parse\\adapters\\docling.py packages\\evaluation\\src\\cortex_evaluation\\adapters.py packages\\evaluation\\src\\cortex_evaluation\\bootstrap.py packages\\synthesis\\src\\cortex_synthesis\\adapters.py packages\\synthesis\\src\\cortex_synthesis\\bootstrap.py tests\\unit\\test_eval_synthesis_adapters.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\unit\\test_eval_synthesis_adapters.py tests\\integration\\test_api_eval_synthesis.py tests\\integration\\test_api_parse.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml`
+  - `docker compose -p cortex-local -f compose.local.yaml --profile docling --profile eval-runtime --profile synthesis-runtime config --quiet`
+  - PowerShell AST parse of `scripts\\dev\\stack.ps1`
+  - Runtime catalog smoke check: parse engines `crawl4ai`, `jina_reader`, `llama_parse`, `markitdown`, and `docling` are `active`; evaluation `deepeval` is `degraded`; synthesis `sdv` and `deepeval` are `degraded`.
+- Prevention:
+  - Treat engine catalog routability and in-process synchronous executability as separate health dimensions.
+  - Keep API images slim, but make async job routes depend on runtime worker availability and runtime configuration rather than local SDK imports in the API container.
+
+## 2026-04-25 22:05:00 +08:00
+
+- Stage: `CTX-20260425-126`, `CTX-20260425-127`, `CTX-20260425-128`
+- Event: EvalScope needed to support both the existing external HTTP service adapter and a Python SDK self-hosted service mode inside Cortex runtime workers.
+- Cause:
+  - EvalScope's documented service mode is provided by `evalscope[service]` and can be started either with `evalscope service` or `from evalscope.service import run_service`.
+  - The previous Cortex adapter only modeled an already-running external EvalScope HTTP service and could not start/manage the SDK service itself.
+  - EvalScope's default service port `9000` conflicts with the local MinIO S3 API port when Cortex is run directly on the host.
+- Action:
+  - Extended `evaluation.engines.evalscope` runtime config with `mode`, `host`, `port`, `debug`, and `startup_timeout_seconds`.
+  - Kept `mode: external_http` for remote EvalScope service deployments and added `mode: self_hosted_sdk` for Python SDK service deployment.
+  - Added `EvalScopeSelfHostedSdkEvaluationEngine`, which lazily starts `evalscope.service.run_service(...)` in a daemon thread, waits for `/health`, then reuses the existing EvalScope REST normalization path.
+  - Added `evalscope[service]` to `cortex-evaluation[evalscope]` and `cortex-evaluation[runtime]`, so the heavy evaluation runtime worker can execute self-hosted EvalScope while the default API image remains slim.
+  - Set local/base self-hosted defaults to `127.0.0.1:19000` to avoid conflicting with MinIO on `9000`, and tightened the health probe to require a 2xx response.
+- Validation:
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run ruff check packages\\common\\src\\cortex_common\\runtime_config.py packages\\evaluation\\src\\cortex_evaluation\\adapters.py packages\\evaluation\\src\\cortex_evaluation\\bootstrap.py tests\\unit\\test_eval_synthesis_adapters.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pyright packages\\common\\src\\cortex_common\\runtime_config.py packages\\evaluation\\src\\cortex_evaluation\\adapters.py packages\\evaluation\\src\\cortex_evaluation\\bootstrap.py tests\\unit\\test_eval_synthesis_adapters.py`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python -m pytest tests\\unit\\test_eval_synthesis_adapters.py tests\\integration\\test_api_eval_synthesis.py -q`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 export --package cortex-worker-evaluation --extra runtime --no-dev --no-hashes --format requirements-txt | Select-String -Pattern 'evalscope|flask|werkzeug|deepeval'`
+  - Runtime catalog smoke check: `deepeval` and `evalscope` are both `degraded` in the slim API process; the runtime extra export includes `evalscope==1.6.1`, `flask`, and `werkzeug`.
+- Prevention:
+  - Avoid hard-coding third-party service default ports that conflict with local infrastructure ports.
+  - Keep self-hosted SDK engines visible as `degraded` in slim control-plane images and executable in explicit runtime images.
+
+## 2026-04-26 10:55:00 +08:00
+
+- Stage: `CTX-20260426-129`, `CTX-20260426-130`, `CTX-20260426-131`, `CTX-20260426-132`, `CTX-20260426-133`
+- Event: Swagger testing found three runtime mismatches:
+  - A parse job explicitly submitted with `engine_id=docling` could be claimed by the slim parse worker and then fail because Docling is intentionally not installed in that process.
+  - Batch parse requests with an explicit engine needed stronger regression coverage to prove they do not fall back into `auto` routing.
+  - DeepEval synthesis could raise `unsupported operand type(s) for *: 'int' and 'NoneType'` when Swagger callers omitted `max_contexts_per_case`.
+- Cause:
+  - Parse queued jobs did not carry an engine-affinity claim filter; all parse workers consumed the same `parse` queue equally.
+  - The API catalog separated routability from in-process SDK availability, but the worker control plane had not yet gained the same separation.
+  - DeepEval's synthesizer expects `max_goldens_per_context` to be an integer, while the Cortex public API intentionally keeps synthesis config optional for simple Try-it-out requests.
+- Action:
+  - Added `CORTEX_PARSE_WORKER_ENGINE_KEYS` and worker-side claim filtering in `ParseJobControlService`.
+  - Configured local/prod Compose so the slim parse worker handles `crawl4ai,jina_reader,llama_parse,markitdown`, while `cortex-parse-worker-docling` handles `docling`.
+  - Updated local `run-parse-worker.ps1` / `.sh` helpers to default to the same slim engine set and accept an explicit Docling override.
+  - Stored `preferred_engine_key` and `engine_keys` in the parse worker deployment context for traceability.
+  - Extended the public Parse compiler to recognize Cortex-managed MinIO/S3 keys such as `s3://cortex-local/tenant_demo/obj_a3da.../bofa_note.pdf` and raw `cortex-local/tenant_demo/obj_a3da.../bofa_note.pdf`.
+  - Added regression tests proving explicit batch parse requests keep `allowed_engines=["docling"]` and `fallback_policy.enabled=false`.
+  - Fixed DeepEval synthesis by deriving `max_goldens_per_context` from `max_contexts_per_case`, then `sample_count`, then `1`.
+  - Expanded runtime Swagger examples and `specs/cortex-api.yaml` for Parse MinIO object jobs, SDV/DeepEval synthesis sync/async jobs, and DeepEval/EvalScope evaluation sync/async jobs.
+- Validation:
+  - `.venv\\Scripts\\python.exe -m pytest tests\\unit\\test_parse_request_compiler.py -q`
+  - `.venv\\Scripts\\python.exe -m pytest tests\\unit\\test_eval_synthesis_adapters.py -q`
+  - `.venv\\Scripts\\python.exe -m pytest tests\\integration\\test_api_parse.py -q`
+  - `.venv\\Scripts\\python.exe -m py_compile packages\\contracts\\src\\cortex_contracts\\openapi_examples.py packages\\parse\\src\\cortex_parse\\jobs.py workers\\parse-worker\\src\\cortex_worker_parse\\bootstrap.py packages\\synthesis\\src\\cortex_synthesis\\adapters.py`
+  - `.venv\\Scripts\\ruff.exe check packages\\parse\\src\\cortex_parse\\jobs.py workers\\parse-worker\\src\\cortex_worker_parse\\bootstrap.py packages\\parse\\src\\cortex_parse\\request_compiler.py packages\\synthesis\\src\\cortex_synthesis\\adapters.py packages\\contracts\\src\\cortex_contracts\\openapi_examples.py tests\\unit\\test_parse_request_compiler.py tests\\unit\\test_eval_synthesis_adapters.py tests\\integration\\test_api_parse.py`
+  - `.venv\\Scripts\\pyright.exe packages\\parse\\src\\cortex_parse\\jobs.py workers\\parse-worker\\src\\cortex_worker_parse\\bootstrap.py packages\\parse\\src\\cortex_parse\\request_compiler.py packages\\synthesis\\src\\cortex_synthesis\\adapters.py tests\\unit\\test_parse_request_compiler.py tests\\unit\\test_eval_synthesis_adapters.py tests\\integration\\test_api_parse.py`
+  - `.venv\\Scripts\\python.exe scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml`
+  - `.venv\\Scripts\\python.exe -m pytest tests\\contract\\test_openapi_contract.py -q`
+  - `.venv\\Scripts\\python.exe -m pytest tests\\integration\\test_api_eval_synthesis.py -q`
+  - `.venv\\Scripts\\python.exe -m pytest tests\\unit\\test_parse_request_compiler.py tests\\unit\\test_eval_synthesis_adapters.py tests\\integration\\test_api_parse.py -q`
+  - PowerShell AST parse of `scripts\\dev\\run-parse-worker.ps1`
+  - Bash syntax validation could not run in this Codex shell because the available `bash` executable returned `E_ACCESSDENIED`; Git Bash was not available on PATH. The script change is a small `--engine-keys` argument/export path and should still be verified by the user's Git Bash if needed.
+- Prevention:
+  - Any optional heavy SDK engine must declare both catalog routability and worker execution affinity.
+  - Swagger examples should prefer the same minimal public request shape that users actually submit, and must avoid unsupported placeholder scenes such as `default` or `llm_ready`.

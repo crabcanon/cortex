@@ -576,3 +576,123 @@ sequenceDiagram
 2. 对象存储、关系库、向量库、图数据库都通过稳定抽象连接，迁移时不会牵动 API 语义。
 3. 长任务全部走统一作业模型，便于扩展更多流水线而不改外部集成方式。
 4. 遥测面独立于业务面，通过 OpenTelemetry 和 Collector 保持对 Jaeger、Prometheus、Grafana 的原生兼容。
+
+## 15. Evaluation 数据流
+
+`mermaid
+flowchart LR
+    A["Caller / CI / Console"] --> B["Evaluation API"]
+    B --> C["AuthZ + Job Service"]
+    B --> D["Eval Router"]
+    D --> E["DeepEval Adapter"]
+    D --> F["EvalScope Adapter"]
+    E --> G["Target API / Model / Trace Replay"]
+    F --> G
+    E --> H["Metric Normalizer"]
+    F --> H
+    H --> I["Storage Artifacts"]
+    H --> J["eval_runs / eval_run_metrics"]
+    H --> K["OTel Trace + Metrics"]
+`
+
+### 15.1 主流程
+
+1. 调用方提交同步或异步评测请求。
+2. API 完成功能权限与数据权限校验，写入 jobs。
+3. Eval Router 根据 eval_type、engine_id、profile、目标类型与可用性选择适配器。
+4. Worker 读取输入 Dataset / Object / trace，编译为引擎原生请求。
+5. 引擎执行完成后，Metric Normalizer 将结果折叠为统一 ScoreCard 和 metrics[]。
+6. 详细报告、失败样本与原始输出落到 Storage，摘要写回 eval_runs / eval_run_metrics。
+7. 全链路遥测写入 OTel，支持从失败样本反查 Jaeger Trace。
+
+### 15.2 异常流
+
+- 引擎不可用：Router 记录降级原因，可按策略切换备选引擎或直接失败。
+- 目标 API 超时：任务进入 ailed，保留目标摘要、错误码与 trace 链接。
+- 指标计算部分失败：允许任务标记为 partial，并在 metrics[] 中标记失败指标。
+
+## 16. Synthesis 数据流
+
+`mermaid
+flowchart LR
+    A["Caller / CI / Console"] --> B["Synthesis API"]
+    B --> C["AuthZ + Job Service"]
+    B --> D["Synthesis Router"]
+    D --> E["SDV Adapter"]
+    D --> F["DeepEval Synth Adapter"]
+    E --> G["Quality Gate Evaluator"]
+    F --> G
+    G --> H["Storage Objects"]
+    G --> I["Datasets"]
+    G --> J["synthesis_runs"]
+    G --> K["OTel Trace + Metrics"]
+`
+
+### 16.1 主流程
+
+1. 调用方提交合成请求，指定 synthesis_type、源数据和输出要求。
+2. Router 依据类型和输入源选择 sdv 或 deepeval_synth 等适配器。
+3. Translator 把 Cortex source/config 转成引擎原生 metadata、seed dataset 或生成配置。
+4. 引擎执行合成后，Quality Gate Evaluator 计算统计质量、隐私、业务门禁。
+5. 产物落为 Storage 对象或 Dataset，并把引用写回 synthesis_runs。
+6. 若配置了 webhook，则在 Job 完成后发出统一事件通知。
+
+### 16.2 闭环能力
+
+- 合成出的 RAG 金标可直接进入 Evaluation。
+- Evaluation 的失败样本可回流为新的 synthesis seed。
+- 合成结果也可进入 Knowledge 域执行 Add / Cognify / Search。
+## 17. Evaluation / Synthesis Worker Runtime Flow
+
+### 17.1 Evaluation 异步作业
+
+```mermaid
+sequenceDiagram
+    participant API as Cortex API
+    participant DB as Metadata DB
+    participant S3 as S3-compatible Storage
+    participant W as Evaluation Worker
+    participant E as Eval Engine
+    participant O as OTel
+
+    API->>DB: enqueue job + eval_run(input_ref)
+    W->>DB: claim job + heartbeat lease
+    W->>DB: read dataset items when dataset_id is provided
+    W->>S3: read object bytes when object_id/object_ids are provided
+    W->>W: hydrate EvalTestCase[]
+    W->>E: run normalized request
+    E-->>W: metrics + scorecard
+    W->>S3: upload evaluation_report JSON
+    W->>DB: persist result + eval_runs.report_object_id
+    W->>O: cortex.eval.run span + metrics
+```
+
+### 17.2 Synthesis 异步作业
+
+```mermaid
+sequenceDiagram
+    participant API as Cortex API
+    participant DB as Metadata DB
+    participant S3 as S3-compatible Storage
+    participant W as Synthesis Worker
+    participant E as Synthesis Engine
+    participant O as OTel
+
+    API->>DB: enqueue job + synthesis_run(source_ref)
+    W->>DB: claim job + heartbeat lease
+    W->>DB: read dataset items / document chunks
+    W->>S3: read object bytes when object refs are provided
+    W->>W: hydrate inline_records or documents
+    W->>E: run SDV / DeepEval Synthesizer request
+    E-->>W: outputs + quality summary
+    W->>S3: upload synthesis_output JSON
+    W->>DB: persist result + synthesis_runs.output_object_id
+    W->>O: cortex.synthesis.run span + metrics
+```
+
+### 17.3 数据最小化原则
+
+- API 层只写引用与控制参数，不搬运大数据。
+- Worker 层负责引用展开、重试、错误记录和产物保存。
+- SQL 保存摘要与 object_id；大报告、合成数据、原始 benchmark 输出进入对象存储。
+- Trace / metric labels 不写入样本文本、PII 或对象正文。

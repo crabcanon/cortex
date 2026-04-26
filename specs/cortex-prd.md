@@ -438,3 +438,55 @@ Agent 对多个数据集发起混合搜索，返回答案、命中片段与引�
 ## 12. 结论
 
 Cortex 的产品形态不是单一服务，而是一个稳定的 AI 数据基础设施入口。只要 URL、文件、文本和知识流水线都被纳入同一套对象模型，上层 Agent 和业务应用就能用统一方式接入、搜索、追溯和迁移。
+
+## 13. Evaluation 与 Synthesis 扩展
+
+### 13.1 产品定位
+
+- Evaluation API 作为统一评测平面，对 RAG、Agent、多轮会话、性能压测与自定义业务评测提供一致的作业接口、指标目录和结果输出。
+- Synthesis API 作为统一数据合成平面，对结构化表格、关系型数据、RAG 金标、QA 对、Agent 轨迹与对话数据提供一致的生成接口、质量门禁与产物落库能力。
+- 两个新域都必须复用 Cortex 既有的 Job、Storage、Dataset、Authorization、OpenTelemetry 体系，而不是各自再造一套旁路能力。
+
+### 13.2 目标用户与核心价值
+
+- AI 平台团队：统一接入 DeepEval、EvalScope、SDV 等能力，减少每个项目单独集成和维护的成本。
+- RAG / Agent 业务团队：用简单的业务字段提交评测或合成请求，不需要理解底层引擎的细碎参数。
+- QA / 质量团队：沉淀统一指标目录、阈值模板、回归报告、失败样本与趋势分析。
+- 数据治理团队：让评测样本、合成数据、报告产物、追踪链路都有审计记录和权限边界。
+
+### 13.3 Evaluation 功能需求
+
+1. 引擎目录：提供 GET /v1/eval/engines，暴露当前启用的评测引擎、支持的评测类型、执行模式、默认 profile 与可用性状态。
+2. 指标目录：提供 GET /v1/eval/metrics，以 Cortex 标准指标键统一映射 EvalScope、DeepEval 与后续引擎的 50+ ready-to-use metrics。
+3. 统一评测类型：至少支持 perf、ag、gentic、multi_turn、custom 五类业务任务。
+4. 同步与异步：小规模冒烟评测走 POST /v1/eval/sync，生产压测、大样本回归、多轮仿真走 POST /v1/eval/jobs。
+5. 输入源统一：支持引用 dataset_id、内建 benchmark、对象文件、内联测试样本、追踪回放等输入形态。
+6. 目标统一：支持评测在线 API、模型服务、已落盘结果或 Trace Replay 目标。
+7. 结果统一：所有引擎必须输出 Cortex 统一 ScoreCard、metric 明细、样本统计、产物引用、	race_id / equest_id。
+8. 失败闭环：失败样本可回写为 Dataset 或报告对象，供后续 Knowledge、修复流程和再次回归使用。
+
+### 13.4 Synthesis 功能需求
+
+1. 引擎目录：提供 GET /v1/synthesis/engines，暴露启用的合成引擎、支持的合成类型、输入源类型、输出格式与默认 profile。
+2. 统一合成类型：至少支持 structured_single_table、structured_relational、ag_goldens、qa_pairs、conversation_goldens、gent_trajectories、custom。
+3. 统一输入源：支持关系型 metadata、已有 Dataset、对象文档、内联表格、追踪轨迹等。
+4. 同步与异步：低样本调试和 prompt 校验走 POST /v1/synthesis/sync，大规模生成和批量质量评估走 POST /v1/synthesis/jobs。
+5. 质量门禁：支持质量阈值、PII 匿名化、统计一致性与业务自定义验证，门禁结果进入统一输出。
+6. 统一产物：可输出 Dataset、Object、报告对象与质量摘要，全部可被 Storage / Knowledge 复用。
+
+### 13.5 非功能需求补充
+
+- 可扩展性：新增评测或合成引擎必须通过适配器和注册表接入，不允许在 API Router 中硬编码分支。
+- 可用性：长耗时评测与合成全部走异步 Job，支持轮询、事件流、Webhook 与失败重试。
+- 性能：引擎内部允许并行 metric 计算、并行分片执行与分段汇总；API 层仅承担编排与提交职责。
+- 可观测性：每一次评测 / 合成运行都要产出 OTel span、trace attributes、job events、result artifact 与失败样本引用。
+- 安全性：接口同时受功能权限和数据权限控制；输入 Dataset / Object 的可见性不得因为引擎切换而绕过授权。
+- 厂商中立：元数据落标准 SQL，产物落对象存储，外部引擎配置通过统一 profile 和 adapter 封装。
+
+### 13.6 验收标准补充
+
+- 用户能够通过同一套 /v1/eval/* 接口完成 perf、rag、agentic、multi-turn、custom 评测，而无需直接调用底层引擎 API。
+- 用户能够通过同一套 /v1/synthesis/* 接口完成结构化和非结构化数据合成，而无需理解 SDV 或 DeepEval 各自的配置细节。
+- 指标目录能以统一 metric_key 表达至少 50+ ready-to-use metrics 的映射关系，并清晰标注每个 metric 对应的适用评测类型与引擎绑定。
+- 评测与合成结果都能落到统一 Job 模型，结果中可直接拿到 	race_id、摘要结果、产物引用与失败原因。
+- 评测失败样本、合成结果集和报告对象能再次进入 Dataset / Knowledge 流程形成闭环。

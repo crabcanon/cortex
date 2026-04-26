@@ -585,3 +585,153 @@ SQL 中只保留：
 - 大体量截图、HTML、PDF、网络日志正文
 
 它们要么进入对象存储，要么留在相应引擎中，由适配器和引用 ID 连接回 Cortex 统一模型。
+
+## 11. Evaluation 与 Synthesis 补充实体
+
+### 11.1 EvalEngine
+
+用途：记录评测引擎注册表。
+
+关键字段：
+- engine_id
+- engine_key
+- display_name
+- engine_kind
+- capability_flags_json
+- metric_prefixes_json
+- supported_modes_json
+- untime_config_json
+- status
+
+### 11.2 EvalMetricDefinition
+
+用途：维护 Cortex 标准指标键到引擎原生实现的映射。
+
+关键字段：
+- metric_key
+- display_name
+- category
+- unit
+- score_direction
+- eval_types_json
+- engine_bindings_json
+- 	hreshold_hint
+
+说明：该实体是“50+ ready-to-use metrics”标准化的核心，业务系统只依赖 metric_key，不直接依赖具体引擎类名。
+
+### 11.3 EvalRun
+
+用途：记录一次评测作业的元数据、输入、目标、结果摘要与报告引用。
+
+关键字段：
+- eval_run_id
+- job_id
+- 	enant_id
+- dataset_id
+- eval_type
+- engine_id
+- profile_key
+- input_ref_json
+- 	arget_ref_json
+- metrics_config_json
+- summary_results_json
+- sample_summary_json
+- eport_object_id
+- esult_dataset_id
+- 	race_id
+- span_id
+
+### 11.4 EvalRunMetric
+
+用途：保存单次评测运行中的逐指标结果，便于排序、查询、告警与趋势分析。
+
+关键字段：
+- eval_run_id
+- metric_index
+- metric_key
+- engine_id
+- 
+ative_metric_key
+- status
+- score
+- 	hreshold
+- unit
+- sample_size
+- details_json
+
+### 11.5 SynthesisEngine
+
+用途：记录合成引擎注册表。
+
+关键字段：
+- engine_id
+- engine_key
+- display_name
+- engine_kind
+- capability_flags_json
+- supported_source_types_json
+- output_formats_json
+- untime_config_json
+- status
+
+### 11.6 SynthesisRun
+
+用途：记录一次数据合成运行的输入、配置、质量结果与输出引用。
+
+关键字段：
+- synthesis_run_id
+- job_id
+- 	enant_id
+- dataset_id
+- synthesis_type
+- engine_id
+- profile_key
+- source_ref_json
+- config_json
+- quality_summary_json
+- output_summary_json
+- output_object_id
+- output_dataset_id
+- 	race_id
+- span_id
+
+### 11.7 关系约束
+
+- eval_runs.job_id -> jobs.job_id
+- eval_runs.dataset_id -> datasets.dataset_id
+- eval_runs.report_object_id -> objects.object_id
+- eval_run_metrics.eval_run_id -> eval_runs.eval_run_id
+- synthesis_runs.job_id -> jobs.job_id
+- synthesis_runs.dataset_id -> datasets.dataset_id
+- synthesis_runs.output_object_id -> objects.object_id
+- synthesis_runs.output_dataset_id -> datasets.dataset_id
+
+### 11.8 建模原则补充
+
+- Evaluation / Synthesis 只在关系库存元数据、状态与摘要，不在 SQL 中存大体积原始报告正文。
+- 大报告、失败样本、生成数据文件、benchmark 原始输出全部落对象存储，再由 object_id 回链。
+- 输入与目标采用 *_ref_json 承载，既保持厂商中立，也避免为每个引擎专门建表。
+- 单指标结果单独拆到 eval_run_metrics，便于按 metric_key、状态、阈值、趋势做分析与告警。
+## 12. Evaluation / Synthesis Runtime Persistence Update
+
+### 12.1 Storage Object Read Path
+
+Worker 可以通过 `objects.object_id -> storage_buckets.bucket_name + objects.object_key` 定位对象，并通过 S3-compatible facade 读取对象正文。该能力用于 Evaluation / Synthesis 引用输入的内部水合，不改变公开下载 API 的预签名 URL 模型。
+
+### 12.2 Run Artifact References
+
+- `eval_runs.report_object_id` 指向本次运行的规范 `evaluation_report` JSON 对象。
+- `synthesis_runs.output_object_id` 指向本次运行的规范 `synthesis_output` JSON 对象。
+- `jobs.result_json` 保留轻量结果与 artifact 引用，避免把大报告正文复制进 SQL。
+
+### 12.3 Dataset Item Metadata Conventions
+
+Evaluation dataset item metadata 推荐包含：
+
+- `question` / `user_input`
+- `answer` / `actual_output`
+- `expected` / `expected_output`
+- `contexts` / `retrieval_contexts`
+- `messages` / `conversation_turns`
+
+Synthesis dataset item metadata 推荐包含业务记录字段；当 `item_type=document` 时，Worker 会优先读取 document markdown 或 document chunks 作为非结构化上下文。

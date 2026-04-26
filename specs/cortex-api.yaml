@@ -1,56 +1,25 @@
-openapi: 3.1.0
+﻿openapi: 3.1.0
 info:
   title: Cortex API
   version: 1.0.0-draft
-  summary: Vendor-neutral APIs for parsing content, storing files, and operating knowledge pipelines. / 面向内容解析、文件存储与知识流水线的厂商中立 API。
+  summary: Vendor-neutral APIs for parse, storage, knowledge, evaluation, and synthesis. / 面向解析、存储、知识、评测与合成的厂商中立 API。
   description: |
-    Cortex exposes three core domains through a single contract:
+    Cortex exposes five first-class domains through a single contract:
 
-    1. Parse API: fetch a page from an arbitrary URL and normalize it into LLM-ready Markdown plus
-       canonical metadata and optional artifacts.
-    2. Storage API: upload and download arbitrary files via S3-compatible object storage while keeping
-       metadata in a relational database that stays portable across SQLite, PostgreSQL, and similar engines.
-    3. Cognee API: orchestrate Add, Cognify, Memify, and Search operations over datasets and knowledge graphs.
+    1. Parse API
+    2. Storage API
+    3. Knowledge API
+    4. Evaluation API
+    5. Synthesis API
 
-    Design principles:
-    - Vendor-neutrality: S3-compatible object APIs, standard SQL metadata model, adapter-based vector/graph stores.
-    - AI-native: Markdown-first outputs, chunking hints, provenance, graph-aware retrieval, and long-running jobs.
-    - High availability: async job model, idempotent writes, retry-safe polling, webhook notifications.
-    - Maintainability: stable resource naming, explicit metadata envelopes, and uniform error semantics.
-    - Observability: W3C Trace Context + Baggage propagation, OTLP-native telemetry, and first-class Jaeger / Prometheus / Grafana integration.
+    Shared design goals:
+    - Vendor-neutrality through S3-compatible object storage and standard SQL metadata.
+    - Async job execution for long-running workloads.
+    - OpenTelemetry-aligned telemetry with Jaeger, Prometheus, and Grafana integration.
+    - Unified authorization using OAuth scopes plus resource-level data permissions.
 
-    Cortex 通过单一契约暴露三大核心域：
-
-    1. Parse API：从任意 URL、对象文件或外部 URI 获取内容，并归一为 LLM-ready Markdown、标准元数据和可选产物。
-    2. Storage API：基于 S3 兼容对象存储提供上传、下载和元数据治理。
-    3. Knowledge API：围绕数据集编排 Add、Cognify、Memify 和 Search。
-
-    设计原则：
-    - 厂商中立：S3 兼容对象接口、标准 SQL 元数据模型、向量库和图库适配器。
-    - AI 原生：Markdown 优先输出、chunking 提示、provenance、图感知检索和长任务模型。
-    - 高可用：异步作业、幂等写入、可重试轮询和 webhook 通知。
-    - 可维护：稳定资源命名、显式元数据封装和统一错误语义。
-    - 可观测：支持 W3C Trace Context 与 `baggage` 传播，遥测通过 OTLP 导出，并原生对接 Jaeger、Prometheus、Grafana。
-
-    Telemetry contract / 遥测契约：
-    - All operations accept `traceparent`, `tracestate`, and `baggage` headers when the caller participates in distributed tracing.
-    - Error payloads and major business responses surface `trace_id`, `span_id`, and `request_id` for correlation.
-    - `/metrics` exposes Prometheus-compatible metrics derived from OpenTelemetry instrumentation.
-    - 所有接口在调用方参与分布式追踪时都接受 `traceparent`、`tracestate`、`baggage` 请求头。
-    - 错误返回和关键业务返回都会暴露 `trace_id`、`span_id`、`request_id` 以便关联。
-    - `/metrics` 暴露由 OpenTelemetry 埋点生成的 Prometheus 兼容指标。
-
-    Authorization contract / 权限契约：
-    - Authentication is OAuth 2.0 / OIDC compatible; JWT access tokens are preferred, with opaque-token introspection as a fallback.
-    - Functional permissions are expressed through OAuth scopes such as `parse:write`, `storage:download`, and `knowledge:read`.
-    - Data permissions are evaluated separately against tenant boundary, role bindings, `access_level`, and resource policies.
-    - Authentication failures return `401`; authorization failures return `403` with decision context.
-    - Cortex acts as a resource server and expects bearer tokens from dev tooling, CI secret injection, or an external authorization server; production deployments do not publish a built-in token minting API, while local `dev` deployments may expose `/v1/dev/auth/token` as a Swagger-friendly helper.
-    - 认证兼容 OAuth 2.0 / OIDC，优先使用 JWT access token，必要时兼容 opaque token introspection。
-    - 功能权限通过 OAuth scope 表达，例如 `parse:write`、`storage:download`、`knowledge:read`。
-    - 数据权限独立于 scope 求值，基于租户边界、角色绑定、`access_level` 和资源策略判断。
-    - 认证失败返回 `401`，授权失败返回 `403` 并给出决策上下文。
-    - Cortex 作为资源服务器运行，bearer token 应来自本地调试脚本、CI 密钥注入或外部授权服务器；系统不再暴露内建 token minting API。
+    Cortex 通过统一契约暴露五类核心 API：Parse、Storage、Knowledge、Evaluation、Synthesis。
+    各域共享厂商中立的数据模型、统一的 Job 体系、统一权限边界，以及基于 OpenTelemetry 的可观测能力。
 servers:
   - url: https://api.cortex.example.com
     description: Production / 生产环境
@@ -64,11 +33,15 @@ tags:
   - name: Jobs
     description: Generic long-running job inspection and control. / 通用长任务查询与控制。
   - name: Parse
-    description: Engine-agnostic parsing, normalization, and persistence for URLs and files. / 面向 URL 和文件的引擎无关解析、标准化与持久化。
+    description: Engine-agnostic parsing, normalization, and persistence for URLs and files. / 面向 URL 与文件的引擎无关解析、标准化与持久化。
   - name: Storage
-    description: Upload, complete, inspect, and download S3-backed objects. / 上传、完成、查询和下载 S3 后端对象。
+    description: Upload, inspect, and download S3-backed objects. / 上传、查询和下载 S3 后端对象。
   - name: Knowledge
     description: Dataset lifecycle plus Cognee-backed Add, Cognify, Memify, and Search operations. / 数据集生命周期与基于 Cognee 的 Add、Cognify、Memify、Search 操作。
+  - name: Evaluation
+    description: AI evaluation engines, metric catalogs, synchronous checks, and asynchronous evaluation jobs. / AI 评测引擎、指标目录、同步校验与异步评测作业。
+  - name: Synthesis
+    description: Synthetic data engines plus synchronous and asynchronous generation workflows. / 数据合成引擎以及同步、异步生成工作流。
   - name: Dev Auth
     description: Local-development-only token issuance helper. / 仅本地开发环境启用的 token 生成辅助接口。
 security:
@@ -78,7 +51,8 @@ paths:
     get:
       tags:
         - Health
-      summary: Liveness probe / 存活检查
+      summary: Liveness probe / 存活探针
+      description: Returns the service liveness state. / 返回服务的存活状态。
       operationId: getLiveness
       security:
         - OAuth2:
@@ -99,25 +73,24 @@ paths:
                 checks: []
         default:
           $ref: '#/components/responses/ErrorResponse'
-
   /v1/health/ready:
     get:
       tags:
         - Health
-      summary: Readiness probe / 就绪检查
+      summary: Readiness probe / 闂備浇顕х换鎰崲濡や胶顩叉い鎺戝绾偓闁硅偐琛ラ崹鎯р槈閵忕姷鍔﹀銈嗗笒鐎氼剟鎷?
       operationId: getReadiness
       security:
         - OAuth2:
             - health:read
       responses:
         '200':
-          description: All required dependencies are ready. / 所有关键依赖均已就绪。
+          description: All required dependencies are ready. / 闂傚倷绀佸﹢閬嶃€傛禒瀣；闁瑰墽绮悡娑㈡煕椤愶絿绠ユ俊鍙夋倐閺屾稑鈻嶇拠鍙夊闁绘挶鍎查妵鍕籍閸パ冩優闁荤姵鍔忛弲鐘诲箖绾拋妲奸梺缁橆殕濞叉牠鈥﹂崶銊﹀劅闁宠棄妫楅弲鐘绘⒑閸︻厾甯涢悽顖涱殜閹啴骞嬮悩鐢碉紳婵炴挻鑹惧ú锝囪姳閻㈠憡鐓?
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
         '503':
-          description: One or more critical dependencies are unavailable. / 一个或多个关键依赖不可用。
+          description: One or more critical dependencies are unavailable. / 婵犵數鍋為崹鍫曞箰閹绢喖纾婚柟鐐灱濡插牓鏌熼崹顔兼殨缂併劌銈搁弻娑㈠Ω閿濆懎顬夐悗鍨緲鐎氼剟锝炲┑瀣垫晝闁挎洍鍋撴繛鍫熺箞濮婅櫣绮欑捄銊ь唹婵犵數鍋涢敃顏勵嚕椤愶富鏁囬柣鏃囨閹虫繂鈹戦悩缁樻锭闁挎洩绠撻妴鍛搭敃閳垛晜顫嶉梺瑙勫劤绾绢厼鐡柣鐔哥矌婢ф鎮￠敓鐘茬畺濞寸姴顑呮儫闂佹寧绻傞崐鍛婄?
           content:
             application/json:
               schema:
@@ -129,17 +102,17 @@ paths:
     get:
       tags:
         - Observability
-      summary: Prometheus scrape endpoint / Prometheus 指标抓取端点
+      summary: Prometheus scrape endpoint / Prometheus 闂傚倷绀佸﹢閬嶁€﹂崼婢濇椽鏁冮崒娑樹函闂佹寧绻傞ˇ顖滅不椤曗偓閺岀喖骞嗚閺嗚京绱掗懠鑸电《缂佽鲸甯″顕€骞嬪┑鍫滃寲闂?
       description: |
         Exposes runtime and business metrics derived from OpenTelemetry instrumentation in a Prometheus-compatible
         text format. Intended for internal scraping by Prometheus or the OpenTelemetry Collector. /
-        以 Prometheus 兼容文本格式暴露由 OpenTelemetry 埋点生成的运行时与业务指标，供 Prometheus
-        或 OpenTelemetry Collector 在内网侧抓取。
+        婵?Prometheus 闂傚倷鑳堕…鍫㈡崲閹烘鍌ㄧ憸鏃堛€佸▎鎾崇疀闁哄瀵чˉ婵嬫⒑閹肩偛鍔橀柛鏂跨Ч楠炲繘鏌嗗鍡欏幐閻庡箍鍎卞ú銈囨暜閸撲胶纾奸柟鎻掝儑缁♀偓閻庢鍠楁繛濠囩嵁濮椻偓椤㈡瑩宕愰悢椋庡讲闂?OpenTelemetry 闂傚倷鑳剁涵鍫曞疾濞戙埄鏁勯柛銉墮绾惧鏌ㄥ┑鍡╂Ч闁稿鍔戦弻锝夊籍閸屻倗鍔搁梺璇茬箰濞差參寮婚敐澶娢╅柕澶堝労娴煎倻绱撴担绛嬪殭缂佸鐖奸獮鍐箥椤旂粯鍕冮梺缁樺姦閸擄箑危椤栨稓绠鹃柟瀵稿仦鐏忣厾绱掗妸銊ヤ汗缂侇噮鍙冮幃銏ゆ偂鎼达綆妲烽梻浣规灱閺呮盯宕锔藉剨鐟滅増甯楅悡娑氣偓骞垮劚閹冲繒绮婇銈囩＜閺夊牄鍔庣粻鏍磼?Prometheus
+        闂?OpenTelemetry Collector 闂傚倷绶氬鑽ゆ嫻閻旂厧绀夌€光偓閸曨偉鍩為柣搴ㄦ涧閹芥粎澹曟ィ鍐╃厵閻庢稒顭囬惌瀣箾閸涱垰鈻堥柡宀€鍠栭幊婊堝垂椤愩垻顣查柣鐔哥矋濠㈡ê煤椤撶喍绻?
       operationId: getMetrics
       security: []
       responses:
         '200':
-          description: Metrics payload in Prometheus exposition format. / Prometheus 暴露格式的指标载荷。
+          description: Metrics payload in Prometheus exposition format. / Prometheus 闂傚倷绀侀幖顐⑽涘▎鎾崇闁告劘顕滈懓鍧楁煕椤愶絾绀€闁告劏鍋撻梻浣虹帛閹哥霉妞嬪孩鍏滈柍褜鍓熷鍝勑ч崶褍顬堥柣搴㈠嚬閸橀箖鍩€椤掆偓閻忔艾鐣濈粙娆惧殨濞寸姴顑呴悙濠冦亜韫囨挻鍣介柕鍫滃嵆濮婃椽鎳濋弶鍟冩捇鏌ｈ箛鏂垮摵闁糕斁鍋?
           content:
             text/plain:
               schema:
@@ -151,13 +124,13 @@ paths:
     post:
       tags:
         - Dev Auth
-      summary: Issue local development access token / 签发本地开发访问令牌
+      summary: Issue local development access token / 缂傚倸鍊烽悞锔剧矙閹烘纾块悗鍦О娴滃綊鏌涘畝鈧崑娑氣偓姘槹閵囧嫰骞掗崱妞惧婵犵數濮崑鎾绘煛婢跺鐒鹃柛銈嗘礋閺屽秷顧侀柛鎾跺枎閻ｇ兘鏁愭径濠勵吅闂佹寧绻傛鎼佸疾闁秵鈷掗柛灞捐壘娴滅偤鏌涢悩铏妤犵偛閰ｆ俊鑸靛緞鐎ｎ亙缃?
       description: |
         Available only when `CORTEX_ENV=local` and `CORTEX_AUTH_MODE=dev`. Issues a local `dev:`
         bearer token for Swagger UI, curl, and smoke tests. This route is not mounted in non-local
         deployments. /
-        仅当 `CORTEX_ENV=local` 且 `CORTEX_AUTH_MODE=dev` 时才会暴露。该接口用于生成本地 `dev:` Bearer token，
-        便于 Swagger、curl 和冒烟测试使用；在非本地部署中不会挂载。
+        婵犵數鍋涢顓熸叏閹绢喖绠犻幖杈剧悼缁€?`CORTEX_ENV=local` 婵?`CORTEX_AUTH_MODE=dev` 闂傚倷绀侀幖顐﹀疮閹惰棄鏄ラ柡宥冨妽濞呯娀鏌ｅΟ鍝勬毐妞ゆ洝椴搁幈銊ヮ潨閸℃绠洪梺浼欑畱缂嶅﹤顫忔繝姘倞鐟滃繐锕㈤幘顔界厓鐟滄粓宕滃▎鎾崇９濞寸姴顑愰弫瀣叏濡寧纭剧紒鐘冲▕閺屾洘寰勯崼婵嗗缂傚倸绉甸幑鍥蓟閿濆缍栨い鎺嗗亾濠德ゆ缁辨帡鈥﹂幋婵嗏拫闂佽鍠曠划娆撳箖閵忋垻鐭欓悹鎭掑妺濞寸兘姊绘担鍛婃儓闁绘绮撳畷婊冣枎韫囥儴鈧?`dev:` Bearer token闂?
+        婵犵數鍋為幐濠氭嚌妤ｅ啫桅婵☆垵澹堟慨?Swagger闂傚倷绶氬褍螞閺冨牆绠掗柣鐘电┙l 闂傚倷绀侀幉锛勫垝瀹€鍕殣妞ゆ牜鍋涢悿顕€鎮楅敐搴℃灍闁稿﹤顭烽弻锝夊棘閹稿孩鍠愰梺闈涚墛閹告娊骞冭ぐ鎺戠倞闁靛濡囬敍娑欑節閻㈤潧浠滄繛宸弮楠炲啯绂掔€Ｑ€鍋撻敃鍌氱闁哄倽鍎婚埀顒€娼″娲閳哄嫮顦伴梺鍛婃⒐閸ㄧ敻鈥﹂崶顒夋晜闁割偅绻傞悵妯侯渻閵堝棗鍧婇柛瀣尰缁绘繈鍩€椤掑嫬绠绘い鏃傛櫕閸旀悂姊洪棃娴ゆ盯宕遍埡浣规毉婵犵數鍋為崹鍫曞箹閳哄懎鍌ㄩ柧蹇撴贡缁犳柨顭跨捄渚剰妞ゆ洝椴搁幈銊ヮ潨閸℃绠归梺浼欏瘜閸ㄨ泛顕ｉ崼鏇熷€风€瑰壊鍠楃紞妤呮⒑?
       operationId: issueLocalDevAccessToken
       security: []
       requestBody:
@@ -168,11 +141,11 @@ paths:
               $ref: '#/components/schemas/LocalDevTokenIssueRequest'
             examples:
               recommended_swagger_token:
-                summary: Recommended Swagger dev token / 推荐的 Swagger 开发令牌
+                summary: Recommended Swagger dev token / 闂傚倷娴囬～澶嬬娴犲绀夐煫鍥ㄦ尵閺嗭附鎱ㄥ璇蹭壕闂?Swagger 闂佽瀛╅鏍窗閹烘纾婚柟鍓х帛閻撴洘绻涢崱妯哄闁诲骏缍侀弻鐔肩叕閹绘巻鍋撳┑瀣畺?
                 description: |
                   Creates a local development bearer token that can be pasted directly into Swagger
                   UI's `Authorize` dialog. /
-                  生成一个可直接粘贴到 Swagger UI `Authorize` 弹窗中的本地开发 Bearer token。
+                  闂傚倷鐒﹂惇褰掑垂婵犳艾绐楅柟鐗堟緲閸ㄥ倹鎱ㄥ鍡楀箻闁崇粯妫冮弻宥堫檨闁告挻姘ㄧ划娆愬緞閹板灚鏅滈梺鍛婃处閸嬪顢欐径鎰拺闁绘垟鏅滃▍鍛存煟鎺抽崝搴ㄥ极椤旈敮鍋撻悽娈跨劸闁搞劍绻冩穱濠囶敍濮樺彉铏庨梺鎼炲姂娴滃爼寮?Swagger UI `Authorize` 闂佽瀛╅鏍窗閺嵮嶈€块梺顒€绉甸崑姗€鏌曟径娑橆洭闁崇粯姊归妵鍕箻鐠虹洅锝夋煟閿濆鎲鹃柡宀嬬節瀹曞ジ顢曢姀鐙€娼绘繝鐢靛Л閸嬫捇鏌℃径瀣劸闁搞倖娲熼弻宥堫檨闁告挾鍠庨悾?Bearer token闂?
                 value:
                   subject: alice
                   tenant_id: tenant_demo
@@ -184,17 +157,17 @@ paths:
                     - platform-ops
                   expires_in: 3600
               minimal_local_token:
-                summary: Minimal local token request / 最小化本地令牌请求
+                summary: Minimal local token request / 闂傚倷绀侀幖顐︽偋閸愵喖纾婚柟鍓х帛閸婂爼鐓崶銊﹀暗缂佺姳鍗抽幃妤呭垂椤愩倕寮ㄩ悗娈垮枤閺佸銆佸Δ鍛劦妞ゆ巻鍋撻柨鏇樺灮閳ь剚绋掗…鍥€呴悜鑺ョ厪闁割偅绻冮幖鎰亜閵堝懎鈧潡骞冭ぐ鎺戠倞妞ゆ帊鐒﹂弳鐘绘⒑?
                 description: |
                   Only `subject` and `tenant_id` are required. Cortex fills in the standard local
                   developer scopes automatically. /
-                  只需要 `subject` 和 `tenant_id`，其余标准本地开发 scope 由 Cortex 自动补齐。
+                  闂傚倷绀侀幉锟犳偡椤栨稓顩叉い蹇撳閳ь剚甯″畷婊勬媴閻熺増姣?`subject` 闂?`tenant_id`闂傚倷鐒︾€笛呯矙閹达附鍤愭い鏍仜閻鏌ｉ幇闈涘濠殿垰鐡ㄧ换娑㈠幢濡搫顫庨梺鎼炲妼閵堟悂寮诲☉銏犵婵犻潧娴傚Λ鈥斥攽閻橆偄浜炬繛鏉戝悑濞兼瑩骞戦崼鏇熺厸濠㈣泛瀛╃涵鍓佺棯閹岀吋闁?scope 闂?Cortex 闂傚倷鑳堕崢褔銆冩惔銏㈩洸婵犲﹤瀚崣蹇涙煃閸濆嫬鏆為柛瀣耿閺屾洘寰勯崱妯荤彇缂備礁顦遍崗姗€寮?
                 value:
                   subject: smoke-test
                   tenant_id: tenant_demo
       responses:
         '200':
-          description: Local development token issued. / 已签发本地开发令牌。
+          description: Local development token issued. / 闂佽姘﹂～澶愭偤閺囩姳鐒婃繛鍡樻惄閺佸棝鏌ｉ幋锝嗩棄闁活厽顨婇弻鐔衡偓鐢殿焾娴狅箓鏌熼悜鎴掓喚闁哄本鐩弫鍌炴嚍閵壯冨殥缂傚倷娴囨ご鎼佸垂閸喚鏆﹂柨婵嗩槸缁狅絾绻濇繝鍌氼仼鐞氭﹢姊绘担铏瑰笡妞ゃ劌鎳愰幃顕€顢曢敃鈧悞?
           content:
             application/json:
               schema:
@@ -208,7 +181,7 @@ paths:
     get:
       tags:
         - Jobs
-      summary: Get job status / 获取任务状态
+      summary: Get job status / 闂傚倷绀侀崥瀣磿閹惰棄搴婇柤鑹扮堪娴滃綊鏌涢妷锝呭妞も晝鍏橀幃褰掑炊閵娿儳绁峰銈庡亖閸婃繈寮婚敐鍛傜喖宕归鎯у缚闂?
       operationId: getJob
       security:
         - OAuth2:
@@ -217,7 +190,7 @@ paths:
         - $ref: '#/components/parameters/JobId'
       responses:
         '200':
-          description: Job status. / 任务状态。
+          description: Job status. / 婵犵數鍋涢顓熸叏妤ｅ喚鏁嬬憸搴ㄥ箞閵娾晜鍋勯柛蹇曞帶娴滃綊姊洪悡搴㈡喐妞わ絼绮欏畷鎴﹀箻鐎涙ê顎撶紒鍓у閿氬ù?
           content:
             application/json:
               schema:
@@ -233,7 +206,7 @@ paths:
     get:
       tags:
         - Jobs
-      summary: List job events / 获取任务事件列表
+      summary: List job events / 闂傚倷绀侀崥瀣磿閹惰棄搴婇柤鑹扮堪娴滃綊鏌涢妷锝呭妞も晝鍏橀幃褰掑炊閵娿儳绁峰銈庡亖閸婃洟婀佸┑鐘诧工閸犳岸宕曟惔銏㈢闁糕剝鍔曢悘鑼偓瑙勬礃閼规崘鐏冮梺鍛婃磵閺備線宕?
       operationId: listJobEvents
       security:
         - OAuth2:
@@ -242,7 +215,7 @@ paths:
         - $ref: '#/components/parameters/JobId'
         - name: limit
           in: query
-          description: Maximum number of events to return. / 返回事件的最大数量。
+          description: Maximum number of events to return. / 闂備礁鎼ˇ顐﹀疾濠婂牆钃熼柕濞垮剭濞差亜鍐€闁靛ě灞鹃敜闂佽鍑界徊娲疾濠婂牜鏁冨ù鐘差儐閻撶喖鏌曟繛鍨姎妞ゅ浚浜濈换娑㈠箻閻熸壆鍘悗鍨緲鐎氼垶藝閹惰姤鐓涢柛鈩冪懃閺嬫盯鏌＄仦鐣岀劮缂佺姵绋撻埀顒婃€ラ崘褍顥?
           schema:
             type: integer
             minimum: 1
@@ -250,7 +223,7 @@ paths:
             default: 100
       responses:
         '200':
-          description: Ordered event stream for the job. / 任务的有序事件流。
+          description: Ordered event stream for the job. / 婵犵數鍋涢顓熸叏妤ｅ喚鏁嬬憸搴ㄥ箞閵娾晜鍋勯柛蹇曞帶閸擃參姊洪崨濠冨闁告挻姘ㄧ划濠氬箳濡も偓缁犲綊鏌℃径瀣仼缂佺媴绲跨槐鎺楀Ω閿濆懎顬夌紓浣稿€圭敮锟犲箠濠婂牊鍋ㄩ柣鎰嚀娴滀即姊?
           content:
             application/json:
               schema:
@@ -266,7 +239,7 @@ paths:
     post:
       tags:
         - Jobs
-      summary: Cancel a queued or running job / 取消排队中或运行中的任务
+      summary: Cancel a queued or running job / 闂傚倷绀侀幉锟犳偡閿曞倹鍋嬫俊銈呭暟閻捇鏌ｉ幋锝嗩棄缂佺姵濞婇弻鐔兼倻濮楀棙鐣烽悶姘箖缁绘盯骞嬮悙瀛樺剮闂佸憡眉缁瑥鐣疯ぐ鎺懳╅柨鏃€鍨濆锕傛⒑瑜版帒浜伴柛銊ャ偢瀵劑鎸婃径鍡橆潔闂佺懓鐏濋崯顐︾嵁濡崵绠鹃柛顐ゅ枎閻忥妇绱掗崒娑樼闁归濞€楠炴捇骞掑┑鍥у皟
       operationId: cancelJob
       security:
         - OAuth2:
@@ -275,7 +248,7 @@ paths:
         - $ref: '#/components/parameters/JobId'
       responses:
         '202':
-          description: Cancellation accepted. / 已接受取消请求。
+          description: Cancellation accepted. / 闂佽楠稿﹢閬嶁€﹂崼婵愬殨闁告挷鐒﹂弳婊堟煙缂併垹鏋涢柣顓燁殕娣囧﹪濡堕崒姘闁荤喐绮嶅妯好洪妶澶婄叀濠㈣埖鍔曢柋鍥煥濠靛棝顎楁繛鍫熷絻閳规垿顢欓悙顒€娈岄梺绋匡工閻栧ジ宕洪埀?
           content:
             application/json:
               schema:
@@ -293,19 +266,15 @@ paths:
     get:
       tags:
         - Parse
-      summary: List available parse engines / 获取可用解析引擎
-      description: |
-        Returns the registered parse engines, supported source types, default scene, supported scenes,
-        and the default internal profile selected by the Parse request compiler for each engine. /
-        返回当前已注册的解析引擎、支持的输入类型、默认 scene、支持的 scene，
-        以及 Parse 请求编译器为每个引擎绑定的默认内部 profile。
+      summary: List available parse engines / 列出可用解析引擎
+      description: Returns the registered parse engines, supported source types, default scene, supported scenes, and the default internal profile selected by the Parse request compiler for each engine. / 返回已注册的解析引擎、支持的来源类型、默认场景、可选场景，以及每个引擎默认映射的内部 profile。
       operationId: listParseEngines
       security:
         - OAuth2:
             - parse:read
       responses:
         '200':
-          description: Parse engine registry returned successfully. / 已成功返回解析引擎注册表。
+          description: Parse engine registry returned successfully. / 成功返回解析引擎注册表。
           content:
             application/json:
               schema:
@@ -319,20 +288,15 @@ paths:
     get:
       tags:
         - Parse
-      summary: List parser profiles / 获取解析配置模板
-      description: |
-        Returns internal parser profiles for operators and debugging workflows. Most API callers should not need
-        to reference them directly because the public Parse API compiles `sources + engine_id (+ scene)` into
-        these profiles automatically. /
-        返回面向运维与调试的内部 parser profile。大多数 API 调用方无需直接引用它们，
-        因为公共 Parse API 会自动将 `sources + engine_id (+ scene)` 编译为这些 profile。
+      summary: List parser profiles / 列出解析器 profile
+      description: Returns internal parser profiles for operators and debugging workflows. Most API callers should not need to reference them directly because the public Parse API compiles `sources + engine_id (+ scene)` into these profiles automatically. / 返回供运维与调试使用的内部解析 profile。多数调用方无需直接感知这些 profile，因为公共 Parse API 会自动将 `sources + engine_id (+ scene)` 编译为最合适的 profile。
       operationId: listParserProfiles
       security:
         - OAuth2:
             - parse:read
       responses:
         '200':
-          description: Parser profiles returned successfully. / 已成功返回解析配置模板。
+          description: Parser profiles returned successfully. / 成功返回解析器 profile 列表。
           content:
             application/json:
               schema:
@@ -347,14 +311,7 @@ paths:
       tags:
         - Parse
       summary: Parse content synchronously / 同步解析内容
-      description: |
-        Synchronously parse one or more source locators into LLM-ready Markdown through a unified public contract.
-        Most callers only need `sources` plus `engine_id`; `engine_id=auto` lets Cortex choose the best active
-        engine and scene for each source, while `scene` remains optional when the caller wants a stronger preset such
-        as `deep_web` or `document_fidelity`. /
-        通过统一公共契约把一个或多个来源定位符同步解析为 LLM-ready Markdown。大多数调用方只需要 `sources`
-        与 `engine_id`；当 `engine_id=auto` 时，Cortex 会为每个来源自动选择最佳可用引擎与场景；`scene`
-        仍为可选字段，用于在调用方希望命中更强预设时显式指定，如 `deep_web`、`document_fidelity`。
+      description: Synchronously parse one or more source locators into LLM-ready Markdown through a unified public contract. Most callers only need `sources` plus `engine_id`; `engine_id=auto` lets Cortex choose the best active engine and scene for each source. / 通过统一公共契约同步解析一个或多个来源，并输出 LLM-ready Markdown；大多数调用方只需要提供 `sources` 与 `engine_id`，当 `engine_id=auto` 时，Cortex 会为每个来源自动选择最佳激活引擎与场景。
       operationId: parseContentSync
       security:
         - OAuth2:
@@ -366,20 +323,39 @@ paths:
             schema:
               $ref: '#/components/schemas/ParseSubmitRequest'
             examples:
-              auto_batch_parse:
-                summary: Auto-routed batch parse / 自动路由批量解析
+              autoWebBatchParse:
+                summary: Auto-routed web batch parse / 自动路由网页批量解析
                 description: |
-                  Submit one or more source locators and let Cortex choose the best active engine and scene
-                  automatically. /
-                  提交一个或多个来源定位符，并由 Cortex 自动选择最佳可用引擎与场景。
+                  Submit one or more source locators and let Cortex choose the best active engine and scene automatically.
+                  提交一个或多个来源，由 Cortex 自动选择最佳激活引擎与场景。
                 value:
                   sources:
                     - https://docs.cognee.ai/core-concepts/overview
-                    - s3://demo-bucket/manuals/architecture.pdf
+                    - https://docs.crawl4ai.com/advanced/advanced-features/
                   engine_id: auto
+              crawl4aiDeepWeb:
+                summary: Crawl4AI deep-web parse / Crawl4AI 深度网页解析
+                description: |
+                  Explicitly use Crawl4AI with the high-intensity deep_web scene; fallback is disabled for explicit engines.
+                  显式指定 Crawl4AI 与 deep_web 场景；显式 engine 不会沿用 auto fallback。
+                value:
+                  sources:
+                    - https://docs.crawl4ai.com/advanced/advanced-features/
+                  engine_id: crawl4ai
+                  scene: deep_web
+              minioObjectAuto:
+                summary: MinIO/S3 object parse / MinIO/S3 对象解析
+                description: |
+                  Parse a Cortex-managed object in MinIO/S3. Cortex extracts the obj_... segment, signs a download URL, and detects MIME type.
+                  解析已上传到 Cortex Storage 的 MinIO/S3 对象；Cortex 会自动提取 obj_...、签发下载 URL 并侦测 MIME。
+                value:
+                  sources:
+                    - s3://cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf
+                  engine_id: auto
+                  scene: document_ai
       responses:
         '200':
-          description: Parse completed within the sync timeout budget. / 已在同步超时预算内完成解析。
+          description: Parse completed within the sync timeout budget. / 在同步超时预算内完成解析。
           content:
             application/json:
               schema:
@@ -391,7 +367,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
         '409':
-          description: Request must be handled asynchronously. / 请求必须改为异步处理。
+          description: Request must be handled asynchronously. / 请求需要改为异步处理。
           content:
             application/json:
               schema:
@@ -403,12 +379,8 @@ paths:
     post:
       tags:
         - Parse
-      summary: Submit an asynchronous parse job / 提交异步解析任务
-      description: |
-        Queue one asynchronous parse job per source using the same unified public Parse contract. Add optional
-        `priority` and `webhook` only when job control is needed. /
-        使用同一套统一公共 Parse 契约为每个来源排队创建一个异步解析作业。只有在需要作业控制时，才额外提供可选
-        `priority` 与 `webhook`。
+      summary: Submit an asynchronous parse job / 提交异步解析作业
+      description: Queue one asynchronous parse job per source using the same unified public Parse contract. Add optional `priority` and `webhook` only when job control is needed. / 基于统一的公共 Parse 契约，为每个来源排入一个异步解析作业；仅在需要作业控制时再补充 `priority` 与 `webhook`。
       operationId: createParseJob
       security:
         - OAuth2:
@@ -422,17 +394,17 @@ paths:
             schema:
               $ref: '#/components/schemas/ParseJobSubmitRequest'
             examples:
-              async_auto_batch_parse:
+              asyncAutoBatchParse:
                 summary: Async auto-routed batch parse / 异步自动路由批量解析
                 description: |
-                  Recommended when you want one async parse job per source with the same high-level routing
-                  contract. /
-                  适用于希望按同一套高层路由契约为每个来源创建异步解析作业的场景。
+                  Recommended when you want one async parse job per source with the same high-level routing contract.
+                  当你希望每个来源各自生成一个异步解析作业，同时仍使用统一高层路由契约时，推荐该模式。
                 value:
                   sources:
                     - https://docs.cognee.ai/core-concepts/overview
                     - s3://demo-bucket/manuals/architecture.pdf
                   engine_id: auto
+                  scene: deep_web
                   priority: 5
                   webhook:
                     url: https://example.com/hooks/cortex/parse
@@ -442,9 +414,31 @@ paths:
                       - job.failed
                     headers:
                       X-Consumer: knowledge-pipeline
+              asyncDoclingMinioPdf:
+                summary: Docling async MinIO PDF parse / Docling 异步解析 MinIO PDF
+                description: |
+                  Use this for PDFs uploaded through Cortex Storage. Start the docling parse worker so the job is claimed by the Docling runtime worker.
+                  用于解析已上传到 Cortex Storage 的 PDF；需要启动 docling parse worker，让任务被 Docling 运行时 worker 领取。
+                value:
+                  sources:
+                    - s3://cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf
+                  engine_id: docling
+                  scene: document_ai
+                  priority: 5
+              asyncLlamaParseMinioPdf:
+                summary: LlamaParse async MinIO PDF parse / LlamaParse 异步解析 MinIO PDF
+                description: |
+                  Use this when LlamaParse cloud credentials are configured and the object should be parsed by the cloud document parser.
+                  当已配置 LlamaParse 云端凭据，且希望使用云端文档解析器时使用。
+                value:
+                  sources:
+                    - cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf
+                  engine_id: llama_parse
+                  scene: document_fidelity
+                  priority: 5
       responses:
         '202':
-          description: Parse job accepted. / 已接受解析任务。
+          description: Parse job accepted. / 已接受解析作业。
           content:
             application/json:
               schema:
@@ -463,6 +457,7 @@ paths:
       tags:
         - Parse
       summary: Get a completed parse result / 获取已完成的解析结果
+      description: Returns the completed parse result for a finished parse job, or a 409 job status payload while work is still in progress. / 返回指定解析作业的最终结果；若任务尚未完成，则返回 409 作业状态载荷。
       operationId: getParseResult
       security:
         - OAuth2:
@@ -476,9 +471,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ParseResult'
-        '202':
-          description: Job is still running. / 任务仍在运行中。
+                $ref: '#/components/schemas/ParseBatchResult'
+        '409':
+          description: Parse job is still running; job status returned for polling. / 解析任务仍在执行中，返回当前作业状态供轮询。
           content:
             application/json:
               schema:
@@ -487,26 +482,20 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          description: Parse result is not ready yet. / 解析结果尚未就绪。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
         default:
           $ref: '#/components/responses/ErrorResponse'
-
   /v1/storage/uploads:
     post:
       tags:
         - Storage
       summary: Initiate an upload session / 初始化上传会话
-      description: |
-        Creates metadata first, then returns pre-signed upload instructions for direct-to-object-store transfer.
-        The caller provides only file identity plus business metadata; Cortex infers `content_type`
-        from `filename` when possible, chooses single-part vs multipart from `size_bytes` when
-        available, and keeps bucket/object-key routing server-owned. In local or containerized
-        deployments, the pre-signed URL host should be driven by `CORTEX_S3_PUBLIC_ENDPOINT`
-        whenever the API reaches object storage through an internal address such as `http://minio:9000`. /
-        先创建元数据，再返回直传对象存储的预签名上传指令。调用方只提供文件标识与业务元数据；Cortex
-        会尽量从 `filename` 推断 `content_type`，并在已知 `size_bytes` 时自动决定 single-part
-        还是 multipart，同时把 bucket 与 object key 路由收敛到服务端管理。在本地或容器化部署中，
-        如果 API 通过 `http://minio:9000` 这类内部地址访问对象存储，则返回给调用方的预签名 URL
-        主机名应通过 `CORTEX_S3_PUBLIC_ENDPOINT` 显式切换到外部可达地址。
+      description: Creates metadata first, then returns pre-signed upload instructions for direct-to-object-store transfer. The caller provides file identity plus business metadata, while Cortex keeps bucket and object-key routing server-owned. / 先创建元数据，再返回直传对象存储所需的预签名上传指令；调用方提供文件标识与业务元数据，bucket 与 object key 路由由 Cortex 服务端统一决定。
       operationId: createUploadSession
       security:
         - OAuth2:
@@ -551,21 +540,12 @@ paths:
           $ref: '#/components/responses/Forbidden'
         default:
           $ref: '#/components/responses/ErrorResponse'
-
   /v1/storage/files:
     post:
       tags:
         - Storage
       summary: Upload a small file / 上传小文件
-      description: |
-        Convenience endpoint for Swagger UI, local testing, and small files. The API accepts
-        `multipart/form-data`, streams the file through the Cortex API process into object
-        storage, and immediately commits the final object/version metadata. This endpoint is
-        intentionally size-limited and should not replace the presigned upload-session flow for
-        production large-file, batch, resumable, or high-throughput uploads. /
-        面向 Swagger UI、本地测试和小文件的便捷接口。API 接收 `multipart/form-data`，由 Cortex API
-        进程把文件写入对象存储，并立即提交最终对象/版本元数据。该接口有明确大小上限，不应替代生产环境中
-        大文件、批量、断点续传或高吞吐场景使用的预签名上传会话流程。
+      description: Convenience endpoint for Swagger UI, local testing, and small files. The API accepts `multipart/form-data`, streams the file through the Cortex API process into object storage, and immediately commits the final object/version metadata. / 这是一个面向 Swagger UI、本地测试与小文件场景的便捷接口，API 接收 `multipart/form-data`，将文件经由 Cortex API 进程流式写入对象存储，并立即提交最终对象与版本元数据。
       operationId: uploadSmallFile
       security:
         - OAuth2:
@@ -582,39 +562,31 @@ paths:
                 file:
                   type: string
                   format: binary
-                  description: |
-                    File content to upload. / 要上传的文件内容。
+                  description: File content to upload. / 待上传的文件内容。
                 metadata_json:
                   type: string
-                  description: |
-                    Optional JSON object string for business metadata. Best default `{}`. /
-                    可选业务元数据 JSON 对象字符串，最佳默认值 `{}`。
+                  description: Optional JSON object string for business metadata. Best default `{}`. / 业务元数据 JSON 字符串，可选，最佳默认值为 `{}`。
                   example: '{"source":"swagger-demo","document_type":"guide"}'
                 access_policy_json:
                   type: string
-                  description: |
-                    Optional JSON object string matching `AccessPolicy`. Best default: omit for `tenant_private`. /
-                    可选 `AccessPolicy` JSON 对象字符串，最佳默认值为省略并使用 `tenant_private`。
+                  description: Optional JSON object string matching `AccessPolicy`. Best default is to omit it for `tenant_private`. / 与 `AccessPolicy` 对应的 JSON 字符串，可选，最佳默认值为省略并使用 `tenant_private`。
                   example: '{"access_level":"tenant_shared"}'
                 tags:
                   type: string
-                  description: |
-                    Optional comma-separated tags or JSON array string. Best default: empty. /
-                    可选逗号分隔标签或 JSON 数组字符串，最佳默认值为空。
+                  description: Optional comma-separated tags or JSON array string. Best default is empty. / 标签字符串，可为逗号分隔或 JSON 数组字符串，可选，最佳默认值为空。
                   example: docs,product
                 checksum_sha256:
                   type: string
                   pattern: '^[0-9a-f]{64}$'
-                  description: |
-                    Optional lowercase SHA-256 checksum. If provided, Cortex verifies it before writing metadata. /
-                    可选小写 SHA-256 校验和；提供时 Cortex 会在写入元数据前校验。
-            example:
-              metadata_json: '{"source":"swagger-demo","document_type":"guide"}'
-              access_policy_json: '{"access_level":"tenant_shared"}'
-              tags: docs,product
+                  description: Optional lowercase SHA-256 checksum. If provided, Cortex verifies it before writing metadata. / 小写 SHA-256 校验和，可选；提供时 Cortex 会在提交元数据前验证。
+            encoding:
+              metadata_json:
+                contentType: application/json
+              access_policy_json:
+                contentType: application/json
       responses:
         '201':
-          description: Small file uploaded and object metadata committed. / 小文件已上传且对象元数据已提交。
+          description: Small file uploaded and object metadata committed. / 小文件上传成功，且对象元数据已提交。
           content:
             application/json:
               schema:
@@ -624,26 +596,24 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
         '413':
-          description: File exceeds the configured direct upload size limit. / 文件超过直接上传大小上限。
+          description: File exceeds the configured direct upload size limit. / 文件超过直传大小限制。
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
         default:
           $ref: '#/components/responses/ErrorResponse'
-
   /v1/storage/uploads/{uploadId}/complete:
     post:
       tags:
         - Storage
-      summary: Complete an upload session / 完成上传会话
+      summary: Complete an upload session / 闂備浇顕уù鐑藉箠閹捐瀚夋い鎺戝閸ㄥ倹鎱ㄥ鍡楀箻闁崇粯鏌ㄩ埞鎴︽偐鏉堫偄鍘￠梺缁樺姇閿曘倝婀侀梺绋跨箻濡寧绂嶉姀銈嗙厽?
       description: |
         Finalizes a direct-to-object-store upload after the file transfer succeeds. Cortex must
         still verify object visibility, recover provider metadata, and commit the final
         object/version records, so this step is required for both single-part and multipart
         uploads. /
-        在文件直传对象存储成功后完成上传收口。由于 Cortex 仍需验证对象是否可见、回收对象存储返回的元数据，
-        并提交最终的对象/版本记录，因此无论 single-part 还是 multipart，这一步都必须保留。
+        闂傚倷绶氬鑽ゆ嫻閻旂厧绀夌€广儱顦崙鐘绘煕閹般劍娅囨い鈺冨厴閺屾盯骞橀懠顒€濡界紓浣鸿檸閸ㄤ即婀侀梺鍏肩ゴ閺呮稑鐡俊鐐€栧ú锕傚窗濮樿泛绠伴柟鐑橆殔閻忓磭鈧娲栧ú锕傚箟婵傚憡鈷戠紒瀣劵椤箓鏌涢弬璺ㄐх€规洜鎳撻～婵堟崉閾忚妲烽梻浣虹帛濡啴寮ㄩ柆宥呯９闁汇垹鎲￠崐鐢告煟閻斿搫顣兼繝鈧导瀛樼厱闁靛濡囬。鑼磼鐎ｎ亶妲圭紒缁樼箖閹峰懘鎼归悷鎵冲亾閻愮儤鈷戦悶娑掆偓鍏呭闂佽崵濮撮幖顐﹀箹椤愩倗绀婇柟鍓х帛閻撳繘鏌涢埄鍐炬當闁逞屽墮椤嘲顕ｉ锝嗙秶闁靛ě灞鹃敜?Cortex 婵犵數鍋涢顓熸叏鐎靛摜鐭撻柣鐔诲焽閳ь剚甯￠幊婊冣枔閹稿寒鍟嶉柣搴″帨閸嬫捇鏌涢幇鍏哥凹妞ゎ偄绉归弻锝嗘償閿濆棙姣勫銈冨灩閿曨亪骞愰崨鏉戠妞ゆ牗鑹惧宄邦渻閵堝棛澧痪鏉跨Ч瀹曟洘绻濋崶銊у幈濠电偛妫欓敋闁诲繈鍎查妵鍕敃閵忊槅妫︽繝纰樷偓宕囨憼闁瑰嘲鎳樺畷銊︾節閸曞灚袣闂傚倷娴囬妴鈧柛瀣崌閹娼幏宀婂妳闂佹悶鍊楁繛鈧柟顔肩秺閹瑩鍩為幆褌澹曢悗瑙勬礀濞诧箓骞夋總鍛娾拺缂佸鍎婚～锕傛煕閺傝法绠抽柟骞垮灲楠炲鏁冮埀顒勬倷婵犲洦鐓熼柟閭﹀墰娴犳盯鏌ｉ敐澶夋喚闁哄本绋栫粻娑㈠箻閾忣偅顔夐梻浣告惈濡盯宕伴弽顓犲祦闁硅揪瀵岄弫瀣煕閳╁啰鎳呮い?        濠德板€楁慨鐑藉磻閻樿鏄ラ柡宥庡厵娴滅懓霉閿濆懏璐℃い鈺傜叀閺屾洟宕煎┑鍥舵！婵炲濮甸…鍥╂閹惧瓨濯撮柛婵勫劚閳崬鈹戦悙鑼闁搞劌缍婇崺鈧い鎺戝€归弳鈺傘亜閵忕媴韬柟?闂傚倷鑳剁划顖炪€冮崨瀛樺亱濠电姴鍋婇懓鍧楁煙濞堝灝鏋熷┑顖氥偢閺屸剝寰勬惔銏€婄紓浣割槸濞硷繝寮婚妸銉㈡婵☆垰鐏濋顓炩攽閻愭彃绾х紒顔肩焸閿濈偤濮€閵堝憘褔鏌涢埄鍐垮叕濡ょ姴绻橀弻?single-part 闂備礁鎼ˇ顐﹀疾濠婂棙鎳屾繝?multipart闂傚倷鐒︾€笛呯矙閹达附鍎楀ù锝囧劋瀹曟煡鏌″鍐ㄥ闁崇粯妫冮弻宥堫檨闁告挻鐟╅敐鐐哄閵堝憘銊╂煃鏉炴壆顦︽鐐差儔濡懘顢曢姀鈩冩倷闂佺娅曢敃銏′繆绾惧鐤€闁哄啫鍊甸弨鍐测攽閻樼粯娑ч柣妤€锕ら埢鎾崇暆閸曨剛鍘?
       operationId: completeUploadSession
       security:
         - OAuth2:
@@ -661,7 +631,7 @@ paths:
               checksum_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
       responses:
         '200':
-          description: Upload finalized and metadata committed. / 上传已完成且元数据已提交。
+          description: Upload finalized and metadata committed. / 婵犵數鍋為崹鍫曞箰閹间焦鏅濋柨婵嗘处椤洟鎮规潪鎷岊劅闁哥喎鎳橀弻鐔虹磼濡櫣顑傞梺鍝勬瀹€鎼佸蓟閻旇　鍋撳☉娅亝鎱ㄩ崘顏嗙＜婵°倓鑳舵晶鐢碘偓瑙勬礃椤ㄥ﹤鐣峰鈧崺锟犲磼濞戝崬鏅欓梻鍌欒兌椤㈠﹪顢氶弽顓炵獥闁哄稁鍘肩粈鍕煥閻斿搫孝缂佺姷鏁婚弻鐔兼焽閿旇法鍑归梺鍝ュ仜椤︾敻寮?
           content:
             application/json:
               schema:
@@ -682,6 +652,7 @@ paths:
       tags:
         - Storage
       summary: Get object metadata / 获取对象元数据
+      description: Returns normalized metadata, audit fields, and access policy information for a stored object. / 返回指定对象的标准化元数据、审计字段与访问控制信息。
       operationId: getStorageObject
       security:
         - OAuth2:
@@ -706,7 +677,8 @@ paths:
     get:
       tags:
         - Storage
-      summary: Create a download URL for an object / 为对象生成下载地址
+      summary: Create a download URL for an object / 为对象生成下载链接
+      description: Creates a pre-signed download URL for a stored object. / 为指定对象创建带时效的预签名下载链接。
       operationId: createDownloadUrl
       security:
         - OAuth2:
@@ -715,7 +687,7 @@ paths:
         - $ref: '#/components/parameters/ObjectId'
         - name: ttl_seconds
           in: query
-          description: Requested URL lifetime in seconds. / 请求的 URL 有效时长（秒）。
+          description: Requested URL lifetime in seconds. / 下载链接有效期，单位为秒。
           example: 900
           schema:
             type: integer
@@ -724,7 +696,7 @@ paths:
             default: 900
         - name: disposition
           in: query
-          description: Content disposition for the download. / 下载的 Content-Disposition。
+          description: Content disposition for the download. / 下载时使用的 Content-Disposition。
           example: attachment
           schema:
             type: string
@@ -734,7 +706,7 @@ paths:
             default: attachment
       responses:
         '200':
-          description: Pre-signed download URL. / 预签名下载地址。
+          description: Pre-signed download URL. / 预签名下载链接。
           content:
             application/json:
               schema:
@@ -745,12 +717,11 @@ paths:
           $ref: '#/components/responses/NotFound'
         default:
           $ref: '#/components/responses/ErrorResponse'
-
   /v1/knowledge/datasets:
     post:
       tags:
         - Knowledge
-      summary: Create a knowledge dataset / 创建知识数据集
+      summary: Create a knowledge dataset / 闂傚倷绀侀幉锛勬暜濡ゅ啰鐭欓柟瀵稿Х绾句粙鏌熼崜褏甯涢柛搴㈩殜閺屾洘寰勯崼婵嗩瀷濠碘€冲级濞茬喖寮婚埄鍐╁闁告繂瀚烽弳顓㈡倵鐟欏嫭灏紒鑸佃壘椤?
       operationId: createKnowledgeDataset
       security:
         - OAuth2:
@@ -786,7 +757,7 @@ paths:
                 constraints: {}
       responses:
         '201':
-          description: Dataset created. / 数据集已创建。
+          description: Dataset created. / 闂傚倷娴囧銊╂嚄閼稿灚娅犳俊銈傚亾闁伙絽鐏氱粭鐔煎焵椤掆偓椤繘宕稿Δ鈧獮銏′繆閵堝倸浜鹃梺鎼炲€栫敮锟犲蓟濞戙垹绠抽柟鎯х亪濡插牏绱撻崒姘偓褰掑箲閸ャ劋绻?
           content:
             application/json:
               schema:
@@ -807,6 +778,7 @@ paths:
       tags:
         - Knowledge
       summary: Get dataset metadata and counters / 获取数据集元数据与计数器
+      description: Returns dataset metadata, status, counters, and policy information. / 返回数据集的元数据、状态、计数器与权限策略信息。
       operationId: getKnowledgeDataset
       security:
         - OAuth2:
@@ -826,16 +798,15 @@ paths:
           $ref: '#/components/responses/NotFound'
         default:
           $ref: '#/components/responses/ErrorResponse'
-
   /v1/knowledge/add/jobs:
     post:
       tags:
         - Knowledge
-      summary: Submit a Cognee Add job / 提交 Cognee Add 任务
+      summary: Submit a Cognee Add job / 闂傚倷绀佸﹢杈╁垝椤栫偛绀夐柟鐑樺焾濞?Cognee Add 婵犵數鍋涢顓熸叏妤ｅ喚鏁嬬憸搴ㄥ箞?
       description: |
         Ingests raw text, documents, object references, or URIs into a dataset. This operation normalizes inputs
         but does not build embeddings or graph structure yet. /
-        将原始文本、文档、对象引用或 URI 导入数据集。该操作会完成归一化，但此时尚不会构建 embedding 或图结构。
+        闂備浇顕х换鎰崲閹邦儵娑樜旈崘鈺傛濡炪倖鍔х徊楣冨矗韫囨稒鍊甸柨婵嗛娴滄繈鏌ｆ惔顔兼珝闁哄矉绻濆畷濂割敃閵忕姴绠ラ梻渚€鈧偛鑻崢鎼佹煟閹虹偟鐣电€殿喗鎮傚畷姗€鈥﹂幋鐐殿洬闂備焦瀵х换鍌炲疮閻樿纾婚柟鎯х摠婵挳鏌涢幘鏉戠祷婵炲牊鎮傞弻锝夋偐闂堟稐姹楅梺閫炲苯澧痪缁㈠幘缁岸宕稿Δ浣哄幗濡炪値鍋掗崜娆愪繆娴犲鐓?URI 闂備浇顕уù鐑藉极閹间礁鍌ㄧ憸鏂跨暦閿濆骞㈡繛鎴炆戦悗顒勬⒑缂佹﹩娈旈柣妤€妫涚划濠囨晝閸屾稈鎷婚梺绯曞墲椤ㄥ棝藟閹剧粯鐓冪憸婊堝礈濞嗘挸纾瑰ù鐘差儛閺佸鎱ㄥΟ鎸庣【缂佺姾鍋愰埀顒€绠嶉崕杈┾偓姘煎枤缁瑦绻濋崑顖氱秺瀹曟鎳濋弶娆炬闂備椒绱紞鍡涘礈閻旇偐宓侀悗锝庡枛缁犳稒銇勯幒鎴濃偓缁橆殭婵犵數鍋為崹鍫曞箰閹绢喖纾婚柟鍓х帛閻撴洟鏌″鍐ㄥ濠㈢懓瀚槐鎺撴綇閵娧呯暫闂佺懓鍢查幊妯虹暦閸楃儐娼ㄩ柛鈩冾殔铻ら梻鍌欑閹碱偊宕崘娴嬫灃婵炴垯鍨洪崕宥囩磽娴ｈ鐒介柍缁樻⒒閳ь剙绠嶉崕杈┾偓姘煎枤缁絽螖閸涱喚鍘搁柣搴秵娴滄粓顢旈埡鍐＝?embedding 闂傚倷鑳堕幊鎾绘偤閵娾晜鍋嬮柡鍥╀紳閻熸嫈鐔兼嚃閳哄喛绱查梻浣筋潐閸庢娊顢氶銏犵劦妞ゆ帒顦悘锕€鈹?
       operationId: createAddJob
       security:
         - OAuth2:
@@ -880,7 +851,7 @@ paths:
                   X-Consumer: knowledge-worker
       responses:
         '202':
-          description: Add job accepted. / 已接受 Add 任务。
+          description: Add job accepted. / 闂佽楠稿﹢閬嶁€﹂崼婵愬殨闁告挷鐒﹂弳婊堟煙缂併垹鏋涢柣?Add 婵犵數鍋涢顓熸叏妤ｅ喚鏁嬬憸搴ㄥ箞閵娾晜鍋勯柣鎾冲?
           content:
             application/json:
               schema:
@@ -896,11 +867,11 @@ paths:
     post:
       tags:
         - Knowledge
-      summary: Submit a Cognify job / 提交 Cognify 任务
+      summary: Submit a Cognify job / 闂傚倷绀佸﹢杈╁垝椤栫偛绀夐柟鐑樺焾濞?Cognify 婵犵數鍋涢顓熸叏妤ｅ喚鏁嬬憸搴ㄥ箞?
       description: |
         Builds chunks, summaries, embeddings, nodes, and edges for a dataset. This is a long-running background
         operation by default. /
-        为数据集构建 chunk、summary、embedding、节点和边。该操作默认是长时间后台任务。
+        婵犵數鍋為崹鍫曞箰妤ｅ啫纾块柕鍫濐槸濮规煡鏌ｉ弮鍌氬付缂佺姴寮堕妵鍕即濡も偓娴滄儳鈹戦悙宸缂佺姵鎸搁锝夊箹娴ｅ摜顦板銈嗗姂閸婃寰?chunk闂傚倷绶氬褍螞閺冣偓瀵板嫰鎮為埡锕巃ry闂傚倷绶氬褍螞閺冨牏鍙曢柣鐐殿嚜edding闂傚倷绶氬褍螞閺傛５褰掑炊閵娿倗绠氬銈嗘尪閸ㄦ椽宕愰悜鑺ョ厽闁绘柨鎼。濂告倵濮橆厾鍙€鐎殿喖鐖煎畷鐓庘攽閸垺娈梻渚€鈧偛鑻晶顕€鏌涙繝浣虹煓妞ゃ垺鑹鹃～婵堟崉閾忚鍟岄柣搴＄畭閸庤京鈧凹鍠氱划娆愮節閸屻倖鍋ュ┑鐐村灦閻燁垶鎮為悙顑句簻闁圭偓鍓氶悡鑲┾偓娈垮枙閸楁娊銆佸☉銏″€烽悗娑欘焽濡差亪姊绘担鍛婃儓闁哥噥鍋婇幃銉╂偂楠烆剚鐩畷绋课旈埀顒傛喆閿曞倸绠圭紒顔煎帨閸嬫捇骞庨挊澶婄稇婵犵數鍋涢顓熸叏妤ｅ喚鏁嬬憸搴ㄥ箞閵娾晜鍋勯柣鎾冲?
       operationId: createCognifyJob
       security:
         - OAuth2:
@@ -932,7 +903,7 @@ paths:
                   X-Consumer: graph-sync
       responses:
         '202':
-          description: Cognify job accepted. / 已接受 Cognify 任务。
+          description: Cognify job accepted. / 闂佽楠稿﹢閬嶁€﹂崼婵愬殨闁告挷鐒﹂弳婊堟煙缂併垹鏋涢柣?Cognify 婵犵數鍋涢顓熸叏妤ｅ喚鏁嬬憸搴ㄥ箞閵娾晜鍋勯柣鎾冲?
           content:
             application/json:
               schema:
@@ -948,11 +919,11 @@ paths:
     post:
       tags:
         - Knowledge
-      summary: Submit a Memify job / 提交 Memify 任务
+      summary: Submit a Memify job / 闂傚倷绀佸﹢杈╁垝椤栫偛绀夐柟鐑樺焾濞?Memify 婵犵數鍋涢顓熸叏妤ｅ喚鏁嬬憸搴ㄥ箞?
       description: |
         Enriches an existing graph with derived nodes or edges. Supports built-in pipelines such as coding rules,
         triplet embeddings, session persistence, and entity consolidation. /
-        对已有图谱增加派生节点或边，支持 coding rules、triplet embeddings、session persistence、entity consolidation 等内建管线。
+        闂備浇顕уù鐑藉极閹间礁绠犻柟鎹愵嚙缁€鍕煥閻斿搫孝閻庢艾顦…璺ㄦ崉閻氬瓨鏁剧紓浣稿€搁悧鎾诲箖閸︻厸鍋撻敐搴濈盎闁兼瓕顫夐妵鍕Χ閸涱厽娈婚悗瑙勬礃缁诲牓骞冮埡鍛優妞ゆ劑鍊曢崝婊堟⒒娴ｅ湱婀介柛銊ヮ煼瀹曚即寮撮悢鍓佺畾濡炪倖鎸堕崹娲磹閻戣姤鍋℃繛鍡楃箰椤忊晠鏌ｈ箛鏃戞疁鐎殿喖鐖煎畷濂稿閳藉棔鎴风紓鍌欐祰妞村摜鎹㈤崼婵愬殨闁靛ň鏅╅弫宥嗙箾閹寸儐鐒芥俊?coding rules闂傚倷绶氬褍螞閺冣偓濞煎繐銆掗悗鎶猯et embeddings闂傚倷绶氬褍螞閺冣偓瀵板嫰鎮為幉鍣慽on persistence闂傚倷绶氬褍螞閺冨牏鍙曢柣鐐电剻ity consolidation 缂傚倸鍊烽悞锔剧矙閹次诲洭顢涢悙鑼跺煘闂佸搫顦伴崺鍫ュ吹閸儲鐓ｉ煫鍥ㄥ嚬閸ゅ啴鏌涘锝呬壕缂傚倸鍊烽悞锕€鐣峰鈧弫鎾诲Ψ閳轰胶鍔?
       operationId: createMemifyJob
       security:
         - OAuth2:
@@ -982,7 +953,7 @@ paths:
                   X-Consumer: knowledge-memify
       responses:
         '202':
-          description: Memify job accepted. / 已接受 Memify 任务。
+          description: Memify job accepted. / 闂佽楠稿﹢閬嶁€﹂崼婵愬殨闁告挷鐒﹂弳婊堟煙缂併垹鏋涢柣?Memify 婵犵數鍋涢顓熸叏妤ｅ喚鏁嬬憸搴ㄥ箞閵娾晜鍋勯柣鎾冲?
           content:
             application/json:
               schema:
@@ -998,7 +969,7 @@ paths:
     post:
       tags:
         - Knowledge
-      summary: Search across datasets and knowledge graphs / 跨数据集与知识图谱搜索
+      summary: Search across datasets and knowledge graphs / 闂備浇宕垫慨鍨娴犲绀夌€广儱顦Ч鏌ユ煟閺冨倸甯剁紒鐘插级閵囧嫰寮村Δ鈧禍鎯р攽閻愬樊妾ч梻鍕缁瑦寰勭€ｎ偄鍔呴梺鎸庣箓濞层倕顕ｉ妸鈺傜厽闁绘ê寮堕幖鎰繆椤愶綆娈旈棁澶嬩繆椤栨艾鎮戦悗姘煎墴瀵爼宕煎☉妯侯瀴闂佺顑嗙换鍕?
       operationId: searchKnowledge
       security:
         - OAuth2:
@@ -1030,7 +1001,7 @@ paths:
               timeout_seconds: 30
       responses:
         '200':
-          description: Search results with answer, context, and provenance. / 返回包含答案、上下文和来源追溯的搜索结果。
+          description: Search results with answer, context, and provenance. / 闂備礁鎼ˇ顐﹀疾濠婂牆钃熼柕濞垮剭濞差亜鍐€妞ゆ挾鍋熼ˇ閬嶆⒑閸涘﹣绶遍柛妯圭矙瀹曟洟骞橀崜浣猴紲濠电偞鍨堕悷锕傚煕閹邦厹浜滈柕蹇曞Х鏁堟繝纰樷偓宕囨憼闁瑰嘲鎳忛ˇ鐗堟償閿濆棗鏆熸繝鐢靛仦閸ㄥ爼骞愰幖渚囨晞闁糕剝绋戦崙鐘绘煕閹伴潧鏋涙俊鐐扮矙閹﹢鎮欓棃娑楀闂傚倸瀚粔鐢垫崲濠靛妲奸梺鍛婃⒐閿曘垽鐛箛鎾舵殝闁逛絻娅曢弫鐘差渻閵堝棛澧紒顔肩Ч閹箖鏌嗗鍡欏幍闂佺绻楅崑鎰版儗瀹€鍕厱閻忕偠顕ф俊璺ㄧ磼鏉堛劌娴鐐搭焽閳ь剛鏁婚弲鏌ュ礄娴犲鈷?
           content:
             application/json:
               schema:
@@ -1042,11 +1013,560 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /v1/eval/engines:
+    get:
+      tags:
+        - Evaluation
+      summary: List evaluation engines / 列出评测引擎
+      description: Returns the currently registered evaluation engines, supported evaluation types, execution modes, and default profile hints. EvalScope may appear as an external HTTP adapter or a self-hosted SDK service managed by the runtime worker. / 返回当前注册的评测引擎、支持的评测类型、执行模式与默认 profile 提示。EvalScope 可作为外部 HTTP 适配器，也可作为由 runtime worker 托管的 self-hosted SDK 服务。
+      operationId: listEvalEngines
+      security:
+        - OAuth2:
+            - eval:read
+      responses:
+        '200':
+          description: Evaluation engines returned successfully. / 成功返回评测引擎列表。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvalEngineList'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/eval/metrics:
+    get:
+      tags:
+        - Evaluation
+      summary: List normalized evaluation metrics / 列出标准化评测指标
+      description: Returns the normalized Cortex metric catalog that maps business-facing metric keys to engine-native implementations across DeepEval, EvalScope, and future adapters. / 返回 Cortex 标准化指标目录，将面向业务的指标键映射到 DeepEval、EvalScope 及未来适配器的原生实现。
+      operationId: listEvalMetrics
+      security:
+        - OAuth2:
+            - eval:read
+      parameters:
+        - name: evalType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/EvalType'
+          description: Filter catalog entries by evaluation type. / 按评测类型过滤指标目录。
+        - name: engineId
+          in: query
+          required: false
+          schema:
+            type: string
+            example: deepeval
+          description: Filter catalog entries by engine identifier. / 按引擎标识过滤指标目录。
+      responses:
+        '200':
+          description: Evaluation metric catalog returned successfully. / 成功返回评测指标目录。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvalMetricCatalog'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/eval/sync:
+    post:
+      tags:
+        - Evaluation
+      summary: Execute a synchronous evaluation run / 执行同步评测
+      description: Runs a small evaluation workload synchronously. Recommended for smoke checks, profile tuning, and low-cardinality datasets; larger workloads should use `/v1/eval/jobs`. / 以同步方式执行小规模评测，适合冒烟验证、profile 调优和低基数数据集；更大规模的评测应使用 `/v1/eval/jobs`。
+      operationId: runEvaluationSync
+      security:
+        - OAuth2:
+            - eval:write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvalSyncRequest'
+            examples:
+              ragEval:
+                summary: RAG evaluation / RAG 评测
+                value:
+                  name: fintech-rag-regression
+                  eval_type: rag
+                  engine_id: auto
+                  input:
+                    type: dataset
+                    dataset_id: ds_fintech_goldens
+                    field_mapping:
+                      user_input: question
+                      actual_output: answer
+                      expected_output: ground_truth
+                      retrieval_contexts: contexts
+                  target:
+                    type: api
+                    protocol: openai_compatible
+                    endpoint_url: https://ordix.internal/v1/query
+                    auth_ref: vault:cortex/eval/ordix
+                    timeout_seconds: 45
+                  metrics:
+                    - metric_key: rag.faithfulness
+                      threshold: 0.8
+                    - metric_key: rag.answer_relevance
+                      threshold: 0.75
+              deepevalMultiTurn:
+                summary: DeepEval multi-turn sync / DeepEval 多轮同步评测
+                value:
+                  name: swagger-dialog-smoke
+                  eval_type: multi_turn
+                  engine_id: deepeval
+                  input:
+                    type: inline_test_cases
+                    test_cases:
+                      - conversation_turns:
+                          - role: user
+                            content: Help me parse a PDF from storage.
+                          - role: assistant
+                            content: Upload it to Storage and submit a Parse job.
+                        metadata:
+                          case_id: dialog-smoke-001
+                  metrics:
+                    - metric_key: dialog.conversation_relevancy
+                      threshold: 0.75
+                    - metric_key: dialog.conversation_completeness
+                      threshold: 0.75
+              evalscopePerfSync:
+                summary: EvalScope perf sync / EvalScope 性能同步评测
+                value:
+                  name: swagger-perf-smoke
+                  eval_type: perf
+                  engine_id: evalscope
+                  input:
+                    type: builtin_dataset
+                    builtin_dataset_key: openqa
+                  target:
+                    type: api
+                    endpoint_url: http://127.0.0.1:8080/v1/health/ready
+                    timeout_seconds: 30
+                  metrics:
+                    - metric_key: perf.qps
+                      threshold: 1.0
+                    - metric_key: perf.p90_latency
+                      threshold: 2.0
+                  engine_options:
+                    parallel:
+                      - 1
+                    number:
+                      - 5
+                    stream: false
+      responses:
+        '200':
+          description: Evaluation completed within the sync budget. / 在同步预算内完成评测。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvalRunResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/eval/jobs:
+    post:
+      tags:
+        - Evaluation
+      summary: Submit an asynchronous evaluation job / 提交异步评测作业
+      description: Queues a long-running evaluation job for performance tests, large benchmark suites, multi-turn simulations, or any workload that exceeds the synchronous budget. / 提交长时运行的评测作业，适用于性能压测、大型 benchmark、多轮会话模拟或超出同步预算的工作负载。
+      operationId: createEvalJob
+      security:
+        - OAuth2:
+            - eval:write
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvalJobSubmitRequest'
+            examples:
+              perfEval:
+                summary: Performance evaluation / 性能评测
+                value:
+                  name: cortex-rag-perf-nightly
+                  eval_type: perf
+                  engine_id: evalscope
+                  input:
+                    type: builtin_dataset
+                    builtin_dataset_key: openqa
+                  target:
+                    type: api
+                    protocol: openai_compatible
+                    endpoint_url: https://gateway.internal/v1/chat/completions
+                    auth_ref: vault:cortex/eval/gateway
+                    timeout_seconds: 120
+                  metrics:
+                    - metric_key: perf.p99_latency
+                      threshold: 2.0
+                    - metric_key: perf.ttft
+                      threshold: 1.2
+                    - metric_key: perf.output_tokens_per_second
+                      threshold: 150.0
+                  engine_options:
+                    parallel:
+                      - 8
+                      - 16
+                    number:
+                      - 200
+                      - 400
+                    rate: 25
+                    stream: true
+                  webhook:
+                    url: https://example.com/hooks/cortex/eval
+                    secret_ref: vault:cortex/webhooks/eval
+              deepevalAgenticJob:
+                summary: DeepEval agentic async job / DeepEval 异步 Agent 评测
+                value:
+                  name: support-agent-regressions
+                  eval_type: agentic
+                  engine_id: deepeval
+                  input:
+                    type: inline_test_cases
+                    test_cases:
+                      - user_input: Create a parse job for an uploaded PDF.
+                        actual_output: Called storage lookup, selected docling, and submitted a parse job.
+                        expected_output: The agent should use storage metadata and submit a docling parse job.
+                        retrieval_contexts:
+                          - Parse jobs support engine_id=docling and object-backed sources.
+                        metadata:
+                          case_id: agent-001
+                          tools_called:
+                            - storage.get
+                            - parse.jobs.create
+                  metrics:
+                    - metric_key: agent.task_completion
+                      threshold: 0.8
+                    - metric_key: agent.tool_correctness
+                      threshold: 0.8
+              deepevalCustomJob:
+                summary: DeepEval custom async job / DeepEval 异步自定义评测
+                value:
+                  name: swagger-custom-quality-job
+                  eval_type: custom
+                  engine_id: deepeval
+                  input:
+                    type: inline_test_cases
+                    test_cases:
+                      - user_input: Explain Cortex Parse in one sentence.
+                        actual_output: Cortex Parse converts web pages and files into Markdown with normalized metadata.
+                        expected_output: Cortex Parse should mention Markdown and standardized metadata.
+                  metrics:
+                    - metric_key: quality.correctness
+                      threshold: 0.8
+                      params:
+                        criteria: Score whether the answer correctly explains the business purpose of Cortex Parse.
+      responses:
+        '202':
+          description: Evaluation job accepted. / 已接受评测作业。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvalJobAccepted'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/eval/jobs/{jobId}/result:
+    get:
+      tags:
+        - Evaluation
+      summary: Get a completed evaluation result / 获取已完成的评测结果
+      description: Returns the completed evaluation result for a finished evaluation job. / 返回指定评测作业的最终结果。
+      operationId: getEvalResult
+      security:
+        - OAuth2:
+            - eval:read
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: Completed evaluation result. / 已完成的评测结果。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvalRunResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Evaluation result is not ready yet. / 评测结果尚未就绪。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/synthesis/engines:
+    get:
+      tags:
+        - Synthesis
+      summary: List synthesis engines / 列出合成引擎
+      description: Returns the currently active synthesis engines, supported synthesis types, source types, output formats, and default profile hints. / 返回当前激活的合成引擎、支持的合成类型、来源类型、输出格式与默认 profile 提示。
+      operationId: listSynthesisEngines
+      security:
+        - OAuth2:
+            - synthesis:read
+      responses:
+        '200':
+          description: Synthesis engines returned successfully. / 成功返回合成引擎列表。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SynthesisEngineList'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/synthesis/sync:
+    post:
+      tags:
+        - Synthesis
+      summary: Execute a synchronous synthesis run / 执行同步合成
+      description: Runs a small synthesis workload synchronously. Recommended for metadata validation, prompt tuning, and low-volume sample generation; larger workloads should use `/v1/synthesis/jobs`. / 以同步方式执行小规模合成，适合元数据校验、prompt 调优和小批量样本生成；更大规模的合成应使用 `/v1/synthesis/jobs`。
+      operationId: runSynthesisSync
+      security:
+        - OAuth2:
+            - synthesis:write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SynthesisSyncRequest'
+            examples:
+              ragGoldens:
+                summary: RAG goldens synthesis / RAG 黄金集生成
+                value:
+                  name: product-doc-rag-goldens
+                  synthesis_type: rag_goldens
+                  engine_id: auto
+                  source:
+                    type: documents
+                    object_ids:
+                      - obj_readme
+                      - obj_faq
+                  config:
+                    sample_count: 50
+                    include_expected_output: true
+                    max_contexts_per_case: 4
+                  output:
+                    output_format: jsonl
+                    persist_dataset_key: ds_rag_goldens_product
+              sdvSingleTable:
+                summary: SDV single-table sync / SDV 单表同步合成
+                value:
+                  name: swagger-sdv-customers
+                  synthesis_type: structured_single_table
+                  engine_id: sdv
+                  source:
+                    type: inline_records
+                    inline_records:
+                      - customer_id: c1
+                        tier: gold
+                        monthly_spend: 1200
+                      - customer_id: c2
+                        tier: silver
+                        monthly_spend: 300
+                    options:
+                      table_name: customers
+                  config:
+                    sample_count: 5
+                    anonymize_pii: true
+                    quality_gates:
+                      - metric_key: quality.row_count_match
+                        threshold: 1.0
+                  output:
+                    output_format: json
+                    include_preview: true
+              deepevalQaPairs:
+                summary: DeepEval QA sync / DeepEval QA 同步合成
+                value:
+                  name: swagger-qa-preview
+                  synthesis_type: qa_pairs
+                  engine_id: deepeval
+                  source:
+                    type: documents
+                    documents:
+                      - Cortex Parse turns URLs and storage objects into LLM-ready Markdown.
+                  config:
+                    sample_count: 2
+                    max_contexts_per_case: 1
+                    include_expected_output: true
+                  output:
+                    output_format: json
+                    include_preview: true
+      responses:
+        '200':
+          description: Synthesis completed within the sync budget. / 在同步预算内完成合成。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SynthesisRunResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/synthesis/jobs:
+    post:
+      tags:
+        - Synthesis
+      summary: Submit an asynchronous synthesis job / 提交异步合成作业
+      description: Queues a long-running synthesis job for large tabular generation, relational synthesis, high-volume golden generation, or agent trajectory generation. / 提交长时运行的合成作业，适用于大规模表格数据生成、关系型合成、高容量黄金集生成或 Agent 轨迹生成。
+      operationId: createSynthesisJob
+      security:
+        - OAuth2:
+            - synthesis:write
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SynthesisJobSubmitRequest'
+            examples:
+              structuredRelational:
+                summary: Structured relational synthesis / 结构化关系型数据合成
+                value:
+                  name: finance-ledger-sdv
+                  synthesis_type: structured_relational
+                  engine_id: sdv
+                  source:
+                    type: relational_metadata
+                    metadata_object_id: obj_finance_metadata
+                    dataset_id: ds_finance_seed
+                  config:
+                    sample_count: 10000
+                    anonymize_pii: true
+                    quality_gates:
+                      - metric_key: synth.quality_score
+                        threshold: 0.85
+                  output:
+                    output_format: parquet
+                    persist_object_filename: finance-ledger-synthetic.parquet
+                  webhook:
+                    url: https://example.com/hooks/cortex/synthesis
+                    secret_ref: vault:cortex/webhooks/synthesis
+              sdvRelationalInline:
+                summary: SDV relational async job / SDV 关系型异步合成
+                value:
+                  name: swagger-sdv-orders
+                  synthesis_type: structured_relational
+                  engine_id: sdv
+                  source:
+                    type: relational_metadata
+                    options:
+                      tables:
+                        customers:
+                          - customer_id: c1
+                            tier: gold
+                          - customer_id: c2
+                            tier: silver
+                        orders:
+                          - order_id: o1
+                            customer_id: c1
+                            amount: 99.0
+                          - order_id: o2
+                            customer_id: c2
+                            amount: 42.0
+                  config:
+                    sample_count: 3
+                    anonymize_pii: true
+                  output:
+                    output_format: jsonl
+                    include_preview: true
+              deepevalConversationGoldens:
+                summary: DeepEval conversation async job / DeepEval 会话异步合成
+                value:
+                  name: swagger-conversation-goldens
+                  synthesis_type: conversation_goldens
+                  engine_id: deepeval
+                  source:
+                    type: documents
+                    documents:
+                      - Support agents should ask for the object_id before parsing a private file.
+                  config:
+                    sample_count: 3
+                    max_contexts_per_case: 1
+                    include_expected_output: true
+                  output:
+                    output_format: jsonl
+                    include_preview: true
+                  webhook:
+                    url: https://example.com/hooks/cortex/synthesis
+                    event_types:
+                      - job.succeeded
+                      - job.failed
+      responses:
+        '202':
+          description: Synthesis job accepted. / 已接受合成作业。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SynthesisJobAccepted'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/synthesis/jobs/{jobId}/result:
+    get:
+      tags:
+        - Synthesis
+      summary: Get a completed synthesis result / 获取已完成的合成结果
+      description: Returns the completed synthesis result for a finished synthesis job. / 返回指定合成作业的最终结果。
+      operationId: getSynthesisResult
+      security:
+        - OAuth2:
+            - synthesis:read
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: Completed synthesis result. / 已完成的合成结果。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SynthesisRunResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Synthesis result is not ready yet. / 合成结果尚未就绪。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
 webhooks:
   job.status.changed:
     post:
-      summary: Job status webhook / 任务状态回调
-      description: Delivered when a job transitions state or completes with a result or failure. / 当任务状态变更或完成时投递。
+      summary: Job status webhook / 婵犵數鍋涢顓熸叏妤ｅ喚鏁嬬憸搴ㄥ箞閵娾晜鍋勯柛蹇曞帶娴滃綊姊洪悡搴㈡喐妞わ絼绮欏畷鎴﹀箻鐎涙ê顎撻梺鍛婄☉閿曪箓藝閵夆晜鐓?
+      description: Delivered when a job transitions state or completes with a result or failure. / 闂佽崵鍠愮划搴㈡櫠濡ゅ懎绠伴柣鎴ｆ缁犳煡鏌曡箛瀣偓鏇犵矆婢舵劖鐓ユ繛鎴灻鈺冪箔閹达附鈷戦悹鍥ｂ偓鍐插箰缂備讲鍋撳ù锝咁潟娴滅懓顭块懜闈涘闁告濞婇幃妤€鈽夊▍顓т邯閹ê螖閸涱喖鈧敻鏌ｉ悢鍝勵暭婵犫偓娴煎瓨鐓曢柕濠忕畱閸濊櫣鈧鍣崳锝夊箠濠婂牊顥堟繛鎴ｉ哺缂嶅姊婚崒娆戣窗闁稿鎳愰弫顕€宕堕鈧悞?
       requestBody:
         required: true
         content:
@@ -1055,7 +1575,7 @@ webhooks:
               $ref: '#/components/schemas/JobWebhookEvent'
       responses:
         '200':
-          description: Webhook accepted by the subscriber. / 回调接收方已接受 webhook。
+          description: Webhook accepted by the subscriber. / 闂傚倷鐒﹂幃鍫曞磿閹惰棄纾婚柣妯肩帛閸庡秹鏌ｉ弮鍌氬付缂佺姵濞婇弻鏇熷緞濞戙垺顎嶉梺鍝勬－娴滎亪寮婚敓鐘茬＜婵犲﹤瀚▓宀勬⒑閸涘﹤鐓€缂佺粯绻堥悰顕€骞掑Δ鈧敮闂侀潧顦崕宕囩矓?webhook闂?
 
 components:
   securitySchemes:
@@ -1064,41 +1584,49 @@ components:
       description: |
         OAuth 2.0 / OIDC-compatible access tokens for Cortex. Best practice is JWT access tokens with standard
         scope claims and tenant-aware audience validation. /
-        用于 Cortex 的 OAuth 2.0 / OIDC 兼容访问令牌。最佳实践是使用带标准 scope 声明并按租户感知 audience 校验的 JWT access token。
+        闂傚倷鐒﹀鍨焽閸ф绀夐悗锝庡墲婵?Cortex 闂?OAuth 2.0 / OIDC 闂傚倷鑳堕…鍫㈡崲閹烘鍌ㄧ憸鏃堛€佸▎鎾崇疀妞ゆ棁妫勯娑㈡⒑缁夊棗瀚峰▓鏇㈡煥濞戞瑧澧棁澶愭煟濮楀棗鏋涢柍褜鍓氶〃鍡涘疾鐠鸿　鏀介悗锝庘偓顓滃劦閺屾稓浠﹂崜褉濮囨繛瀵稿У閿氶棁澶愭煥濠靛棙鍣归柡鍡涗憾閺岋綁濡堕崨顓т紑闂佸湱鎳撶€氭澘鐣疯ぐ鎺濇晝闁挎稑搴滅粻鎴︽箒闂佹寧绻傞悧濠勬兜閸洘鐓涘ù锝夋涧閳ь剚顨婂顐︻敋閳ь剟寮崒鐐村仼閻忕偟鏅导鍥⒒?scope 婵犵數濮伴崹鐟帮耿鏉堛劍娅犳俊銈傚亾閸楅亶鏌熸潏鎯ь洭鐎规挷绶氶弻銈夊箹娴ｈ閿梺浼欑畳瀹曠數妲愰幒鎾崇窞閻忕偠濮ら悗楣冩⒑缁洘娅嗛柣鈺婂灦閻涱噣宕堕浣镐簻闂佹儳绻掗幊鎾愁嚕?audience 闂傚倷绀侀幖顐ょ矙閸曨厽宕叉繝闈涱儐閸嬫ɑ绻涢崱妯诲鞍闁?JWT access token闂?
       flows:
         authorizationCode:
           authorizationUrl: https://auth.cortex.example.com/oauth2/authorize
           tokenUrl: https://auth.cortex.example.com/oauth2/token
           scopes:
-            health:read: Read health and readiness status. / 读取健康和就绪状态。
-            jobs:read: Read job status and event streams. / 读取任务状态和事件流。
-            jobs:cancel: Cancel queued or running jobs. / 取消排队中或运行中的任务。
-            parse:read: Read parse registries and parse results. / 读取解析注册表和解析结果。
-            parse:write: Submit synchronous or asynchronous parse operations. / 提交同步或异步解析操作。
-            storage:read: Read object metadata. / 读取对象元数据。
-            storage:write: Create or finalize upload sessions. / 创建或完成上传会话。
-            storage:download: Generate download URLs after resource authorization. / 在资源授权后生成下载地址。
-            knowledge:read: Read datasets and execute knowledge search. / 读取数据集并执行知识搜索。
-            knowledge:write: Create datasets and submit Add/Cognify/Memify jobs. / 创建数据集并提交 Add/Cognify/Memify 任务。
-            observability:read: Read protected observability resources. / 读取受保护的观测资源。
-            admin:read: Read platform administration resources. / 读取平台管理资源。
-            admin:write: Change platform administration resources. / 修改平台管理资源。
+            health:read: Read health and readiness status. / 闂備浇宕垫慨鏉懨洪埡鍜佹晪鐟滄垿濡甸幇鏉跨倞妞ゆ巻鍋撶痪鎯ь煼閺屾洘寰勯崼婵嗗闂佺顭紞渚€寮诲☉姗嗙叆闁告劦鍘奸顓炩攽椤旇婊堝礉鎼达絾顫曢柟鐑橆殢閺佸倿鏌涢埄鍐︿簼闁挎洖鍊归悡娆愩亜閹存繃鍋ユ俊鍓у厴閺?
+            jobs:read: Read job status and event streams. / 闂備浇宕垫慨鏉懨洪埡鍜佹晪鐟滄垿濡甸幇鏉跨倞闁靛ě灞剧カ闂佽崵濮村ú锕併亹閸愵噯缍栭柕鍫濐槹閻撶喐淇婇姘变虎闁绘挻鍔欓弻宥堫檨闁稿繑绋撶划鍫熺瑹閳ь剟鐛箛娑欏亱闁割偁鍩勫ú鎼佹煟鎼搭垳宀涢柡鍛矒椤㈡洟鎳為妷褏顔曠紓鍌氱墢婵炩偓婵″墽鍏橀弻?
+            jobs:cancel: Cancel queued or running jobs. / 闂傚倷绀侀幉锟犳偡閿曞倹鍋嬫俊銈呭暟閻捇鏌ｉ幋锝嗩棄缂佺姵濞婇弻鐔兼倻濮楀棙鐣烽悶姘箖缁绘盯骞嬮悙瀛樺剮闂佸憡眉缁瑥鐣疯ぐ鎺懳╅柨鏃€鍨濆锕傛⒑瑜版帒浜伴柛銊ャ偢瀵劑鎸婃径鍡橆潔闂佺懓鐏濋崯顐︾嵁濡崵绠鹃柛顐ゅ枎閻忥妇绱掗崒娑樼闁归濞€楠炴捇骞掑┑鍥у皟闂?
+            parse:read: Read parse registries and parse results. / 闂備浇宕垫慨鏉懨洪埡鍜佹晪鐟滄垿濡甸幇鏉跨倞闁冲搫鍊搁弸鍌炴⒑閹稿海绠撴俊顐ｇ洴閸┾偓妞ゆ帒鍟ˉ澶愭煃缂佹ɑ顥堝┑鈩冩倐婵＄兘濡烽敂鑺ョ帆闂備浇宕甸崑鐐电矙韫囨稑绀夌€光偓閸曨偆顔嗛梺瑙勵問閸犳宕伴崱娑欑叆婵犻潧妫欓ˉ鐘绘煃瑜滈崜娑㈠疾椤愩倖顫曢柟鐑橆殔缁犲鎮楅悽鍛婃珳闁告垳绮欏?
+            parse:write: Submit synchronous or asynchronous parse operations. / 闂傚倷绀佸﹢杈╁垝椤栫偛绀夐柟鐑樺焾濞尖晠鏌ㄩ弴鐐测偓鍝ユ喆閿曞倹鍊堕柣鎰祷濡炬悂鏌涢弬鍨伃闁哄瞼鍠撻埀顒佺⊕椤洦鏅堕鍡欑＜閺夊牄鍔嶇亸顓熴亜椤愮姴鐏插┑锛勫厴婵℃悂骞囬鐐磋癁閻庢鍠楅幃鍌炵嵁閸ヮ剦鏁囬柣鏃傤焾閸斿苯鈹戦悙鑸靛涧缂佹煡绠栧畷鍨償閵娿儳鍔?
+            storage:read: Read object metadata. / 闂備浇宕垫慨鏉懨洪埡鍜佹晪鐟滄垿濡甸幇鏉跨倞闁宠鍎虫禍楣冩煟閵忊槅鍟忛柡鈧导瀛樼參闁哄诞鍐句純閻庤娲橀〃濠傜暦濮椻偓閸╋繝宕掑☉鍗炴櫃闂傚倷鑳堕、濠囶敋閺嶎厼绐楅柟鎹愵嚙閻?
+            storage:write: Create or finalize upload sessions. / 闂傚倷绀侀幉锛勬暜濡ゅ啰鐭欓柟瀵稿Х绾句粙鏌熼幑鎰靛殭缂佺媴缍侀弻鈥崇暤椤斿吋鍣烘繛鍫櫍濮婃椽鎮烽幍顔芥喖闂佸憡姊圭敮鐐靛垝椤撱垹纾兼繛鎴烇供閸ゃ倝姊虹紒姗嗙劸濞存粠鍓涚划锝呂旈崨顔间化闂佹悶鍎崝搴ｇ磽濮樿埖鐓?
+            storage:download: Generate download URLs after resource authorization. / 闂傚倷绶氬鑽ゆ嫻閻旂厧绀夐煫鍥ㄦ礈閻牊銇勯幇銊﹀櫚闁衡偓閿曞倹鐓欓梺顓ㄧ畱楠炴牠鏌熼弶鎴炲仴闁哄备鍓濆鍕節閸屾稒顔勯梻浣筋嚃閸犳銆冩繝鍥х畺濞寸姴顑嗛崑鍕磼鐎ｎ厽纭跺ù婊愮稻缁绘盯骞嬮悙鏉戠濡炪倖鍨甸悧鍡涙箒闂佹悶鍎洪崜娆撳箲閸洘鐓涘璺侯儏椤曟粎绱掗幓鎺濈吋闁?
+            knowledge:read: Read datasets and execute knowledge search. / 闂備浇宕垫慨鏉懨洪埡鍜佹晪鐟滄垿濡甸幇鏉跨倞妞ゆ巻鍋撻柡瀣╃窔閺岋絽螖閳ь剟鎮ч崱娆戠焾闁挎洖鍊归埛鎺楁煕閳╁喚娈曟い銉︾矒閺屻倝鎳￠妶鍛亪濡ょ姷鍋涚粔鐑剿囬懜鐐逛簻闁靛繆鈧磭浼岄梺璇″灠閻倹淇婇悜钘壩╃憸搴綖濮樿埖鈷戦柣鐔告緲閹垹绱掗濂稿弰鐎规洘甯℃俊鎼佸煛娴?
+            knowledge:write: Create datasets and submit Add/Cognify/Memify jobs. / 闂傚倷绀侀幉锛勬暜濡ゅ啰鐭欓柟瀵稿Х绾句粙鏌熼幑鎰靛殭闁哄绶氶弻锝呂旈埀顒勬偋閸℃瑧鐭堥柨鏇炲€归埛鎺楁煕閳╁喚娈曟い銉︾矒閺屻倝鎳￠妶鍛亪濡ょ姷鍋為幑鍥嵁閸ヮ剦鏁傞柛娑卞幗閺?Add/Cognify/Memify 婵犵數鍋涢顓熸叏妤ｅ喚鏁嬬憸搴ㄥ箞閵娾晜鍋勯柣鎾冲?
+            eval:read: Read evaluation engine catalogs, metrics, and evaluation results. / 闂佽崵濮村ú鈺咁敋瑜戦妵鎰板炊閳哄倸鐝伴梺鍛婃处閸撴盯濡剁€电硶鍋撳▓鍨灍婵炲弶锕㈤獮鏍箹娴ｇ懓鍓銈嗘閸嬫劗绮旈崸妤佺厪闁糕剝娲滈崝宥夋倵閸偄鍝虹€殿喕绮欏畷鍫曞煛閸屾粎宕堕柣鐔哥矌婢ф煤閹寸姷绠旂€光偓閳ь剟骞忛悩璇茬妞ゆ帒鍊堕崑鐐电磽閸屾瑧鍔嶉柟绋款煼閹ɑ寰勯幇顑?
+            eval:write: Submit synchronous or asynchronous evaluation runs. / 闂備礁婀辩划顖炲礉閹烘埈娼╅柨鏇炲€哥憴锕傛倶閻愪絻妾搁柛鏂垮閺岀喓鈧稒顭囨晶顏嗙磼鏉堛劍灏い顐犲灲婵＄兘濡歌椤牕鈹戦悙瀛樼稇妞ゆ垵瀚伴獮鎴﹀閵堝懐顦柟鐑樺▕閸┾偓?
+            synthesis:read: Read synthesis engine catalogs and synthesis results. / 闂佽崵濮村ú鈺咁敋瑜戦妵鎰板炊椤掆偓閺嬩線鏌ｅΔ鈧悧鍡欑矈閿曞倹鐓曟慨姗嗗墰婢ф盯鏌涢妸锕佸妞ゆ洩缍佸鎾偄閸涘﹤鍔庨梻浣哄劦閺呪晠宕伴弽顐ょ鐎广儱妫涢埢鏃堝箹缁懓澧查柛濞垮€濋弻鐔衡偓娑櫭慨澶岀磼椤斿搫濮傜€殿喚顭堥埞鍐╂償閹惧厖澹?
+            synthesis:write: Submit synchronous or asynchronous synthesis runs. / 闂備礁婀辩划顖炲礉閹烘埈娼╅柨鏇炲€哥憴锕傛倶閻愪絻妾搁柛鏂垮閺岀喓鈧稒顭囨晶顏嗙磼鏉堛劍灏い顐犲灲婵＄兘鏁傞懞銉晙闂備胶顢婇鏍窗閺嶎厼绠栭幖娣妼缁狅綁鏌熼柇锔跨凹鐎规洘鐓￠弻娑㈠棘閸涱喖顥愰柛?
+            observability:read: Read protected observability resources. / 闂備浇宕垫慨鏉懨洪埡鍜佹晪鐟滄垿濡甸幇鏉跨倞妞ゆ巻鍋撻柣顓燁殕娣囧﹪鎮欓幓鎺嗘寖缂備胶濮崇划娆撳蓟閻旇偐鍙曢柟缁樺坊閸嬫挸螖閳ь剟鍩㈤幘璇茬闁绘ê鍟块弸鍌炴⒑缁嬫寧婀扮紒瀣崌婵″爼骞橀钘変化閻熸粌绉堕埀顒佸嚬閸橀箖鎳為柆宥庢晪闁逞屽墯娣?
+            admin:read: Read platform administration resources. / 闂備浇宕垫慨鏉懨洪埡鍜佹晪鐟滄垿濡甸幇鏉跨倞妞ゆ帒鍊哥粊锕傛⒑閸涘﹤濮堢憸鏉垮暣閺屽﹥娼忛埡鍐紲闂佺粯鐟ラ幊鎰閸ф鐓欐い鏃傘€嬮崝鐔兼煙缁夊棗娲ょ粈瀣亜閹烘垵鈧宕哄澶嬧拺?
+            admin:write: Change platform administration resources. / 婵犵數鍎戠徊钘壝归崒鐐茬獥婵°倕鎳庨弸浣糕攽閸屾碍鎲哥€规挷绶氶弻娑㈠箛椤撶偟绁烽梻浣瑰娴滎剛妲愰幒妤佸亼闁告侗鍨抽敍鐔兼⒑鐠団€虫灈闁挎洩绠撻獮鎰樄鐎规洜鍠栭、妤呭磼濠婂啰鍘撻梻?
         clientCredentials:
           tokenUrl: https://auth.cortex.example.com/oauth2/token
           scopes:
-            health:read: Read health and readiness status. / 读取健康和就绪状态。
-            jobs:read: Read job status and event streams. / 读取任务状态和事件流。
-            jobs:cancel: Cancel queued or running jobs. / 取消排队中或运行中的任务。
-            parse:read: Read parse registries and parse results. / 读取解析注册表和解析结果。
-            parse:write: Submit synchronous or asynchronous parse operations. / 提交同步或异步解析操作。
-            storage:read: Read object metadata. / 读取对象元数据。
-            storage:write: Create or finalize upload sessions. / 创建或完成上传会话。
-            storage:download: Generate download URLs after resource authorization. / 在资源授权后生成下载地址。
-            knowledge:read: Read datasets and execute knowledge search. / 读取数据集并执行知识搜索。
-            knowledge:write: Create datasets and submit Add/Cognify/Memify jobs. / 创建数据集并提交 Add/Cognify/Memify 任务。
-            observability:read: Read protected observability resources. / 读取受保护的观测资源。
-            admin:read: Read platform administration resources. / 读取平台管理资源。
-            admin:write: Change platform administration resources. / 修改平台管理资源。
+            health:read: Read health and readiness status. / 闂備浇宕垫慨鏉懨洪埡鍜佹晪鐟滄垿濡甸幇鏉跨倞妞ゆ巻鍋撶痪鎯ь煼閺屾洘寰勯崼婵嗗闂佺顭紞渚€寮诲☉姗嗙叆闁告劦鍘奸顓炩攽椤旇婊堝礉鎼达絾顫曢柟鐑橆殢閺佸倿鏌涢埄鍐︿簼闁挎洖鍊归悡娆愩亜閹存繃鍋ユ俊鍓у厴閺?
+            jobs:read: Read job status and event streams. / 闂備浇宕垫慨鏉懨洪埡鍜佹晪鐟滄垿濡甸幇鏉跨倞闁靛ě灞剧カ闂佽崵濮村ú锕併亹閸愵噯缍栭柕鍫濐槹閻撶喐淇婇姘变虎闁绘挻鍔欓弻宥堫檨闁稿繑绋撶划鍫熺瑹閳ь剟鐛箛娑欏亱闁割偁鍩勫ú鎼佹煟鎼搭垳宀涢柡鍛矒椤㈡洟鎳為妷褏顔曠紓鍌氱墢婵炩偓婵″墽鍏橀弻?
+            jobs:cancel: Cancel queued or running jobs. / 闂傚倷绀侀幉锟犳偡閿曞倹鍋嬫俊銈呭暟閻捇鏌ｉ幋锝嗩棄缂佺姵濞婇弻鐔兼倻濮楀棙鐣烽悶姘箖缁绘盯骞嬮悙瀛樺剮闂佸憡眉缁瑥鐣疯ぐ鎺懳╅柨鏃€鍨濆锕傛⒑瑜版帒浜伴柛銊ャ偢瀵劑鎸婃径鍡橆潔闂佺懓鐏濋崯顐︾嵁濡崵绠鹃柛顐ゅ枎閻忥妇绱掗崒娑樼闁归濞€楠炴捇骞掑┑鍥у皟闂?
+            parse:read: Read parse registries and parse results. / 闂備浇宕垫慨鏉懨洪埡鍜佹晪鐟滄垿濡甸幇鏉跨倞闁冲搫鍊搁弸鍌炴⒑閹稿海绠撴俊顐ｇ洴閸┾偓妞ゆ帒鍟ˉ澶愭煃缂佹ɑ顥堝┑鈩冩倐婵＄兘濡烽敂鑺ョ帆闂備浇宕甸崑鐐电矙韫囨稑绀夌€光偓閸曨偆顔嗛梺瑙勵問閸犳宕伴崱娑欑叆婵犻潧妫欓ˉ鐘绘煃瑜滈崜娑㈠疾椤愩倖顫曢柟鐑橆殔缁犲鎮楅悽鍛婃珳闁告垳绮欏?
+            parse:write: Submit synchronous or asynchronous parse operations. / 闂傚倷绀佸﹢杈╁垝椤栫偛绀夐柟鐑樺焾濞尖晠鏌ㄩ弴鐐测偓鍝ユ喆閿曞倹鍊堕柣鎰祷濡炬悂鏌涢弬鍨伃闁哄瞼鍠撻埀顒佺⊕椤洦鏅堕鍡欑＜閺夊牄鍔嶇亸顓熴亜椤愮姴鐏插┑锛勫厴婵℃悂骞囬鐐磋癁閻庢鍠楅幃鍌炵嵁閸ヮ剦鏁囬柣鏃傤焾閸斿苯鈹戦悙鑸靛涧缂佹煡绠栧畷鍨償閵娿儳鍔?
+            storage:read: Read object metadata. / 闂備浇宕垫慨鏉懨洪埡鍜佹晪鐟滄垿濡甸幇鏉跨倞闁宠鍎虫禍楣冩煟閵忊槅鍟忛柡鈧导瀛樼參闁哄诞鍐句純閻庤娲橀〃濠傜暦濮椻偓閸╋繝宕掑☉鍗炴櫃闂傚倷鑳堕、濠囶敋閺嶎厼绐楅柟鎹愵嚙閻?
+            storage:write: Create or finalize upload sessions. / 闂傚倷绀侀幉锛勬暜濡ゅ啰鐭欓柟瀵稿Х绾句粙鏌熼幑鎰靛殭缂佺媴缍侀弻鈥崇暤椤斿吋鍣烘繛鍫櫍濮婃椽鎮烽幍顔芥喖闂佸憡姊圭敮鐐靛垝椤撱垹纾兼繛鎴烇供閸ゃ倝姊虹紒姗嗙劸濞存粠鍓涚划锝呂旈崨顔间化闂佹悶鍎崝搴ｇ磽濮樿埖鐓?
+            storage:download: Generate download URLs after resource authorization. / 闂傚倷绶氬鑽ゆ嫻閻旂厧绀夐煫鍥ㄦ礈閻牊銇勯幇銊﹀櫚闁衡偓閿曞倹鐓欓梺顓ㄧ畱楠炴牠鏌熼弶鎴炲仴闁哄备鍓濆鍕節閸屾稒顔勯梻浣筋嚃閸犳銆冩繝鍥х畺濞寸姴顑嗛崑鍕磼鐎ｎ厽纭跺ù婊愮稻缁绘盯骞嬮悙鏉戠濡炪倖鍨甸悧鍡涙箒闂佹悶鍎洪崜娆撳箲閸洘鐓涘璺侯儏椤曟粎绱掗幓鎺濈吋闁?
+            knowledge:read: Read datasets and execute knowledge search. / 闂備浇宕垫慨鏉懨洪埡鍜佹晪鐟滄垿濡甸幇鏉跨倞妞ゆ巻鍋撻柡瀣╃窔閺岋絽螖閳ь剟鎮ч崱娆戠焾闁挎洖鍊归埛鎺楁煕閳╁喚娈曟い銉︾矒閺屻倝鎳￠妶鍛亪濡ょ姷鍋涚粔鐑剿囬懜鐐逛簻闁靛繆鈧磭浼岄梺璇″灠閻倹淇婇悜钘壩╃憸搴綖濮樿埖鈷戦柣鐔告緲閹垹绱掗濂稿弰鐎规洘甯℃俊鎼佸煛娴?
+            knowledge:write: Create datasets and submit Add/Cognify/Memify jobs. / 闂傚倷绀侀幉锛勬暜濡ゅ啰鐭欓柟瀵稿Х绾句粙鏌熼幑鎰靛殭闁哄绶氶弻锝呂旈埀顒勬偋閸℃瑧鐭堥柨鏇炲€归埛鎺楁煕閳╁喚娈曟い銉︾矒閺屻倝鎳￠妶鍛亪濡ょ姷鍋為幑鍥嵁閸ヮ剦鏁傞柛娑卞幗閺?Add/Cognify/Memify 婵犵數鍋涢顓熸叏妤ｅ喚鏁嬬憸搴ㄥ箞閵娾晜鍋勯柣鎾冲?
+            eval:read: Read evaluation engine catalogs, metrics, and evaluation results. / 闂佽崵濮村ú鈺咁敋瑜戦妵鎰板炊閳哄倸鐝伴梺鍛婃处閸撴盯濡剁€电硶鍋撳▓鍨灍婵炲弶锕㈤獮鏍箹娴ｇ懓鍓銈嗘閸嬫劗绮旈崸妤佺厪闁糕剝娲滈崝宥夋倵閸偄鍝虹€殿喕绮欏畷鍫曞煛閸屾粎宕堕柣鐔哥矌婢ф煤閹寸姷绠旂€光偓閳ь剟骞忛悩璇茬妞ゆ帒鍊堕崑鐐电磽閸屾瑧鍔嶉柟绋款煼閹ɑ寰勯幇顑?
+            eval:write: Submit synchronous or asynchronous evaluation runs. / 闂備礁婀辩划顖炲礉閹烘埈娼╅柨鏇炲€哥憴锕傛倶閻愪絻妾搁柛鏂垮閺岀喓鈧稒顭囨晶顏嗙磼鏉堛劍灏い顐犲灲婵＄兘濡歌椤牕鈹戦悙瀛樼稇妞ゆ垵瀚伴獮鎴﹀閵堝懐顦柟鐑樺▕閸┾偓?
+            synthesis:read: Read synthesis engine catalogs and synthesis results. / 闂佽崵濮村ú鈺咁敋瑜戦妵鎰板炊椤掆偓閺嬩線鏌ｅΔ鈧悧鍡欑矈閿曞倹鐓曟慨姗嗗墰婢ф盯鏌涢妸锕佸妞ゆ洩缍佸鎾偄閸涘﹤鍔庨梻浣哄劦閺呪晠宕伴弽顐ょ鐎广儱妫涢埢鏃堝箹缁懓澧查柛濞垮€濋弻鐔衡偓娑櫭慨澶岀磼椤斿搫濮傜€殿喚顭堥埞鍐╂償閹惧厖澹?
+            synthesis:write: Submit synchronous or asynchronous synthesis runs. / 闂備礁婀辩划顖炲礉閹烘埈娼╅柨鏇炲€哥憴锕傛倶閻愪絻妾搁柛鏂垮閺岀喓鈧稒顭囨晶顏嗙磼鏉堛劍灏い顐犲灲婵＄兘鏁傞懞銉晙闂備胶顢婇鏍窗閺嶎厼绠栭幖娣妼缁狅綁鏌熼柇锔跨凹鐎规洘鐓￠弻娑㈠棘閸涱喖顥愰柛?
+            observability:read: Read protected observability resources. / 闂備浇宕垫慨鏉懨洪埡鍜佹晪鐟滄垿濡甸幇鏉跨倞妞ゆ巻鍋撻柣顓燁殕娣囧﹪鎮欓幓鎺嗘寖缂備胶濮崇划娆撳蓟閻旇偐鍙曢柟缁樺坊閸嬫挸螖閳ь剟鍩㈤幘璇茬闁绘ê鍟块弸鍌炴⒑缁嬫寧婀扮紒瀣崌婵″爼骞橀钘変化閻熸粌绉堕埀顒佸嚬閸橀箖鎳為柆宥庢晪闁逞屽墯娣?
+            admin:read: Read platform administration resources. / 闂備浇宕垫慨鏉懨洪埡鍜佹晪鐟滄垿濡甸幇鏉跨倞妞ゆ帒鍊哥粊锕傛⒑閸涘﹤濮堢憸鏉垮暣閺屽﹥娼忛埡鍐紲闂佺粯鐟ラ幊鎰閸ф鐓欐い鏃傘€嬮崝鐔兼煙缁夊棗娲ょ粈瀣亜閹烘垵鈧宕哄澶嬧拺?
+            admin:write: Change platform administration resources. / 婵犵數鍎戠徊钘壝归崒鐐茬獥婵°倕鎳庨弸浣糕攽閸屾碍鎲哥€规挷绶氶弻娑㈠箛椤撶偟绁烽梻浣瑰娴滎剛妲愰幒妤佸亼闁告侗鍨抽敍鐔兼⒑鐠団€虫灈闁挎洩绠撻獮鎰樄鐎规洜鍠栭、妤呭磼濠婂啰鍘撻梻?
     BearerAuth:
       type: http
       scheme: bearer
@@ -1112,7 +1640,7 @@ components:
       schema:
         type: string
         example: job_71fe50adf1cb4981bb322f0d74f32598
-      description: Stable job identifier, typically a UUID or ULID generated by the service. / 稳定的任务标识，通常由服务生成 UUID 或 ULID。
+      description: Stable job identifier, typically a UUID or ULID generated by the service. / 缂傚倸鍊风粈渚€顢栭崨鏉戠柈闁秆勵殕閸嬧晛螖閿濆懎鏆為柛搴＄Ч閺屾盯寮撮妸銈囧嚬閻庤娲橀悡锟犲蓟濞戙垹妫橀柛婵嗗閳峰姊虹紒妯煎缂佹彃娼￠獮蹇涙偐鐠囨彃鑰垮銈嗘尵婵兘藝椤曗偓濮婄粯绗熼崶褌绨奸梺鐓庣秺缁犳牠骞冮妷鈺侀唶闁哄洨鍠庢禒娲煛婢跺﹦澧戦柛鏂跨Ф缁鈽夐姀锛勫幈闂佸搫鍟幐鍓у閸ф鐓涘ù锝堫潐瀹曞本顨?UUID 闂?ULID闂?
     UploadId:
       name: uploadId
       in: path
@@ -1120,7 +1648,7 @@ components:
       schema:
         type: string
         example: upl_9feeaad1935f4b478ff61d6347ee5562
-      description: Upload session identifier returned by `POST /v1/storage/uploads`. / 由 `POST /v1/storage/uploads` 返回的上传会话标识。
+      description: Upload session identifier returned by `POST /v1/storage/uploads`. / 闂?`POST /v1/storage/uploads` 闂備礁鎼ˇ顐﹀疾濠婂牆钃熼柕濞垮剭濞差亜鍐€妞ゆ挾鍠庨崜顓㈡⒑閸涘﹥澶勫ù婊呭仱閹兘骞囬鐐茬秺閹虫牠鍩℃担鍥风磿缁辨帗娼忛妸銉闂佸綊顥撴慨鎾煘閹达箑鐐婇柍杞拌兌娴煎洭姊洪懡銈呅㈡繛灞傚€曡灋閹兼番鍔岄悞?
     ObjectId:
       name: objectId
       in: path
@@ -1128,7 +1656,7 @@ components:
       schema:
         type: string
         example: obj_3f6c1d5e9b1646b5a4eabdbf8b417bd3
-      description: Stable object identifier returned by the Storage API. / 由 Storage API 返回的稳定对象标识。
+      description: Stable object identifier returned by the Storage API. / 闂?Storage API 闂備礁鎼ˇ顐﹀疾濠婂牆钃熼柕濞垮剭濞差亜鍐€妞ゆ挾鍠庨崜顓㈡⒑閸涘﹥澶勯柛妯诲姍瀵噣宕掑Δ鈧禍楣冩偡濞嗗繐顏瑙勆戦妵鍕即閵娿儲鐏撻梺鐟版啞鐢繝宕洪崟顖氱妞ゅ繐瀚导鍥⒑閼姐倕孝婵炲眰鍊曡灋閹兼番鍔岄悞?
     DatasetId:
       name: datasetId
       in: path
@@ -1136,7 +1664,7 @@ components:
       schema:
         type: string
         example: dset_9558cfc9178444e4a4c60d5658db78f5
-      description: Stable dataset identifier returned by the Knowledge API. / 由 Knowledge API 返回的稳定数据集标识。
+      description: Stable dataset identifier returned by the Knowledge API. / 闂?Knowledge API 闂備礁鎼ˇ顐﹀疾濠婂牆钃熼柕濞垮剭濞差亜鍐€妞ゆ挾鍠庨崜顓㈡⒑閸涘﹥澶勯柛妯诲姍瀵噣宕掑Δ鈧禍楣冩偡濞嗗繐顏い锝嗙叀閺岋繝宕卞▎蹇旂亪濡ょ姷鍋為崹鍧椼€佸璺虹劦妞ゆ巻鍋撻柍缁樻閺佸啴宕掑顒€鏁ら梻浣规偠閸庣儤绂嶉悙鍙傦綁寮撮姀锛勫帾?
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -1144,7 +1672,7 @@ components:
       description: |
         Optional idempotency key for safely retrying asynchronous job-submission APIs. The server scopes keys by
         tenant, job type, and authenticated principal. /
-        可选的幂等键，仅用于安全重试异步作业提交接口。服务端应按租户、作业类型和认证主体进行作用域隔离。
+        闂傚倷绀侀幉锟犳偡椤栫偛鍨傞柛顐ｆ礀閻掑灚銇勯幒鍡椾壕濡炪倧绠戝畷顒勫煝閹捐绠ｉ柨鏃€鍎崇粊锕傛⒑缁嬫寧婀扮紒顔奸叄楠炴牗绺介崨濞炬嫼濠电偛妫欓崕鍐测枍濞嗘垹纾奸弶鍫涘妿缁犳牜绱掗崒娑樻诞鐎规洏鍔戦、娑樷槈濞嗘劦鍚傛繝鐢靛仜閻°劎鍒掔仦缁㈡闁归棿鐒﹂崑鈺呮煏婵炵偓娅呯紒鈧崒鐐寸厪濠电偟鍋撳▍鍛箾閸涱偄鐏查柟顔肩秺瀹曞爼濡搁敂缁㈡К缂傚倷娴囨ご鎼佸箰閹间緤缍栭柕蹇嬪€曞敮闂侀潧鐗嗗ú銊╁煝閺囩喓绠鹃柟瀵稿仦鐏忔壆鐥弶璺ㄐラ柕鍥ㄥ姈閹峰懘宕烽褎閿ら梻渚€娼ч悧鍡椢涘Δ浣哥窞鐎广儱顦伴悡鏇熺箾閸℃鎳呯紒浣哄厴閺屽秷顧侀柛鎾寸懇瀹曟劙鎮风敮顔库偓鍧楁煕閵夘喖澧紒鈧径鎰叆婵炴垶锚椤忔潙霉閻撳骸鈧潡鐛弽顐熷亾濞戞鎴﹀煕閹扮増鍊甸柛顭戝亞閻瞼绱掗鑺ヮ棃闁诡喓鍨荤划娆戞崉閵娿儱绠為梻鍌欑窔濞佳兾涢弬娆炬富闁圭儤姊荤粈濠囨煛閸愶絽浜剧紓浣割儏椤︻垶锝炲┑鍥ㄧ秶妞ゆ劦鍋呴拺澶愭⒒娴ｈ鍋犻柛鏂跨焸椤㈡牠宕ㄩ弶鎴狀唵闂佽顔栭崰妤佸垔婵傚憡鐓忛柛顐ｇ箘婢с垺淇婇幓鎺斿闁宠棄顦甸獮妯兼嫚閳ヨ櫕鏆紓鍌氬€哥粔鎾敄閸℃鐒介悹鍥ㄧゴ濡插牊绻濇繝鍌氼劉闁哄倵鍋撴繝鐢靛仩閹活亞寰婇崜褍鍨濋幖娣妼閺嬩線鏌曢崼婵愭Ц闁哄嫨鍎甸弻锝夊棘閸喗鍊銈嗘尭婢х晫妲愰幒妤€纾兼繛鎴炵閼垮洭姊?
       schema:
         type: string
         maxLength: 255
@@ -1153,52 +1681,52 @@ components:
       name: traceparent
       in: header
       required: false
-      description: W3C Trace Context header for distributed tracing. / 用于分布式追踪的 W3C Trace Context 头。
+      description: W3C Trace Context header for distributed tracing. / 闂傚倷鐒﹀鍨焽閸ф绀夐悗锝庡墲婵櫕銇勯幒鎴濐仼缂佲偓閸℃稒鐓曢柍鈺佸枤濞堟ɑ銇勮箛鎿冨殶闁逞屽墯椤旀牠宕伴弽顐ｅ床婵°倕鎳庣粻顖炴煟閹寸姵娅曢柛娆愬笚閵囧嫯绠涢幘鎼！闂?W3C Trace Context 婵犵數濮伴崹濂稿春閺嶎厽鍋╂い蹇撶墕閻?
       schema:
         type: string
     TracestateHeader:
       name: tracestate
       in: header
       required: false
-      description: Optional W3C tracestate header carrying vendor-specific trace state. / 可选的 W3C tracestate 头，用于承载供应商特定追踪状态。
+      description: Optional W3C tracestate header carrying vendor-specific trace state. / 闂傚倷绀侀幉锟犳偡椤栫偛鍨傞柛顐ｆ礀閻掑灚銇勯幒鍡椾壕濡炪倧绠戝畷顒勫煝?W3C tracestate 婵犵數濮伴崹娲磿婵傜绠垫い蹇撴椤洘绻濋棃娑卞剱闁稿鍔戦弻鏇熺箾閸喒鍋撳Δ鍛殞濡わ絽鍟悡娆徝归敐鍛殭闁告柨鐏氱换娑㈠级閹寸偛顦╃紓浣诡殘閸犲酣鍩ユ径濞㈢喖鎮℃惔锝嗘闂傚倷绀侀幗婊堝窗鎼粹垾娑樷槈濞嗘垹褰鹃梺鍦劋閺岋繝宕戦幘鑸靛枂闁告洦浜欑€涒晠姊鸿ぐ鎺濇闁稿繑锕㈤幃锟狀敂閸偅鏅滈梺绯曞墲閵囧懘鏁冮崒娑氬幍濡炪倖鍨靛鈥愁瀶閻戣姤鐓?
       schema:
         type: string
     BaggageHeader:
       name: baggage
       in: header
       required: false
-      description: W3C Baggage header for propagating release, experiment, or tenant context. / 用于传播发布、实验或租户上下文的 W3C Baggage 头。
+      description: W3C Baggage header for propagating release, experiment, or tenant context. / 闂傚倷鐒﹀鍨焽閸ф绀夐悗锝庡墲婵櫕銇勯幒宥囶槮妞ゆ洟浜堕弻锝呂熼幐搴ｅ涧闁诲繐楠忕换婵嬪蓟濞戞ǚ鏋庨柟閭﹀墰娴犲绱撴担瑙勨拻闁稿繑蓱娣囧﹦鈧稒蓱婵挳鏌涘┑鍕姕婵犮垺鐗楁穱濠囧Χ閸ヮ灝銏ゆ煛閸偄澧寸€规洖缍婃俊姝岊槾闁活厽鎹囬弻锝夊籍閸屻倗鍔搁梺缁樻尰濞叉牠鍩ユ径鎰缂佹稖顫夐。鑲╃磽娴ｈ娈旈柟铏锝夘敆閸曨偆鍊為梺鍐叉惈閸婂寮?W3C Baggage 婵犵數濮伴崹濂稿春閺嶎厽鍋╂い蹇撶墕閻?
       schema:
         type: string
     RequestIdHeader:
       name: X-Request-Id
       in: header
       required: false
-      description: Optional caller-supplied request identifier for log and trace correlation. / 调用方可选传入的请求标识，用于日志和链路关联。
+      description: Optional caller-supplied request identifier for log and trace correlation. / 闂備浇宕垫慨鎾敄閸涙潙鐤ù鍏兼綑閺嬩線鏌曢崼婵愭Ц婵☆偅锕㈤弻锝夋偄閸涘﹦鍑￠柣鐘辩劍閻撯€愁潖濞差亶鏁冮柕蹇婃櫆鍟哥紓鍌欑瀹曨剟鎮ラ悡搴ｆ殾婵°倕鎳庡敮閻熸粌閰ｉ幃楣冩焼瀹ュ棗浠梺鎼炲労閸撴岸寮柆宥嗙厽妞ゅ繐鍟畵鍡欌偓娈垮枙缁瑥鐣烽崼鏇ㄦ晜闁糕剝锕╁銉╂⒒娴ｇ懓顕滅紒瀣灴閹绺界粙鎸庣€梺闈涚墕濡盯銆呴弻銉ョ婵烇綆鍓欓悘顏堟煥濞戞﹩妯€闁绘搩鍋婂畷鍫曗€﹂幋鐐垫殽闂備胶顢婂〒褰掑础閹惰棄钃熺憸鏃堢嵁閹达箑绠涙い鏃€鍎抽弫鍫曟⒒娴ｄ警鐒剧紒缁樺姍閹潡宕堕妸褜娴勯梺鍓插亖閸庤精绻?
       schema:
         type: string
 
   headers:
     Traceparent:
-      description: Current request traceparent value generated or echoed by the service. / 服务生成或回传的当前请求 traceparent。
+      description: Current request traceparent value generated or echoed by the service. / 闂傚倷绀侀幖顐︽偋閸℃瑧鐭撻悗娑櫳戦崣蹇涙煟閺傚灝鎮戦柛瀣ㄥ姂閺岋綁寮崒銈囧姼闂佽绻愬ú顓㈠蓟閻旇　鍋撳☉娆樼劷濠⒀屼簼缁绘盯宕ｆ径灞筋潷闁诲酣娼ч妶鎼佸箖閳哄懎鍨傛い鎰╁€栧▓鎼佹煟閻斿摜鐭屽褎顨婇獮鎰板川婵犲啯鐝烽梺缁樏悘姘扁偓姘哺濮婃椽宕归鍛壋濠电姭鍋?traceparent闂?
       schema:
         type: string
     XTraceId:
-      description: Canonical trace identifier for jumping to Jaeger or Grafana. / 用于跳转 Jaeger 或 Grafana 的标准 trace 标识。
+      description: Canonical trace identifier for jumping to Jaeger or Grafana. / 闂傚倷鐒﹀鍨焽閸ф绀夐悗锝庡墲婵櫕銇勯幒鎴濃偓鐟扮暦婢舵劖鍊甸柛锔诲幖鏍＄紓?Jaeger 闂?Grafana 闂傚倷鐒﹂惇褰掑礉瀹€鈧埀顒佸嚬閸欏啴骞冮妷鈺傛櫜濠㈣泛锕﹂ˇ?trace 闂傚倷绀侀幖顐ょ矓閺夋嚚娲煛閸涱喖鍓ㄩ梺纭呮彧缁犳垼绻?
       schema:
         type: string
     XRequestId:
-      description: Canonical request identifier for logs, events, and audit records. / 用于日志、事件和审计记录的请求标识。
+      description: Canonical request identifier for logs, events, and audit records. / 闂傚倷鐒﹀鍨焽閸ф绀夐悗锝庡墲婵櫕銇勯幒鎴濐仼缂侇偄绉归弻鏇熷緞閸繂濮㈢紓浣哄Т閻栧ジ寮婚弴銏犲耿闁哄洨鍣ュΟ鍌滅磽娴ｉ潧濡搁柛鏂跨Ф缁骞掗弮鈧畷澶愭煟閹寸伝顏堫敂椤栫偞鐓熼幖绮规閸斿啴鏌曢崼婵嬵€楅柟顔荤窔閺岋綁鎮╂潏鈺佸濠电姰鍨洪…鍥╂閻愬樊鍚嬪璺侯儏閸擃參姊洪崨濠冨闁革綆鍣ｅ畷鐢告倷鐎涙ê寮块梺鑽ゅ枑濠㈡﹢鍩€椤掆偓缂嶅﹪骞冮妷鈺傛櫜闁搞儯鍔岄悵浼存⒑缁洖澧查柛鏂跨箻瀹?
       schema:
         type: string
     XDecisionId:
-      description: Authorization decision identifier for audit and support investigations. / 用于审计与问题排查的授权决策标识。
+      description: Authorization decision identifier for audit and support investigations. / 闂傚倷鐒﹀鍨焽閸ф绀夐悗锝庡墲婵櫕銇勯幒鎴濃偓鐢稿磻閹惧灈鍋撳☉鏍р偓鎴﹀磹閵堝瑙﹂柍褜鍓氱换娑㈠箣閻愭潙纰嶉梻浣稿簻缁插€熺亱闂佺厧鎽滈。顔炬閿濆棔绻嗘い鏍ㄧ箥閸ゆ瑧绱掑Δ浣瑰磳闁哄矉绱曟禒锔炬嫚閹绘帒袘婵犵數鍋涢悧濠囧垂閸ф宓侀柟鐑橆殔闁卞洭鏌ｉ弬鎸庢喐缂佸鍓熷娲川婵犲倸顫岀紒鍓ц檸閸欏啴骞冨ú顏勎ㄩ柍杞扮閸炪劑姊洪幖鐐插姶濞存粎鍋涘嵄闁哄洢鍨洪悡?
       schema:
         type: string
 
   responses:
     BadRequest:
-      description: Invalid request. / 无效请求。
+      description: Invalid request. / 闂傚倷绀侀幖顐﹀疮閻楀牊鍙忛柣銏㈩焾閻ら箖鏌曟竟顖氬閻濅即姊绘担鍝ヤ虎妞ゆ垵娲ら敃銏ゅ箻椤旂晫鍘?
       headers:
         traceparent:
           $ref: '#/components/headers/Traceparent'
@@ -1211,7 +1739,7 @@ components:
           schema:
             $ref: '#/components/schemas/ProblemDetails'
     Unauthorized:
-      description: Authentication required or token invalid. / 需要认证或令牌无效。
+      description: Authentication required or token invalid. / 闂傚倸鍊搁崐绋棵洪悩璇茬；闁瑰墽绮崑锟犳煛閸ャ劎顣茬紒浣哄閵囧嫰骞橀悷鏉挎優闂佸綊顥撴慨鐢稿箯閸涘瓨鍋￠柟娈垮枙缁絽鈹戦悙宸殶濠殿喕鍗冲畷鎰旀担瑙勭彿濠电娀娼ч鍛尵瀹ュ鐓熸俊顖涘閻濐亝绻涢崨顓犵闁?
       headers:
         traceparent:
           $ref: '#/components/headers/Traceparent'
@@ -1224,7 +1752,7 @@ components:
           schema:
             $ref: '#/components/schemas/ProblemDetails'
     Forbidden:
-      description: Authenticated caller lacks required functional or data permissions. / 调用方已通过认证，但缺少所需功能权限或数据权限。
+      description: Authenticated caller lacks required functional or data permissions. / 闂備浇宕垫慨鎾敄閸涙潙鐤ù鍏兼綑閺嬩線鏌曢崼婵愭Ц婵☆偅锕㈤弻锝夋偄閸涘﹦鍑￠梺鎼炲€栫敮鈥愁潖濞差亶鏁冮柨婵嗗鐎涒晝绱撴担绛嬪殭闁哥喍鍗抽獮蹇曗偓锝庡枛鍥撮梺鍓插亖閸ㄦ椽锝炲澶嬧拺闁圭娴烽埥澶娾攽閸屾稒鈷掔€垫澘锕畷婊嗩槾缁惧彞绮欓弻娑樷攽閸℃浼€濠殿噯绲介惌鍌炲蓟閻斿搫鏋堟俊顖濇〃婢规洟姊婚崒姘偓绋棵洪悩璇茬；闁瑰墽绮悡鏇㈡煛閸愩劌鈧悂寮稿▎鎾寸厱闊洦妫戦懓璺ㄢ偓娈垮枛閻栫厧鐣峰鈧、娆戠驳鐎Ｑ冧壕婵炲棙鎸婚悡娆撴倵濞戞瑯鐒藉褜鍓熼弻锟犲幢濞嗗繑鐏堝Δ鐘靛仦閸ㄥ潡銆佸▎鎾村殟闁靛／鍛呮岸姊婚崒姘偓鍝モ偓姘煎弮瀹曟繈骞嬮敃鈧悞?
       headers:
         traceparent:
           $ref: '#/components/headers/Traceparent'
@@ -1239,7 +1767,7 @@ components:
           schema:
             $ref: '#/components/schemas/ProblemDetails'
     NotFound:
-      description: Resource not found. / 资源不存在。
+      description: Resource not found. / 闂備浇宕垫慨宥夊礃椤垳鐥紓鍌欑贰閻撳牓宕板Δ鍐煓濠㈣泛顭崥瀣煕濞戝崬鐏￠柟鎻掋偢濮婃椽妫冮埡鍕槹闂佸憡鏌ㄩ敃顏堝春閳?
       headers:
         traceparent:
           $ref: '#/components/headers/Traceparent'
@@ -1252,7 +1780,7 @@ components:
           schema:
             $ref: '#/components/schemas/ProblemDetails'
     Conflict:
-      description: Resource state conflict. / 资源状态冲突。
+      description: Resource state conflict. / 闂備浇宕垫慨宥夊礃椤垳鐥紓鍌欑贰閻撳牓宕抽敐澶婄畺闁冲搫鎳忛崵瀣棯閻楀煫顏呯閹灐褰掓晲閸ュ墎鍔搁梺鍝勬娴滎剛妲愰幒妤€绠涙い蹇撶墛椤庢牠姊?
       headers:
         traceparent:
           $ref: '#/components/headers/Traceparent'
@@ -1265,7 +1793,7 @@ components:
           schema:
             $ref: '#/components/schemas/ProblemDetails'
     ErrorResponse:
-      description: Generic error. / 通用错误。
+      description: Generic error. / 闂傚倸鍊风欢锟犲磻閸涱収娼╅柕濞炬櫅閺嬩線鏌曢崼婵愭Ч闁绘挶鍎茬换娑㈠幢濡桨鍒婇梺鎼炲€栭悧鐘诲蓟?
       headers:
         traceparent:
           $ref: '#/components/headers/Traceparent'
@@ -1576,6 +2104,8 @@ components:
             - knowledge_add
             - knowledge_cognify
             - knowledge_memify
+            - eval
+            - synthesis
         status:
           type: string
           enum:
@@ -1754,7 +2284,7 @@ components:
           format: uri
         signing_secret_ref:
           type: string
-          description: Reference to a secret managed outside the API payload. / 指向 API 载荷之外托管密钥的引用。
+          description: Reference to a secret managed outside the API payload. / 闂傚倷绀佸﹢閬嶁€﹂崼婢濇椽濡舵径濠勭暫?API 闂備礁鎼ˇ閬嶅磻濞戙垹鐒垫い鎺戝€搁弸搴ｇ磼娴ｇ儤鍤€闁宠棄顦靛顒€鈻庨幆褍澹堟俊鐐€х粻鎴︹€﹂悜鐣屽祦鐎广儱鎲橀悢鍝勬瀳闁告鍋為崐搴ㄦ⒑鐠囨煡鍙勬繛浣冲吘娑樷攽鐎ｎ亞顔囧┑鐘诧工閻楀﹪宕曞澶嬬厱闁哄洢鍔屾禍鐐电磼鐏炶姤鍋ラ柡宀嬬秮閿濈偤顢楅埀顒佷繆閹间焦鐓?
         include_event_history:
           type: boolean
           default: false
@@ -1767,7 +2297,7 @@ components:
         sources:
           type: array
           minItems: 1
-          description: Required source locators. Each item may be an HTTP(S) URL, `s3://` URI, `file://` URI, or `cortex://objects/{object_id}` reference. / 必填的来源定位符列表。每一项都可以是 HTTP(S) URL、`s3://` URI、`file://` URI 或 `cortex://objects/{object_id}` 引用。
+          description: Required source locators. Each item may be an HTTP(S) URL, `s3://` URI, `file://` URI, or `cortex://objects/{object_id}` reference. / 闂傚倸顭崑鍕洪妶澶婄疇閹兼番鍔嶉弲鏌ユ煟閹邦喖鍔嬮柛搴＄Ч閺屾盯寮撮妸銉ヮ潽闂傚倸瀚粔鐢垫崲濠靛妲奸梺鍛婃⒐濞茬喖骞冩ィ鍐╁€锋い鎺嶇椤庢捇鎮楅獮鍨姎婵炴潙鍊垮畷鏇熺節閸ャ劎鍘遍梺鍦劋閹尖晛鈻撳▎鎾寸厪闁糕剝顨呴弳锝呪攽閳╁啯灏︾€规洘甯掗埥澶婎潩椤撳鐗楃换娑㈠箣閻愭潙鐨戦梺绋款儐閹告悂鈥旈崘顔嘉ч柛娑卞灣妤旈梻浣侯焾缁绘垿鏁冮姀鐘垫殾闁挎繂顦介弫宥嗙箾閸℃鎹ｉ梻澶婄Ч濮?HTTP(S) URL闂傚倷绶氬褍螞閺傛娼栨慨?://` URI闂傚倷绶氬褍螞閺傛娼栨慨濠冩綊le://` URI 闂?`cortex://objects/{object_id}` 闂佽瀛╅鏍窗濡も偓鐓ゆ繝濠傜墕閺嬩線鏌曢崼婵愭Ц鏉?
           items:
             type: string
           example:
@@ -1776,13 +2306,13 @@ components:
           type: string
           minLength: 1
           default: auto
-          description: Public parser engine identifier. Use `auto` to let Cortex choose the best active engine and scene per source; otherwise use `crawl4ai`, `jina_reader`, `llama_parse`, `markitdown`, or `docling`. / 公共解析引擎标识。使用 `auto` 可让 Cortex 为每个来源自动选择最佳可用引擎与场景，否则可显式指定 `crawl4ai`、`jina_reader`、`llama_parse`、`markitdown` 或 `docling`。
+          description: Public parser engine identifier. Use `auto` to let Cortex choose the best active engine and scene per source; otherwise use `crawl4ai`, `jina_reader`, `llama_parse`, `markitdown`, or `docling`. / 闂傚倷鑳堕…鍫澝瑰璺虹婵炲棙鎸搁惌妤呮煥濞戞ê顏柛鐘叉閺屻劌鈹戦崱姗嗘￥闂侀€炲苯澧叉俊顐㈠椤㈡岸鏁愭径濠傚祮闂佺粯鏌ㄩ幉锟犲磿瑜斿娲传閸曨厜銏＄箾濞村娅婇柟顖欑窔楠炲鏁冮埀顒冪箽闂備胶顭堥張顒勬偡閵夆晛鐓濋煫鍥ㄧ⊕閻?`auto` 闂傚倷绀侀幉锟犳偡椤栫偛鍨傞柣銏犲閺佸﹪鏌?Cortex 婵犵數鍋為崹鍫曞箰妤ｅ啫纾块柕鍫濐槹閸庡﹪鏌嶉埡浣告殶闁崇粯姊归妵鍕疀閹炬潙娅ら梻鍌氬缁夌數鎹㈠┑濠庢Ъ闂佸憡姊归敃銏犵暦闂堟侗鐓ラ柛顐ｇ箘椤︻噣姊洪棃娴ュ牓寮笟鈧畷鎴﹀箻閺夋垹绐為柣搴秵娴滆埖绂掗幘顔解拺闁告繂瀚晶鎰版煕鐎ｎ偅灏棁澶愭煥濠靛棙鍣归柡鍡氫含閹叉悂鎮ч崼銏犲绩闂佽鍠曠划娆愪繆閹间礁唯鐟滃繘鍩炲☉銏♀拺闁荤喐澹嗘禒銏㈢磼閵娿劌浜圭紒顕呭幖閻ｆ繈宕熼锝呯ザ闂備胶绮崹鎯版懌闂佺粯绻嶉崹鍫曞蓟閵娿儮妲堟俊顖氱仢椤忣參姊虹拠鈥崇仧缂佽埖鑹鹃悾宄邦潩椤戣姤鐎婚棅顐㈡处閹逛線顢欐径鎰拺闁告繂瀚顏堟煕鎼达紕锛嶆俊鍙夊姍閺佹捇鎮╅懠顒夊敹闂備焦鎮堕崕婊堝川椤旂晫妲?`crawl4ai`闂傚倷绶氬褍螞閺傛娼栨慨濠冮搨na_reader`闂傚倷绶氬褍螞閺傛娼栨慨濠冨Кama_parse`闂傚倷绶氬褍螞閺傛娼栨慨濠勨偓濉簁itdown` 闂?`docling`闂?
           example: auto
         scene:
           anyOf:
             - type: string
             - type: 'null'
-          description: Optional high-level parse scene. Best default is to omit it and let Cortex select the engine default scene. Typical values include `balanced`, `deep_web`, `authenticated_web`, `fast_extract`, `document_fidelity`, `document_ai`, or `lightweight`. / 可选的高层解析场景，最佳默认值是留空并由 Cortex 选择引擎默认 scene。常见取值包括 `balanced`、`deep_web`、`authenticated_web`、`fast_extract`、`document_fidelity`、`document_ai`、`lightweight`。
+          description: Optional high-level parse scene. Best default is to omit it and let Cortex select the engine default scene. Typical values include `balanced`, `deep_web`, `authenticated_web`, `fast_extract`, `document_fidelity`, `document_ai`, or `lightweight`. / 闂傚倷绀侀幉锟犳偡椤栫偛鍨傞柛顐ｆ礀閻掑灚銇勯幒鍡椾壕濡炪倧绠戝畷顒勫煝閹捐绠ｉ柣鎴濇閻ｈ鈹戦埥鍡楃仴婵炲拑绲介敃銏ゅ箻椤旇棄浠┑鐐叉閻熝呯矙婵犳碍鐓熼幖瀛樼箘閻瑧鈧娲滈崗姗€骞冨鍏剧喖鎳￠妶鍛邦唹闂傚倷鐒︾€笛呯矙閹达箑瀚夋い鎺嗗亾闁靛棙甯￠幊婊堝垂椤愩埄鈧捇姊洪悷鏉款暢闁哄拋鍋嗛弫顔尖槈閵忊€充化婵炶揪缍佸褔鍩€椤掍焦绀嬮柛鈹惧亾濡炪倖宸婚崑鎾绘煕濮橆剦鍎忛崡閬嶆煙闂傚鍔嶉柛瀣ф櫆缁绘盯宕卞Ο铏逛憾闂佽桨绀佺€氼參銆冮妷鈺傚€烽柟缁樺俯閺嗐垽姊?Cortex 闂傚倸鍊风欢锟犲磻閸曨垁鍥箥椤旂懓浜炬慨妯稿劚婵″吋銇勯弴顏嗙М鐎殿喗鎸抽幃銏ゅ川婵犲倸濡挎繝娈垮枟鐢绮欓幒妞烩偓锕傚醇閵夘喗鏅?scene闂傚倷绶氬褍螞濡ゅ懎纾归柟闂寸劍閸嬪鏌涢幘鑼妽闁哥姴妫楅湁闁挎繂娴傞悞鍓х磼閹绘帗鍋ラ柡灞剧⊕缁绘繈宕熼顫帛闂佽楠搁悘姘舵晝閵忋倗宓?`balanced`闂傚倷绶氬褍螞閺傛娼栨慨濠冩敤ep_web`闂傚倷绶氬褍螞閺傛娼栨慨濠冧淮thenticated_web`闂傚倷绶氬褍螞閺傛娼栨慨濠冩簜st_extract`闂傚倷绶氬褍螞閺傛娼栨慨濠冩敿cument_fidelity`闂傚倷绶氬褍螞閺傛娼栨慨濠冩敿cument_ai`闂傚倷绶氬褍螞閺傛娼栨慨濠冭抗ghtweight`闂?
           example: deep_web
 
     ParseJobSubmitRequest:
@@ -1793,7 +2323,7 @@ components:
         sources:
           type: array
           minItems: 1
-          description: Required source locators. Each item may be an HTTP(S) URL, `s3://` URI, `file://` URI, or `cortex://objects/{object_id}` reference. / 必填的来源定位符列表。每一项都可以是 HTTP(S) URL、`s3://` URI、`file://` URI 或 `cortex://objects/{object_id}` 引用。
+          description: Required source locators. Each item may be an HTTP(S) URL, `s3://` URI, `file://` URI, or `cortex://objects/{object_id}` reference. / 闂傚倸顭崑鍕洪妶澶婄疇閹兼番鍔嶉弲鏌ユ煟閹邦喖鍔嬮柛搴＄Ч閺屾盯寮撮妸銉ヮ潽闂傚倸瀚粔鐢垫崲濠靛妲奸梺鍛婃⒐濞茬喖骞冩ィ鍐╁€锋い鎺嶇椤庢捇鎮楅獮鍨姎婵炴潙鍊垮畷鏇熺節閸ャ劎鍘遍梺鍦劋閹尖晛鈻撳▎鎾寸厪闁糕剝顨呴弳锝呪攽閳╁啯灏︾€规洘甯掗埥澶婎潩椤撳鐗楃换娑㈠箣閻愭潙鐨戦梺绋款儐閹告悂鈥旈崘顔嘉ч柛娑卞灣妤旈梻浣侯焾缁绘垿鏁冮姀鐘垫殾闁挎繂顦介弫宥嗙箾閸℃鎹ｉ梻澶婄Ч濮?HTTP(S) URL闂傚倷绶氬褍螞閺傛娼栨慨?://` URI闂傚倷绶氬褍螞閺傛娼栨慨濠冩綊le://` URI 闂?`cortex://objects/{object_id}` 闂佽瀛╅鏍窗濡も偓鐓ゆ繝濠傜墕閺嬩線鏌曢崼婵愭Ц鏉?
           items:
             type: string
           example:
@@ -1802,13 +2332,13 @@ components:
           type: string
           minLength: 1
           default: auto
-          description: Public parser engine identifier. Use `auto` to let Cortex choose the best active engine and scene per source; otherwise use `crawl4ai`, `jina_reader`, `llama_parse`, `markitdown`, or `docling`. / 公共解析引擎标识。使用 `auto` 可让 Cortex 为每个来源自动选择最佳可用引擎与场景，否则可显式指定 `crawl4ai`、`jina_reader`、`llama_parse`、`markitdown` 或 `docling`。
+          description: Public parser engine identifier. Use `auto` to let Cortex choose the best active engine and scene per source; otherwise use `crawl4ai`, `jina_reader`, `llama_parse`, `markitdown`, or `docling`. / 闂傚倷鑳堕…鍫澝瑰璺虹婵炲棙鎸搁惌妤呮煥濞戞ê顏柛鐘叉閺屻劌鈹戦崱姗嗘￥闂侀€炲苯澧叉俊顐㈠椤㈡岸鏁愭径濠傚祮闂佺粯鏌ㄩ幉锟犲磿瑜斿娲传閸曨厜銏＄箾濞村娅婇柟顖欑窔楠炲鏁冮埀顒冪箽闂備胶顭堥張顒勬偡閵夆晛鐓濋煫鍥ㄧ⊕閻?`auto` 闂傚倷绀侀幉锟犳偡椤栫偛鍨傞柣銏犲閺佸﹪鏌?Cortex 婵犵數鍋為崹鍫曞箰妤ｅ啫纾块柕鍫濐槹閸庡﹪鏌嶉埡浣告殶闁崇粯姊归妵鍕疀閹炬潙娅ら梻鍌氬缁夌數鎹㈠┑濠庢Ъ闂佸憡姊归敃銏犵暦闂堟侗鐓ラ柛顐ｇ箘椤︻噣姊洪棃娴ュ牓寮笟鈧畷鎴﹀箻閺夋垹绐為柣搴秵娴滆埖绂掗幘顔解拺闁告繂瀚晶鎰版煕鐎ｎ偅灏棁澶愭煥濠靛棙鍣归柡鍡氫含閹叉悂鎮ч崼銏犲绩闂佽鍠曠划娆愪繆閹间礁唯鐟滃繘鍩炲☉銏♀拺闁荤喐澹嗘禒銏㈢磼閵娿劌浜圭紒顕呭幖閻ｆ繈宕熼锝呯ザ闂備胶绮崹鎯版懌闂佺粯绻嶉崹鍫曞蓟閵娿儮妲堟俊顖氱仢椤忣參姊虹拠鈥崇仧缂佽埖鑹鹃悾宄邦潩椤戣姤鐎婚棅顐㈡处閹逛線顢欐径鎰拺闁告繂瀚顏堟煕鎼达紕锛嶆俊鍙夊姍閺佹捇鎮╅懠顒夊敹闂備焦鎮堕崕婊堝川椤旂晫妲?`crawl4ai`闂傚倷绶氬褍螞閺傛娼栨慨濠冮搨na_reader`闂傚倷绶氬褍螞閺傛娼栨慨濠冨Кama_parse`闂傚倷绶氬褍螞閺傛娼栨慨濠勨偓濉簁itdown` 闂?`docling`闂?
           example: auto
         scene:
           anyOf:
             - type: string
             - type: 'null'
-          description: Optional high-level parse scene. Best default is to omit it and let Cortex select the engine default scene. Typical values include `balanced`, `deep_web`, `authenticated_web`, `fast_extract`, `document_fidelity`, `document_ai`, or `lightweight`. / 可选的高层解析场景，最佳默认值是留空并由 Cortex 选择引擎默认 scene。常见取值包括 `balanced`、`deep_web`、`authenticated_web`、`fast_extract`、`document_fidelity`、`document_ai`、`lightweight`。
+          description: Optional high-level parse scene. Best default is to omit it and let Cortex select the engine default scene. Typical values include `balanced`, `deep_web`, `authenticated_web`, `fast_extract`, `document_fidelity`, `document_ai`, or `lightweight`. / 闂傚倷绀侀幉锟犳偡椤栫偛鍨傞柛顐ｆ礀閻掑灚銇勯幒鍡椾壕濡炪倧绠戝畷顒勫煝閹捐绠ｉ柣鎴濇閻ｈ鈹戦埥鍡楃仴婵炲拑绲介敃銏ゅ箻椤旇棄浠┑鐐叉閻熝呯矙婵犳碍鐓熼幖瀛樼箘閻瑧鈧娲滈崗姗€骞冨鍏剧喖鎳￠妶鍛邦唹闂傚倷鐒︾€笛呯矙閹达箑瀚夋い鎺嗗亾闁靛棙甯￠幊婊堝垂椤愩埄鈧捇姊洪悷鏉款暢闁哄拋鍋嗛弫顔尖槈閵忊€充化婵炶揪缍佸褔鍩€椤掍焦绀嬮柛鈹惧亾濡炪倖宸婚崑鎾绘煕濮橆剦鍎忛崡閬嶆煙闂傚鍔嶉柛瀣ф櫆缁绘盯宕卞Ο铏逛憾闂佽桨绀佺€氼參銆冮妷鈺傚€烽柟缁樺俯閺嗐垽姊?Cortex 闂傚倸鍊风欢锟犲磻閸曨垁鍥箥椤旂懓浜炬慨妯稿劚婵″吋銇勯弴顏嗙М鐎殿喗鎸抽幃銏ゅ川婵犲倸濡挎繝娈垮枟鐢绮欓幒妞烩偓锕傚醇閵夘喗鏅?scene闂傚倷绶氬褍螞濡ゅ懎纾归柟闂寸劍閸嬪鏌涢幘鑼妽闁哥姴妫楅湁闁挎繂娴傞悞鍓х磼閹绘帗鍋ラ柡灞剧⊕缁绘繈宕熼顫帛闂佽楠搁悘姘舵晝閵忋倗宓?`balanced`闂傚倷绶氬褍螞閺傛娼栨慨濠冩敤ep_web`闂傚倷绶氬褍螞閺傛娼栨慨濠冧淮thenticated_web`闂傚倷绶氬褍螞閺傛娼栨慨濠冩簜st_extract`闂傚倷绶氬褍螞閺傛娼栨慨濠冩敿cument_fidelity`闂傚倷绶氬褍螞閺傛娼栨慨濠冩敿cument_ai`闂傚倷绶氬褍螞閺傛娼栨慨濠冭抗ghtweight`闂?
           example: deep_web
         priority:
           type: integer
@@ -1817,14 +2347,14 @@ components:
           default: 5
           description: >-
             Job priority where higher values are more urgent. Best default: 5. /
-            作业优先级，越高越紧急，最佳默认值为 5。
+            婵犵數鍋犻幓顏嗗緤閸撗冨灊闁割偁鍨荤粻鏃堟煟閺冨偆鐒炬い鏇￠哺娣囧﹪顢涘顓熷創闁汇埄鍨崕宕囨閹烘鍋戞繛鍡楃箳鑲栫紓浣插亾濠㈣埖鍔栭崑銈夋煙閻戞ê鐓€闂婎剦鍓熼弻锝呪攽閹邦剚鐏撻梺纭呭亹閸嬫挾鎹㈠┑瀣妞ゆ巻鍋撶紓宥嗘崌濮婅櫣鎷犻垾鍐插箥闂佺姘﹀畷闈浳ｉ幇顑芥斀閻庯綆浜滈悵姗€姊洪柅鐐茶嫰婢ь垶鏌熷畡鐗堝殗妤犵偛閰ｉ幃鍓т沪閻ｅ矈鍋ч梻浣藉吹婵娊姊藉澶婄９闁哄洢鍨归悞鍨亜閹烘垵顏柨娑氬枛閹?5闂?
         webhook:
           anyOf:
             - $ref: '#/components/schemas/WebhookConfig'
             - type: 'null'
           description: >-
             Optional webhook callback configuration. Best default: omit. /
-            可选的 webhook 回调配置，最佳默认值为留空。
+            闂傚倷绀侀幉锟犳偡椤栫偛鍨傞柛顐ｆ礀閻掑灚銇勯幒鍡椾壕濡炪倧绠戝畷顒勫煝?webhook 闂傚倷鐒﹂幃鍫曞磿閹惰棄纾婚柣妯肩帛閸庡秹鏌ｉ弬鍨倯闁绘挴鍋撻柣搴＄畭閸庡崬煤閵娾晛鍑犻柛宀€鍋為悡銉︾箾閹寸倖鎴濓耿閻楀牏绠鹃柟鍓ф嚀閻撴劙鏌熷畡鐗堝殗妤犵偛閰ｉ幃鍓т沪閻ｅ矈鍋ч梻浣藉吹婵娊姊藉澶婄９闁哄洢鍨归悞鍨亜閹烘垵顏柨娑氬枛閹綊骞囬鍏肩亪闂佽鍠楅崕鎶藉煝鎼淬劌绠ｉ柡鍐ｅ亾闁哄懐鍋ゅ?
 
     ParseSyncRequest:
       type: object
@@ -1872,7 +2402,7 @@ components:
           description: >-
             Unified source locator for URL or external URI inputs. Best default:
             provide `uri` for public web pages or externally addressable files. /
-            URL 或外部 URI 输入的统一来源定位字段。
+            URL 闂傚倷鑳堕幊鎾绘偤閵娾晜鍋嬮柡鍥ｆ嚍閸ャ劎绡€婵﹩鍘鹃崝?URI 闂備礁鎼ˇ顖炴偋婵犲洤绠伴柟闂寸閻鏌涢埄鍐姇闁稿骸绉归弻娑㈠即閵娿儱绠婚梺绯曟櫇婵挳鍩ユ径鎰妞ゆ牗鐭竟鏇㈡⒒娴ｅ憡鎯堟い锔诲弮瀹曟洟鎳犻鍐ㄐ″銈嗘閺侇噣宕戦幘鑸靛枂闁告洦鍘鹃崣婵堢磽閸屾氨孝闁硅櫕鍔欓崺鈧い鎺嶈兌閳洘銇勯妸銉︻棦妞ゃ垺鐟ラ悾婵嬪礋椤?
           example: https://docs.cognee.ai/core-concepts/overview
         object_id:
           anyOf:
@@ -1880,7 +2410,7 @@ components:
             - type: 'null'
           description: >-
             Previously uploaded Cortex object identifier. Best default: omit unless
-            parsing a stored object. / 已上传 Cortex 对象的标识。
+            parsing a stored object. / 闂佽姘﹂～澶愭偤閺囩儐鍤曢柟鎯у缁犳棃鏌涚仦鍓р槈妞?Cortex 闂備浇顕уù鐑藉极閹间降鈧焦绻濋崶銊ョ樁闂佸憡娲﹂崹閬嶅磿瀹ュ鐓曢柡鍥ュ妼婢т即鏌涢妸銉ｅ仮闁诡喖缍婂畷鎯邦槼妞ゃ儲鎹囬弻?
           example: obj_3f6c1d5e9b1646b5a4eabdbf8b417bd3
         kind:
           anyOf:
@@ -1888,13 +2418,13 @@ components:
             - type: 'null'
           description: >-
             Optional explicit source-kind hint. Best default: omit and let Cortex
-            infer from `uri` or `object_id`. / 可选的来源类型提示，默认由 Cortex 自动推断。
+            infer from `uri` or `object_id`. / 闂傚倷绀侀幉锟犳偡椤栫偛鍨傞柛顐ｆ礀閻掑灚銇勯幒鍡椾壕濡炪倧绠戝畷顒勫煝閹捐绠ｉ柨鏇楀亾缂佺嫏鍥ㄧ厪濠㈣埖绋戦々顒勬煟閺嶎兛鍚紒杈ㄥ浮椤㈡洟濡烽鍏碱唲闂備浇顕уù鐑藉礂濮椻偓閻涱噣骞樼拠鑼杸濡炪倖妫佸銊у垝閻㈠憡鈷戦柟绋挎捣閳藉鏌ｉ鐐测偓濠氬礆閹烘鏁嶆繝濠傚椤庢盯姊洪棃娑氬婵炶绠撳?Cortex 闂傚倷鑳堕崢褔銆冩惔銏㈩洸婵犲﹤瀚崣蹇涙煃閸濆嫭鍣圭紒鐘冲▕閺屾洘绻濊箛娑欘€嶉梺缁樺笂缁瑩寮?
           example: url
         filename:
           anyOf:
             - type: string
             - type: 'null'
-          description: Optional filename hint used for MIME or profile inference. / 可选文件名提示，用于 MIME 或 profile 推断。
+          description: Optional filename hint used for MIME or profile inference. / 闂傚倷绀侀幉锟犳偡椤栫偛鍨傞柛顐ｆ礀閻掑灚銇勯幒鍡椾壕濡炪倧缂氶崡鍐差嚕閹间礁绀冮柍鍝勫枤濞村嫰鏌ｉ悩鐑橆仩闁稿簺鍊濆畷鎰板箮閼恒儳鍘电紓鍌欑劍閿氬┑顔碱樀閺屾洟宕堕妸銉ユ懙闂佽桨绀佺粔鎾偩濠靛鐒垫い鎺戝閺嬩線鏌曢崼婵囶棤妞?MIME 闂?profile 闂傚倷娴囬～澶嬬娴犲绀夌€广儱顦拑鐔兼煕閵夘喖澧潻?
           example: architecture-overview.pdf
         mime_type:
           anyOf:
@@ -1902,7 +2432,7 @@ components:
             - type: 'null'
           description: >-
             Optional MIME hint used for engine-scene compilation. Best default:
-            omit to let Cortex infer it. / 可选 MIME 提示，用于引擎与 scene 编译。
+            omit to let Cortex infer it. / 闂傚倷绀侀幉锟犳偡椤栫偛鍨傞柛顐ｆ礀閻?MIME 闂傚倷绀佸﹢杈╁垝椤栫偛绀夋俊銈呮噹妗呭┑顔筋焾閸╂牠寮查鍌楀亾閸忓浜鹃梺閫炲苯澧寸€殿噮鍋婃俊鍫曞幢濞嗘ɑ閿ら梺纭呭閹活亞妲愰弴鐘电煔闁秆勵殕閻撴瑩鏌涢…鎴濇灓闁告垵婀辩槐?scene 缂傚倸鍊搁崐鎼佸磹瑜版帗鍋嬮柣鎰劋閸庡﹦鎲搁弮鈧穱?
           example: application/pdf
         canonical_url:
           anyOf:
@@ -1910,7 +2440,7 @@ components:
             - type: 'null'
           description: >-
             Optional canonical URL saved into document provenance. Best default:
-            omit to use the resolved final URL. / 可选 canonical URL，用于写入文档溯源信息。
+            omit to use the resolved final URL. / 闂傚倷绀侀幉锟犳偡椤栫偛鍨傞柛顐ｆ礀閻?canonical URL闂傚倷鐒︾€笛呯矙閹达附鍎斿┑鍌滎焾閺嬩線鏌曢崼婵囶棤妞も晜鐓￠獮鏍垝閸忓浜鹃柧蹇ｅ亝椤忕喖姊绘担渚劸缂佽鐗撳畷鏇㈠蓟閵夈儱鍤戦梺鍛婂姦閻撳牆霉閺嶎厽鐓ユ繝闈涙椤ユ粓鏌涢妶鍫ュ摵缂佺粯绻嗛ˇ鎶芥煕閺冣偓鐢绮氭潏銊х瘈闁搞儜鍛殺婵＄偑鍊栭悧妤勫綔闂?
           example: https://docs.cognee.ai/core-concepts/overview
 
     ParseSource:
@@ -1949,21 +2479,21 @@ components:
       properties:
         profile_ref:
           type: string
-          description: Reusable parser profile reference / 可复用的解析模板引用。
+          description: Reusable parser profile reference / 闂傚倷绀侀幉锟犳偡椤栫偛鍨傚ù鍏碱劃閸ヮ剙钃熼柕澶涚畱娴犳椽姊洪棃娴ゆ盯宕熼鐔割啅闂備浇宕甸崰鎰版偡鏉堚晛绶ゅΔ锝呭暞閸婄敻鏌﹀Ο鐚寸礆闁绘梻鍘ч悞娲煕閹般劍娅囬柛鎴節閹鈻撻崹顔界亶濠电偛寮剁划鎾愁嚕椤愶箑围濠㈣泛谩?
         preferred_engine_key:
           type: string
-          description: Preferred engine key such as `crawl4ai`, `jina_reader`, `llamaparse`, `markitdown`, or `docling`. / 首选解析引擎标识。
+          description: Preferred engine key such as `crawl4ai`, `jina_reader`, `llamaparse`, `markitdown`, or `docling`. / 婵犵妲呴崑鎾跺緤妤ｅ啯鍋嬮柣妯款嚙閻掑灚銇勯幒鍡椾壕濡炪倧绠戦悿鍥€傛ィ鍐┾拺闁告繂瀚烽崕鎰版煕閺冣偓濞叉粌危閹版澘鐓涢柛娑卞幘椤旀捇鏌熼崗鑲╂殬闁搞劌顭峰畷瑙勭附閸涘﹤浠梺鎼炲劀閸曞灚顥栭梻?
         allowed_engines:
           type: array
           items:
             type: string
         engine_template_ref:
           type: string
-          description: Optional engine-specific template override / 可选的引擎级模板覆盖。
+          description: Optional engine-specific template override / 闂傚倷绀侀幉锟犳偡椤栫偛鍨傞柛顐ｆ礀閻掑灚銇勯幒鍡椾壕濡炪倧绠戝畷顒勫煝閹捐绠ｆ繝鍨姇濞堛劑姊洪崫鍕窛闁哥姵鍔欓獮鍡椻槈濮樿京锛滈梺缁樼懄閻熴儲鍒婇鐔虹懝闁逞屽墮椤曪綁宕奸弴鐔锋畱濡炪倖鐗徊楣冩嚋瑜版帗鈷戦柣鎴旀櫆濞呭棝鏌ｅΔ浣瑰磳闁糕斁鍋?
         engine_options:
           type: object
           additionalProperties: true
-          description: Engine-specific options passed through the adapter layer / 透传给解析器适配层的引擎特定参数。
+          description: Engine-specific options passed through the adapter layer / 闂傚倸鍊风欢锟犲磻閸曨厽宕查悗锝庡墯椤洟鏌涢幘鑼跺厡缁炬儳鍚嬬换娑㈠幢濡椽鍞堕梺鍦劋椤ㄥ懘宕欓悩缁樼厵闂侇叏绠戞晶顖炴煟濠靛嫬鈧繂顫忓ú顏嶆晝闁靛繒濮崑鎾诲锤濡も偓閸屻劑鏌曢崼婵囩煑婵炲矈浜弻娑氫沪閸撗呯厑闂佷紮缍€娴滎剟鍩€椤掍緡鍟忛柛鐘愁殔鐓ゆ慨妞诲亾妤犵偞鐗犻獮鏍ㄦ媴閻熼缃曢梻浣藉吹閸犳劖绔熼崱娑樻辈濞寸厧鐡ㄩ悡鏇熺箾閸℃绠伴柍褜鍓欑紞濠傤嚕閹惰姤鍋勯柣鎾冲?
         fallback_policy:
           $ref: '#/components/schemas/FallbackPolicy'
 
@@ -2010,10 +2540,10 @@ components:
             type: string
         wait_for:
           type: string
-          description: CSS or JS wait expression, such as `css:.main-loaded` or `js:() => window.ready === true`. / CSS 或 JS 等待表达式。
+          description: CSS or JS wait expression, such as `css:.main-loaded` or `js:() => window.ready === true`. / CSS 闂?JS 缂傚倸鍊烽悞锔剧矙閹次诲洭顢涘鍕靛仺闂佺粯姊婚崕銈夊磻濮椻偓閺屾洘绻涢崹顔碱瀴閻熸粍濡搁崨顏勪壕婵炲牆鐏濋弸娑氱磼鐠囪尙澧﹂柛鈹惧亾?
         js_code:
           type: array
-          description: JavaScript steps executed after the page becomes ready. / 页面就绪后执行的 JavaScript 步骤。
+          description: JavaScript steps executed after the page becomes ready. / 婵犵绱曢崑鎴﹀磹濡ゅ懎鏋侀悹鍥ф▕閻掍粙鏌熷▓鍨灆闁绘帒锕鍫曞醇濮橆厽鐝旈悗瑙勬礃濞茬喖寮诲☉姗嗘僵妞ゆ巻鍋撴い鎺嬪灩椤儻顦撮柡鍜佸亰楠炲啴寮剁捄銊︽畷闂侀€炲苯澧柍?JavaScript 濠电姵顔栭崰妤冪紦閸ф纾块柣銏犲閺佷線鏌涢幇闈涙灈鏉?
           items:
             type: string
         remove_overlay_elements:
@@ -2072,7 +2602,7 @@ components:
             type: string
         proxy_ref:
           type: string
-          description: Reference to a configured proxy profile, not raw credentials. / 已配置代理模板的引用，而不是明文凭据。
+          description: Reference to a configured proxy profile, not raw credentials. / 闂佽娴烽幊鎾诲箟閿熺姵鍋傞柨鐔哄Т閸屻劑鏌曢崼婵囧窛缁惧墽鍋撻妵鍕籍閸ヨ泛娈梺杞拌閺呯娀寮婚敐澶嬪€烽柛娆忣樈濡繝鏌ら崹娑欐珚闁哄备鍓濆鍕償閵忣潿鈧﹤鈹戦悙鑼闁搞劎鏁婚、姘舵晲婢跺﹤宓嗛梺缁橆焾濞呮洖鈻撻姀銈嗏拺闁圭娴烽埥澶愭煟椤撴繄绐旈柛鈹惧亾濡炪倖宸婚崑鎾斥攽閸屾稒鈷掔紒顕呭幗瀵板嫰骞囬鈧宄邦渻閵堝棛澧紒瀣浮閿濈偤寮介鐔哄幐闂佺鏈喊宥夊箹閹扮増鐓曢柕鍫濇搐閺嬫稒顨ラ悙鏉戠伌妞ゃ垺鐟ч幃浼村灳閸忓懎顥?
         enable_stealth:
           type: boolean
           default: false
@@ -2086,7 +2616,7 @@ components:
           type: string
         storage_state_ref:
           type: string
-          description: Reference to exported cookies/localStorage state for authenticated or stateful browsing. / 已导出 cookies 或 localStorage 状态的引用。
+          description: Reference to exported cookies/localStorage state for authenticated or stateful browsing. / 闂佽娴烽幊鎾诲箟闄囬妵鎰板礃椤曞懏鏅梻渚囧墮缁夊绮?cookies 闂?localStorage 闂傚倷鑳剁划顖炩€﹂崼銉ユ槬闁哄稁鍘奸悞鍨亜閹达絽鍔甸柛蹇撴湰缁绘盯宕奸悢椋庝淮濡炪倖娲╃紞浣割嚕閹绢喗鍋愰柧蹇ｅ亝椤撳綊姊?
 
     CaptureOptions:
       type: object
@@ -2875,15 +3405,15 @@ components:
         content_type:
           type: string
           description: Optional MIME type. Cortex infers it from `filename` when omitted and may
-            reconcile it with the object store during completion. / 可选 MIME type；省略时 Cortex
-            会从 `filename` 推断，并在完成上传时尝试用对象存储返回值校正。
+            reconcile it with the object store during completion. / 闂傚倷绀侀幉锟犳偡椤栫偛鍨傞柛顐ｆ礀閻?MIME type闂傚倷鐒︾€笛呯矙閹烘梻鐭欓柟鍓у仺閳ь剚甯￠幃婊堟嚍閵夈儰鎮ｉ梻渚€娼ч¨鈧梻鍕钘?Cortex
+            婵犵數鍋炲娆撳触鐎ｎ喗鍎楁い鏃€鍎抽崹?`filename` 闂傚倷娴囬～澶嬬娴犲绀夌€广儱顦拑鐔兼煕閵夘喖澧柡鍜佸墴閹﹢鎮欏ù瀣壕闁绘棃顥撹ぐ鏌ユ⒒娓氣偓濞艰崵鎷归悢鐓庣鐎光偓閸曨剙浠煎銈嗗笒鐎氼剛绮婚敐澶嬬厵闂侇叏缂氱花浠嬫煟閻旂濮囬棁澶愭煠濞村娅呴弽鈥斥攽閿涘嫬浠滈柛濠勭帛缁傚秶绮欐惔鎾存杸婵犵數濮寸€氼厾鐟ч梻鍌欑劍濡炲灝顭囬崸妤€绀夌€光偓閸曞灚鏅銈嗘⒒閸嬫挾鈧鍓熼弻宥夊Ψ閵壯嶇礊闂佸湱鏅繛鈧柡灞剧〒娴狅妇鎷犻幓鎺濇綂缂傚倷鑳剁划顖炲垂閸喚鏆﹂柛顐ｆ礃閸婇攱绻涢弶鎴剰濞存粓绠栭弻娑滅疀濮橆兛姹楁繝鈷€鈧崜婵嬪箞閵娿儮鏀介柟鎯у閵堢兘姊?
         size_bytes:
           type: integer
           minimum: 0
           description: Optional total size in bytes. Provide it when the client already knows the
             file size so Cortex can choose multipart for large uploads; omit it when the size is
-            unknown before upload. / 可选文件总大小；若客户端已知文件大小，建议提供以便 Cortex
-            为大文件自动选择 multipart；若上传前未知则可省略。
+            unknown before upload. / 闂傚倷绀侀幉锟犳偡椤栫偛鍨傞柛顐ｆ礀閻掑灚銇勯幒鍡椾壕濡炪倧缂氶崡鍐差嚕閹间礁绀冮柍鍝勫枤濞村嫰姊洪悡搴㈡喐妞わ絼绮欏畷鎴﹀箻閼搁潧鐝伴柣蹇曞仜閸婂嘲霉閻戣姤鐓熼煫鍥ㄦ尵缁犳澘螖閻樿尙绠虫俊鍙夊姍閺屽棗顓奸崱妤侇吅闂備線娼чˇ顓㈠磿濞差亜瑙﹂柛宀€鍋為悡娆撴煙缂併垹娅樻俊顐ｅ灦閵囧嫯绠涢敐鍛潻濡炪倖鏌ㄧ换姗€骞婇悩娲绘晢闁稿本鑹剧紒鈺呮⒒娴ｅ憡鎯堥柛濠勵焾鐓ら柨婵嗘噳閺嬪酣鏌曡箛濞惧亾瀹曞洨鐛柣鐔哥矊缁夊綊骞嗛崘顕呮晢闁告洦鍓氬▍鏍煟韫囨洖浠ч柡鍜佸亞濡叉劙鏁冮崒娑樹化婵炴挻鑹惧ú銈夊几閻旂儤鍠愬Λ棰佽兌閸斿秶绱掑Δ鍐ㄦ瀻闁宠棄顦—鍐礈瑜旈悗鍝勨攽?Cortex
+            婵犵數鍋為崹鍫曞箰閹间礁绠规い鎰剁畱妗呴梺鎼炲労閸撴瑥螞濮椻偓閺屾盯濡烽鐐搭€嶅銈嗗姃缁瑩寮婚妶鍡欓檮濠㈣泛顦遍惄搴㈢節濞堝灝鏋撻柡鍛█瀵宕ㄩ鑲╃獮闁诲函缍嗘禍鑸电?multipart闂傚倷鐒︾€笛呯矙閹烘梻鐭欓柡宥庡亐閸嬫挸顫濋妷銉т痪缂備礁顑呴ˇ鎵崲濠靛洦濯撮柧蹇曟嚀閳ь剛鍋ゅ娲川婵犲啫纰嶇紓浣割樀濞佳囨晝閵忋値鏁囬柕蹇娾偓鍐插闂備線娼чˇ顓㈠磿闁秵鍊堕柣鏂垮悑閻撴洘绻涢崱妯忣亪鎮橀敐鍡欑闁规崘娉涢崢鎾煙椤曗偓缁犳牗淇婇悜鑺ユ櫜闁稿本鐭竟?
         checksum_sha256:
           type: string
           pattern: '^[0-9a-f]{64}$'
@@ -2922,10 +3452,10 @@ components:
             - multipart
         bucket:
           type: string
-          description: Target S3 bucket name; prefixes such as `tenant_demo/...` belong in `object_key`, not here. / 真实对象存储 bucket 名称；`tenant_demo/...` 这类前缀属于 `object_key`，不是 bucket。
+          description: Target S3 bucket name. / 目标 S3 bucket 名称。
         object_key:
           type: string
-          description: Full object key inside the bucket. For local uploads this commonly looks like `tenant_demo/obj_xxx/README.md`. / bucket 内的完整对象 key；本地上传时常见形态为 `tenant_demo/obj_xxx/README.md`。
+          description: Full object key inside the bucket. For local uploads this commonly looks like `tenant_demo/obj_xxx/README.md`. / bucket 内完整对象键，本地上传时通常类似 `tenant_demo/obj_xxx/README.md`。
         expires_at:
           type: string
           format: date-time
@@ -2937,7 +3467,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MultipartPartUpload'
-
     PresignedRequestDescriptor:
       type: object
       required:
@@ -3018,7 +3547,7 @@ components:
           description: Stored object bucket. / 对象所在 bucket。
         object_key:
           type: string
-          description: Stored object key within the bucket. / 对象在 bucket 中的完整 key。
+          description: Stored object key within the bucket. / 对象在 bucket 内的 object key。
         filename:
           type: string
         content_type:
@@ -3037,24 +3566,51 @@ components:
           type: object
           additionalProperties:
             type: string
+        access_policy:
+          $ref: '#/components/schemas/AccessPolicy'
         tags:
           type: array
           items:
             type: string
-        source_uri:
-          type: string
-          format: uri
-        access_policy:
-          $ref: '#/components/schemas/AccessPolicy'
+        version:
+          $ref: '#/components/schemas/StorageObjectVersion'
         status:
           type: string
           enum:
+            - pending_upload
             - available
-            - archived
             - deleted
         audit:
           $ref: '#/components/schemas/AuditFields'
-
+    StorageObjectVersion:
+      type: object
+      required:
+        - object_version_id
+        - version_no
+        - size_bytes
+        - is_latest
+      properties:
+        object_version_id:
+          type: string
+        version_no:
+          type: integer
+          minimum: 1
+        size_bytes:
+          type: integer
+          minimum: 0
+        provider_version_ref:
+          type: string
+          description: Provider-native object version identifier. / 对象存储厂商原生版本标识。
+        checksum_sha256:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+        etag:
+          type: string
+        is_latest:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
     DownloadUrlResponse:
       type: object
       required:
@@ -3487,3 +4043,824 @@ components:
           items:
             type: object
             additionalProperties: true
+
+    EvalType:
+      type: string
+      enum:
+        - perf
+        - rag
+        - agentic
+        - multi_turn
+        - custom
+
+    SynthesisType:
+      type: string
+      enum:
+        - structured_single_table
+        - structured_relational
+        - rag_goldens
+        - qa_pairs
+        - conversation_goldens
+        - agent_trajectories
+        - custom
+
+    EngineMetricBinding:
+      type: object
+      required:
+        - engine_id
+        - native_key
+      properties:
+        engine_id:
+          type: string
+          example: deepeval
+        native_key:
+          type: string
+          example: FaithfulnessMetric
+        notes:
+          type: string
+
+    EvalEngineList:
+      type: object
+      required:
+        - engines
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+        engines:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvalEngineDescriptor'
+
+    EvalEngineDescriptor:
+      type: object
+      required:
+        - engine_id
+        - display_name
+        - availability_status
+        - supported_eval_types
+      properties:
+        engine_id:
+          type: string
+          example: deepeval
+        display_name:
+          type: string
+          example: DeepEval
+        provider:
+          type: string
+          example: Confident AI / OSS
+        availability_status:
+          type: string
+          enum:
+            - available
+            - degraded
+            - disabled
+        execution_modes:
+          type: array
+          items:
+            type: string
+            enum:
+              - sync
+              - async
+        supported_eval_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvalType'
+        supported_metric_prefixes:
+          type: array
+          items:
+            type: string
+          example:
+            - rag
+            - agent
+            - dialog
+        default_profiles:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+
+    EvalMetricCatalog:
+      type: object
+      required:
+        - metrics
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvalMetricDefinition'
+
+    EvalMetricDefinition:
+      type: object
+      required:
+        - metric_key
+        - display_name
+        - eval_types
+        - engine_bindings
+      properties:
+        metric_key:
+          type: string
+          example: rag.faithfulness
+        display_name:
+          type: string
+          example: Faithfulness
+        description:
+          type: string
+        category:
+          type: string
+          example: rag
+        eval_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvalType'
+        unit:
+          type: string
+          example: score
+        score_direction:
+          type: string
+          enum:
+            - higher_is_better
+            - lower_is_better
+            - informational
+        threshold_hint:
+          type: number
+          format: float
+        required_fields:
+          type: array
+          items:
+            type: string
+        engine_bindings:
+          type: array
+          items:
+            $ref: '#/components/schemas/EngineMetricBinding'
+
+    EvalFieldMapping:
+      type: object
+      additionalProperties:
+        type: string
+      example:
+        user_input: question
+        actual_output: answer
+        expected_output: ground_truth
+        retrieval_contexts: contexts
+
+    EvalConversationTurn:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        role:
+          type: string
+          enum:
+            - system
+            - user
+            - assistant
+            - tool
+        content:
+          type: string
+
+    EvalTestCase:
+      type: object
+      properties:
+        user_input:
+          type: string
+        actual_output:
+          type: string
+        expected_output:
+          type: string
+        retrieval_contexts:
+          type: array
+          items:
+            type: string
+        conversation_turns:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvalConversationTurn'
+        metadata:
+          type: object
+          additionalProperties: true
+
+    EvalInput:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - dataset
+            - builtin_dataset
+            - object
+            - objects
+            - inline_cases
+            - inline_test_cases
+            - traces
+        dataset_id:
+          type: string
+          description: Dataset identifier. Async workers hydrate dataset items into EvalTestCase records.
+        dataset_version:
+          type: string
+        builtin_dataset_key:
+          type: string
+        object_id:
+          type: string
+          description: Storage object identifier. Workers read JSON, JSONL, or CSV content and map records into test cases.
+        object_ids:
+          type: array
+          description: Batch storage object identifiers for worker-side hydration.
+          items:
+            type: string
+        field_mapping:
+          $ref: '#/components/schemas/EvalFieldMapping'
+        filters:
+          type: object
+          additionalProperties: true
+        test_cases:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvalTestCase'
+        trace_session_id:
+          type: string
+
+    EvalTarget:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - api
+            - model
+            - trace_replay
+            - existing_outputs
+        protocol:
+          type: string
+          example: openai_compatible
+        endpoint_url:
+          type: string
+          format: uri
+        auth_ref:
+          type: string
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        timeout_seconds:
+          type: integer
+          minimum: 1
+        model_ref:
+          type: string
+        provider:
+          type: string
+        request_template:
+          type: object
+          additionalProperties: true
+
+    EvalMetricRequest:
+      type: object
+      required:
+        - metric_key
+      properties:
+        metric_key:
+          type: string
+          example: rag.faithfulness
+        threshold:
+          type: number
+          format: float
+        weight:
+          type: number
+          format: float
+        params:
+          type: object
+          additionalProperties: true
+
+    EvalOutputOptions:
+      type: object
+      properties:
+        persist_report_object:
+          type: boolean
+          default: true
+          description: Persist the canonical evaluation report as a storage object and return it in artifacts.
+        persist_dataset_key:
+          type: string
+        include_sample_results:
+          type: boolean
+          default: true
+        max_failures_reported:
+          type: integer
+          minimum: 1
+
+    EvalSyncRequest:
+      type: object
+      required:
+        - eval_type
+        - input
+      properties:
+        name:
+          type: string
+        eval_type:
+          $ref: '#/components/schemas/EvalType'
+        engine_id:
+          type: string
+          default: auto
+          example: auto
+        profile_key:
+          type: string
+        input:
+          $ref: '#/components/schemas/EvalInput'
+        target:
+          $ref: '#/components/schemas/EvalTarget'
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvalMetricRequest'
+        engine_options:
+          type: object
+          additionalProperties: true
+        output:
+          $ref: '#/components/schemas/EvalOutputOptions'
+        webhook:
+          $ref: '#/components/schemas/WebhookConfig'
+
+    EvalJobSubmitRequest:
+      allOf:
+        - $ref: '#/components/schemas/EvalSyncRequest'
+
+    EvalScoreCard:
+      type: object
+      required:
+        - overall_passed
+        - metric_count
+      properties:
+        overall_passed:
+          type: boolean
+        composite_score:
+          type: number
+          format: float
+        metric_count:
+          type: integer
+          minimum: 0
+        passed_metric_count:
+          type: integer
+          minimum: 0
+        failed_metric_count:
+          type: integer
+          minimum: 0
+        summary_by_namespace:
+          type: object
+          additionalProperties:
+            type: number
+
+    EvalMetricResult:
+      type: object
+      required:
+        - metric_key
+        - status
+      properties:
+        metric_key:
+          type: string
+        display_name:
+          type: string
+        status:
+          type: string
+          enum:
+            - passed
+            - failed
+            - warn
+            - info
+        score:
+          type: number
+          format: float
+        threshold:
+          type: number
+          format: float
+        unit:
+          type: string
+        engine_id:
+          type: string
+        native_metric_key:
+          type: string
+        sample_size:
+          type: integer
+          minimum: 0
+        details:
+          type: object
+          additionalProperties: true
+
+    EvalSampleCounters:
+      type: object
+      properties:
+        total:
+          type: integer
+          minimum: 0
+        passed:
+          type: integer
+          minimum: 0
+        failed:
+          type: integer
+          minimum: 0
+        skipped:
+          type: integer
+          minimum: 0
+
+    StoredArtifactRef:
+      type: object
+      required:
+        - object_id
+        - label
+      properties:
+        object_id:
+          type: string
+        label:
+          type: string
+        content_type:
+          type: string
+        format:
+          type: string
+        description:
+          type: string
+
+    EvalJobAccepted:
+      allOf:
+        - $ref: '#/components/schemas/JobAccepted'
+        - type: object
+          properties:
+            eval_type:
+              $ref: '#/components/schemas/EvalType'
+            engine_id:
+              type: string
+
+    EvalRunResult:
+      type: object
+      required:
+        - eval_type
+        - engine_id
+        - status
+        - summary
+        - metrics
+      properties:
+        eval_run_id:
+          type: string
+        job_id:
+          type: string
+        name:
+          type: string
+        eval_type:
+          $ref: '#/components/schemas/EvalType'
+        engine_id:
+          type: string
+        profile_key:
+          type: string
+        status:
+          type: string
+          enum:
+            - succeeded
+            - failed
+            - partial
+        source_summary:
+          type: object
+          additionalProperties: true
+        target_summary:
+          type: object
+          additionalProperties: true
+        summary:
+          $ref: '#/components/schemas/EvalScoreCard'
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvalMetricResult'
+        samples:
+          $ref: '#/components/schemas/EvalSampleCounters'
+        artifacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/StoredArtifactRef'
+        telemetry:
+          $ref: '#/components/schemas/TelemetryContext'
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+
+    SynthesisEngineList:
+      type: object
+      required:
+        - engines
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+        engines:
+          type: array
+          items:
+            $ref: '#/components/schemas/SynthesisEngineDescriptor'
+
+    SynthesisEngineDescriptor:
+      type: object
+      required:
+        - engine_id
+        - display_name
+        - availability_status
+        - supported_synthesis_types
+      properties:
+        engine_id:
+          type: string
+          example: sdv
+        display_name:
+          type: string
+          example: SDV
+        provider:
+          type: string
+        availability_status:
+          type: string
+          enum:
+            - available
+            - degraded
+            - disabled
+        supported_synthesis_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/SynthesisType'
+        supported_source_types:
+          type: array
+          items:
+            type: string
+        output_formats:
+          type: array
+          items:
+            type: string
+        default_profiles:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+
+    SynthesisSource:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - dataset
+            - documents
+            - object
+            - objects
+            - relational_metadata
+            - inline_rows
+            - inline_records
+            - traces
+        dataset_id:
+          type: string
+          description: Dataset identifier. Workers hydrate metadata records or document items before engine execution.
+        object_id:
+          type: string
+          description: Storage object identifier. Workers read JSON, JSONL, CSV, text, or markdown content.
+        object_ids:
+          type: array
+          description: Batch storage object identifiers for worker-side hydration.
+          items:
+            type: string
+        metadata_object_id:
+          type: string
+        inline_rows:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        inline_records:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        documents:
+          type: array
+          items:
+            type: string
+        field_mapping:
+          type: object
+          additionalProperties:
+            type: string
+        options:
+          type: object
+          additionalProperties: true
+        trace_session_id:
+          type: string
+
+    SynthesisQualityGate:
+      type: object
+      required:
+        - metric_key
+        - threshold
+      properties:
+        metric_key:
+          type: string
+          example: synth.quality_score
+        threshold:
+          type: number
+          format: float
+        params:
+          type: object
+          additionalProperties: true
+
+    SynthesisConfig:
+      type: object
+      properties:
+        sample_count:
+          type: integer
+          minimum: 1
+        anonymize_pii:
+          type: boolean
+        include_expected_output:
+          type: boolean
+        max_contexts_per_case:
+          type: integer
+          minimum: 1
+        generator_model_ref:
+          type: string
+        quality_gates:
+          type: array
+          items:
+            $ref: '#/components/schemas/SynthesisQualityGate'
+        engine_options:
+          type: object
+          additionalProperties: true
+          deprecated: true
+          description: Use config.options for engine-specific synthesis options.
+        options:
+          type: object
+          additionalProperties: true
+        timeout_seconds:
+          type: integer
+          minimum: 1
+
+    SynthesisOutputOptions:
+      type: object
+      properties:
+        output_format:
+          type: string
+          enum:
+            - jsonl
+            - json
+            - csv
+            - parquet
+            - md
+            - conversation_json
+        persist_dataset_key:
+          type: string
+        persist_object_filename:
+          type: string
+          description: Optional filename for the canonical synthesis output object.
+        persist_object_key:
+          type: string
+          deprecated: true
+          description: Object keys are service-owned; use persist_object_filename when a friendly name is needed.
+        include_preview:
+          type: boolean
+          default: true
+
+    SynthesisSyncRequest:
+      type: object
+      required:
+        - synthesis_type
+        - source
+      properties:
+        name:
+          type: string
+        synthesis_type:
+          $ref: '#/components/schemas/SynthesisType'
+        engine_id:
+          type: string
+          default: auto
+          example: auto
+        profile_key:
+          type: string
+        source:
+          $ref: '#/components/schemas/SynthesisSource'
+        config:
+          $ref: '#/components/schemas/SynthesisConfig'
+        output:
+          $ref: '#/components/schemas/SynthesisOutputOptions'
+        webhook:
+          $ref: '#/components/schemas/WebhookConfig'
+
+    SynthesisJobSubmitRequest:
+      allOf:
+        - $ref: '#/components/schemas/SynthesisSyncRequest'
+
+    SynthesisSummary:
+      type: object
+      properties:
+        requested_sample_count:
+          type: integer
+          minimum: 0
+        output_sample_count:
+          type: integer
+          minimum: 0
+        quality_score:
+          type: number
+          format: float
+        privacy_score:
+          type: number
+          format: float
+        notes:
+          type: array
+          items:
+            type: string
+
+    SynthesisQualityResult:
+      type: object
+      required:
+        - metric_key
+        - status
+      properties:
+        metric_key:
+          type: string
+        status:
+          type: string
+          enum:
+            - passed
+            - failed
+            - warn
+            - info
+        threshold:
+          type: number
+          format: float
+        score:
+          type: number
+          format: float
+        unit:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+
+    SynthesisJobAccepted:
+      allOf:
+        - $ref: '#/components/schemas/JobAccepted'
+        - type: object
+          properties:
+            synthesis_type:
+              $ref: '#/components/schemas/SynthesisType'
+            engine_id:
+              type: string
+
+    SynthesisRunResult:
+      type: object
+      required:
+        - synthesis_type
+        - engine_id
+        - status
+      properties:
+        synthesis_run_id:
+          type: string
+        job_id:
+          type: string
+        name:
+          type: string
+        synthesis_type:
+          $ref: '#/components/schemas/SynthesisType'
+        engine_id:
+          type: string
+        profile_key:
+          type: string
+        status:
+          type: string
+          enum:
+            - succeeded
+            - failed
+            - partial
+        source_summary:
+          type: object
+          additionalProperties: true
+        summary:
+          $ref: '#/components/schemas/SynthesisSummary'
+        quality_gates:
+          type: array
+          items:
+            $ref: '#/components/schemas/SynthesisQualityResult'
+        outputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/StoredArtifactRef'
+        output_dataset_id:
+          type: string
+        telemetry:
+          $ref: '#/components/schemas/TelemetryContext'
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+

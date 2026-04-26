@@ -70,6 +70,13 @@ class ObjectStoreClientProtocol(Protocol):
         object_key: str,
     ) -> dict[str, Any]: ...
 
+    def get_object_bytes(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+    ) -> bytes: ...
+
     def create_download_request(
         self,
         *,
@@ -285,6 +292,28 @@ class Boto3ObjectStoreClient:
             self._raise_client_error("head_object", exc)
         except BotoCoreError as exc:
             self._raise_provider_unavailable("head_object", exc)
+
+    def get_object_bytes(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+    ) -> bytes:
+        try:
+            response = self._control_client.get_object(
+                Bucket=bucket_name,
+                Key=object_key,
+            )
+            body = response.get("Body")
+            if body is None:
+                return b""
+            return body.read()
+        except EndpointConnectionError as exc:
+            self._raise_endpoint_unreachable("get_object", exc)
+        except ClientError as exc:
+            self._raise_client_error("get_object", exc)
+        except BotoCoreError as exc:
+            self._raise_provider_unavailable("get_object", exc)
 
     def create_download_request(
         self,

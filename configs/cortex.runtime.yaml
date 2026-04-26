@@ -69,3 +69,33 @@ knowledge:
     migration_db:
       db_provider: sqlite
       db_url: sqlite:///./.data/cognee/cognee.sqlite
+
+evaluation:
+  default_profile_ref: auto_default
+  engines:
+    deepeval:
+      enabled: true
+      model_ref: env:CORTEX_EVAL_DEEPEVAL_MODEL
+      options: {}
+    evalscope:
+      enabled: true
+      mode: self_hosted_sdk
+      base_url: http://127.0.0.1:19000
+      host: 127.0.0.1
+      port: 19000
+      debug: false
+      startup_timeout_seconds: 30
+      timeout_seconds: 120
+      headers: {}
+      options: {}
+
+synthesis:
+  default_profile_ref: auto_default
+  engines:
+    sdv:
+      enabled: true
+      options: {}
+    deepeval:
+      enabled: true
+      model_ref: env:CORTEX_SYNTH_DEEPEVAL_MODEL
+      options: {}

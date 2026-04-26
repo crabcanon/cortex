@@ -16,6 +16,10 @@ DEFAULT_LOCAL_DEV_SCOPES = [
     "storage:download",
     "knowledge:read",
     "knowledge:write",
+    "eval:read",
+    "eval:write",
+    "synthesis:read",
+    "synthesis:write",
     "jobs:read",
     "jobs:cancel",
 ]

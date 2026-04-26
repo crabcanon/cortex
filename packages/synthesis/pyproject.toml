@@ -1,0 +1,28 @@
+[project]
+name = "cortex-synthesis"
+version = "0.1.0"
+description = "Synthesis orchestration for Cortex."
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "cortex-common",
+  "cortex-contracts",
+  "cortex-db",
+  "cortex-domain",
+  "cortex-observability",
+]
+
+[project.optional-dependencies]
+sdv = [
+  "sdv>=1.36,<2",
+]
+deepeval = [
+  "deepeval>=3.9,<4",
+]
+runtime = [
+  "sdv>=1.36,<2",
+  "deepeval>=3.9,<4",
+]
+
+[build-system]
+requires = ["uv_build>=0.10.4,<0.11.0"]
+build-backend = "uv_build"

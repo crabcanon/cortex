@@ -38,6 +38,8 @@ members = [
   "apps/api",
   "workers/parse-worker",
   "workers/knowledge-worker",
+  "workers/evaluation-worker",
+  "workers/synthesis-worker",
   "packages/common",
   "packages/contracts",
   "packages/domain",
@@ -46,6 +48,8 @@ members = [
   "packages/storage",
   "packages/parse",
   "packages/knowledge",
+  "packages/evaluation",
+  "packages/synthesis",
   "packages/observability",
 ]
 
@@ -53,6 +57,8 @@ members = [
 cortex-api = { workspace = true }
 cortex-worker-parse = { workspace = true }
 cortex-worker-knowledge = { workspace = true }
+cortex-worker-evaluation = { workspace = true }
+cortex-worker-synthesis = { workspace = true }
 cortex-common = { workspace = true }
 cortex-contracts = { workspace = true }
 cortex-domain = { workspace = true }
@@ -61,6 +67,8 @@ cortex-auth = { workspace = true }
 cortex-storage = { workspace = true }
 cortex-parse = { workspace = true }
 cortex-knowledge = { workspace = true }
+cortex-evaluation = { workspace = true }
+cortex-synthesis = { workspace = true }
 cortex-observability = { workspace = true }
 
 [tool.ruff]

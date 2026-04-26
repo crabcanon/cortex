@@ -101,6 +101,24 @@ class ParseInputKind(StrEnum):
     URI = "uri"
 
 
+class EvalType(StrEnum):
+    PERF = "perf"
+    RAG = "rag"
+    AGENTIC = "agentic"
+    MULTI_TURN = "multi_turn"
+    CUSTOM = "custom"
+
+
+class SynthesisType(StrEnum):
+    STRUCTURED_SINGLE_TABLE = "structured_single_table"
+    STRUCTURED_RELATIONAL = "structured_relational"
+    RAG_GOLDENS = "rag_goldens"
+    QA_PAIRS = "qa_pairs"
+    CONVERSATION_GOLDENS = "conversation_goldens"
+    AGENT_TRAJECTORIES = "agent_trajectories"
+    CUSTOM = "custom"
+
+
 class ParseEngineDeploymentMode(StrEnum):
     LOCAL = "local"
     REMOTE = "remote"
@@ -154,6 +172,8 @@ class JobType(StrEnum):
     KNOWLEDGE_ADD = "knowledge_add"
     KNOWLEDGE_COGNIFY = "knowledge_cognify"
     KNOWLEDGE_MEMIFY = "knowledge_memify"
+    EVAL = "eval"
+    SYNTHESIS = "synthesis"
 
 
 class JobStatus(StrEnum):

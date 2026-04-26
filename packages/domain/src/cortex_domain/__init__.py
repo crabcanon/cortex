@@ -3,6 +3,7 @@
 from .enums import (
     AccessLevel,
     DecisionEffect,
+    EvalType,
     JobStatus,
     JobType,
     ObjectStatus,
@@ -10,6 +11,7 @@ from .enums import (
     ParseEngineDeploymentMode,
     ParseEngineStatus,
     SourceType,
+    SynthesisType,
     UploadMode,
 )
 from .models import (
@@ -23,6 +25,10 @@ from .models import (
     DocumentChunkRecord,
     DocumentRecord,
     DocumentTagRecord,
+    EvalEngineRecord,
+    EvalMetricDefinitionRecord,
+    EvalRunMetricRecord,
+    EvalRunRecord,
     JobEventRecord,
     JobRecord,
     KnowledgeRunRecord,
@@ -38,6 +44,8 @@ from .models import (
     SearchHitRecord,
     SearchRequestRecord,
     StorageBucketRecord,
+    SynthesisEngineRecord,
+    SynthesisRunRecord,
     TenantRecord,
 )
 
@@ -54,6 +62,11 @@ __all__ = [
     "DocumentChunkRecord",
     "DocumentRecord",
     "DocumentTagRecord",
+    "EvalEngineRecord",
+    "EvalMetricDefinitionRecord",
+    "EvalRunMetricRecord",
+    "EvalRunRecord",
+    "EvalType",
     "JobRecord",
     "KnowledgeRunRecord",
     "JobEventRecord",
@@ -76,6 +89,9 @@ __all__ = [
     "SearchRequestRecord",
     "SourceType",
     "StorageBucketRecord",
+    "SynthesisEngineRecord",
+    "SynthesisRunRecord",
+    "SynthesisType",
     "TenantRecord",
     "UploadMode",
 ]

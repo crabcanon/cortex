@@ -12,6 +12,12 @@ from cortex_contracts import (
     AddJobRequest,
     CognifyJobRequest,
     DownloadUrlResponse,
+    EvalEngineList,
+    EvalJobAccepted,
+    EvalJobSubmitRequest,
+    EvalMetricCatalog,
+    EvalRunResult,
+    EvalSyncRequest,
     HealthResponse,
     JobAccepted,
     JobStatusDetail,
@@ -31,7 +37,13 @@ from cortex_contracts import (
     StorageUploadCompleteRequest,
     StorageUploadCreateRequest,
     StorageUploadSession,
+    SynthesisEngineList,
+    SynthesisJobAccepted,
+    SynthesisJobSubmitRequest,
+    SynthesisRunResult,
+    SynthesisSyncRequest,
 )
+from cortex_db.cli import main as db_migrate_main
 from fastapi.testclient import TestClient
 
 SPEC_PATH = Path("specs/cortex-api.yaml")
@@ -41,6 +53,12 @@ SCHEMA_MODELS: dict[str, type] = {
     "JobStatus": JobStatusDetail,
     "LocalDevTokenIssueRequest": LocalDevTokenIssueRequest,
     "LocalDevTokenIssueResponse": LocalDevTokenIssueResponse,
+    "EvalEngineList": EvalEngineList,
+    "EvalMetricCatalog": EvalMetricCatalog,
+    "EvalSyncRequest": EvalSyncRequest,
+    "EvalJobSubmitRequest": EvalJobSubmitRequest,
+    "EvalJobAccepted": EvalJobAccepted,
+    "EvalRunResult": EvalRunResult,
     "ParseSubmitRequest": ParseSubmitRequest,
     "ParseJobSubmitRequest": ParseJobSubmitRequest,
     "ParseBatchJobAccepted": ParseBatchJobAccepted,
@@ -58,6 +76,11 @@ SCHEMA_MODELS: dict[str, type] = {
     "MemifyJobRequest": MemifyJobRequest,
     "SearchRequest": SearchRequest,
     "SearchResponse": SearchResponse,
+    "SynthesisEngineList": SynthesisEngineList,
+    "SynthesisSyncRequest": SynthesisSyncRequest,
+    "SynthesisJobSubmitRequest": SynthesisJobSubmitRequest,
+    "SynthesisJobAccepted": SynthesisJobAccepted,
+    "SynthesisRunResult": SynthesisRunResult,
 }
 
 
@@ -202,9 +225,15 @@ def test_contract_model_signatures_match_documented_schemas() -> None:
 def test_metrics_endpoint_returns_prometheus_text(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("CORTEX_DB_DSN", "sqlite+aiosqlite:///./runtime-test-data/openapi.db")
+    db_path = Path("runtime-test-data/openapi.db")
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    if db_path.exists():
+        db_path.unlink()
+    db_migrate_main(["upgrade", "head", "--db-url", f"sqlite:///{db_path.as_posix()}"])
+    monkeypatch.setenv("CORTEX_DB_DSN", f"sqlite+aiosqlite:///{db_path.as_posix()}")
     monkeypatch.setenv("CORTEX_AUTH_MODE", "dev")
     monkeypatch.setenv("CORTEX_OTEL_ENABLED", "false")
+    monkeypatch.setenv("CORTEX_COGNEE_ENABLED", "false")
     monkeypatch.setenv("CORTEX_CRAWL4AI_SKIP_PROBE", "1")
     load_settings.cache_clear()
     app = create_app()
@@ -241,6 +270,8 @@ def test_runtime_openapi_exposes_bearer_security_scheme_for_protected_routes() -
 
 REQUEST_EXAMPLE_OPERATIONS: tuple[tuple[str, str], ...] = (
     ("/v1/dev/auth/token", "post"),
+    ("/v1/eval/sync", "post"),
+    ("/v1/eval/jobs", "post"),
     ("/v1/parse/sync", "post"),
     ("/v1/parse/jobs", "post"),
     ("/v1/storage/uploads", "post"),
@@ -250,6 +281,8 @@ REQUEST_EXAMPLE_OPERATIONS: tuple[tuple[str, str], ...] = (
     ("/v1/knowledge/cognify/jobs", "post"),
     ("/v1/knowledge/memify/jobs", "post"),
     ("/v1/knowledge/search", "post"),
+    ("/v1/synthesis/sync", "post"),
+    ("/v1/synthesis/jobs", "post"),
 )
 
 

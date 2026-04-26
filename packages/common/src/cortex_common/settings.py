@@ -94,6 +94,14 @@ class CogneeSettings(_BaseEnvSettings):
     enabled: bool | None = Field(default=None, alias="CORTEX_COGNEE_ENABLED")
 
 
+class EvaluationSettings(_BaseEnvSettings):
+    default_profile: str | None = Field(default=None, alias="CORTEX_EVAL_DEFAULT_PROFILE")
+
+
+class SynthesisSettings(_BaseEnvSettings):
+    default_profile: str | None = Field(default=None, alias="CORTEX_SYNTHESIS_DEFAULT_PROFILE")
+
+
 class TelemetrySettings(_BaseEnvSettings):
     enabled: bool = Field(default=True, alias="CORTEX_OTEL_ENABLED")
     exporter_otlp_endpoint: str = Field(
@@ -114,6 +122,8 @@ class CortexSettings(BaseModel):
     runtime: RuntimeConfigSettings
     parse: ParseSettings
     cognee: CogneeSettings
+    evaluation: EvaluationSettings
+    synthesis: SynthesisSettings
     telemetry: TelemetrySettings
 
 
@@ -129,5 +139,7 @@ def load_settings() -> CortexSettings:
         runtime=RuntimeConfigSettings(),
         parse=ParseSettings(),
         cognee=CogneeSettings(),
+        evaluation=EvaluationSettings(),
+        synthesis=SynthesisSettings(),
         telemetry=TelemetrySettings(),
     )

@@ -27,6 +27,7 @@ from cortex_contracts import (
     DownloadUrlResponse,
     StorageObject,
     StorageObjectStatus,
+    StorageObjectVersion,
     StorageUploadCompleteRequest,
     StorageUploadCreateRequest,
     StorageUploadSession,
@@ -478,6 +479,28 @@ class StorageService:
             raise NotFoundError(f"Object `{object_id}` was not found.")
         return await self._to_storage_object(uow=uow, record=record)
 
+    async def read_object_bytes(
+        self,
+        *,
+        uow: CortexUnitOfWork,
+        object_id: str,
+    ) -> tuple[ObjectRecord, bytes]:
+        with self._tracer.start_as_current_span("storage.object.read") as span:
+            record = await uow.objects.get(object_id)
+            if record is None or record.status is ObjectStatus.PENDING_UPLOAD:
+                raise NotFoundError(f"Object `{object_id}` was not found.")
+            if record.status is ObjectStatus.DELETED:
+                raise NotFoundError(f"Object `{object_id}` was not found.")
+            bucket_name = await self._bucket_name(uow, record.bucket_id)
+            payload = await asyncio.to_thread(
+                self._object_store.get_object_bytes,
+                bucket_name=bucket_name,
+                object_key=record.object_key,
+            )
+            span.set_attribute("cortex.storage.object_id", object_id)
+            span.set_attribute("cortex.storage.bytes", len(payload))
+            return record, payload
+
     async def create_download_url(
         self,
         *,
@@ -615,7 +638,20 @@ class StorageService:
             storage_class=record.storage_class,
             metadata={key: str(value) for key, value in record.metadata.items()},
             tags=list(record.tags),
-            source_uri=record.source_uri,
+            version=(
+                StorageObjectVersion(
+                    object_version_id=latest_version.object_version_id,
+                    version_no=latest_version.version_no,
+                    size_bytes=latest_version.size_bytes,
+                    provider_version_ref=latest_version.provider_version_ref,
+                    checksum_sha256=latest_version.checksum_sha256,
+                    etag=latest_version.etag,
+                    is_latest=latest_version.is_latest,
+                    created_at=latest_version.created_at,
+                )
+                if latest_version is not None
+                else None
+            ),
             access_policy=self._deserialize_access_policy(record),
             status=StorageObjectStatus(record.status.value),
             audit=AuditFields(

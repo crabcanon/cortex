@@ -5,6 +5,7 @@ from collections.abc import AsyncIterator
 from cortex_auth import AuthorizationService
 from cortex_common import CortexSettings
 from cortex_db import CortexUnitOfWork, SessionFactory
+from cortex_evaluation import EvaluationJobControlService, EvaluationService
 from cortex_knowledge import (
     KnowledgeDatasetService,
     KnowledgeJobControlService,
@@ -12,6 +13,7 @@ from cortex_knowledge import (
 )
 from cortex_parse import ParseJobControlService, ParseRequestCompiler, ParseService
 from cortex_storage import StorageService
+from cortex_synthesis import SynthesisJobControlService, SynthesisService
 from fastapi import Request
 
 
@@ -29,6 +31,14 @@ def get_auth_service(request: Request) -> AuthorizationService:
 
 def get_storage_service(request: Request) -> StorageService:
     return request.app.state.storage_service  # type: ignore[no-any-return]
+
+
+def get_evaluation_service(request: Request) -> EvaluationService:
+    return request.app.state.evaluation_service  # type: ignore[no-any-return]
+
+
+def get_evaluation_job_service(request: Request) -> EvaluationJobControlService:
+    return request.app.state.evaluation_job_service  # type: ignore[no-any-return]
 
 
 def get_knowledge_service(request: Request) -> KnowledgeDatasetService:
@@ -53,6 +63,14 @@ def get_parse_request_compiler(request: Request) -> ParseRequestCompiler:
 
 def get_parse_job_service(request: Request) -> ParseJobControlService:
     return request.app.state.parse_job_service  # type: ignore[no-any-return]
+
+
+def get_synthesis_service(request: Request) -> SynthesisService:
+    return request.app.state.synthesis_service  # type: ignore[no-any-return]
+
+
+def get_synthesis_job_service(request: Request) -> SynthesisJobControlService:
+    return request.app.state.synthesis_job_service  # type: ignore[no-any-return]
 
 
 async def get_uow(request: Request) -> AsyncIterator[CortexUnitOfWork]:

@@ -543,6 +543,143 @@ class KnowledgeRunModel(Base):
     created_at: Mapped[datetime] = created_at_column()
 
 
+class EvalEngineModel(Base):
+    __tablename__ = "eval_engines"
+
+    engine_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    engine_key: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
+    display_name: Mapped[str] = mapped_column(String(256), nullable=False)
+    engine_kind: Mapped[str] = mapped_column(String(64), nullable=False)
+    capability_flags_json: Mapped[str] = json_text_column(default="[]")
+    metric_prefixes_json: Mapped[str] = json_text_column(default="[]")
+    supported_modes_json: Mapped[str] = json_text_column(default="[]")
+    runtime_config_json: Mapped[str] = json_text_column()
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
+    created_at: Mapped[datetime] = created_at_column()
+
+
+class EvalMetricDefinitionModel(Base):
+    __tablename__ = "eval_metric_definitions"
+
+    metric_key: Mapped[str] = mapped_column(String(128), primary_key=True)
+    display_name: Mapped[str] = mapped_column(String(256), nullable=False)
+    category: Mapped[str] = mapped_column(String(64), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    unit: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    score_direction: Mapped[str] = mapped_column(String(32), nullable=False)
+    eval_types_json: Mapped[str] = json_text_column(default="[]")
+    engine_bindings_json: Mapped[str] = json_text_column(default="[]")
+    threshold_hint: Mapped[float | None] = mapped_column(Numeric(12, 6), nullable=True)
+    created_at: Mapped[datetime] = created_at_column()
+
+
+class EvalRunModel(Base):
+    __tablename__ = "eval_runs"
+    __table_args__ = (
+        UniqueConstraint("job_id"),
+        Index("idx_eval_runs_tenant_created_at", "tenant_id", "created_at"),
+        Index("idx_eval_runs_engine_type", "engine_id", "eval_type"),
+        Index("idx_eval_runs_trace_id", "trace_id", "created_at"),
+    )
+
+    eval_run_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    job_id: Mapped[str] = mapped_column(
+        ForeignKey("jobs.job_id", ondelete="CASCADE"), nullable=False
+    )
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.tenant_id"), nullable=False)
+    dataset_id: Mapped[str | None] = mapped_column(ForeignKey("datasets.dataset_id"), nullable=True)
+    eval_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    engine_id: Mapped[str] = mapped_column(ForeignKey("eval_engines.engine_id"), nullable=False)
+    profile_key: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    input_ref_json: Mapped[str] = json_text_column()
+    target_ref_json: Mapped[str] = json_text_column()
+    metrics_config_json: Mapped[str] = json_text_column(default="[]")
+    summary_results_json: Mapped[str] = json_text_column()
+    sample_summary_json: Mapped[str] = json_text_column()
+    report_object_id: Mapped[str | None] = mapped_column(
+        ForeignKey("objects.object_id"), nullable=True
+    )
+    result_dataset_id: Mapped[str | None] = mapped_column(
+        ForeignKey("datasets.dataset_id"), nullable=True
+    )
+    trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    span_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    created_by: Mapped[str | None] = mapped_column(ForeignKey("actors.actor_id"), nullable=True)
+    created_at: Mapped[datetime] = created_at_column()
+
+
+class EvalRunMetricModel(Base):
+    __tablename__ = "eval_run_metrics"
+    __table_args__ = (Index("idx_eval_run_metrics_metric_key", "metric_key", "status"),)
+
+    eval_run_id: Mapped[str] = mapped_column(
+        ForeignKey("eval_runs.eval_run_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    metric_index: Mapped[int] = mapped_column(Integer, primary_key=True)
+    metric_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    engine_id: Mapped[str] = mapped_column(ForeignKey("eval_engines.engine_id"), nullable=False)
+    native_metric_key: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    score: Mapped[float | None] = mapped_column(Numeric(12, 6), nullable=True)
+    threshold: Mapped[float | None] = mapped_column(Numeric(12, 6), nullable=True)
+    unit: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    sample_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    details_json: Mapped[str] = json_text_column()
+
+
+class SynthesisEngineModel(Base):
+    __tablename__ = "synthesis_engines"
+
+    engine_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    engine_key: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
+    display_name: Mapped[str] = mapped_column(String(256), nullable=False)
+    engine_kind: Mapped[str] = mapped_column(String(64), nullable=False)
+    capability_flags_json: Mapped[str] = json_text_column(default="[]")
+    supported_source_types_json: Mapped[str] = json_text_column(default="[]")
+    output_formats_json: Mapped[str] = json_text_column(default="[]")
+    runtime_config_json: Mapped[str] = json_text_column()
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
+    created_at: Mapped[datetime] = created_at_column()
+
+
+class SynthesisRunModel(Base):
+    __tablename__ = "synthesis_runs"
+    __table_args__ = (
+        UniqueConstraint("job_id"),
+        Index("idx_synthesis_runs_tenant_created_at", "tenant_id", "created_at"),
+        Index("idx_synthesis_runs_engine_type", "engine_id", "synthesis_type"),
+        Index("idx_synthesis_runs_trace_id", "trace_id", "created_at"),
+    )
+
+    synthesis_run_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    job_id: Mapped[str] = mapped_column(
+        ForeignKey("jobs.job_id", ondelete="CASCADE"), nullable=False
+    )
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.tenant_id"), nullable=False)
+    dataset_id: Mapped[str | None] = mapped_column(ForeignKey("datasets.dataset_id"), nullable=True)
+    synthesis_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    engine_id: Mapped[str] = mapped_column(
+        ForeignKey("synthesis_engines.engine_id"),
+        nullable=False,
+    )
+    profile_key: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    source_ref_json: Mapped[str] = json_text_column()
+    config_json: Mapped[str] = json_text_column()
+    quality_summary_json: Mapped[str] = json_text_column()
+    output_summary_json: Mapped[str] = json_text_column()
+    output_object_id: Mapped[str | None] = mapped_column(
+        ForeignKey("objects.object_id"), nullable=True
+    )
+    output_dataset_id: Mapped[str | None] = mapped_column(
+        ForeignKey("datasets.dataset_id"), nullable=True
+    )
+    trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    span_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    created_by: Mapped[str | None] = mapped_column(ForeignKey("actors.actor_id"), nullable=True)
+    created_at: Mapped[datetime] = created_at_column()
+
+
 class SearchRequestModel(Base):
     __tablename__ = "search_requests"
     __table_args__ = (

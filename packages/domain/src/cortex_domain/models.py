@@ -7,6 +7,7 @@ from typing import Any
 from .enums import (
     AccessLevel,
     DecisionEffect,
+    EvalType,
     JobStatus,
     JobType,
     ObjectStatus,
@@ -14,6 +15,7 @@ from .enums import (
     ParseEngineDeploymentMode,
     ParseEngineStatus,
     SourceType,
+    SynthesisType,
 )
 
 
@@ -296,6 +298,106 @@ class KnowledgeRunRecord:
     telemetry_context: dict[str, Any] = field(default_factory=dict)
     deployment_context: dict[str, Any] = field(default_factory=dict)
     experiment_context: dict[str, Any] = field(default_factory=dict)
+    created_at: datetime | None = None
+
+
+@dataclass(slots=True)
+class EvalEngineRecord:
+    engine_id: str
+    engine_key: str
+    display_name: str
+    engine_kind: str
+    capability_flags: list[str] = field(default_factory=list)
+    metric_prefixes: list[str] = field(default_factory=list)
+    supported_modes: list[str] = field(default_factory=list)
+    runtime_config: dict[str, Any] = field(default_factory=dict)
+    status: str = "active"
+    created_at: datetime | None = None
+
+
+@dataclass(slots=True)
+class EvalMetricDefinitionRecord:
+    metric_key: str
+    display_name: str
+    category: str
+    score_direction: str
+    description: str | None = None
+    unit: str | None = None
+    eval_types: list[EvalType] = field(default_factory=list)
+    engine_bindings: list[dict[str, Any]] = field(default_factory=list)
+    threshold_hint: float | None = None
+    created_at: datetime | None = None
+
+
+@dataclass(slots=True)
+class EvalRunRecord:
+    eval_run_id: str
+    job_id: str
+    tenant_id: str
+    eval_type: EvalType
+    engine_id: str
+    dataset_id: str | None = None
+    profile_key: str | None = None
+    input_ref: dict[str, Any] = field(default_factory=dict)
+    target_ref: dict[str, Any] = field(default_factory=dict)
+    metrics_config: list[dict[str, Any]] = field(default_factory=list)
+    summary_results: dict[str, Any] = field(default_factory=dict)
+    sample_summary: dict[str, Any] = field(default_factory=dict)
+    report_object_id: str | None = None
+    result_dataset_id: str | None = None
+    trace_id: str | None = None
+    span_id: str | None = None
+    created_by: str | None = None
+    created_at: datetime | None = None
+
+
+@dataclass(slots=True)
+class EvalRunMetricRecord:
+    eval_run_id: str
+    metric_index: int
+    metric_key: str
+    engine_id: str
+    status: str
+    native_metric_key: str | None = None
+    score: float | None = None
+    threshold: float | None = None
+    unit: str | None = None
+    sample_size: int | None = None
+    details: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(slots=True)
+class SynthesisEngineRecord:
+    engine_id: str
+    engine_key: str
+    display_name: str
+    engine_kind: str
+    capability_flags: list[str] = field(default_factory=list)
+    supported_source_types: list[str] = field(default_factory=list)
+    output_formats: list[str] = field(default_factory=list)
+    runtime_config: dict[str, Any] = field(default_factory=dict)
+    status: str = "active"
+    created_at: datetime | None = None
+
+
+@dataclass(slots=True)
+class SynthesisRunRecord:
+    synthesis_run_id: str
+    job_id: str
+    tenant_id: str
+    synthesis_type: SynthesisType
+    engine_id: str
+    dataset_id: str | None = None
+    profile_key: str | None = None
+    source_ref: dict[str, Any] = field(default_factory=dict)
+    config: dict[str, Any] = field(default_factory=dict)
+    quality_summary: dict[str, Any] = field(default_factory=dict)
+    output_summary: dict[str, Any] = field(default_factory=dict)
+    output_object_id: str | None = None
+    output_dataset_id: str | None = None
+    trace_id: str | None = None
+    span_id: str | None = None
+    created_by: str | None = None
     created_at: datetime | None = None
 
 

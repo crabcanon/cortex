@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from cortex_auth import AuthorizationService
 from cortex_common import load_runtime_config, load_settings
 from cortex_db import create_database_engine, create_session_factory
+from cortex_evaluation import EvaluationJobControlService, build_evaluation_service
 from cortex_knowledge import (
     KnowledgeDatasetService,
     KnowledgeJobControlService,
@@ -21,6 +22,7 @@ from cortex_parse import (
     prepare_crawl4ai_playwright_runtime,
 )
 from cortex_storage import StorageService
+from cortex_synthesis import SynthesisJobControlService, build_synthesis_service
 from fastapi import FastAPI
 
 
@@ -51,6 +53,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     session_factory = create_session_factory(engine)
     auth_service = AuthorizationService(settings.auth)
     storage_service = StorageService(settings.s3)
+    evaluation_service = build_evaluation_service(settings.evaluation, runtime_config)
+    evaluation_job_service = EvaluationJobControlService()
     knowledge_runtime = build_cognee_runtime(settings.cognee, runtime_config)
     knowledge_service = KnowledgeDatasetService(knowledge_runtime)
     knowledge_job_service = KnowledgeJobControlService()
@@ -60,7 +64,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         {descriptor.engine_key for descriptor in parse_service.list_engines().engines}
     )
     parse_job_service = ParseJobControlService()
+    synthesis_service = build_synthesis_service(settings.synthesis, runtime_config)
+    synthesis_job_service = SynthesisJobControlService()
     logger = install_logging_correlation()
+
+    from cortex_db import CortexUnitOfWork
+
+    async with CortexUnitOfWork(session_factory) as uow:
+        await evaluation_service.sync_catalog(uow)
+        await synthesis_service.sync_catalog(uow)
 
     app.state.settings = settings
     app.state.runtime_config = runtime_config
@@ -69,12 +81,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.session_factory = session_factory
     app.state.auth_service = auth_service
     app.state.storage_service = storage_service
+    app.state.evaluation_service = evaluation_service
+    app.state.evaluation_job_service = evaluation_job_service
     app.state.knowledge_service = knowledge_service
     app.state.knowledge_job_service = knowledge_job_service
     app.state.knowledge_search_service = knowledge_search_service
     app.state.parse_service = parse_service
     app.state.parse_request_compiler = parse_request_compiler
     app.state.parse_job_service = parse_job_service
+    app.state.synthesis_service = synthesis_service
+    app.state.synthesis_job_service = synthesis_job_service
     app.state.logger = logger
 
     try:

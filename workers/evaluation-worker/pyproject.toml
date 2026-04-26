@@ -1,0 +1,25 @@
+[project]
+name = "cortex-worker-evaluation"
+version = "0.1.0"
+description = "Evaluation worker for Cortex."
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "cortex-common",
+  "cortex-contracts",
+  "cortex-db",
+  "cortex-domain",
+  "cortex-evaluation",
+  "cortex-storage",
+]
+
+[project.optional-dependencies]
+runtime = [
+  "cortex-evaluation[runtime]",
+]
+
+[project.scripts]
+cortex-evaluation-worker = "cortex_worker_evaluation.main:main"
+
+[build-system]
+requires = ["uv_build>=0.10.4,<0.11.0"]
+build-backend = "uv_build"

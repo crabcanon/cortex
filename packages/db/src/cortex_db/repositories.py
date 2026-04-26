@@ -17,6 +17,11 @@ from cortex_domain import (
     DocumentChunkRecord,
     DocumentRecord,
     DocumentTagRecord,
+    EvalEngineRecord,
+    EvalMetricDefinitionRecord,
+    EvalRunMetricRecord,
+    EvalRunRecord,
+    EvalType,
     JobEventRecord,
     JobRecord,
     JobStatus,
@@ -39,6 +44,9 @@ from cortex_domain import (
     SearchRequestRecord,
     SourceType,
     StorageBucketRecord,
+    SynthesisEngineRecord,
+    SynthesisRunRecord,
+    SynthesisType,
     TenantRecord,
 )
 from sqlalchemy import desc, or_, select, update
@@ -55,6 +63,10 @@ from .models import (
     DocumentChunkModel,
     DocumentModel,
     DocumentTagModel,
+    EvalEngineModel,
+    EvalMetricDefinitionModel,
+    EvalRunMetricModel,
+    EvalRunModel,
     JobEventModel,
     JobModel,
     KnowledgeRunModel,
@@ -70,6 +82,8 @@ from .models import (
     SearchHitModel,
     SearchRequestModel,
     StorageBucketModel,
+    SynthesisEngineModel,
+    SynthesisRunModel,
     TenantModel,
 )
 
@@ -479,6 +493,124 @@ def _knowledge_run_from_model(model: KnowledgeRunModel) -> KnowledgeRunRecord:
         telemetry_context=_json_dict(model.telemetry_context_json),
         deployment_context=_json_dict(model.deployment_context_json),
         experiment_context=_json_dict(model.experiment_context_json),
+        created_at=model.created_at,
+    )
+
+
+def _eval_engine_from_model(model: EvalEngineModel) -> EvalEngineRecord:
+    return EvalEngineRecord(
+        engine_id=model.engine_id,
+        engine_key=model.engine_key,
+        display_name=model.display_name,
+        engine_kind=model.engine_kind,
+        capability_flags=[str(value) for value in _json_list(model.capability_flags_json)],
+        metric_prefixes=[str(value) for value in _json_list(model.metric_prefixes_json)],
+        supported_modes=[str(value) for value in _json_list(model.supported_modes_json)],
+        runtime_config=_json_dict(model.runtime_config_json),
+        status=model.status,
+        created_at=model.created_at,
+    )
+
+
+def _eval_metric_definition_from_model(
+    model: EvalMetricDefinitionModel,
+) -> EvalMetricDefinitionRecord:
+    return EvalMetricDefinitionRecord(
+        metric_key=model.metric_key,
+        display_name=model.display_name,
+        category=model.category,
+        description=model.description,
+        unit=model.unit,
+        score_direction=model.score_direction,
+        eval_types=[EvalType(str(value)) for value in _json_list(model.eval_types_json)],
+        engine_bindings=[
+            dict(value)
+            for value in _json_list(model.engine_bindings_json)
+            if isinstance(value, dict)
+        ],
+        threshold_hint=float(model.threshold_hint) if model.threshold_hint is not None else None,
+        created_at=model.created_at,
+    )
+
+
+def _eval_run_from_model(model: EvalRunModel) -> EvalRunRecord:
+    return EvalRunRecord(
+        eval_run_id=model.eval_run_id,
+        job_id=model.job_id,
+        tenant_id=model.tenant_id,
+        dataset_id=model.dataset_id,
+        eval_type=EvalType(model.eval_type),
+        engine_id=model.engine_id,
+        profile_key=model.profile_key,
+        input_ref=_json_dict(model.input_ref_json),
+        target_ref=_json_dict(model.target_ref_json),
+        metrics_config=[
+            dict(value)
+            for value in _json_list(model.metrics_config_json)
+            if isinstance(value, dict)
+        ],
+        summary_results=_json_dict(model.summary_results_json),
+        sample_summary=_json_dict(model.sample_summary_json),
+        report_object_id=model.report_object_id,
+        result_dataset_id=model.result_dataset_id,
+        trace_id=model.trace_id,
+        span_id=model.span_id,
+        created_by=model.created_by,
+        created_at=model.created_at,
+    )
+
+
+def _eval_run_metric_from_model(model: EvalRunMetricModel) -> EvalRunMetricRecord:
+    return EvalRunMetricRecord(
+        eval_run_id=model.eval_run_id,
+        metric_index=model.metric_index,
+        metric_key=model.metric_key,
+        engine_id=model.engine_id,
+        native_metric_key=model.native_metric_key,
+        status=model.status,
+        score=float(model.score) if model.score is not None else None,
+        threshold=float(model.threshold) if model.threshold is not None else None,
+        unit=model.unit,
+        sample_size=model.sample_size,
+        details=_json_dict(model.details_json),
+    )
+
+
+def _synthesis_engine_from_model(model: SynthesisEngineModel) -> SynthesisEngineRecord:
+    return SynthesisEngineRecord(
+        engine_id=model.engine_id,
+        engine_key=model.engine_key,
+        display_name=model.display_name,
+        engine_kind=model.engine_kind,
+        capability_flags=[str(value) for value in _json_list(model.capability_flags_json)],
+        supported_source_types=[
+            str(value) for value in _json_list(model.supported_source_types_json)
+        ],
+        output_formats=[str(value) for value in _json_list(model.output_formats_json)],
+        runtime_config=_json_dict(model.runtime_config_json),
+        status=model.status,
+        created_at=model.created_at,
+    )
+
+
+def _synthesis_run_from_model(model: SynthesisRunModel) -> SynthesisRunRecord:
+    return SynthesisRunRecord(
+        synthesis_run_id=model.synthesis_run_id,
+        job_id=model.job_id,
+        tenant_id=model.tenant_id,
+        dataset_id=model.dataset_id,
+        synthesis_type=SynthesisType(model.synthesis_type),
+        engine_id=model.engine_id,
+        profile_key=model.profile_key,
+        source_ref=_json_dict(model.source_ref_json),
+        config=_json_dict(model.config_json),
+        quality_summary=_json_dict(model.quality_summary_json),
+        output_summary=_json_dict(model.output_summary_json),
+        output_object_id=model.output_object_id,
+        output_dataset_id=model.output_dataset_id,
+        trace_id=model.trace_id,
+        span_id=model.span_id,
+        created_by=model.created_by,
         created_at=model.created_at,
     )
 
@@ -1654,6 +1786,339 @@ class KnowledgeRunRepository:
             .order_by(KnowledgeRunModel.created_at.asc())
         )
         return [_knowledge_run_from_model(model) for model in result.scalars().all()]
+
+
+class EvalEngineRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: EvalEngineRecord) -> EvalEngineRecord:
+        model = EvalEngineModel(
+            engine_id=record.engine_id,
+            engine_key=record.engine_key,
+            display_name=record.display_name,
+            engine_kind=record.engine_kind,
+            capability_flags_json=json_dumps(record.capability_flags),
+            metric_prefixes_json=json_dumps(record.metric_prefixes),
+            supported_modes_json=json_dumps(record.supported_modes),
+            runtime_config_json=_json_object(record.runtime_config),
+            status=record.status,
+            created_at=record.created_at or utc_now(),
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _eval_engine_from_model(model)
+
+    async def get(self, engine_id: str) -> EvalEngineRecord | None:
+        model = await self._session.get(EvalEngineModel, engine_id)
+        return None if model is None else _eval_engine_from_model(model)
+
+    async def get_by_key(self, engine_key: str) -> EvalEngineRecord | None:
+        result = await self._session.execute(
+            select(EvalEngineModel).where(EvalEngineModel.engine_key == engine_key)
+        )
+        model = result.scalar_one_or_none()
+        return None if model is None else _eval_engine_from_model(model)
+
+    async def list_all(self) -> list[EvalEngineRecord]:
+        result = await self._session.execute(
+            select(EvalEngineModel).order_by(EvalEngineModel.display_name.asc())
+        )
+        return [_eval_engine_from_model(model) for model in result.scalars().all()]
+
+    async def upsert(self, record: EvalEngineRecord) -> EvalEngineRecord:
+        existing = await self.get(record.engine_id)
+        if existing is None:
+            return await self.add(record)
+        model = await self._session.get(EvalEngineModel, record.engine_id)
+        if model is None:
+            return await self.add(record)
+        model.engine_key = record.engine_key
+        model.display_name = record.display_name
+        model.engine_kind = record.engine_kind
+        model.capability_flags_json = json_dumps(record.capability_flags)
+        model.metric_prefixes_json = json_dumps(record.metric_prefixes)
+        model.supported_modes_json = json_dumps(record.supported_modes)
+        model.runtime_config_json = _json_object(record.runtime_config)
+        model.status = record.status
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _eval_engine_from_model(model)
+
+
+class EvalMetricDefinitionRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: EvalMetricDefinitionRecord) -> EvalMetricDefinitionRecord:
+        model = EvalMetricDefinitionModel(
+            metric_key=record.metric_key,
+            display_name=record.display_name,
+            category=record.category,
+            description=record.description,
+            unit=record.unit,
+            score_direction=record.score_direction,
+            eval_types_json=json_dumps([value.value for value in record.eval_types]),
+            engine_bindings_json=json_dumps(record.engine_bindings),
+            threshold_hint=record.threshold_hint,
+            created_at=record.created_at or utc_now(),
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _eval_metric_definition_from_model(model)
+
+    async def get(self, metric_key: str) -> EvalMetricDefinitionRecord | None:
+        model = await self._session.get(EvalMetricDefinitionModel, metric_key)
+        return None if model is None else _eval_metric_definition_from_model(model)
+
+    async def list_all(self) -> list[EvalMetricDefinitionRecord]:
+        result = await self._session.execute(
+            select(EvalMetricDefinitionModel).order_by(EvalMetricDefinitionModel.metric_key.asc())
+        )
+        return [_eval_metric_definition_from_model(model) for model in result.scalars().all()]
+
+    async def upsert(self, record: EvalMetricDefinitionRecord) -> EvalMetricDefinitionRecord:
+        model = await self._session.get(EvalMetricDefinitionModel, record.metric_key)
+        if model is None:
+            return await self.add(record)
+        model.display_name = record.display_name
+        model.category = record.category
+        model.description = record.description
+        model.unit = record.unit
+        model.score_direction = record.score_direction
+        model.eval_types_json = json_dumps([value.value for value in record.eval_types])
+        model.engine_bindings_json = json_dumps(record.engine_bindings)
+        model.threshold_hint = record.threshold_hint
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _eval_metric_definition_from_model(model)
+
+
+class EvalRunRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: EvalRunRecord) -> EvalRunRecord:
+        model = EvalRunModel(
+            eval_run_id=record.eval_run_id,
+            job_id=record.job_id,
+            tenant_id=record.tenant_id,
+            dataset_id=record.dataset_id,
+            eval_type=record.eval_type.value,
+            engine_id=record.engine_id,
+            profile_key=record.profile_key,
+            input_ref_json=_json_object(record.input_ref),
+            target_ref_json=_json_object(record.target_ref),
+            metrics_config_json=json_dumps(record.metrics_config),
+            summary_results_json=_json_object(record.summary_results),
+            sample_summary_json=_json_object(record.sample_summary),
+            report_object_id=record.report_object_id,
+            result_dataset_id=record.result_dataset_id,
+            trace_id=record.trace_id,
+            span_id=record.span_id,
+            created_by=record.created_by,
+            created_at=record.created_at or utc_now(),
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _eval_run_from_model(model)
+
+    async def get(self, eval_run_id: str) -> EvalRunRecord | None:
+        model = await self._session.get(EvalRunModel, eval_run_id)
+        return None if model is None else _eval_run_from_model(model)
+
+    async def get_by_job(self, job_id: str) -> EvalRunRecord | None:
+        result = await self._session.execute(
+            select(EvalRunModel).where(EvalRunModel.job_id == job_id)
+        )
+        model = result.scalar_one_or_none()
+        return None if model is None else _eval_run_from_model(model)
+
+    async def update(self, record: EvalRunRecord) -> EvalRunRecord | None:
+        model = await self._session.get(EvalRunModel, record.eval_run_id)
+        if model is None:
+            return None
+        model.dataset_id = record.dataset_id
+        model.eval_type = record.eval_type.value
+        model.engine_id = record.engine_id
+        model.profile_key = record.profile_key
+        model.input_ref_json = _json_object(record.input_ref)
+        model.target_ref_json = _json_object(record.target_ref)
+        model.metrics_config_json = json_dumps(record.metrics_config)
+        model.summary_results_json = _json_object(record.summary_results)
+        model.sample_summary_json = _json_object(record.sample_summary)
+        model.report_object_id = record.report_object_id
+        model.result_dataset_id = record.result_dataset_id
+        model.trace_id = record.trace_id
+        model.span_id = record.span_id
+        model.created_by = record.created_by
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _eval_run_from_model(model)
+
+
+class EvalRunMetricRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def replace_for_run(
+        self,
+        eval_run_id: str,
+        metrics: Sequence[EvalRunMetricRecord],
+    ) -> list[EvalRunMetricRecord]:
+        result = await self._session.execute(
+            select(EvalRunMetricModel).where(EvalRunMetricModel.eval_run_id == eval_run_id)
+        )
+        for model in result.scalars().all():
+            await self._session.delete(model)
+        created: list[EvalRunMetricRecord] = []
+        for record in metrics:
+            model = EvalRunMetricModel(
+                eval_run_id=record.eval_run_id,
+                metric_index=record.metric_index,
+                metric_key=record.metric_key,
+                engine_id=record.engine_id,
+                native_metric_key=record.native_metric_key,
+                status=record.status,
+                score=record.score,
+                threshold=record.threshold,
+                unit=record.unit,
+                sample_size=record.sample_size,
+                details_json=_json_object(record.details),
+            )
+            self._session.add(model)
+            created.append(record)
+        await self._session.flush()
+        return created
+
+    async def list_for_run(self, eval_run_id: str) -> list[EvalRunMetricRecord]:
+        result = await self._session.execute(
+            select(EvalRunMetricModel)
+            .where(EvalRunMetricModel.eval_run_id == eval_run_id)
+            .order_by(EvalRunMetricModel.metric_index.asc())
+        )
+        return [_eval_run_metric_from_model(model) for model in result.scalars().all()]
+
+
+class SynthesisEngineRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: SynthesisEngineRecord) -> SynthesisEngineRecord:
+        model = SynthesisEngineModel(
+            engine_id=record.engine_id,
+            engine_key=record.engine_key,
+            display_name=record.display_name,
+            engine_kind=record.engine_kind,
+            capability_flags_json=json_dumps(record.capability_flags),
+            supported_source_types_json=json_dumps(record.supported_source_types),
+            output_formats_json=json_dumps(record.output_formats),
+            runtime_config_json=_json_object(record.runtime_config),
+            status=record.status,
+            created_at=record.created_at or utc_now(),
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _synthesis_engine_from_model(model)
+
+    async def get(self, engine_id: str) -> SynthesisEngineRecord | None:
+        model = await self._session.get(SynthesisEngineModel, engine_id)
+        return None if model is None else _synthesis_engine_from_model(model)
+
+    async def get_by_key(self, engine_key: str) -> SynthesisEngineRecord | None:
+        result = await self._session.execute(
+            select(SynthesisEngineModel).where(SynthesisEngineModel.engine_key == engine_key)
+        )
+        model = result.scalar_one_or_none()
+        return None if model is None else _synthesis_engine_from_model(model)
+
+    async def list_all(self) -> list[SynthesisEngineRecord]:
+        result = await self._session.execute(
+            select(SynthesisEngineModel).order_by(SynthesisEngineModel.display_name.asc())
+        )
+        return [_synthesis_engine_from_model(model) for model in result.scalars().all()]
+
+    async def upsert(self, record: SynthesisEngineRecord) -> SynthesisEngineRecord:
+        model = await self._session.get(SynthesisEngineModel, record.engine_id)
+        if model is None:
+            return await self.add(record)
+        model.engine_key = record.engine_key
+        model.display_name = record.display_name
+        model.engine_kind = record.engine_kind
+        model.capability_flags_json = json_dumps(record.capability_flags)
+        model.supported_source_types_json = json_dumps(record.supported_source_types)
+        model.output_formats_json = json_dumps(record.output_formats)
+        model.runtime_config_json = _json_object(record.runtime_config)
+        model.status = record.status
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _synthesis_engine_from_model(model)
+
+
+class SynthesisRunRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, record: SynthesisRunRecord) -> SynthesisRunRecord:
+        model = SynthesisRunModel(
+            synthesis_run_id=record.synthesis_run_id,
+            job_id=record.job_id,
+            tenant_id=record.tenant_id,
+            dataset_id=record.dataset_id,
+            synthesis_type=record.synthesis_type.value,
+            engine_id=record.engine_id,
+            profile_key=record.profile_key,
+            source_ref_json=_json_object(record.source_ref),
+            config_json=_json_object(record.config),
+            quality_summary_json=_json_object(record.quality_summary),
+            output_summary_json=_json_object(record.output_summary),
+            output_object_id=record.output_object_id,
+            output_dataset_id=record.output_dataset_id,
+            trace_id=record.trace_id,
+            span_id=record.span_id,
+            created_by=record.created_by,
+            created_at=record.created_at or utc_now(),
+        )
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _synthesis_run_from_model(model)
+
+    async def get(self, synthesis_run_id: str) -> SynthesisRunRecord | None:
+        model = await self._session.get(SynthesisRunModel, synthesis_run_id)
+        return None if model is None else _synthesis_run_from_model(model)
+
+    async def get_by_job(self, job_id: str) -> SynthesisRunRecord | None:
+        result = await self._session.execute(
+            select(SynthesisRunModel).where(SynthesisRunModel.job_id == job_id)
+        )
+        model = result.scalar_one_or_none()
+        return None if model is None else _synthesis_run_from_model(model)
+
+    async def update(self, record: SynthesisRunRecord) -> SynthesisRunRecord | None:
+        model = await self._session.get(SynthesisRunModel, record.synthesis_run_id)
+        if model is None:
+            return None
+        model.dataset_id = record.dataset_id
+        model.synthesis_type = record.synthesis_type.value
+        model.engine_id = record.engine_id
+        model.profile_key = record.profile_key
+        model.source_ref_json = _json_object(record.source_ref)
+        model.config_json = _json_object(record.config)
+        model.quality_summary_json = _json_object(record.quality_summary)
+        model.output_summary_json = _json_object(record.output_summary)
+        model.output_object_id = record.output_object_id
+        model.output_dataset_id = record.output_dataset_id
+        model.trace_id = record.trace_id
+        model.span_id = record.span_id
+        model.created_by = record.created_by
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _synthesis_run_from_model(model)
 
 
 class SearchRequestRepository:

@@ -172,6 +172,14 @@ class FakeObjectStoreClient:
     ) -> dict[str, Any]:
         return dict(self.single_part_objects.get((bucket_name, object_key), {}))
 
+    def get_object_bytes(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+    ) -> bytes:
+        return self.put_objects[(bucket_name, object_key)]
+
 
 @contextmanager
 def _build_client(

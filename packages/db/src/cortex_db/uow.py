@@ -14,6 +14,10 @@ from .repositories import (
     DocumentChunkRepository,
     DocumentRepository,
     DocumentTagRepository,
+    EvalEngineRepository,
+    EvalMetricDefinitionRepository,
+    EvalRunMetricRepository,
+    EvalRunRepository,
     JobEventRepository,
     JobRepository,
     KnowledgeRunRepository,
@@ -29,6 +33,8 @@ from .repositories import (
     SearchHitRepository,
     SearchRequestRepository,
     StorageBucketRepository,
+    SynthesisEngineRepository,
+    SynthesisRunRepository,
     TenantRepository,
 )
 
@@ -162,6 +168,30 @@ class CortexUnitOfWork:
     @property
     def knowledge_runs(self) -> KnowledgeRunRepository:
         return KnowledgeRunRepository(self._require_session())
+
+    @property
+    def eval_engines(self) -> EvalEngineRepository:
+        return EvalEngineRepository(self._require_session())
+
+    @property
+    def eval_metric_definitions(self) -> EvalMetricDefinitionRepository:
+        return EvalMetricDefinitionRepository(self._require_session())
+
+    @property
+    def eval_runs(self) -> EvalRunRepository:
+        return EvalRunRepository(self._require_session())
+
+    @property
+    def eval_run_metrics(self) -> EvalRunMetricRepository:
+        return EvalRunMetricRepository(self._require_session())
+
+    @property
+    def synthesis_engines(self) -> SynthesisEngineRepository:
+        return SynthesisEngineRepository(self._require_session())
+
+    @property
+    def synthesis_runs(self) -> SynthesisRunRepository:
+        return SynthesisRunRepository(self._require_session())
 
     @property
     def search_requests(self) -> SearchRequestRepository:

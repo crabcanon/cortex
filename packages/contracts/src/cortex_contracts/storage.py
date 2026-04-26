@@ -118,6 +118,17 @@ class StorageUploadCompleteRequest(BaseModel):
     )
 
 
+class StorageObjectVersion(BaseModel):
+    object_version_id: str
+    version_no: int = Field(ge=1)
+    size_bytes: int = Field(ge=0)
+    provider_version_ref: str | None = None
+    checksum_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    etag: str | None = None
+    is_latest: bool = True
+    created_at: datetime | None = None
+
+
 class StorageObject(BaseModel):
     object_id: str
     filename: str
@@ -133,7 +144,7 @@ class StorageObject(BaseModel):
     storage_class: str | None = None
     metadata: dict[str, str] = Field(default_factory=dict)
     tags: list[str] = Field(default_factory=list)
-    source_uri: str | None = None
+    version: StorageObjectVersion | None = None
     access_policy: AccessPolicy | None = None
 
 

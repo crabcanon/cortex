@@ -83,3 +83,33 @@ knowledge:
     migration_db:
       db_provider: postgres
       db_url_ref: env:COGNEE_MIGRATION_DB_URL
+
+evaluation:
+  default_profile_ref: auto_default
+  engines:
+    deepeval:
+      enabled: false
+      model_ref: env:CORTEX_EVAL_DEEPEVAL_MODEL
+      options: {}
+    evalscope:
+      enabled: false
+      mode: external_http
+      base_url: http://evalscope:9000
+      host: 127.0.0.1
+      port: 9000
+      debug: false
+      startup_timeout_seconds: 30
+      timeout_seconds: 180
+      headers: {}
+      options: {}
+
+synthesis:
+  default_profile_ref: auto_default
+  engines:
+    sdv:
+      enabled: false
+      options: {}
+    deepeval:
+      enabled: false
+      model_ref: env:CORTEX_SYNTH_DEEPEVAL_MODEL
+      options: {}

@@ -44,8 +44,8 @@ LOCAL_DEV_TOKEN_REQUEST_EXAMPLES: dict[str, Example] = cast(
 PARSE_SYNC_REQUEST_EXAMPLES: dict[str, Example] = cast(
     dict[str, Example],
     {
-        "auto_batch_parse": {
-            "summary": "Auto-routed batch parse",
+        "auto_web_batch_parse": {
+            "summary": "Auto-routed web batch parse / 自动路由网页批量解析",
             "description": (
                 "Submit one or more source locators and let Cortex pick the best active engine "
                 "and scene automatically."
@@ -53,9 +53,36 @@ PARSE_SYNC_REQUEST_EXAMPLES: dict[str, Example] = cast(
             "value": {
                 "sources": [
                     "https://docs.cognee.ai/core-concepts/overview",
-                    "s3://demo-bucket/manuals/architecture.pdf",
+                    "https://docs.crawl4ai.com/advanced/advanced-features/",
                 ],
                 "engine_id": "auto",
+            },
+        },
+        "crawl4ai_deep_web": {
+            "summary": "Crawl4AI deep-web parse / Crawl4AI 深度网页解析",
+            "description": (
+                "Use Crawl4AI explicitly with the high-intensity `deep_web` scene. This keeps "
+                "fallback disabled and always routes the request to Crawl4AI."
+            ),
+            "value": {
+                "sources": ["https://docs.crawl4ai.com/advanced/advanced-features/"],
+                "engine_id": "crawl4ai",
+                "scene": "deep_web",
+            },
+        },
+        "minio_object_auto": {
+            "summary": "MinIO/S3 object parse / MinIO/S3 对象解析",
+            "description": (
+                "Parse a Cortex-managed object stored in MinIO/S3. The locator may be the "
+                "storage object key, an `s3://bucket/key` URI, or `cortex://objects/{object_id}`; "
+                "Cortex extracts the `obj_...` id, signs a download URL, and detects MIME type."
+            ),
+            "value": {
+                "sources": [
+                    "s3://cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf"
+                ],
+                "engine_id": "auto",
+                "scene": "document_ai",
             },
         },
     },
@@ -65,7 +92,7 @@ PARSE_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
     dict[str, Example],
     {
         "async_auto_batch_parse": {
-            "summary": "Async auto-routed batch parse",
+            "summary": "Async auto-routed batch parse / 异步自动路由批量解析",
             "description": (
                 "Recommended when you want one async parse job per source with the same "
                 "high-level routing contract."
@@ -88,6 +115,37 @@ PARSE_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
                         "X-Consumer": "knowledge-pipeline",
                     },
                 },
+            },
+        },
+        "async_docling_minio_pdf": {
+            "summary": "Docling async MinIO PDF parse / Docling 异步解析 MinIO PDF",
+            "description": (
+                "Use this for PDFs uploaded through Cortex Storage. Start the "
+                "`cortex-parse-worker-docling` worker/profile so the job is claimed by the "
+                "Docling runtime worker instead of the slim parse worker."
+            ),
+            "value": {
+                "sources": [
+                    "s3://cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf"
+                ],
+                "engine_id": "docling",
+                "scene": "document_ai",
+                "priority": 5,
+            },
+        },
+        "async_llamaparse_minio_pdf": {
+            "summary": "LlamaParse async MinIO PDF parse / LlamaParse 异步解析 MinIO PDF",
+            "description": (
+                "Use this when the LlamaParse cloud API key is configured and the object should "
+                "be parsed by the cloud document parser."
+            ),
+            "value": {
+                "sources": [
+                    "cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf"
+                ],
+                "engine_id": "llama_parse",
+                "scene": "document_fidelity",
+                "priority": 5,
             },
         },
     },
@@ -178,8 +236,7 @@ KNOWLEDGE_DATASET_CREATE_REQUEST_EXAMPLES: dict[str, Example] = cast(
         "recommended_dataset": {
             "summary": "Recommended shared dataset",
             "description": (
-                "Creates a tenant-shared dataset suitable for "
-                "Parse -> Add -> Search workflows."
+                "Creates a tenant-shared dataset suitable for Parse -> Add -> Search workflows."
             ),
             "value": {
                 "dataset_key": "product_docs",
@@ -210,8 +267,7 @@ ADD_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
         "document_ingest": {
             "summary": "Ingest parsed documents and uploaded objects",
             "description": (
-                "Recommended Add request after a file has "
-                "been uploaded and optionally parsed."
+                "Recommended Add request after a file has been uploaded and optionally parsed."
             ),
             "value": {
                 "dataset_key": "product_docs",
@@ -247,8 +303,7 @@ ADD_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
         "direct_text_ingest": {
             "summary": "Direct text ingest",
             "description": (
-                "Useful for small snippets, notes, or quick "
-                "operator tests without a prior upload."
+                "Useful for small snippets, notes, or quick operator tests without a prior upload."
             ),
             "value": {
                 "dataset_key": "product_docs",
@@ -256,9 +311,7 @@ ADD_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
                     {
                         "input_type": "text",
                         "text": (
-                            "# Cortex Notes\n\n"
-                            "Cortex supports Parse, Storage, "
-                            "and Knowledge APIs."
+                            "# Cortex Notes\n\nCortex supports Parse, Storage, and Knowledge APIs."
                         ),
                         "label": "Quick note",
                         "node_set": ["notes"],
@@ -313,8 +366,7 @@ MEMIFY_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
         "recommended_memify": {
             "summary": "Recommended Memify request",
             "description": (
-                "Runs the default coding-rules enrichment "
-                "pipeline over the selected dataset."
+                "Runs the default coding-rules enrichment pipeline over the selected dataset."
             ),
             "value": {
                 "dataset_key": "product_docs",
@@ -338,8 +390,7 @@ SEARCH_REQUEST_EXAMPLES: dict[str, Example] = cast(
         "recommended_graph_completion": {
             "summary": "Recommended graph completion search",
             "description": (
-                "A good default search request for answering "
-                "a question with graph-aware context."
+                "A good default search request for answering a question with graph-aware context."
             ),
             "value": {
                 "query_text": "What does the documentation say about Cortex parse workflows?",
@@ -362,8 +413,7 @@ SEARCH_REQUEST_EXAMPLES: dict[str, Example] = cast(
         "chunk_search": {
             "summary": "Chunk-level retrieval",
             "description": (
-                "Useful when you only want ranked context "
-                "snippets without a synthesized answer."
+                "Useful when you only want ranked context snippets without a synthesized answer."
             ),
             "value": {
                 "query_text": "OpenTelemetry integration",
@@ -374,6 +424,346 @@ SEARCH_REQUEST_EXAMPLES: dict[str, Example] = cast(
                 "include_provenance": True,
                 "include_graph_paths": False,
                 "timeout_seconds": 15,
+            },
+        },
+    },
+)
+
+EVAL_SYNC_REQUEST_EXAMPLES: dict[str, Example] = cast(
+    dict[str, Example],
+    {
+        "rag_eval": {
+            "summary": "RAG evaluation / RAG 评测",
+            "description": (
+                "Recommended synchronous evaluation for a small RAG validation dataset."
+            ),
+            "value": {
+                "name": "Fintech-RAG-QA-Eval",
+                "eval_type": "rag",
+                "engine_id": "auto",
+                "input": {
+                    "type": "dataset",
+                    "dataset_id": "ds_001",
+                    "field_mapping": {
+                        "user_input": "question",
+                        "actual_output": "answer",
+                        "retrieval_contexts": "contexts",
+                    },
+                },
+                "target": {
+                    "type": "api",
+                    "endpoint_url": "https://ordix.internal/v1/query",
+                    "timeout_seconds": 30,
+                },
+                "metrics": [
+                    {"metric_key": "rag.faithfulness", "threshold": 0.8},
+                    {"metric_key": "rag.answer_relevance", "threshold": 0.7},
+                ],
+            },
+        },
+        "deepeval_multi_turn_sync": {
+            "summary": "DeepEval multi-turn sync / DeepEval 多轮同步评测",
+            "description": "Inline multi-turn conversation evaluation for quick regression checks.",
+            "value": {
+                "name": "swagger-dialog-smoke",
+                "eval_type": "multi_turn",
+                "engine_id": "deepeval",
+                "input": {
+                    "type": "inline_test_cases",
+                    "test_cases": [
+                        {
+                            "conversation_turns": [
+                                {"role": "user", "content": "Help me parse a PDF from storage."},
+                                {
+                                    "role": "assistant",
+                                    "content": "Upload it to Storage and submit a Parse job.",
+                                },
+                            ],
+                            "metadata": {"case_id": "dialog-smoke-001"},
+                        }
+                    ],
+                },
+                "metrics": [
+                    {"metric_key": "dialog.conversation_relevancy", "threshold": 0.75},
+                    {"metric_key": "dialog.conversation_completeness", "threshold": 0.75},
+                ],
+            },
+        },
+        "evalscope_perf_sync": {
+            "summary": "EvalScope perf sync / EvalScope 性能同步评测",
+            "description": (
+                "Small performance smoke request routed to EvalScope. In local Docker, the "
+                "target can point at the Cortex readiness endpoint."
+            ),
+            "value": {
+                "name": "swagger-perf-smoke",
+                "eval_type": "perf",
+                "engine_id": "evalscope",
+                "input": {"type": "builtin_dataset", "builtin_dataset_key": "openqa"},
+                "target": {
+                    "type": "api",
+                    "endpoint_url": "http://127.0.0.1:8080/v1/health/ready",
+                    "timeout_seconds": 30,
+                },
+                "metrics": [
+                    {"metric_key": "perf.qps", "threshold": 1.0},
+                    {"metric_key": "perf.p90_latency", "threshold": 2.0},
+                ],
+                "engine_options": {"parallel": [1], "number": [5], "stream": False},
+            },
+        },
+    },
+)
+
+EVAL_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
+    dict[str, Example],
+    {
+        "agent_eval_job": {
+            "summary": "Agent evaluation job / Agent 评测作业",
+            "description": (
+                "Recommended async submission for larger agentic or regression workloads."
+            ),
+            "value": {
+                "name": "Support-Agent-Regressions",
+                "eval_type": "agentic",
+                "engine_id": "auto",
+                "input": {
+                    "type": "dataset",
+                    "dataset_id": "ds_agent_suite",
+                },
+                "metrics": [
+                    {"metric_key": "agent.task_completion", "threshold": 0.8},
+                    {"metric_key": "agent.tool_correctness", "threshold": 0.8},
+                ],
+                "webhook": {
+                    "url": "https://example.com/hooks/cortex/eval",
+                    "event_types": ["job.succeeded", "job.failed"],
+                },
+            },
+        },
+        "evalscope_perf_job": {
+            "summary": "EvalScope perf async job / EvalScope 异步性能评测",
+            "description": "Recommended async submission for larger performance workloads.",
+            "value": {
+                "name": "swagger-perf-job",
+                "eval_type": "perf",
+                "engine_id": "evalscope",
+                "input": {"type": "builtin_dataset", "builtin_dataset_key": "openqa"},
+                "target": {
+                    "type": "api",
+                    "protocol": "openai_compatible",
+                    "endpoint_url": "http://127.0.0.1:8080/v1/health/ready",
+                    "timeout_seconds": 60,
+                },
+                "metrics": [
+                    {"metric_key": "perf.qps", "threshold": 1.0},
+                    {"metric_key": "perf.p99_latency", "threshold": 5.0},
+                    {"metric_key": "perf.output_tokens_per_second", "threshold": 1.0},
+                ],
+                "engine_options": {"parallel": [1, 2], "number": [10], "stream": False},
+            },
+        },
+        "deepeval_custom_job": {
+            "summary": "DeepEval custom async job / DeepEval 异步自定义评测",
+            "description": "Custom GEval-style quality check with a caller-provided criterion.",
+            "value": {
+                "name": "swagger-custom-quality-job",
+                "eval_type": "custom",
+                "engine_id": "deepeval",
+                "input": {
+                    "type": "inline_test_cases",
+                    "test_cases": [
+                        {
+                            "user_input": "Explain Cortex Parse in one sentence.",
+                            "actual_output": (
+                                "Cortex Parse converts web pages and files into Markdown "
+                                "with normalized metadata."
+                            ),
+                            "expected_output": (
+                                "Cortex Parse should mention Markdown and standardized metadata."
+                            ),
+                        }
+                    ],
+                },
+                "metrics": [
+                    {
+                        "metric_key": "quality.correctness",
+                        "threshold": 0.8,
+                        "params": {
+                            "criteria": (
+                                "Score whether the answer correctly explains the business "
+                                "purpose of Cortex Parse."
+                            )
+                        },
+                    }
+                ],
+                "webhook": {
+                    "url": "https://example.com/hooks/cortex/eval",
+                    "event_types": ["job.succeeded", "job.failed"],
+                },
+            },
+        },
+    },
+)
+
+SYNTHESIS_SYNC_REQUEST_EXAMPLES: dict[str, Example] = cast(
+    dict[str, Example],
+    {
+        "rag_goldens": {
+            "summary": "RAG goldens synthesis / RAG 黄金集生成",
+            "description": (
+                "Generate a small synchronous preview set of RAG golden samples from documents."
+            ),
+            "value": {
+                "name": "Support-RAG-Goldens",
+                "synthesis_type": "rag_goldens",
+                "engine_id": "auto",
+                "source": {
+                    "type": "documents",
+                    "documents": [
+                        "Cortex exposes Parse, Storage, Knowledge, Evaluation, and Synthesis APIs."
+                    ],
+                },
+                "config": {
+                    "sample_count": 5,
+                    "quality_gates": [{"metric_key": "quality.correctness", "threshold": 0.8}],
+                },
+                "output": {"output_format": "json"},
+            },
+        },
+        "sdv_single_table": {
+            "summary": "SDV single-table sync / SDV 单表同步合成",
+            "description": (
+                "Generate a small structured preview from inline records. Requires the SDV "
+                "runtime dependency for synchronous execution."
+            ),
+            "value": {
+                "name": "swagger-sdv-customers",
+                "synthesis_type": "structured_single_table",
+                "engine_id": "sdv",
+                "source": {
+                    "type": "inline_records",
+                    "inline_records": [
+                        {"customer_id": "c1", "tier": "gold", "monthly_spend": 1200},
+                        {"customer_id": "c2", "tier": "silver", "monthly_spend": 300},
+                    ],
+                    "options": {"table_name": "customers"},
+                },
+                "config": {
+                    "sample_count": 5,
+                    "anonymize_pii": True,
+                    "quality_gates": [
+                        {"metric_key": "quality.row_count_match", "threshold": 1.0}
+                    ],
+                },
+                "output": {"output_format": "json", "include_preview": True},
+            },
+        },
+        "deepeval_qa_pairs": {
+            "summary": "DeepEval QA sync / DeepEval QA 同步合成",
+            "description": "Generate a tiny QA preview from inline document context.",
+            "value": {
+                "name": "swagger-qa-preview",
+                "synthesis_type": "qa_pairs",
+                "engine_id": "deepeval",
+                "source": {
+                    "type": "documents",
+                    "documents": [
+                        "Cortex Parse turns URLs and storage objects into LLM-ready Markdown."
+                    ],
+                },
+                "config": {
+                    "sample_count": 2,
+                    "max_contexts_per_case": 1,
+                    "include_expected_output": True,
+                },
+                "output": {"output_format": "json", "include_preview": True},
+            },
+        },
+    },
+)
+
+SYNTHESIS_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
+    dict[str, Example],
+    {
+        "qa_pairs_job": {
+            "summary": "QA pairs synthesis job / QA 对生成作业",
+            "description": (
+                "Recommended async submission for larger synthetic dataset generation workloads."
+            ),
+            "value": {
+                "name": "Product-QA-Synth",
+                "synthesis_type": "qa_pairs",
+                "engine_id": "auto",
+                "source": {
+                    "type": "inline_records",
+                    "inline_records": [
+                        {"document": "Cortex supports pluggable evaluation and synthesis engines."}
+                    ],
+                },
+                "config": {
+                    "sample_count": 100,
+                    "quality_gates": [{"metric_key": "quality.correctness", "threshold": 0.8}],
+                },
+                "output": {"output_format": "jsonl"},
+                "webhook": {
+                    "url": "https://example.com/hooks/cortex/synthesis",
+                    "event_types": ["job.succeeded", "job.failed"],
+                },
+            },
+        },
+        "sdv_relational_job": {
+            "summary": "SDV relational async job / SDV 关系型异步合成",
+            "description": (
+                "Async relational synthesis from inline table samples. This example is designed "
+                "for local Swagger testing with the runtime synthesis worker."
+            ),
+            "value": {
+                "name": "swagger-sdv-orders",
+                "synthesis_type": "structured_relational",
+                "engine_id": "sdv",
+                "source": {
+                    "type": "relational_metadata",
+                    "options": {
+                        "tables": {
+                            "customers": [
+                                {"customer_id": "c1", "tier": "gold"},
+                                {"customer_id": "c2", "tier": "silver"},
+                            ],
+                            "orders": [
+                                {"order_id": "o1", "customer_id": "c1", "amount": 99.0},
+                                {"order_id": "o2", "customer_id": "c2", "amount": 42.0},
+                            ],
+                        }
+                    },
+                },
+                "config": {"sample_count": 3, "anonymize_pii": True},
+                "output": {"output_format": "jsonl", "include_preview": True},
+            },
+        },
+        "deepeval_conversation_job": {
+            "summary": "DeepEval conversation async job / DeepEval 会话异步合成",
+            "description": "Async conversation golden generation from seed support-policy context.",
+            "value": {
+                "name": "swagger-conversation-goldens",
+                "synthesis_type": "conversation_goldens",
+                "engine_id": "deepeval",
+                "source": {
+                    "type": "documents",
+                    "documents": [
+                        "Support agents should ask for the object_id before parsing a private file."
+                    ],
+                },
+                "config": {
+                    "sample_count": 3,
+                    "max_contexts_per_case": 1,
+                    "include_expected_output": True,
+                },
+                "output": {"output_format": "jsonl", "include_preview": True},
+                "webhook": {
+                    "url": "https://example.com/hooks/cortex/synthesis",
+                    "event_types": ["job.succeeded", "job.failed"],
+                },
             },
         },
     },

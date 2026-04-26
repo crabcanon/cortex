@@ -105,10 +105,62 @@ class KnowledgeRuntimeConfig(_RuntimeModel):
     cognee: CogneeRuntimeConfig = Field(default_factory=CogneeRuntimeConfig)
 
 
+class DeepEvalRuntimeConfig(_RuntimeModel):
+    enabled: bool = False
+    model_ref: str | None = None
+    options: dict[str, Any] = Field(default_factory=dict)
+
+
+class EvalScopeRuntimeConfig(_RuntimeModel):
+    enabled: bool = False
+    mode: str = "external_http"
+    base_url: str = "http://127.0.0.1:9000"
+    host: str = "127.0.0.1"
+    port: int = 9000
+    debug: bool = False
+    startup_timeout_seconds: float = 30.0
+    timeout_seconds: float = 120.0
+    headers: dict[str, str] = Field(default_factory=dict)
+    options: dict[str, Any] = Field(default_factory=dict)
+
+
+class EvaluationEngineRuntimeCatalog(_RuntimeModel):
+    deepeval: DeepEvalRuntimeConfig = Field(default_factory=DeepEvalRuntimeConfig)
+    evalscope: EvalScopeRuntimeConfig = Field(default_factory=EvalScopeRuntimeConfig)
+
+
+class EvaluationRuntimeConfig(_RuntimeModel):
+    default_profile_ref: str = "auto_default"
+    engines: EvaluationEngineRuntimeCatalog = Field(default_factory=EvaluationEngineRuntimeCatalog)
+
+
+class SdvRuntimeConfig(_RuntimeModel):
+    enabled: bool = False
+    options: dict[str, Any] = Field(default_factory=dict)
+
+
+class DeepEvalSynthRuntimeConfig(_RuntimeModel):
+    enabled: bool = False
+    model_ref: str | None = None
+    options: dict[str, Any] = Field(default_factory=dict)
+
+
+class SynthesisEngineRuntimeCatalog(_RuntimeModel):
+    sdv: SdvRuntimeConfig = Field(default_factory=SdvRuntimeConfig)
+    deepeval: DeepEvalSynthRuntimeConfig = Field(default_factory=DeepEvalSynthRuntimeConfig)
+
+
+class SynthesisRuntimeConfig(_RuntimeModel):
+    default_profile_ref: str = "auto_default"
+    engines: SynthesisEngineRuntimeCatalog = Field(default_factory=SynthesisEngineRuntimeCatalog)
+
+
 class CortexRuntimeConfig(_RuntimeModel):
     schema_version: str = "cortex.runtime.v1"
     parse: ParseRuntimeConfig = Field(default_factory=ParseRuntimeConfig)
     knowledge: KnowledgeRuntimeConfig = Field(default_factory=KnowledgeRuntimeConfig)
+    evaluation: EvaluationRuntimeConfig = Field(default_factory=EvaluationRuntimeConfig)
+    synthesis: SynthesisRuntimeConfig = Field(default_factory=SynthesisRuntimeConfig)
 
     @model_validator(mode="after")
     def _validate_schema_version(self) -> CortexRuntimeConfig:

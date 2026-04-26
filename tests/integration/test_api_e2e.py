@@ -109,9 +109,32 @@ class _FakeObjectStoreClient:
     def __init__(self) -> None:
         self.buckets: set[str] = set()
         self.single_part_objects: dict[tuple[str, str], dict[str, Any]] = {}
+        self.put_objects: dict[tuple[str, str], bytes] = {}
 
     def ensure_bucket(self, bucket_name: str) -> None:
         self.buckets.add(bucket_name)
+
+    def put_object(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+        body: bytes,
+        content_type: str,
+        metadata: dict[str, str],
+    ) -> dict[str, Any]:
+        del metadata
+        self.buckets.add(bucket_name)
+        self.put_objects[(bucket_name, object_key)] = body
+        self.single_part_objects[(bucket_name, object_key)] = {
+            "ContentType": content_type,
+            "ETag": f"etag-{object_key}",
+            "VersionId": "version-direct-001",
+        }
+        return {
+            "ETag": f"etag-{object_key}",
+            "VersionId": "version-direct-001",
+        }
 
     def create_single_part_upload(
         self,
@@ -200,6 +223,14 @@ class _FakeObjectStoreClient:
         object_key: str,
     ) -> dict[str, Any]:
         return dict(self.single_part_objects.get((bucket_name, object_key), {}))
+
+    def get_object_bytes(
+        self,
+        *,
+        bucket_name: str,
+        object_key: str,
+    ) -> bytes:
+        return self.put_objects[(bucket_name, object_key)]
 
 
 class _E2EParseEngine(ParseEngineProtocol):
@@ -634,7 +665,7 @@ def test_e2e_upload_parse_add_search_round_trip(monkeypatch: pytest.MonkeyPatch)
     assert X_REQUEST_ID_HEADER in download_response.headers
 
     assert parse_job_response.status_code == 202
-    assert pending_parse_result.status_code == 202
+    assert pending_parse_result.status_code == 409
     assert parse_worker_result.status == "succeeded"
     assert completed_parse_result.status_code == 200
     assert completed_parse_result.json()["document"]["title"] == "Cortex Guide"

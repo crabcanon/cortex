@@ -651,9 +651,17 @@ class ParseSubmitRequest(BaseModel):
         min_length=1,
         description=(
             "Required source locators. Each item may be an HTTP(S) URL, `s3://` URI, `file://` "
-            "URI, or `cortex://objects/{object_id}` reference."
+            "URI, raw Cortex storage object key such as "
+            "`cortex-local/tenant_demo/obj_.../file.pdf`, or "
+            "`cortex://objects/{object_id}` reference. For Cortex-managed S3/MinIO keys, Cortex "
+            "extracts the `obj_...` segment and resolves a signed download URL automatically."
         ),
-        examples=[["https://docs.cognee.ai/core-concepts/overview"]],
+        examples=[
+            [
+                "https://docs.cognee.ai/core-concepts/overview",
+                "s3://cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf",
+            ]
+        ],
     )
     engine_id: str = Field(
         default="auto",

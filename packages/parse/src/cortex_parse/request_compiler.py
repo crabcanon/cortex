@@ -452,6 +452,14 @@ class ParseRequestCompiler:
                 mime_type=ParseRequestCompiler._mime_type_from_locator(text),
                 canonical_url=text,
             )
+        storage_object_id = ParseRequestCompiler._object_id_from_storage_locator(text)
+        if storage_object_id is not None:
+            return ParseSourceInput(
+                object_id=storage_object_id,
+                kind=ParseInputKind.OBJECT,
+                filename=ParseRequestCompiler._filename_from_locator(text),
+                mime_type=ParseRequestCompiler._mime_type_from_locator(text),
+            )
         return ParseSourceInput(
             uri=text,
             kind=ParseInputKind.URI,
@@ -472,6 +480,21 @@ class ParseRequestCompiler:
         path = parsed.path or locator
         mime_type, _ = mimetypes.guess_type(path)
         return mime_type
+
+    @staticmethod
+    def _object_id_from_storage_locator(locator: str) -> str | None:
+        parsed = urlparse(locator)
+        if parsed.scheme and parsed.scheme != "s3":
+            return None
+        if parsed.scheme == "":
+            first_segment = locator.strip("/").split("/", 1)[0]
+            if first_segment.startswith(("http:", "https:", "file:")):
+                return None
+        path = parsed.path if parsed.scheme else locator
+        for segment in path.strip("/").split("/"):
+            if segment.startswith("obj_"):
+                return segment
+        return None
 
     def _compile_engine_selection(
         self,

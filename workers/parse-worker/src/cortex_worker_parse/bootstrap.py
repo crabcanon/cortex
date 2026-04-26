@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from dataclasses import dataclass
 
 from cortex_common import (
@@ -49,10 +50,16 @@ class ParseWorkerConfig:
     worker_id: str
     lease_seconds: int = 60
     heartbeat_interval_seconds: int = 15
+    supported_engine_keys: set[str] | None = None
 
     @classmethod
     def create(cls, worker_id: str | None = None) -> ParseWorkerConfig:
-        return cls(worker_id=worker_id or new_prefixed_id("pworker"))
+        return cls(
+            worker_id=worker_id or new_prefixed_id("pworker"),
+            supported_engine_keys=_parse_engine_key_set(
+                os.getenv("CORTEX_PARSE_WORKER_ENGINE_KEYS")
+            ),
+        )
 
 
 class ParseWorker:
@@ -77,6 +84,7 @@ class ParseWorker:
                 uow=uow,
                 worker_id=self._config.worker_id,
                 lease_seconds=self._config.lease_seconds,
+                supported_engine_keys=self._config.supported_engine_keys,
             )
             if job is None:
                 return ParseWorkerRunResult(status="idle", message="No queued parse jobs.")
@@ -201,3 +209,10 @@ def build_worker(settings: CortexSettings | None = None) -> ParseWorkerRuntime:
 def bootstrap_message() -> str:
     """Return a stable bootstrap message for smoke tests."""
     return "cortex parse worker bootstrap ready"
+
+
+def _parse_engine_key_set(value: str | None) -> set[str] | None:
+    if value is None:
+        return None
+    keys = {item.strip().lower() for item in value.split(",") if item.strip()}
+    return keys or None

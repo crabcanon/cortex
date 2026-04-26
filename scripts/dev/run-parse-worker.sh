@@ -6,6 +6,7 @@ force_recreate=0
 interval_seconds=1
 skip_browser_bootstrap=0
 no_browser_install=0
+engine_keys="crawl4ai,jina_reader,llama_parse,markitdown"
 
 while (($# > 0)); do
   case "$1" in
@@ -24,6 +25,10 @@ while (($# > 0)); do
       ;;
     --no-browser-install)
       no_browser_install=1
+      ;;
+    --engine-keys)
+      shift
+      engine_keys="${1:?missing engine keys value}"
       ;;
     *)
       echo "[cortex] unknown argument: $1" >&2
@@ -79,6 +84,8 @@ if [[ "${skip_browser_bootstrap}" != "1" ]]; then
 fi
 
 cd "$(cortex_repo_root)"
+
+export CORTEX_PARSE_WORKER_ENGINE_KEYS="${engine_keys}"
 
 if [[ "${once}" == "1" ]]; then
   exec "${worker_path}"

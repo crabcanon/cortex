@@ -158,6 +158,50 @@ def test_compiler_auto_selects_document_engine_from_source_extension() -> None:
     assert compiled.parser.profile_ref == "llama_parse_document_fidelity"
 
 
+def test_compiler_extracts_cortex_object_id_from_minio_s3_locator() -> None:
+    compiler = ParseRequestCompiler({"docling"})
+
+    source_input = compiler.source_input_from_locator(
+        "s3://cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf"
+    )
+    raw_source_input = compiler.source_input_from_locator(
+        "cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf"
+    )
+
+    assert source_input.kind is ParseInputKind.OBJECT
+    assert source_input.object_id == "obj_a3da967e3ca446cab3631bb7"
+    assert source_input.filename == "bofa_note.pdf"
+    assert source_input.mime_type == "application/pdf"
+    assert raw_source_input.kind is ParseInputKind.OBJECT
+    assert raw_source_input.object_id == "obj_a3da967e3ca446cab3631bb7"
+
+
+def test_compiler_explicit_engine_disables_fallback_for_each_batch_source() -> None:
+    compiler = ParseRequestCompiler({"docling", "markitdown", "llama_parse"})
+    request = ParseSubmitRequest(
+        sources=[
+            "https://example.com/a.pdf",
+            "https://example.com/b.pdf",
+        ],
+        engine_id="docling",
+    )
+
+    compiled = [
+        compiler.compile_sync(request, compiler.source_input_from_locator(source))
+        for source in request.sources
+    ]
+
+    assert [item.parser.allowed_engines for item in compiled] == [
+        ["docling"],
+        ["docling"],
+    ]
+    assert all(
+        item.parser.preferred_engine_key == "docling"
+        and item.parser.fallback_policy.enabled is False
+        for item in compiled
+    )
+
+
 def test_compiler_auto_honors_scene_override_when_supported() -> None:
     compiler = ParseRequestCompiler({"crawl4ai", "jina_reader"})
     request = ParseSubmitRequest(

@@ -279,9 +279,9 @@ async def create_parse_job(
     response_model=ParseResult | JobStatusDetail,
     operation_id="getParseResult",
     summary="Get a completed parse result",
-    responses={202: {"model": JobStatusDetail}},
+    responses={409: {"model": JobStatusDetail}},
     description=(
-        "Poll for the parse result. Returns `202` with job status until the parse completes, "
+        "Poll for the parse result. Returns `409` with job status until the parse completes, "
         "then returns the final `ParseResult`."
     ),
 )
@@ -309,6 +309,6 @@ async def get_parse_job_result(
     )
     result = await parse_job_service.get_completed_result(uow=uow, job_id=jobId)
     if result is None:
-        response.status_code = status.HTTP_202_ACCEPTED
+        response.status_code = status.HTTP_409_CONFLICT
         return job
     return result

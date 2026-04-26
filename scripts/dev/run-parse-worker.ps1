@@ -3,7 +3,8 @@ param(
     [switch]$ForceRecreate,
     [int]$IntervalSeconds = 1,
     [switch]$SkipBrowserBootstrap,
-    [switch]$NoBrowserInstall
+    [switch]$NoBrowserInstall,
+    [string]$EngineKeys = "crawl4ai,jina_reader,llama_parse,markitdown"
 )
 
 $ErrorActionPreference = "Stop"
@@ -50,6 +51,9 @@ if (-not $SkipBrowserBootstrap) {
 
 Push-Location (Get-CortexRepoRoot)
 try {
+    if ($EngineKeys) {
+        $env:CORTEX_PARSE_WORKER_ENGINE_KEYS = $EngineKeys
+    }
     if ($Once) {
         & $workerPath
         exit $LASTEXITCODE

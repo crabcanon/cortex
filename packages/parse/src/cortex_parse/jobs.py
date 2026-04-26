@@ -112,9 +112,14 @@ class ParseJobControlService:
         self,
         *,
         uow: CortexUnitOfWork,
+        supported_engine_keys: set[str] | None = None,
+        limit: int = 50,
     ) -> JobRecord | None:
-        jobs = await uow.jobs.list_queued(job_type=JobType.PARSE, limit=1)
-        return jobs[0] if jobs else None
+        jobs = await uow.jobs.list_queued(job_type=JobType.PARSE, limit=limit)
+        for job in jobs:
+            if self._worker_can_handle(job, supported_engine_keys):
+                return job
+        return None
 
     async def recover_stale_leases(
         self,
@@ -177,6 +182,7 @@ class ParseJobControlService:
         uow: CortexUnitOfWork,
         worker_id: str,
         lease_seconds: int,
+        supported_engine_keys: set[str] | None = None,
         recover_stale: bool = True,
     ) -> JobRecord | None:
         now = utc_now()
@@ -186,7 +192,10 @@ class ParseJobControlService:
                 stale_before=now - timedelta(seconds=lease_seconds),
             )
 
-        job = await self.next_queued_job(uow=uow)
+        job = await self.next_queued_job(
+            uow=uow,
+            supported_engine_keys=supported_engine_keys,
+        )
         if job is None:
             return None
 
@@ -337,15 +346,39 @@ class ParseJobControlService:
 
     @staticmethod
     def _initial_queue_state(request: ParseJobRequest) -> dict[str, Any]:
+        engine_keys = ParseJobControlService._required_engine_keys(request)
         return {
             "attempt": 0,
             "max_attempts": request.crawl.retry_policy.max_attempts,
             "execution_timeout_seconds": request.timeout_seconds,
+            "preferred_engine_key": request.parser.preferred_engine_key,
+            "engine_keys": engine_keys,
             "status": "queued",
             "lease_owner": None,
             "lease_expires_at": None,
             "heartbeat_at": None,
         }
+
+    @staticmethod
+    def _worker_can_handle(
+        job: JobRecord,
+        supported_engine_keys: set[str] | None,
+    ) -> bool:
+        if not supported_engine_keys:
+            return True
+        try:
+            request = ParseJobRequest.model_validate(job.request_payload)
+        except Exception:
+            return True
+        required = set(ParseJobControlService._required_engine_keys(request))
+        return not required or bool(required & supported_engine_keys)
+
+    @staticmethod
+    def _required_engine_keys(request: ParseJobRequest) -> list[str]:
+        if request.parser.allowed_engines:
+            return list(dict.fromkeys(request.parser.allowed_engines))
+        preferred = request.parser.preferred_engine_key
+        return [preferred] if preferred else []
 
     @staticmethod
     def _queue_state(job: JobRecord) -> dict[str, Any]:

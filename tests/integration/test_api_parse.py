@@ -142,6 +142,21 @@ class _SlowParseEngine(_ApiParseEngine):
         return await super().execute(context)
 
 
+class _DoclingTestEngine(_ApiParseEngine):
+    @property
+    def descriptor(self) -> ParseEngineDescriptor:
+        return ParseEngineDescriptor(
+            engine_key="docling",
+            display_name="Docling Test Engine",
+            engine_family="document_local",
+            deployment_mode=ParseEngineDeploymentMode.LOCAL,
+            status=ParseEngineStatus.ACTIVE,
+            supported_source_types=["url", "uri", "object"],
+            supported_formats=["application/pdf"],
+            capabilities=["markdown"],
+        )
+
+
 def _build_parse_service(
     profiles_dir: Path,
     engine: ParseEngineProtocol | None = None,
@@ -433,7 +448,7 @@ def test_async_parse_job_submit_worker_and_result(monkeypatch: pytest.MonkeyPatc
     assert accepted_response.json()["jobs"][0]["status"] == "queued"
     assert duplicate_response.status_code == 202
     assert duplicate_response.json()["jobs"][0]["job_id"] == job_id
-    assert pending_result.status_code == 202
+    assert pending_result.status_code == 409
     assert pending_result.json()["status"] == "queued"
     assert completed_result.status_code == 200
     assert completed_result.json()["document"]["title"] == "API Parse"
@@ -452,6 +467,7 @@ async def _run_worker_once_with_engine(
     *,
     worker_id: str,
     lease_seconds: int = 30,
+    supported_engine_keys: set[str] | None = None,
 ) -> str:
     engine = create_database_engine(_async_sqlite_url(db_path))
     session_factory = create_session_factory(engine)
@@ -463,10 +479,12 @@ async def _run_worker_once_with_engine(
                 worker_id=worker_id,
                 lease_seconds=lease_seconds,
                 heartbeat_interval_seconds=10,
+                supported_engine_keys=supported_engine_keys,
             ),
         )
         result = await worker.run_once()
-        assert result.job_id is not None
+        if result.status != "idle":
+            assert result.job_id is not None
         return result.status
     finally:
         await engine.dispose()
@@ -574,6 +592,73 @@ def test_parse_worker_retries_then_fails(monkeypatch: pytest.MonkeyPatch) -> Non
         "parse.job.failed",
     ]
     assert "engine unavailable" in events_response.json()[-1]["details"]["last_error"]
+
+
+def test_parse_worker_only_claims_supported_engine_jobs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    case_dir = _case_dir("api-parse-engine-filter")
+    db_path = case_dir / "cortex.db"
+    profiles_dir = case_dir / "profiles"
+    profiles_dir.mkdir(parents=True, exist_ok=True)
+    (profiles_dir / "test_profile.yaml").write_text(
+        "\n".join(
+            [
+                "profile_ref: test_profile",
+                "display_name: Test Profile",
+                "preferred_engine_key: docling",
+                "allowed_engines: [docling]",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    db_migrate_main(["upgrade", "head", "--db-url", _sync_sqlite_url(db_path)])
+    headers = {
+        "Authorization": _dev_bearer_token(
+            tenant_id="tenant_parse_engine_filter",
+            actor_id="alice",
+            scopes=["parse:read", "parse:write", "jobs:read"],
+        )
+    }
+
+    with _build_client(monkeypatch, db_path, profiles_dir) as client:
+        app = cast(FastAPI, client.app)
+        app.state.parse_request_compiler = _build_parse_compiler("docling")
+        accepted_response = client.post(
+            "/v1/parse/jobs",
+            headers=headers,
+            json={
+                "sources": ["https://example.com/doc.pdf"],
+                "engine_id": "docling",
+            },
+        )
+        job_id = accepted_response.json()["jobs"][0]["job_id"]
+        slim_worker_status = asyncio.run(
+            _run_worker_once_with_engine(
+                db_path,
+                profiles_dir,
+                _ApiParseEngine(),
+                worker_id="slim-worker",
+                supported_engine_keys={"api_test_engine"},
+            )
+        )
+        queued_status = client.get(f"/v1/jobs/{job_id}", headers=headers)
+        docling_worker_status = asyncio.run(
+            _run_worker_once_with_engine(
+                db_path,
+                profiles_dir,
+                _DoclingTestEngine(),
+                worker_id="docling-worker",
+                supported_engine_keys={"docling"},
+            )
+        )
+        completed_result = client.get(f"/v1/parse/jobs/{job_id}/result", headers=headers)
+
+    assert slim_worker_status == "idle"
+    assert queued_status.json()["status"] == "queued"
+    assert docling_worker_status == "succeeded"
+    assert completed_result.status_code == 200
+    assert completed_result.json()["diagnostics"]["selected_engine_key"] == "docling"
 
 
 def test_parse_worker_timeout_fails_without_retry(monkeypatch: pytest.MonkeyPatch) -> None:

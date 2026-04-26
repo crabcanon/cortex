@@ -48,15 +48,13 @@ class DoclingParseEngine(ParseEngineProtocol):
     def __init__(self, config: dict[str, object] | None = None) -> None:
         self._config = dict(config) if isinstance(config, dict) else {}
         enabled = bool(self._config.get("enabled", True))
-        available = _docling_available()
+        self._local_available = _docling_available()
         self._descriptor = ParseEngineDescriptor(
             engine_key="docling",
             display_name="Docling",
             engine_family="document_local",
             deployment_mode=ParseEngineDeploymentMode.LOCAL,
-            status=ParseEngineStatus.ACTIVE
-            if enabled and available
-            else ParseEngineStatus.DISABLED,
+            status=ParseEngineStatus.ACTIVE if enabled else ParseEngineStatus.DISABLED,
             supported_source_types=[
                 ParseInputKind.URI.value,
                 ParseInputKind.URL.value,
@@ -79,6 +77,13 @@ class DoclingParseEngine(ParseEngineProtocol):
         return self._descriptor
 
     async def execute(self, context: EngineExecutionContext) -> EngineExecutionResult:
+        if not self._local_available:
+            raise ConfigError(
+                "Docling is enabled in the Cortex runtime catalog but is not installed in this "
+                "process. Submit an async parse job to a `cortex-parse-worker-docling` worker, or "
+                "install the `cortex-parse[docling]` extra in the API process for synchronous "
+                "Docling execution."
+            )
         source_ref = context.source.uri or context.source.url
         if source_ref is None:
             raise ValidationError("Docling requires `source.uri` or `source.url`.")

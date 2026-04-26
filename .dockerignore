@@ -23,6 +23,9 @@ htmlcov
 runtime-test-data
 pytest_tmp_data
 .tmp-runtime
+.tmp-swagger-ui
+.tmp-build-check
+.npm-cache
 **/node_modules
 **/dist
 site

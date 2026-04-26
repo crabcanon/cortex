@@ -131,3 +131,6 @@ __marimo__/
 
 # Local scratch
 .tmp-remote/
+.tmp-swagger-ui/
+.tmp-build-check/
+.npm-cache/

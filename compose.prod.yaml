@@ -35,6 +35,8 @@ x-cortex-prod-env: &cortex-prod-env
   CORTEX_REGION: ${CORTEX_REGION:-global}
   CORTEX_CLUSTER: ${CORTEX_CLUSTER:-cortex-prod}
   CORTEX_CRAWL4AI_PROXY: ${CORTEX_CRAWL4AI_PROXY:-}
+  CORTEX_EVALUATION_WORKER_LOOP_SLEEP_SECONDS: ${CORTEX_EVALUATION_WORKER_LOOP_SLEEP_SECONDS:-1}
+  CORTEX_SYNTHESIS_WORKER_LOOP_SLEEP_SECONDS: ${CORTEX_SYNTHESIS_WORKER_LOOP_SLEEP_SECONDS:-1}
   JINA_API_KEY: ${JINA_API_KEY:-}
   LLAMA_CLOUD_API_KEY: ${LLAMA_CLOUD_API_KEY:-}
   OPENAI_API_KEY: ${OPENAI_API_KEY:-}
@@ -81,6 +83,7 @@ services:
     shm_size: "1gb"
     environment:
       <<: *cortex-prod-env
+      CORTEX_PARSE_WORKER_ENGINE_KEYS: ${CORTEX_PARSE_WORKER_ENGINE_KEYS:-crawl4ai,jina_reader,llama_parse,markitdown}
     restart: unless-stopped
     volumes:
       - cortex-data:/app/.data
@@ -92,12 +95,47 @@ services:
     shm_size: "1gb"
     environment:
       <<: *cortex-prod-env
+      CORTEX_PARSE_WORKER_ENGINE_KEYS: ${CORTEX_PARSE_WORKER_DOCLING_ENGINE_KEYS:-docling}
     restart: unless-stopped
     volumes:
       - cortex-data:/app/.data
 
   cortex-knowledge-worker:
     image: ${CORTEX_KNOWLEDGE_WORKER_IMAGE:-ghcr.io/crabcanon/cortex-knowledge-worker:latest}
+    environment:
+      <<: *cortex-prod-env
+    restart: unless-stopped
+    volumes:
+      - cortex-data:/app/.data
+
+  cortex-evaluation-worker:
+    image: ${CORTEX_EVALUATION_WORKER_IMAGE:-ghcr.io/crabcanon/cortex-evaluation-worker:latest}
+    environment:
+      <<: *cortex-prod-env
+    restart: unless-stopped
+    volumes:
+      - cortex-data:/app/.data
+
+  cortex-evaluation-worker-runtime:
+    image: ${CORTEX_EVALUATION_WORKER_RUNTIME_IMAGE:-ghcr.io/crabcanon/cortex-evaluation-worker-runtime:latest}
+    profiles: ["eval-runtime"]
+    environment:
+      <<: *cortex-prod-env
+    restart: unless-stopped
+    volumes:
+      - cortex-data:/app/.data
+
+  cortex-synthesis-worker:
+    image: ${CORTEX_SYNTHESIS_WORKER_IMAGE:-ghcr.io/crabcanon/cortex-synthesis-worker:latest}
+    environment:
+      <<: *cortex-prod-env
+    restart: unless-stopped
+    volumes:
+      - cortex-data:/app/.data
+
+  cortex-synthesis-worker-runtime:
+    image: ${CORTEX_SYNTHESIS_WORKER_RUNTIME_IMAGE:-ghcr.io/crabcanon/cortex-synthesis-worker-runtime:latest}
+    profiles: ["synthesis-runtime"]
     environment:
       <<: *cortex-prod-env
     restart: unless-stopped

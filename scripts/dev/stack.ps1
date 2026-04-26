@@ -1,7 +1,10 @@
 param(
-    [ValidateSet("up", "down", "ps", "logs", "restart")]
+    [ValidateSet("up", "down", "ps", "logs", "restart", "build")]
     [string]$Action = "up",
     [string[]]$Services = @(),
+    [Alias("Profile")]
+    [string[]]$ComposeProfile = @(),
+    [switch]$Heavy,
     [switch]$Follow,
     [switch]$NoWait,
     [switch]$Build
@@ -18,6 +21,34 @@ $ComposeArgs = @(
     "-f",
     (Join-Path $RepoRoot "compose.local.yaml")
 )
+
+$ActiveProfiles = @($ComposeProfile)
+if ($Heavy) {
+    $ActiveProfiles += @("docling", "eval-runtime", "synthesis-runtime")
+}
+$ActiveProfiles = @($ActiveProfiles | Where-Object { $_ } | Select-Object -Unique)
+foreach ($ActiveProfile in $ActiveProfiles) {
+    $ComposeArgs += @("--profile", $ActiveProfile)
+}
+
+if ($Heavy -and $Action -eq "up" -and $Services.Count -eq 0) {
+    $Services = @(
+        "postgres",
+        "minio",
+        "redis",
+        "jaeger-all-in-one",
+        "otel-collector",
+        "prometheus",
+        "grafana",
+        "cortex-migrate",
+        "cortex-api",
+        "cortex-parse-worker",
+        "cortex-parse-worker-docling",
+        "cortex-knowledge-worker",
+        "cortex-evaluation-worker-runtime",
+        "cortex-synthesis-worker-runtime"
+    )
+}
 
 function Test-ServiceRequested {
     param(
@@ -134,6 +165,12 @@ switch ($Action) {
         } else {
             & docker @ComposeArgs logs @Services
         }
+        exit $LASTEXITCODE
+    }
+    "build" {
+        $buildArgs = @($ComposeArgs + @("build"))
+        $buildArgs += $Services
+        & docker @buildArgs
         exit $LASTEXITCODE
     }
     "restart" {

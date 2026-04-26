@@ -120,3 +120,31 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --python "$(command -v python)" --package cortex-worker-knowledge --no-default-groups --frozen
 
 ENTRYPOINT ["bash", "scripts/runtime/start-knowledge-worker.sh"]
+
+FROM python-base AS evaluation-worker
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --python "$(command -v python)" --package cortex-worker-evaluation --no-default-groups --frozen
+
+ENTRYPOINT ["bash", "scripts/runtime/start-evaluation-worker.sh"]
+
+FROM python-base AS evaluation-worker-runtime
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --python "$(command -v python)" --package cortex-worker-evaluation --extra runtime --no-default-groups --frozen
+
+ENTRYPOINT ["bash", "scripts/runtime/start-evaluation-worker.sh"]
+
+FROM python-base AS synthesis-worker
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --python "$(command -v python)" --package cortex-worker-synthesis --no-default-groups --frozen
+
+ENTRYPOINT ["bash", "scripts/runtime/start-synthesis-worker.sh"]
+
+FROM python-base AS synthesis-worker-runtime
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --python "$(command -v python)" --package cortex-worker-synthesis --extra runtime --no-default-groups --frozen
+
+ENTRYPOINT ["bash", "scripts/runtime/start-synthesis-worker.sh"]

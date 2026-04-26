@@ -33,6 +33,38 @@ x-cortex-build-knowledge-worker: &cortex-build-knowledge-worker
     UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
     CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
 
+x-cortex-build-evaluation-worker: &cortex-build-evaluation-worker
+  context: .
+  target: evaluation-worker
+  args:
+    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-ghcr.io/astral-sh/uv:python3.12-bookworm-slim}
+    UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
+    CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
+
+x-cortex-build-evaluation-worker-runtime: &cortex-build-evaluation-worker-runtime
+  context: .
+  target: evaluation-worker-runtime
+  args:
+    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-ghcr.io/astral-sh/uv:python3.12-bookworm-slim}
+    UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
+    CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
+
+x-cortex-build-synthesis-worker: &cortex-build-synthesis-worker
+  context: .
+  target: synthesis-worker
+  args:
+    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-ghcr.io/astral-sh/uv:python3.12-bookworm-slim}
+    UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
+    CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
+
+x-cortex-build-synthesis-worker-runtime: &cortex-build-synthesis-worker-runtime
+  context: .
+  target: synthesis-worker-runtime
+  args:
+    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-ghcr.io/astral-sh/uv:python3.12-bookworm-slim}
+    UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
+    CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
+
 x-cortex-env: &cortex-env
   CORTEX_ENV: local
   CORTEX_HOST: 0.0.0.0
@@ -64,6 +96,8 @@ x-cortex-env: &cortex-env
   CORTEX_REGION: local
   CORTEX_CLUSTER: docker-compose
   CORTEX_CRAWL4AI_PROXY: ${CORTEX_CRAWL4AI_PROXY:-}
+  CORTEX_EVALUATION_WORKER_LOOP_SLEEP_SECONDS: "1"
+  CORTEX_SYNTHESIS_WORKER_LOOP_SLEEP_SECONDS: "1"
   JINA_API_KEY: ${JINA_API_KEY:-}
   LLAMA_CLOUD_API_KEY: ${LLAMA_CLOUD_API_KEY:-}
   OPENAI_API_KEY: ${OPENAI_API_KEY:-}
@@ -219,6 +253,7 @@ services:
     shm_size: "1gb"
     environment:
       <<: *cortex-env
+      CORTEX_PARSE_WORKER_ENGINE_KEYS: crawl4ai,jina_reader,llama_parse,markitdown
     depends_on:
       cortex-migrate:
         condition: service_completed_successfully
@@ -242,6 +277,7 @@ services:
     shm_size: "1gb"
     environment:
       <<: *cortex-env
+      CORTEX_PARSE_WORKER_ENGINE_KEYS: docling
     depends_on:
       cortex-migrate:
         condition: service_completed_successfully
@@ -260,6 +296,88 @@ services:
   cortex-knowledge-worker:
     image: cortex-knowledge-worker:local
     build: *cortex-build-knowledge-worker
+    environment:
+      <<: *cortex-env
+    depends_on:
+      cortex-migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - cortex-data:/app/.data
+
+  cortex-evaluation-worker:
+    image: cortex-evaluation-worker:local
+    build: *cortex-build-evaluation-worker
+    environment:
+      <<: *cortex-env
+    depends_on:
+      cortex-migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - cortex-data:/app/.data
+
+  cortex-evaluation-worker-runtime:
+    image: cortex-evaluation-worker-runtime:local
+    build: *cortex-build-evaluation-worker-runtime
+    profiles: ["eval-runtime"]
+    environment:
+      <<: *cortex-env
+    depends_on:
+      cortex-migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - cortex-data:/app/.data
+
+  cortex-synthesis-worker:
+    image: cortex-synthesis-worker:local
+    build: *cortex-build-synthesis-worker
+    environment:
+      <<: *cortex-env
+    depends_on:
+      cortex-migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - cortex-data:/app/.data
+
+  cortex-synthesis-worker-runtime:
+    image: cortex-synthesis-worker-runtime:local
+    build: *cortex-build-synthesis-worker-runtime
+    profiles: ["synthesis-runtime"]
     environment:
       <<: *cortex-env
     depends_on:

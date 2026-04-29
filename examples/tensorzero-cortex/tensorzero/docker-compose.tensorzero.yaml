@@ -1,0 +1,95 @@
+# Local TensorZero stack for the Cortex example.
+# Cortex itself should already be running from the repository Docker stack.
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.12-alpine
+    environment:
+      CLICKHOUSE_USER: chuser
+      CLICKHOUSE_PASSWORD: chpassword
+      CLICKHOUSE_DB: tensorzero
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "8123:8123"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--tries", "1", "http://127.0.0.1:8123/ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - tensorzero-clickhouse-data:/var/lib/clickhouse
+
+  postgres:
+    image: tensorzero/postgres:${TENSORZERO_POSTGRES_IMAGE_TAG:-17}
+    command: ["postgres", "-c", "cron.database_name=tensorzero"]
+    environment:
+      POSTGRES_USER: ${TENSORZERO_POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${TENSORZERO_POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${TENSORZERO_POSTGRES_DB:-tensorzero}
+    ports:
+      - "${TENSORZERO_POSTGRES_HOST_PORT:-5434}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TENSORZERO_POSTGRES_USER:-postgres} -d ${TENSORZERO_POSTGRES_DB:-tensorzero}"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+    volumes:
+      - tensorzero-postgres-data:/var/lib/postgresql/data
+
+  gateway-migrate-postgres:
+    image: tensorzero/gateway:latest
+    command: ["--run-postgres-migrations"]
+    environment:
+      TENSORZERO_POSTGRES_URL: ${TENSORZERO_POSTGRES_URL:-postgres://postgres:postgres@postgres:5432/tensorzero}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  gateway:
+    image: tensorzero/gateway:latest
+    command: ["--config-file", "/app/config/tensorzero.toml"]
+    environment:
+      TENSORZERO_CLICKHOUSE_URL: http://chuser:chpassword@clickhouse:8123/tensorzero
+      TENSORZERO_POSTGRES_URL: ${TENSORZERO_POSTGRES_URL:-postgres://postgres:postgres@postgres:5432/tensorzero}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      KIMI_API_KEY: ${KIMI_API_KEY:-}
+    ports:
+      - "${TENSORZERO_GATEWAY_HOST_PORT:-3002}:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      gateway-migrate-postgres:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--tries", "1", "http://127.0.0.1:3000/status"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - ./tensorzero.toml:/app/config/tensorzero.toml:ro
+      - ./templates:/app/config/templates:ro
+      - ./schemas:/app/config/schemas:ro
+
+  ui:
+    image: tensorzero/ui:latest
+    environment:
+      TENSORZERO_GATEWAY_URL: http://gateway:3000
+      TENSORZERO_CLICKHOUSE_URL: http://chuser:chpassword@clickhouse:8123/tensorzero
+      TENSORZERO_POSTGRES_URL: ${TENSORZERO_POSTGRES_URL:-postgres://postgres:postgres@postgres:5432/tensorzero}
+    ports:
+      - "4000:4000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      gateway:
+        condition: service_healthy
+
+volumes:
+  tensorzero-clickhouse-data:
+  tensorzero-postgres-data:

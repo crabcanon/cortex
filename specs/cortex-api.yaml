@@ -732,29 +732,60 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/KnowledgeDatasetCreateRequest'
-            example:
-              dataset_key: product_docs
-              display_name: Product Docs
-              description: Primary product knowledge base for demos and regression tests.
-              tags:
-                - docs
-                - product
-              retention_class: standard
-              metadata:
-                domain: product
-                owner_team: platform
-              access_policy:
-                access_level: tenant_shared
-                classification_labels:
-                  - internal
-                allowed_role_keys:
-                  - tenant_admin
-                  - analyst
-                denied_role_keys: []
-                purpose_tags:
-                  - search
-                  - assistant
-                constraints: {}
+            examples:
+              swaggerDemoDataset:
+                summary: Swagger demo dataset / Swagger 演示数据集
+                value:
+                  dataset_key: swagger_knowledge_demo
+                  display_name: Swagger Knowledge Demo
+                  description: Small Knowledge dataset for Swagger Try it out tests using inline text, public URIs, and uploaded storage objects.
+                  tags:
+                    - swagger
+                    - knowledge
+                    - demo
+                  retention_class: temporary
+                  metadata:
+                    domain: cortex
+                    owner_team: platform
+                    demo_flow: storage-parse-knowledge
+                  access_policy:
+                    access_level: tenant_shared
+                    classification_labels:
+                      - internal
+                    allowed_role_keys:
+                      - tenant_admin
+                      - analyst
+                    denied_role_keys: []
+                    purpose_tags:
+                      - search
+                      - assistant
+                      - swagger_demo
+                    constraints: {}
+              productDocsDataset:
+                summary: Product docs dataset / 产品文档数据集
+                value:
+                  dataset_key: product_docs
+                  display_name: Product Docs
+                  description: Primary product knowledge base for demos and regression tests.
+                  tags:
+                    - docs
+                    - product
+                  retention_class: standard
+                  metadata:
+                    domain: product
+                    owner_team: platform
+                  access_policy:
+                    access_level: tenant_shared
+                    classification_labels:
+                      - internal
+                    allowed_role_keys:
+                      - tenant_admin
+                      - analyst
+                    denied_role_keys: []
+                    purpose_tags:
+                      - search
+                      - assistant
+                    constraints: {}
       responses:
         '201':
           description: Dataset created. / 闂傚倷娴囧銊╂嚄閼稿灚娅犳俊銈傚亾闁伙絽鐏氱粭鐔煎焵椤掆偓椤繘宕稿Δ鈧獮銏′繆閵堝倸浜鹃梺鎼炲€栫敮锟犲蓟濞戙垹绠抽柟鎯х亪濡插牏绱撻崒姘偓褰掑箲閸ャ劋绻?
@@ -819,36 +850,93 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/AddJobRequest'
-            example:
-              dataset_key: product_docs
-              inputs:
-                - input_type: object_id
-                  object_id: obj_3f6c1d5e9b1646b5a4eabdbf8b417bd3
-                  label: Uploaded source file
-                  node_set:
-                    - docs
-                  metadata:
-                    source: storage
-                - input_type: document_id
-                  document_id: doc_71fe50adf1cb4981bb322f0d74f32598
-                  label: Normalized parsed document
-                  node_set:
-                    - docs
-                    - parsed
-                  metadata:
-                    source: parse
-              options:
-                normalize_text: true
-                structured_ingest: true
-                incremental: true
-                persist_source_copy: true
-              webhook:
-                url: https://example.com/hooks/cortex/knowledge-add
-                event_types:
-                  - job.succeeded
-                  - job.failed
-                headers:
-                  X-Consumer: knowledge-worker
+            examples:
+              swaggerInlineTextIngest:
+                summary: Runnable inline text Add / 可直接运行的内联文本 Add
+                value:
+                  dataset_key: swagger_knowledge_demo
+                  inputs:
+                    - input_type: text
+                      text: "# Cortex API Demo Knowledge\n\nCortex provides Parse, Storage, Knowledge, Evaluation, and Synthesis APIs. Parse normalizes URLs and files into Markdown. Storage keeps source files in S3-compatible buckets. Knowledge uses Add, Cognify, Memify, and Search to build graph-aware retrieval workflows."
+                      label: Cortex API demo note
+                      node_set:
+                        - swagger_demo
+                        - docs
+                      metadata:
+                        source: swagger-inline
+                        domain: cortex
+                        document_type: demo_note
+                  options:
+                    normalize_text: true
+                    structured_ingest: true
+                    incremental: true
+                    persist_source_copy: false
+              publicUriIngest:
+                summary: Public URI Add / 公共 URI Add
+                value:
+                  dataset_key: swagger_knowledge_demo
+                  inputs:
+                    - input_type: uri
+                      uri: https://raw.githubusercontent.com/crabcanon/cortex/main/README.md
+                      label: Cortex README from GitHub
+                      node_set:
+                        - swagger_demo
+                        - docs
+                        - uri
+                      metadata:
+                        source: github-raw
+                        domain: cortex
+                        document_type: readme
+                  options:
+                    normalize_text: true
+                    structured_ingest: true
+                    incremental: true
+                    persist_source_copy: true
+              storageObjectIngest:
+                summary: Storage object Add / 存储对象 Add
+                value:
+                  dataset_key: swagger_knowledge_demo
+                  inputs:
+                    - input_type: object_id
+                      object_id: obj_a3da967e3ca446cab3631bb7
+                      label: Uploaded README or PDF
+                      node_set:
+                        - swagger_demo
+                        - storage
+                      metadata:
+                        source: storage
+                        bucket: cortex-local
+                        object_key: tenant_demo/obj_a3da967e3ca446cab3631bb7/README.md
+                  options:
+                    normalize_text: true
+                    structured_ingest: true
+                    incremental: true
+                    persist_source_copy: true
+              parsedDocumentIngest:
+                summary: Parsed document Add / 解析文档 Add
+                value:
+                  dataset_key: product_docs
+                  inputs:
+                    - input_type: object_id
+                      object_id: obj_3f6c1d5e9b1646b5a4eabdbf8b417bd3
+                      label: Uploaded source file
+                      node_set:
+                        - docs
+                      metadata:
+                        source: storage
+                    - input_type: document_id
+                      document_id: doc_71fe50adf1cb4981bb322f0d74f32598
+                      label: Normalized parsed document
+                      node_set:
+                        - docs
+                        - parsed
+                      metadata:
+                        source: parse
+                  options:
+                    normalize_text: true
+                    structured_ingest: true
+                    incremental: true
+                    persist_source_copy: true
       responses:
         '202':
           description: Add job accepted. / 闂佽楠稿﹢閬嶁€﹂崼婵愬殨闁告挷鐒﹂弳婊堟煙缂併垹鏋涢柣?Add 婵犵數鍋涢顓熸叏妤ｅ喚鏁嬬憸搴ㄥ箞閵娾晜鍋勯柣鎾冲?
@@ -884,23 +972,38 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CognifyJobRequest'
-            example:
-              dataset_key: product_docs
-              incremental_loading: true
-              graph_prompt_profile: default
-              chunking:
-                enabled: true
-                strategy: semantic
-                target_tokens: 512
-                overlap_tokens: 64
-                max_chunks: 256
-              webhook:
-                url: https://example.com/hooks/cortex/cognify
-                event_types:
-                  - job.succeeded
-                  - job.failed
-                headers:
-                  X-Consumer: graph-sync
+            examples:
+              swaggerDemoCognify:
+                summary: Runnable Cognify for demo dataset / 演示数据集 Cognify
+                value:
+                  dataset_key: swagger_knowledge_demo
+                  incremental_loading: true
+                  graph_prompt_profile: simple
+                  chunking:
+                    enabled: true
+                    strategy: semantic
+                    target_tokens: 384
+                    overlap_tokens: 48
+                    max_chunks: 64
+              recommendedCognify:
+                summary: Recommended Cognify request / 推荐 Cognify 请求
+                value:
+                  dataset_key: product_docs
+                  incremental_loading: true
+                  graph_prompt_profile: default
+                  chunking:
+                    enabled: true
+                    strategy: semantic
+                    target_tokens: 512
+                    overlap_tokens: 64
+                    max_chunks: 256
+                  webhook:
+                    url: https://example.com/hooks/cortex/cognify
+                    event_types:
+                      - job.succeeded
+                      - job.failed
+                    headers:
+                      X-Consumer: graph-sync
       responses:
         '202':
           description: Cognify job accepted. / 闂佽楠稿﹢閬嶁€﹂崼婵愬殨闁告挷鐒﹂弳婊堟煙缂併垹鏋涢柣?Cognify 婵犵數鍋涢顓熸叏妤ｅ喚鏁嬬憸搴ㄥ箞閵娾晜鍋勯柣鎾冲?
@@ -936,21 +1039,32 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/MemifyJobRequest'
-            example:
-              dataset_key: product_docs
-              pipeline: coding_rules
-              node_type: document
-              node_names:
-                - Cortex API Overview
-                - Runtime Configuration Guide
-              session_ids: []
-              webhook:
-                url: https://example.com/hooks/cortex/memify
-                event_types:
-                  - job.succeeded
-                  - job.failed
-                headers:
-                  X-Consumer: knowledge-memify
+            examples:
+              swaggerTripletMemify:
+                summary: Runnable triplet Memify / 可运行的三元组 Memify
+                value:
+                  dataset_key: swagger_knowledge_demo
+                  pipeline: triplet_embeddings
+                  node_type: document
+                  node_names: []
+                  session_ids: []
+              recommendedMemify:
+                summary: Recommended Memify request / 推荐 Memify 请求
+                value:
+                  dataset_key: product_docs
+                  pipeline: coding_rules
+                  node_type: document
+                  node_names:
+                    - Cortex API Overview
+                    - Runtime Configuration Guide
+                  session_ids: []
+                  webhook:
+                    url: https://example.com/hooks/cortex/memify
+                    event_types:
+                      - job.succeeded
+                      - job.failed
+                    headers:
+                      X-Consumer: knowledge-memify
       responses:
         '202':
           description: Memify job accepted. / 闂佽楠稿﹢閬嶁€﹂崼婵愬殨闁告挷鐒﹂弳婊堟煙缂併垹鏋涢柣?Memify 婵犵數鍋涢顓熸叏妤ｅ喚鏁嬬憸搴ㄥ箞閵娾晜鍋勯柣鎾冲?
@@ -980,25 +1094,79 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/SearchRequest'
-            example:
-              query_text: What does the documentation say about Cortex parse workflows?
-              dataset_keys:
-                - product_docs
-              search_type: GRAPH_COMPLETION
-              top_k: 10
-              filters:
-                document_ids: []
-                object_ids: []
-                tags:
-                  - docs
-                node_sets:
-                  - docs
-                metadata:
-                  domain: product
-              only_context: false
-              include_provenance: true
-              include_graph_paths: true
-              timeout_seconds: 30
+            examples:
+              swaggerDemoSearch:
+                summary: Runnable demo search / 可运行的演示搜索
+                value:
+                  query_text: What Cortex APIs are available and what does Knowledge do?
+                  dataset_keys:
+                    - swagger_knowledge_demo
+                  search_type: GRAPH_COMPLETION
+                  top_k: 5
+                  filters:
+                    document_ids: []
+                    object_ids: []
+                    tags: []
+                    node_sets:
+                      - swagger_demo
+                    metadata: {}
+                  only_context: false
+                  include_provenance: true
+                  include_graph_paths: true
+                  timeout_seconds: 30
+              storageObjectSearch:
+                summary: Search storage-backed knowledge / 搜索存储来源知识
+                value:
+                  query_text: Summarize the uploaded README or PDF.
+                  dataset_keys:
+                    - swagger_knowledge_demo
+                  search_type: CHUNKS
+                  top_k: 5
+                  filters:
+                    document_ids: []
+                    object_ids:
+                      - obj_a3da967e3ca446cab3631bb7
+                    tags: []
+                    node_sets:
+                      - storage
+                    metadata: {}
+                  only_context: true
+                  include_provenance: true
+                  include_graph_paths: false
+                  timeout_seconds: 15
+              recommendedGraphCompletion:
+                summary: Recommended graph completion search / 推荐图谱补全搜索
+                value:
+                  query_text: What does the documentation say about Cortex parse workflows?
+                  dataset_keys:
+                    - product_docs
+                  search_type: GRAPH_COMPLETION
+                  top_k: 10
+                  filters:
+                    document_ids: []
+                    object_ids: []
+                    tags:
+                      - docs
+                    node_sets:
+                      - docs
+                    metadata:
+                      domain: product
+                  only_context: false
+                  include_provenance: true
+                  include_graph_paths: true
+                  timeout_seconds: 30
+              chunkSearch:
+                summary: Chunk-level retrieval / Chunk 级检索
+                value:
+                  query_text: OpenTelemetry integration
+                  dataset_keys:
+                    - product_docs
+                  search_type: CHUNKS
+                  top_k: 5
+                  only_context: true
+                  include_provenance: true
+                  include_graph_paths: false
+                  timeout_seconds: 15
       responses:
         '200':
           description: Search results with answer, context, and provenance. / 闂備礁鎼ˇ顐﹀疾濠婂牆钃熼柕濞垮剭濞差亜鍐€妞ゆ挾鍋熼ˇ閬嶆⒑閸涘﹣绶遍柛妯圭矙瀹曟洟骞橀崜浣猴紲濠电偞鍨堕悷锕傚煕閹邦厹浜滈柕蹇曞Х鏁堟繝纰樷偓宕囨憼闁瑰嘲鎳忛ˇ鐗堟償閿濆棗鏆熸繝鐢靛仦閸ㄥ爼骞愰幖渚囨晞闁糕剝绋戦崙鐘绘煕閹伴潧鏋涙俊鐐扮矙閹﹢鎮欓棃娑楀闂傚倸瀚粔鐢垫崲濠靛妲奸梺鍛婃⒐閿曘垽鐛箛鎾舵殝闁逛絻娅曢弫鐘差渻閵堝棛澧紒顔肩Ч閹箖鏌嗗鍡欏幍闂佺绻楅崑鎰版儗瀹€鍕厱閻忕偠顕ф俊璺ㄧ磼鏉堛劌娴鐐搭焽閳ь剛鏁婚弲鏌ュ礄娴犲鈷?

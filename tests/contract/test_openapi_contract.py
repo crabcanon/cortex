@@ -43,8 +43,16 @@ from cortex_contracts import (
     SynthesisRunResult,
     SynthesisSyncRequest,
 )
+from cortex_contracts.openapi_examples import (
+    ADD_JOB_REQUEST_EXAMPLES,
+    COGNIFY_JOB_REQUEST_EXAMPLES,
+    KNOWLEDGE_DATASET_CREATE_REQUEST_EXAMPLES,
+    MEMIFY_JOB_REQUEST_EXAMPLES,
+    SEARCH_REQUEST_EXAMPLES,
+)
 from cortex_db.cli import main as db_migrate_main
 from fastapi.testclient import TestClient
+from pydantic import BaseModel
 
 SPEC_PATH = Path("specs/cortex-api.yaml")
 SCHEMA_MODELS: dict[str, type] = {
@@ -318,6 +326,81 @@ def test_runtime_openapi_includes_examples_for_all_request_bodies() -> None:
         json_content = content["application/json"]
         assert isinstance(json_content, dict)
         assert "example" in json_content or "examples" in json_content
+
+
+def _example_value(example: object) -> object:
+    assert isinstance(example, Mapping)
+    return example["value"]
+
+
+@pytest.mark.parametrize(
+    ("model", "examples"),
+    (
+        (KnowledgeDatasetCreateRequest, KNOWLEDGE_DATASET_CREATE_REQUEST_EXAMPLES),
+        (AddJobRequest, ADD_JOB_REQUEST_EXAMPLES),
+        (CognifyJobRequest, COGNIFY_JOB_REQUEST_EXAMPLES),
+        (MemifyJobRequest, MEMIFY_JOB_REQUEST_EXAMPLES),
+        (SearchRequest, SEARCH_REQUEST_EXAMPLES),
+    ),
+)
+def test_knowledge_runtime_openapi_examples_validate_against_contracts(
+    model: type[BaseModel],
+    examples: Mapping[str, object],
+) -> None:
+    for example in examples.values():
+        model.model_validate(_example_value(example))
+
+
+def test_runtime_openapi_exposes_runnable_knowledge_examples() -> None:
+    runtime = _runtime_openapi()
+    paths = runtime["paths"]
+    assert isinstance(paths, dict)
+
+    expected_examples = {
+        "/v1/knowledge/datasets": {"swagger_demo_dataset"},
+        "/v1/knowledge/add/jobs": {
+            "swagger_inline_text_ingest",
+            "public_uri_ingest",
+            "storage_object_ingest",
+        },
+        "/v1/knowledge/cognify/jobs": {"swagger_demo_cognify"},
+        "/v1/knowledge/memify/jobs": {"swagger_triplet_memify"},
+        "/v1/knowledge/search": {"swagger_demo_search", "storage_object_search"},
+    }
+    for path, expected_names in expected_examples.items():
+        operation = paths[path]["post"]
+        assert isinstance(operation, dict)
+        json_content = operation["requestBody"]["content"]["application/json"]
+        assert isinstance(json_content, dict)
+        examples = json_content["examples"]
+        assert isinstance(examples, dict)
+        assert expected_names.issubset(examples)
+
+
+def test_documented_openapi_exposes_runnable_knowledge_examples() -> None:
+    documented = _load_documented_openapi()
+    paths = documented["paths"]
+    assert isinstance(paths, dict)
+
+    expected_examples = {
+        "/v1/knowledge/datasets": {"swaggerDemoDataset"},
+        "/v1/knowledge/add/jobs": {
+            "swaggerInlineTextIngest",
+            "publicUriIngest",
+            "storageObjectIngest",
+        },
+        "/v1/knowledge/cognify/jobs": {"swaggerDemoCognify"},
+        "/v1/knowledge/memify/jobs": {"swaggerTripletMemify"},
+        "/v1/knowledge/search": {"swaggerDemoSearch", "storageObjectSearch"},
+    }
+    for path, expected_names in expected_examples.items():
+        operation = paths[path]["post"]
+        assert isinstance(operation, dict)
+        json_content = operation["requestBody"]["content"]["application/json"]
+        assert isinstance(json_content, dict)
+        examples = json_content["examples"]
+        assert isinstance(examples, dict)
+        assert expected_names.issubset(examples)
 
 
 def test_documented_parameter_examples_cover_common_request_inputs() -> None:

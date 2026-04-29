@@ -233,8 +233,39 @@ STORAGE_UPLOAD_COMPLETE_REQUEST_EXAMPLES: dict[str, Example] = cast(
 KNOWLEDGE_DATASET_CREATE_REQUEST_EXAMPLES: dict[str, Example] = cast(
     dict[str, Example],
     {
-        "recommended_dataset": {
-            "summary": "Recommended shared dataset",
+        "swagger_demo_dataset": {
+            "summary": "Swagger demo dataset / Swagger 演示数据集",
+            "description": (
+                "Creates a tenant-shared dataset used by the one-click Knowledge examples below. "
+                "If this key already exists, change the suffix and reuse the same key in Add, "
+                "Cognify, Memify, and Search requests."
+            ),
+            "value": {
+                "dataset_key": "swagger_knowledge_demo",
+                "display_name": "Swagger Knowledge Demo",
+                "description": (
+                    "Small Knowledge dataset for Swagger Try it out tests using inline text, "
+                    "public URIs, and uploaded storage objects."
+                ),
+                "tags": ["swagger", "knowledge", "demo"],
+                "retention_class": "temporary",
+                "metadata": {
+                    "domain": "cortex",
+                    "owner_team": "platform",
+                    "demo_flow": "storage-parse-knowledge",
+                },
+                "access_policy": {
+                    "access_level": "tenant_shared",
+                    "classification_labels": ["internal"],
+                    "allowed_role_keys": ["tenant_admin", "analyst"],
+                    "denied_role_keys": [],
+                    "purpose_tags": ["search", "assistant", "swagger_demo"],
+                    "constraints": {},
+                },
+            },
+        },
+        "product_docs_dataset": {
+            "summary": "Product docs dataset / 产品文档数据集",
             "description": (
                 "Creates a tenant-shared dataset suitable for Parse -> Add -> Search workflows."
             ),
@@ -264,8 +295,105 @@ KNOWLEDGE_DATASET_CREATE_REQUEST_EXAMPLES: dict[str, Example] = cast(
 ADD_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
     dict[str, Example],
     {
-        "document_ingest": {
-            "summary": "Ingest parsed documents and uploaded objects",
+        "swagger_inline_text_ingest": {
+            "summary": "Runnable inline text Add / 可直接运行的内联文本 Add",
+            "description": (
+                "Use after creating `swagger_knowledge_demo`. This is the safest local Swagger "
+                "smoke example because it does not require an existing Storage object or external "
+                "network access."
+            ),
+            "value": {
+                "dataset_key": "swagger_knowledge_demo",
+                "inputs": [
+                    {
+                        "input_type": "text",
+                        "text": (
+                            "# Cortex API Demo Knowledge\n\n"
+                            "Cortex provides Parse, Storage, Knowledge, Evaluation, and "
+                            "Synthesis APIs. Parse normalizes URLs and files into Markdown. "
+                            "Storage keeps source files in S3-compatible buckets. Knowledge "
+                            "uses Add, Cognify, Memify, and Search to build graph-aware "
+                            "retrieval workflows."
+                        ),
+                        "label": "Cortex API demo note",
+                        "node_set": ["swagger_demo", "docs"],
+                        "metadata": {
+                            "source": "swagger-inline",
+                            "domain": "cortex",
+                            "document_type": "demo_note",
+                        },
+                    }
+                ],
+                "options": {
+                    "normalize_text": True,
+                    "structured_ingest": True,
+                    "incremental": True,
+                    "persist_source_copy": False,
+                },
+            },
+        },
+        "public_uri_ingest": {
+            "summary": "Public URI Add / 公共 URI Add",
+            "description": (
+                "Use when the Knowledge runtime can fetch public URLs. This keeps the request "
+                "copy-pasteable while exercising the URI input path."
+            ),
+            "value": {
+                "dataset_key": "swagger_knowledge_demo",
+                "inputs": [
+                    {
+                        "input_type": "uri",
+                        "uri": "https://raw.githubusercontent.com/crabcanon/cortex/main/README.md",
+                        "label": "Cortex README from GitHub",
+                        "node_set": ["swagger_demo", "docs", "uri"],
+                        "metadata": {
+                            "source": "github-raw",
+                            "domain": "cortex",
+                            "document_type": "readme",
+                        },
+                    }
+                ],
+                "options": {
+                    "normalize_text": True,
+                    "structured_ingest": True,
+                    "incremental": True,
+                    "persist_source_copy": True,
+                },
+            },
+        },
+        "storage_object_ingest": {
+            "summary": "Storage object Add / 存储对象 Add",
+            "description": (
+                "Use after uploading a file with `POST /v1/storage/files`; replace `object_id` "
+                "with the returned object id. This documents the Storage -> Knowledge path."
+            ),
+            "value": {
+                "dataset_key": "swagger_knowledge_demo",
+                "inputs": [
+                    {
+                        "input_type": "object_id",
+                        "object_id": "obj_a3da967e3ca446cab3631bb7",
+                        "label": "Uploaded README or PDF",
+                        "node_set": ["swagger_demo", "storage"],
+                        "metadata": {
+                            "source": "storage",
+                            "bucket": "cortex-local",
+                            "object_key": (
+                                "tenant_demo/obj_a3da967e3ca446cab3631bb7/README.md"
+                            ),
+                        },
+                    }
+                ],
+                "options": {
+                    "normalize_text": True,
+                    "structured_ingest": True,
+                    "incremental": True,
+                    "persist_source_copy": True,
+                },
+            },
+        },
+        "parsed_document_ingest": {
+            "summary": "Parsed document Add / 解析文档 Add",
             "description": (
                 "Recommended Add request after a file has been uploaded and optionally parsed."
             ),
@@ -301,7 +429,7 @@ ADD_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
             },
         },
         "direct_text_ingest": {
-            "summary": "Direct text ingest",
+            "summary": "Direct text ingest / 直接文本摄入",
             "description": (
                 "Useful for small snippets, notes, or quick operator tests without a prior upload."
             ),
@@ -332,8 +460,27 @@ ADD_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
 COGNIFY_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
     dict[str, Example],
     {
+        "swagger_demo_cognify": {
+            "summary": "Runnable Cognify for demo dataset / 演示数据集 Cognify",
+            "description": (
+                "Run after the `swagger_inline_text_ingest` Add job succeeds. It builds graph "
+                "structure for the demo dataset with a small chunking budget."
+            ),
+            "value": {
+                "dataset_key": "swagger_knowledge_demo",
+                "incremental_loading": True,
+                "graph_prompt_profile": "simple",
+                "chunking": {
+                    "enabled": True,
+                    "strategy": "semantic",
+                    "target_tokens": 384,
+                    "overlap_tokens": 48,
+                    "max_chunks": 64,
+                },
+            },
+        },
         "recommended_cognify": {
-            "summary": "Recommended Cognify request",
+            "summary": "Recommended Cognify request / 推荐 Cognify 请求",
             "description": (
                 "Builds or refreshes the dataset graph with "
                 "the default prompt profile and semantic "
@@ -363,8 +510,22 @@ COGNIFY_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
 MEMIFY_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
     dict[str, Example],
     {
+        "swagger_triplet_memify": {
+            "summary": "Runnable triplet Memify / 可运行的三元组 Memify",
+            "description": (
+                "Run after Cognify. The Python Cognee adapter currently supports "
+                "`triplet_embeddings` and `session_persistence` for live execution."
+            ),
+            "value": {
+                "dataset_key": "swagger_knowledge_demo",
+                "pipeline": "triplet_embeddings",
+                "node_type": "document",
+                "node_names": [],
+                "session_ids": [],
+            },
+        },
         "recommended_memify": {
-            "summary": "Recommended Memify request",
+            "summary": "Recommended Memify request / 推荐 Memify 请求",
             "description": (
                 "Runs the default coding-rules enrichment pipeline over the selected dataset."
             ),
@@ -387,8 +548,56 @@ MEMIFY_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
 SEARCH_REQUEST_EXAMPLES: dict[str, Example] = cast(
     dict[str, Example],
     {
+        "swagger_demo_search": {
+            "summary": "Runnable demo search / 可运行的演示搜索",
+            "description": (
+                "Run after Add and preferably after Cognify. Uses the demo dataset key from the "
+                "Swagger dataset example."
+            ),
+            "value": {
+                "query_text": "What Cortex APIs are available and what does Knowledge do?",
+                "dataset_keys": ["swagger_knowledge_demo"],
+                "search_type": "GRAPH_COMPLETION",
+                "top_k": 5,
+                "filters": {
+                    "document_ids": [],
+                    "object_ids": [],
+                    "tags": [],
+                    "node_sets": ["swagger_demo"],
+                    "metadata": {},
+                },
+                "only_context": False,
+                "include_provenance": True,
+                "include_graph_paths": True,
+                "timeout_seconds": 30,
+            },
+        },
+        "storage_object_search": {
+            "summary": "Search storage-backed knowledge / 搜索存储来源知识",
+            "description": (
+                "Use after adding an uploaded Storage object. Replace the object id with the id "
+                "returned by `/v1/storage/files` when you want to narrow results."
+            ),
+            "value": {
+                "query_text": "Summarize the uploaded README or PDF.",
+                "dataset_keys": ["swagger_knowledge_demo"],
+                "search_type": "CHUNKS",
+                "top_k": 5,
+                "filters": {
+                    "document_ids": [],
+                    "object_ids": ["obj_a3da967e3ca446cab3631bb7"],
+                    "tags": [],
+                    "node_sets": ["storage"],
+                    "metadata": {},
+                },
+                "only_context": True,
+                "include_provenance": True,
+                "include_graph_paths": False,
+                "timeout_seconds": 15,
+            },
+        },
         "recommended_graph_completion": {
-            "summary": "Recommended graph completion search",
+            "summary": "Recommended graph completion search / 推荐图谱补全搜索",
             "description": (
                 "A good default search request for answering a question with graph-aware context."
             ),
@@ -411,7 +620,7 @@ SEARCH_REQUEST_EXAMPLES: dict[str, Example] = cast(
             },
         },
         "chunk_search": {
-            "summary": "Chunk-level retrieval",
+            "summary": "Chunk-level retrieval / Chunk 级检索",
             "description": (
                 "Useful when you only want ranked context snippets without a synthesized answer."
             ),

@@ -6,6 +6,7 @@ import asyncio
 import hashlib
 import importlib
 import importlib.metadata
+import json
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -47,6 +48,8 @@ class DoclingParseEngine(ParseEngineProtocol):
 
     def __init__(self, config: dict[str, object] | None = None) -> None:
         self._config = dict(config) if isinstance(config, dict) else {}
+        self._cached_converter: Any | None = None
+        self._converter_cache_key: str | None = None
         enabled = bool(self._config.get("enabled", True))
         self._local_available = _docling_available()
         self._descriptor = ParseEngineDescriptor(
@@ -87,8 +90,7 @@ class DoclingParseEngine(ParseEngineProtocol):
         source_ref = context.source.uri or context.source.url
         if source_ref is None:
             raise ValidationError("Docling requires `source.uri` or `source.url`.")
-        converter_cls = _load_document_converter_cls()
-        converter = converter_cls(**self._converter_options(context))
+        converter = self._get_converter(context)
         result = await asyncio.to_thread(
             converter.convert,
             source_ref,
@@ -115,6 +117,16 @@ class DoclingParseEngine(ParseEngineProtocol):
             content_hash_sha256=content_hash,
             engine_payload_summary={"converter": "docling"},
         )
+
+    def _get_converter(self, context: EngineExecutionContext) -> Any:
+        options = self._converter_options(context)
+        cache_key = json.dumps(options, sort_keys=True, default=str)
+        if self._cached_converter is not None and self._converter_cache_key == cache_key:
+            return self._cached_converter
+        converter_cls = _load_document_converter_cls()
+        self._cached_converter = converter_cls(**options)
+        self._converter_cache_key = cache_key
+        return self._cached_converter
 
     def _converter_options(self, context: EngineExecutionContext) -> dict[str, Any]:
         options = self._config.get("docling")

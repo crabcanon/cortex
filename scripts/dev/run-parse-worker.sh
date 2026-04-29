@@ -88,10 +88,9 @@ cd "$(cortex_repo_root)"
 export CORTEX_PARSE_WORKER_ENGINE_KEYS="${engine_keys}"
 
 if [[ "${once}" == "1" ]]; then
+  export CORTEX_PARSE_WORKER_RUN_ONCE=1
   exec "${worker_path}"
 fi
 
-while true; do
-  "${worker_path}"
-  sleep "${interval_seconds}"
-done
+export CORTEX_PARSE_WORKER_LOOP_SLEEP_SECONDS="${interval_seconds}"
+exec "${worker_path}"

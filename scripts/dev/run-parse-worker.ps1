@@ -55,17 +55,14 @@ try {
         $env:CORTEX_PARSE_WORKER_ENGINE_KEYS = $EngineKeys
     }
     if ($Once) {
+        $env:CORTEX_PARSE_WORKER_RUN_ONCE = "1"
         & $workerPath
         exit $LASTEXITCODE
     }
 
-    while ($true) {
-        & $workerPath
-        if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
-        }
-        Start-Sleep -Seconds $IntervalSeconds
-    }
+    $env:CORTEX_PARSE_WORKER_LOOP_SLEEP_SECONDS = [string]$IntervalSeconds
+    & $workerPath
+    exit $LASTEXITCODE
 } finally {
     Pop-Location
 }

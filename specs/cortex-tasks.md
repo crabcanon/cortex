@@ -653,3 +653,52 @@ Goal: fix Swagger-discovered runtime issues for Docling parse routing, explicit 
 | CTX-20260426-131 | 2026-04-26 10:55:00 +08:00 | P0 | synthesis-adapter | Fix DeepEval synthesis requests that omit `max_contexts_per_case` by applying a safe `max_contexts_per_case -> sample_count -> 1` default | CTX-20260424-109 | done |
 | CTX-20260426-132 | 2026-04-26 10:55:00 +08:00 | P1 | swagger-docs | Add Swagger/OpenAPI examples for MinIO parse, sync/async SDV and DeepEval synthesis, and sync/async DeepEval/EvalScope evaluation | CTX-20260426-130, CTX-20260426-131 | done |
 | CTX-20260426-133 | 2026-04-26 10:55:00 +08:00 | P1 | validation | Run focused unit/integration tests plus YAML/OpenAPI validation and record the regression notes | CTX-20260426-132 | done |
+
+### Batch 2026-04-26 23:05:00 +08:00 | Phase AU OpenAI-Compatible LLM Runtime And Docling Worker Log Hygiene
+
+Goal: make all LLM-backed Cortex features switchable through one OpenAI-compatible provider contract and reduce Docling worker log noise caused by repeated process/converter cold starts.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260426-134 | 2026-04-26 23:05:00 +08:00 | P0 | runtime-config | Add `OPENAI_API_URL` alongside `OPENAI_API_KEY` to env examples, compose env, and runtime overlays for Cognee LLM/BAML/Embedding plus DeepEval evaluation/synthesis | CTX-20260426-133 | done |
+| CTX-20260426-135 | 2026-04-26 23:05:00 +08:00 | P0 | llm-adapters | Add shared OpenAI-compatible provider helpers and wire DeepEval / DeepEval Synthesizer to apply `OPENAI_API_URL`, `OPENAI_BASE_URL`, `OPENAI_API_BASE`, and `LITELLM_API_BASE` before SDK execution | CTX-20260426-134 | done |
+| CTX-20260426-136 | 2026-04-26 23:05:00 +08:00 | P1 | parse-worker | Convert Parse Worker from outer-shell restart polling to in-process long polling, keep `--once` compatibility through `CORTEX_PARSE_WORKER_RUN_ONCE`, and cache Docling `DocumentConverter` instances by converter options | CTX-20260426-133 | done |
+| CTX-20260426-137 | 2026-04-26 23:05:00 +08:00 | P1 | docs-validation | Document the OpenAI-compatible LLM contract, explain Docling/RapidOCR cold-start logs, add regression tests, and record validation limits caused by the currently unhealthy `.venv` Python launcher | CTX-20260426-134, CTX-20260426-136 | done |
+
+### Batch 2026-04-28 10:45:00 +08:00 | Phase AV Model Provider Slots And API-Type Binding
+
+Goal: keep `.env` as a provider-slot declaration layer and let runtime YAML bind each API family to the desired LLM / embedding provider.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260428-138 | 2026-04-28 10:45:00 +08:00 | P0 | runtime-config | Replace feature-specific model variables with provider slots such as `OPENAI_*`, `GEMINI_*`, `QWEN_*`, and `LOCAL_LLM_*`, then bind Knowledge / Evaluation / Synthesis through runtime refs | CTX-20260426-137 | done |
+| CTX-20260428-139 | 2026-04-28 10:45:00 +08:00 | P0 | knowledge-runtime | Make Cognee provider and BAML fields adapter defaults derived from `llm_model_ref`, `llm_endpoint_ref`, and `llm_api_key_ref` so users do not maintain duplicate SDK fields | CTX-20260428-138 | done |
+| CTX-20260428-140 | 2026-04-28 10:45:00 +08:00 | P1 | docs | Update README and technical design to explain provider slots, API-type binding, and how to switch models without changing code | CTX-20260428-138 | done |
+| CTX-20260428-141 | 2026-04-28 10:45:00 +08:00 | P1 | validation | Run focused lint/config checks and record the remaining `.venv` Python launcher limitation | CTX-20260428-139, CTX-20260428-140 | done |
+
+### Batch 2026-04-28 14:10:00 +08:00 | Phase AW Local OTel Port Guard And TensorZero Async Parse
+
+Goal: keep the local Docker stack startable on Windows and let the TensorZero example choose sync or async Cortex Parse execution.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260428-142 | 2026-04-28 14:10:00 +08:00 | P0 | docker-dev | Stop publishing OTel Collector zPages host port `55679` in local Compose because Windows may reserve or forbid it; keep zPages container-internal | CTX-20260428-141 | done |
+| CTX-20260428-143 | 2026-04-28 14:10:00 +08:00 | P0 | examples | Add `sync` / `async` parse mode support to `examples/tensorzero-cortex`, using `/v1/parse/sync` or `/v1/parse/jobs` plus `/v1/parse/jobs/{jobId}/result` | CTX-20260428-142 | done |
+| CTX-20260428-144 | 2026-04-28 14:10:00 +08:00 | P1 | validation-docs | Validate compose config, lint/compile the TensorZero example, and document the async parse usage | CTX-20260428-143 | done |
+
+### Batch 2026-04-29 10:35:00 +08:00 | Phase AX TensorZero Async Evaluation Jobs
+
+Goal: let the TensorZero example keep synchronous Cortex Evaluation for smoke checks while also exercising asynchronous evaluation jobs and result retrieval.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260429-145 | 2026-04-29 10:35:00 +08:00 | P0 | examples | Add `sync` / `async` Cortex Evaluation mode support to `examples/tensorzero-cortex`, using `/v1/eval/sync` or `/v1/eval/jobs` plus `/v1/eval/jobs/{jobId}/result` | CTX-20260428-144 | done |
+| CTX-20260429-146 | 2026-04-29 10:35:00 +08:00 | P1 | validation-docs | Expose `CORTEX_EVAL_MODE`, CLI / FastAPI request controls, README usage examples, and lint/compile validation | CTX-20260429-145 | done |
+| CTX-20260429-147 | 2026-04-29 10:55:00 +08:00 | P1 | examples | Make `.env` the primary TensorZero example control plane for Cortex Evaluation sync/async mode, so `uv run tensorzero-cortex run` can stay short | CTX-20260429-146 | done |
+| CTX-20260429-148 | 2026-04-29 11:15:00 +08:00 | P0 | examples-docker | Remove the unavailable `tensorzero/postgres:latest` dependency and pin the TensorZero Postgres service to `tensorzero/postgres:17` on host port `5434` so migrations have pg_cron and do not conflict with Cortex Postgres | CTX-20260429-147 | done |
+| CTX-20260429-149 | 2026-04-29 11:35:00 +08:00 | P0 | examples-docker | Move the TensorZero Gateway host port from `3000` to configurable `TENSORZERO_GATEWAY_HOST_PORT=3002` to avoid Cortex Grafana port conflicts | CTX-20260429-148 | done |
+| CTX-20260429-150 | 2026-04-29 11:55:00 +08:00 | P1 | examples-resilience | Add TensorZero Gateway readiness retries and friendly FastAPI error mapping so transient `/status` 502 responses do not surface as raw ASGI stack traces | CTX-20260429-149 | done |
+| CTX-20260429-151 | 2026-04-29 12:40:00 +08:00 | P1 | examples-resilience | Make TensorZero readiness timeout configurable and add a FastAPI `/tensorzero/status` diagnostic endpoint using the same client path as experiments | CTX-20260429-150 | done |
+| CTX-20260429-152 | 2026-04-29 13:05:00 +08:00 | P1 | examples-resilience | Make `.env` override stale shell variables and keep `/tensorzero/status` as a short diagnostic that reports the effective Gateway URL | CTX-20260429-151 | done |
+| CTX-20260429-153 | 2026-04-29 13:25:00 +08:00 | P1 | examples-resilience | Disable environment proxy inheritance in the TensorZero and Cortex example HTTP clients so local `127.0.0.1` requests cannot be routed through `HTTP_PROXY` / `HTTPS_PROXY` and return proxy 502s | CTX-20260429-152 | done |
+| CTX-20260429-154 | 2026-04-29 13:45:00 +08:00 | P1 | examples-resilience | Make the TensorZero example degrade from Cortex Knowledge Search to parsed Markdown context when Cognee runtime is unavailable or knowledge jobs are skipped | CTX-20260429-153 | done |

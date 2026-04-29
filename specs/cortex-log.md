@@ -1775,3 +1775,230 @@
 - Prevention:
   - Any optional heavy SDK engine must declare both catalog routability and worker execution affinity.
   - Swagger examples should prefer the same minimal public request shape that users actually submit, and must avoid unsupported placeholder scenes such as `default` or `llm_ready`.
+
+## 2026-04-26 23:05:00 +08:00
+
+- Stage: `CTX-20260426-134`, `CTX-20260426-135`, `CTX-20260426-136`, `CTX-20260426-137`
+- Event: LLM-backed features needed a single OpenAI-compatible provider contract, and Docling worker logs showed repeated `Loading weights` / RapidOCR initialization plus misleading `bootstrap ready: retrying/failed` lines.
+- Cause:
+  - Runtime overlays referenced `OPENAI_API_KEY`, but did not consistently carry the OpenAI-compatible base URL into Cognee, DeepEval, and DeepEval Synthesizer.
+  - DeepEval-family SDKs commonly read different OpenAI-compatible base URL environment names (`OPENAI_BASE_URL`, `OPENAI_API_BASE`, or LiteLLM aliases), so setting only one name is fragile.
+  - The parse worker container script restarted `cortex-parse-worker` after every polling iteration, which rebuilt the parse service and could repeatedly initialize Docling / RapidOCR even when no deployment error existed.
+  - The parse worker CLI printed every run result with the `bootstrap ready` prefix, making job retry/failure transitions look like bootstrap health failures.
+- Action:
+  - Added `OPENAI_API_URL` to `.env.example`, `.env.local.example`, `.env.prod.example`, and compose environments.
+  - Updated runtime overlays so Cognee LLM, BAML LLM, and Embedding configs read `env:OPENAI_API_URL` and `env:OPENAI_API_KEY`.
+  - Added shared `cortex_common.openai_compatible` helpers and wired DeepEval evaluation/synthesis engines to resolve provider config from runtime refs/options/env, then set `OPENAI_API_URL`, `OPENAI_BASE_URL`, `OPENAI_API_BASE`, and `LITELLM_API_BASE` before SDK execution.
+  - Stripped OpenAI-compatible endpoint/key aliases out of engine options after resolution so provider credentials cannot leak into evaluation result details.
+  - Changed Cognee runtime config resolution to drop unresolved `*_ref` values before calling Cognee setters, preventing absent `OPENAI_API_URL` from being passed as `None` into strict string config fields.
+  - Converted parse worker scripts to start the Python worker once and let it long-poll internally; `--once` remains supported via `CORTEX_PARSE_WORKER_RUN_ONCE=1`.
+  - Cached Docling `DocumentConverter` instances per converter-options fingerprint to reduce repeated model initialization inside a long-lived worker.
+  - Updated README and technical design to explain that RapidOCR `File exists and is valid` / `Loading weights` messages are cold-start info, while real failures are surfaced as job status/events.
+- Validation:
+  - `.venv\\Scripts\\ruff.exe check packages\\common\\src\\cortex_common\\openai_compatible.py packages\\common\\src\\cortex_common\\__init__.py packages\\common\\src\\cortex_common\\runtime_config.py packages\\knowledge\\src\\cortex_knowledge\\runtime.py packages\\evaluation\\src\\cortex_evaluation\\bootstrap.py packages\\evaluation\\src\\cortex_evaluation\\adapters.py packages\\synthesis\\src\\cortex_synthesis\\bootstrap.py packages\\synthesis\\src\\cortex_synthesis\\adapters.py packages\\parse\\src\\cortex_parse\\adapters\\docling.py workers\\parse-worker\\src\\cortex_worker_parse\\main.py tests\\unit\\test_runtime_config.py tests\\unit\\test_eval_synthesis_adapters.py`
+  - `docker compose -p cortex-local -f compose.local.yaml --profile docling --profile eval-runtime --profile synthesis-runtime config --quiet`
+  - PowerShell AST parse of `scripts\\dev\\run-parse-worker.ps1`
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run --no-sync python -m pytest tests\\unit\\test_eval_synthesis_adapters.py tests\\unit\\test_runtime_config.py -q` could not run because the current `.venv` Python launcher still points at `C:\\Users\\hy\\AppData\\Roaming\\uv\\python\\cpython-3.12.12-windows-x86_64-none\\python.exe`, which is unavailable. No forced `.venv` repair was attempted to avoid disrupting a possibly active IDE/session.
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run --no-sync python scripts\\ci\\validate_yaml.py specs\\cortex-api.yaml` hit the same unhealthy `.venv` launcher.
+- Prevention:
+  - Keep model-provider endpoint/key as a single OpenAI-compatible contract; add engine-specific API keys only when an engine genuinely authenticates to its own service.
+  - Prefer long-lived worker processes for heavy local SDK engines so model/OCR initialization happens once per worker lifecycle rather than once per polling iteration.
+  - When `.venv` is unhealthy, run validation with `--no-sync` first and record the launcher failure instead of force-recreating an environment that may be held by IDEs or running workers.
+
+## 2026-04-28 10:45:00 +08:00
+
+- Stage: `CTX-20260428-138`, `CTX-20260428-139`, `CTX-20260428-140`, `CTX-20260428-141`
+- Event: Model provider configuration was clarified: `.env` should declare reusable supplier slots only, while runtime YAML should decide which API family uses which slot.
+- Cause:
+  - The first OpenAI-compatible pass still kept feature-oriented variables such as `CORTEX_EVAL_DEEPEVAL_MODEL` and `CORTEX_SYNTH_DEEPEVAL_MODEL`.
+  - Runtime overlays also exposed Cognee SDK details (`llm_provider`, `embedding_provider`, BAML LLM duplicates) as user-maintained config, which made model switching noisier than necessary.
+- Action:
+  - Replaced feature-specific model variables in runtime overlays with provider-slot refs: Knowledge uses `OPENAI_*`, Evaluation DeepEval uses `GEMINI_*`, and Synthesis DeepEval Synthesizer uses `QWEN_*` by default.
+  - Kept `.env.example`, `.env.local.example`, and `.env.prod.example` as provider declarations containing `*_BASE_URL`, `*_API_KEY`, `*_MODEL_ID`, optional embedding model IDs, and embedding dimensions.
+  - Removed `OPENAI_API_URL` from Compose inputs; runtime adapters still set `OPENAI_API_URL`, `OPENAI_BASE_URL`, `OPENAI_API_BASE`, and `LITELLM_API_BASE` internally for SDK compatibility after resolving the selected slot.
+  - Updated Cognee runtime normalization so `llm_provider`, `embedding_provider`, and BAML LLM fields are derived automatically from the resolved OpenAI-compatible LLM / embedding payload.
+  - Updated README and technical design to explain the provider-slot model and API-type binding.
+- Validation:
+  - `.venv\\Scripts\\ruff.exe check packages\\common\\src\\cortex_common\\openai_compatible.py packages\\knowledge\\src\\cortex_knowledge\\runtime.py packages\\evaluation\\src\\cortex_evaluation\\bootstrap.py packages\\evaluation\\src\\cortex_evaluation\\adapters.py packages\\synthesis\\src\\cortex_synthesis\\bootstrap.py packages\\synthesis\\src\\cortex_synthesis\\adapters.py tests\\unit\\test_runtime_config.py tests\\unit\\test_eval_synthesis_adapters.py`
+  - `docker compose -p cortex-local -f compose.local.yaml --profile docling --profile eval-runtime --profile synthesis-runtime config --quiet` passed, with Docker's local `C:\\Users\\hy\\.docker\\config.json` access warning printed by Docker Desktop.
+  - `docker compose -p cortex-prod -f compose.prod.yaml --profile docling --profile eval-runtime --profile synthesis-runtime config --quiet` passed, with the same Docker config access warning.
+  - Runtime overlay scan confirmed no `llm_provider`, `embedding_provider`, `baml_llm*`, `CORTEX_EVAL_DEEPEVAL_MODEL`, `CORTEX_SYNTH_DEEPEVAL_MODEL`, or `OPENAI_API_URL` remain in `configs/cortex.runtime*.yaml`.
+  - `powershell -ExecutionPolicy Bypass -File scripts\\dev\\uv.ps1 run --no-sync python -m pytest tests\\unit\\test_runtime_config.py tests\\unit\\test_eval_synthesis_adapters.py -q` could not run because the current `.venv` Python launcher still points at `C:\\Users\\hy\\AppData\\Roaming\\uv\\python\\cpython-3.12.12-windows-x86_64-none\\python.exe`, which is unavailable. No forced `.venv` repair was attempted.
+- Prevention:
+  - Avoid naming model variables after individual API domains unless the external engine itself requires a domain-specific credential.
+  - Keep SDK adapter compatibility aliases inside runtime code, not as user-facing `.env` requirements.
+
+## 2026-04-28 14:10:00 +08:00
+
+- Stage: `CTX-20260428-142`, `CTX-20260428-143`, `CTX-20260428-144`
+- Event: Local Docker stack built successfully but failed while starting `otel-collector` because host port `55679` could not be bound on Windows. The TensorZero example also needed an async Cortex Parse path in addition to `/v1/parse/sync`.
+- Cause:
+  - `55679` is the OTel Collector zPages debugging port. On Windows hosts it can be reserved, blocked, or otherwise unavailable, and publishing it to `0.0.0.0:55679` can prevent the whole Compose stack from starting.
+  - The first TensorZero example always used synchronous Parse, which is convenient for smoke checks but does not exercise production-style parse workers and result polling.
+- Action:
+  - Removed the `55679:55679` host port mapping from `compose.local.yaml`; zPages remains available inside the collector container, while OTLP, health, Prometheus metrics, and pprof host ports remain exposed.
+  - Added `PARSE_MODE=sync` to the TensorZero example `.env.example`.
+  - Added `--parse-mode sync|async` to the TensorZero example CLI and `parse_mode` to the FastAPI request model.
+  - Implemented async parse submission through `/v1/parse/jobs`, job polling through `/v1/jobs/{jobId}`, and result retrieval through `/v1/parse/jobs/{jobId}/result`.
+  - Updated the TensorZero example README with sync and async parse commands.
+- Validation:
+  - `.venv\\Scripts\\ruff.exe check examples\\tensorzero-cortex\\src`
+  - `docker compose -f compose.local.yaml --profile docling --profile eval-runtime --profile synthesis-runtime config --quiet`
+  - `docker compose --env-file examples\\tensorzero-cortex\\.env.example -f examples\\tensorzero-cortex\\tensorzero\\docker-compose.tensorzero.yaml config --quiet`
+  - `uv run --project examples/tensorzero-cortex python -m compileall examples/tensorzero-cortex/src` with `UV_CACHE_DIR` and `UV_PYTHON_INSTALL_DIR` pointed inside the workspace because the default user-level uv directories are not readable in this sandbox.
+  - `uv run --project examples/tensorzero-cortex tensorzero-cortex list-urls`
+  - `uv run --project examples/tensorzero-cortex tensorzero-cortex render-config`
+- Prevention:
+  - Keep nonessential observability debugging endpoints container-internal by default on local Windows Compose stacks.
+  - Examples that touch long-running Cortex capabilities should expose both sync smoke-test paths and async worker-backed paths.
+
+## 2026-04-29 10:35:00 +08:00
+
+- Stage: `CTX-20260429-145`, `CTX-20260429-146`
+- Event: The TensorZero Cortex example kept synchronous Cortex Evaluation submission only, so users could not choose the worker-backed `/v1/eval/jobs` path from the example CLI or FastAPI wrapper.
+- Cause:
+  - Parse had already grown a `sync` / `async` mode selector, but Evaluation still called `/v1/eval/sync` unconditionally.
+  - The example README documented Cortex Eval submission as a single synchronous path, which made it easy to miss the production-style async job flow.
+- Action:
+  - Added `CORTEX_EVAL_MODE=sync` to the TensorZero example `.env.example`.
+  - Added `--cortex-eval-mode sync|async` to the example CLI and `cortex_eval_mode` to the FastAPI experiment request model.
+  - Implemented async evaluation submission through `/v1/eval/jobs`, job polling through `/v1/jobs/{jobId}`, and result retrieval through `/v1/eval/jobs/{jobId}/result`.
+  - Persisted the selected evaluation mode into the evaluation metadata and scorecard, and updated the README with both sync and async commands.
+- Validation:
+  - `.venv\\Scripts\\ruff.exe check examples\\tensorzero-cortex\\src`
+  - `uv run --project examples/tensorzero-cortex python -m compileall examples/tensorzero-cortex/src` with `UV_CACHE_DIR` and `UV_PYTHON_INSTALL_DIR` pointed inside the workspace because the default user-level uv directories are not readable in this sandbox.
+  - `uv run --project examples/tensorzero-cortex tensorzero-cortex run --help`
+- Prevention:
+  - Keep example-level long-running Cortex capabilities aligned: each feature that supports both smoke-test sync and worker-backed async execution should expose both modes in `.env`, CLI, FastAPI request models, and docs.
+
+### 2026-04-29 10:55:00 +08:00 update
+
+- Stage: `CTX-20260429-147`
+- Event: The TensorZero example could select Cortex Evaluation sync/async mode, but README commands still encouraged passing `--cortex-eval-mode` each time.
+- Action:
+  - Documented `CORTEX_EVAL_MODE=sync|async` directly in `.env.example`, mirroring `PARSE_MODE`.
+  - Changed the CLI `--submit-cortex-eval` default to `None`, allowing `SUBMIT_CORTEX_EVAL=true` from `.env` to take effect when the flag is omitted.
+  - Simplified README commands so `.env` can drive Evaluation mode and users only pass CLI flags for temporary overrides.
+- Validation:
+  - `.venv\\Scripts\\ruff.exe check examples\\tensorzero-cortex\\src`
+  - `uv run --project examples/tensorzero-cortex tensorzero-cortex run --help`
+
+### 2026-04-29 11:15:00 +08:00 update
+
+- Stage: `CTX-20260429-148`
+- Event: Starting the TensorZero example Docker stack failed first because `docker.io/tensorzero/postgres:latest` does not exist, then Postgres migrations failed when trying to reuse the Cortex local Postgres.
+- Cause:
+  - TensorZero publishes tagged Postgres images such as `tensorzero/postgres:17`; `latest` is not a safe tag for this image.
+  - TensorZero adaptive A/B testing requires the `pg_cron` extension in the logical TensorZero database. The Cortex local stack uses plain `postgres:16`, which is fine for Cortex but does not satisfy TensorZero's migration requirements.
+- Action:
+  - Replaced `tensorzero/postgres:latest` with `tensorzero/postgres:${TENSORZERO_POSTGRES_IMAGE_TAG:-17}`.
+  - Restored a dedicated TensorZero Postgres service with `cron.database_name=tensorzero`, a persistent `tensorzero-postgres-data` volume, and host port `${TENSORZERO_POSTGRES_HOST_PORT:-5434}` so it does not conflict with Cortex's `5432`.
+  - Updated TensorZero gateway, migration, and UI containers to use the internal `postgres://postgres:postgres@postgres:5432/tensorzero` URL by default.
+  - Documented why TensorZero should not reuse the plain Cortex Postgres unless that external instance has `pg_cron` installed and configured.
+- Validation:
+  - `docker compose --env-file examples\\tensorzero-cortex\\.env.example -f examples\\tensorzero-cortex\\tensorzero\\docker-compose.tensorzero.yaml config --quiet`
+- Prevention:
+  - Pin third-party example images to known-supported tags instead of `latest`.
+  - Do not reuse another stack's database for TensorZero adaptive experiments unless it explicitly has `pg_cron` installed, preloaded, and enabled in the TensorZero database.
+
+### 2026-04-29 11:35:00 +08:00 update
+
+- Stage: `CTX-20260429-149`
+- Event: TensorZero Gateway failed to start because host port `3000` was already allocated by the Cortex local stack's Grafana service.
+- Cause:
+  - The TensorZero example exposed Gateway as `3000:3000`, while Cortex local Compose exposes Grafana on `127.0.0.1:3000`.
+- Action:
+  - Changed TensorZero Gateway host publishing to `${TENSORZERO_GATEWAY_HOST_PORT:-3002}:3000`.
+  - Updated `.env.example`, runtime settings defaults, and README endpoint table to use `http://127.0.0.1:3002`.
+  - Kept container-internal TensorZero URLs on `gateway:3000` so UI and gateway service discovery remain unchanged.
+- Validation:
+  - `docker compose --env-file examples\\tensorzero-cortex\\.env.example -f examples\\tensorzero-cortex\\tensorzero\\docker-compose.tensorzero.yaml config --quiet`
+  - `.venv\\Scripts\\ruff.exe check examples\\tensorzero-cortex\\src`
+- Prevention:
+  - All example host ports that might overlap with Cortex local services should be parameterized in `.env.example`.
+
+### 2026-04-29 11:55:00 +08:00 update
+
+- Stage: `CTX-20260429-150`
+- Event: Calling the TensorZero example FastAPI endpoint immediately after Docker startup returned a raw 500 stack trace because `GET /status` on the TensorZero Gateway briefly returned `502 Bad Gateway`.
+- Cause:
+  - The example called TensorZero Gateway readiness exactly once at the start of the experiment.
+  - FastAPI did not catch `httpx.HTTPStatusError`, so transient dependency readiness failures were exposed as internal ASGI exceptions.
+- Action:
+  - Added retry/backoff readiness checks in `TensorZeroClient.status`.
+  - Mapped `TensorZeroError` to HTTP 503 and `CortexApiError` to HTTP 502 in the FastAPI example route.
+  - Documented the transient `/status` 502 window and manual readiness check command in the example README.
+- Validation:
+  - `.venv\\Scripts\\ruff.exe check examples\\tensorzero-cortex\\src`
+  - `uv run --project examples/tensorzero-cortex python -m compileall examples/tensorzero-cortex/src`
+- Prevention:
+  - Example apps that depend on Docker services should treat startup readiness as eventually consistent and return user-actionable HTTP errors instead of raw tracebacks.
+
+### 2026-04-29 12:40:00 +08:00 update
+
+- Stage: `CTX-20260429-151`
+- Event: TensorZero Gateway `/status` could still return repeated 502 responses during local startup windows, causing experiment submission to fail after the fixed 60-second readiness budget.
+- Cause:
+  - The readiness retry budget was hard-coded as 30 attempts at 2 seconds.
+  - Users had no FastAPI-side diagnostic endpoint to confirm whether the example app saw the same TensorZero Gateway health state as direct browser / PowerShell checks.
+- Action:
+  - Replaced fixed attempt counting with a timeout-based readiness loop.
+  - Added `TENSORZERO_READY_TIMEOUT_SECONDS=180` to `.env.example` and `Settings`.
+  - Added `GET /tensorzero/status` to the FastAPI example so users can validate Gateway readiness through the same client path used by `/experiments/run`.
+- Validation:
+  - `GET http://127.0.0.1:3002/status` returned `200 {"status":"ok", ...}` from this workspace.
+  - `.venv\\Scripts\\ruff.exe check examples\\tensorzero-cortex\\src`
+  - `uv run --project examples/tensorzero-cortex python -m compileall examples/tensorzero-cortex/src`
+- Prevention:
+  - Keep Docker-backed example readiness budgets configurable and expose explicit diagnostics for each external service dependency.
+
+### 2026-04-29 13:05:00 +08:00 update
+
+- Stage: `CTX-20260429-152`
+- Event: Direct `GET http://127.0.0.1:3002/status` returned 200, but `GET http://127.0.0.1:8090/tensorzero/status` could still hang or fail from the FastAPI example process.
+- Cause:
+  - The diagnostic route reused the full experiment readiness budget, which made health debugging slow when the process had a stale or wrong Gateway URL.
+  - `python-dotenv` does not override existing shell environment variables by default, so a previously exported `TENSORZERO_GATEWAY_URL=http://127.0.0.1:3000` could shadow the corrected `.env` value.
+- Action:
+  - Changed `.env` loading to `override=True` for this example so the checked-in `.env` file remains the source of truth for local runs.
+  - Made `/tensorzero/status` use a short 8-second readiness check and return the effective `gateway_url`.
+  - Documented that the diagnostic endpoint should show `http://127.0.0.1:3002`; otherwise the FastAPI process must be restarted.
+- Validation:
+  - `.venv\\Scripts\\ruff.exe check examples\\tensorzero-cortex\\src`
+  - `uv run --project examples/tensorzero-cortex python -m compileall examples/tensorzero-cortex/src`
+- Prevention:
+  - Diagnostics should be short and should echo effective dependency URLs so stale environment issues are immediately visible.
+
+### 2026-04-29 13:25:00 +08:00 update
+
+- Stage: `CTX-20260429-153`
+- Event: Direct PowerShell access to `http://127.0.0.1:3002/status` returned 200, while the FastAPI example's Python/httpx client saw repeated 502 responses from the same URL.
+- Cause:
+  - Python `httpx.Client` inherits proxy-related environment variables by default. On machines with `HTTP_PROXY`, `HTTPS_PROXY`, or `ALL_PROXY` configured without a matching `NO_PROXY` for loopback addresses, local `127.0.0.1` traffic can be sent to the proxy and return a proxy-generated 502.
+- Action:
+  - Set `trust_env=False` on both TensorZero and Cortex example `httpx.Client` instances.
+  - Documented that the example clients intentionally bypass system proxy environment variables for local API calls.
+- Validation:
+  - `.venv\\Scripts\\ruff.exe check examples\\tensorzero-cortex\\src`
+  - `uv run --project examples/tensorzero-cortex python -m compileall examples/tensorzero-cortex/src`
+  - Direct `TensorZeroClient.status(timeout_seconds=8)` returned 200 from this workspace.
+- Prevention:
+  - Local example clients should not inherit ambient proxy settings unless the example explicitly supports proxy testing.
+
+### 2026-04-29 13:45:00 +08:00 update
+
+- Stage: `CTX-20260429-154`
+- Event: The TensorZero example failed with `POST /v1/knowledge/search failed with 500: Cognee runtime module is unavailable.`
+- Cause:
+  - The example always called Cortex Knowledge Search after parsing, even when `run_knowledge_jobs=false`.
+  - In slim Cortex API deployments, Knowledge catalog/routes can exist while Cognee runtime modules are intentionally absent from the API process or only available in dedicated workers.
+- Action:
+  - Stopped calling Knowledge APIs when knowledge jobs are skipped.
+  - Wrapped Knowledge Add/Cognify/Search failures and degraded to a parsed Markdown context fallback.
+  - Added `context_excerpt` to parse artifacts so the fallback can still provide useful RAG context for TensorZero inference.
+  - Added `context_source` and `knowledge_status` to the scorecard and documented the fallback behavior in the TensorZero example README.
+- Validation:
+  - `.venv\\Scripts\\ruff.exe check examples\\tensorzero-cortex\\src`
+  - `uv run --project examples/tensorzero-cortex python -m compileall examples/tensorzero-cortex/src`
+- Prevention:
+  - Example pipelines should keep optional platform capabilities optional and provide a useful degraded path for smoke tests.

@@ -63,7 +63,9 @@ MANIFEST
 .venv
 .venv-*/
 .uv-cache/
+.uv-cache-*/
 .uv-python/
+.uv-python-*/
 venv/
 env/
 ENV/
@@ -124,6 +126,7 @@ __marimo__/
 .env
 .env.*
 !.env.example
+!.env.local.example
 !.env.prod.example
 .envrc
 *.local
@@ -134,3 +137,7 @@ __marimo__/
 .tmp-swagger-ui/
 .tmp-build-check/
 .npm-cache/
+
+# Example runtime artifacts
+examples/tensorzero-cortex/artifacts/
+examples/tensorzero-cortex/tensorzero/tensorzero.toml

@@ -549,9 +549,17 @@ src/cortex_parse/
 - 统一的 secret reference
 - Cognee 的 LLM / embedding / vector DB / graph DB / migration DB 配置
 
+LLM / Embedding 相关能力统一采用“模型供应商槽位 + runtime 引用”的 OpenAI-compatible provider contract：
+
+- `.env` / secret manager 只声明供应商槽位，例如 `OPENAI_BASE_URL`、`OPENAI_API_KEY`、`OPENAI_MODEL_ID`、`OPENAI_EMBEDDING_MODEL_ID`，以及 `GEMINI_*`、`QWEN_*`、`LOCAL_LLM_*` 等同构变量。
+- runtime YAML 决定不同 API 类型引用哪个槽位，例如 Knowledge 引用 `OPENAI_*`，Evaluation DeepEval 可引用 `GEMINI_*`，Synthesis DeepEval Synthesizer 可引用 `QWEN_*`。
+- `llm_provider`、`embedding_provider`、BAML LLM 等 Cognee SDK 适配字段不是用户必须维护的配置项；Cortex 会在 Cognee adapter 中按 OpenAI-compatible 默认值补齐，并从 `llm_model_ref`、`llm_endpoint_ref`、`llm_api_key_ref` 自动派生 BAML LLM 字段。
+- DeepEval 与 DeepEval Synthesizer 通过 runtime schema 中的 `model_ref`、`api_url_ref`、`api_key_ref` 读取当前引擎引用的 provider 槽位，并在运行前同步设置 `OPENAI_API_URL`、`OPENAI_BASE_URL`、`OPENAI_API_BASE`、`LITELLM_API_BASE`，兼容 OpenAI SDK、LiteLLM 与 DeepEval 的常见读取方式。
+- EvalScope 不引入模型供应商 API Key 字段；它要么调用外部 EvalScope HTTP service，要么在 runtime worker 内以 Python SDK self-hosted service 模式运行，外部服务鉴权通过 `evaluation.engines.evalscope.headers` 表达。
+
 推荐约定：
 
-- `.env` 只放 secret、endpoint、或 `CORTEX_RUNTIME_CONFIG_PATH` 这类 coarse override
+- `.env` 只放 secret、endpoint、模型 ID、embedding 维度、或 `CORTEX_RUNTIME_CONFIG_PATH` 这类 coarse override
 - 对象存储在容器/服务网格内部地址与外部调用方可达地址不一致时，必须拆分
   `CORTEX_S3_ENDPOINT`（控制面直连地址）与 `CORTEX_S3_PUBLIC_ENDPOINT`（预签名 URL 对外地址）
 - `configs/cortex.runtime.yaml` 放 provider 行为与运行时模板
@@ -559,6 +567,13 @@ src/cortex_parse/
 - `packages/parse/profiles/*.yaml` 放 route / fallback / normalization 策略
 - request 级 `engine_options` 只做最后一跳覆盖，不承担长期运维配置
 - 浏览器型 provider 的工作目录、代理引用、storage state 等运行时基础设施项也应留在 runtime config，而不是散落到临时请求里
+
+Docling / RapidOCR 运行日志治理：
+
+- `Loading weights`、`RapidOCR File exists and is valid` 等日志是模型加载和 OCR 引擎初始化信息，不应按错误处理。
+- 默认容器启动脚本不再通过外层 shell 无限重启 `cortex-parse-worker`，而是让 Python worker 在进程内长驻轮询，避免每一轮 idle polling 都重建 Docling / RapidOCR runtime。
+- `DoclingParseEngine` 会按 converter options 复用 `DocumentConverter` 实例，降低同一 worker 连续处理文档时的模型重复加载成本。
+- 作业级失败统一通过 `cortex parse worker run: failed ...`、jobs 表状态和 job events 暴露，启动健康信息只在 bootstrap 阶段打印一次。
 
 统一运行时配置支持以下 reference scheme：
 
@@ -1798,7 +1813,7 @@ ame、eval_type、engine_id、input、	arget、metrics
   - `mode: self_hosted_sdk`: 由 Cortex runtime worker 安装 `evalscope[service]`，并通过 `evalscope.service.run_service(host, port, debug)` 启动本地 EvalScope Flask service，再调用 `/api/v1/eval` 与 `/api/v1/perf`。
 - EvalScope 不存在必须配置的 `EVALSCOPE_API_KEY`；如果外部 EvalScope Service 被 API Gateway、Ingress 或 sidecar 保护，应在 `evaluation.engines.evalscope.headers` 中通过 `env:` 引用注入服务访问 header，例如 `Authorization: env:EVALSCOPE_SERVICE_AUTH_HEADER`。
 - 本地 self-hosted 默认端口为 `19000`，避免与 MinIO S3 API 的宿主机 `9000` 端口冲突；容器内由 evaluation runtime worker 私有启动，无需暴露给宿主机。
-- `deepeval` 不再从 `cortex.runtime.*.yaml` 读取 API Key。模型供应商凭证由 Worker 运行环境提供，例如 `OPENAI_API_KEY`、云厂商模型 key 或企业模型网关 token。
+- `deepeval` 不再配置独立 vendor API Key。模型供应商统一使用 OpenAI-compatible provider 槽位，由 runtime YAML 的 `model_ref`、`api_url_ref`、`api_key_ref` 显式引用，例如 `env:GEMINI_MODEL_ID`、`env:GEMINI_BASE_URL`、`env:GEMINI_API_KEY`。
 - 默认 `evaluation-worker` 不安装 `deepeval` 或 `evalscope[service]`，只保留 Cortex 编排和 EvalScope external HTTP 调用能力。需要本地 DeepEval 或 EvalScope self-hosted SDK 时使用 `evaluation-worker-runtime` 镜像或安装 `cortex-worker-evaluation[runtime]`。
 
 ## 18. Synthesis 平台化设计
@@ -1851,7 +1866,7 @@ ame、synthesis_type、engine_id、source
 ### 18.6 凭证与运行时依赖边界
 
 - `sdv` 是本地 SDK 型引擎，不需要 Cortex runtime API Key；数据源权限由 Cortex Storage / Dataset / DB 权限模型控制。
-- DeepEval Synthesizer 与 Evaluation 的 DeepEval 策略一致：不在 runtime YAML 中配置 API Key，模型供应商凭证由 Worker 进程环境提供。
+- DeepEval Synthesizer 与 Evaluation 的 DeepEval 策略一致：不配置独立 vendor API Key，而是引用 runtime YAML 选定的模型供应商槽位，例如 `env:QWEN_MODEL_ID`、`env:QWEN_BASE_URL`、`env:QWEN_API_KEY`。
 - 默认 `synthesis-worker` 不安装 `sdv` 或 `deepeval`，避免把数据科学和 LLM 评测依赖拖进所有镜像。需要本地合成 SDK 时使用 `synthesis-worker-runtime` 镜像或安装 `cortex-worker-synthesis[runtime]`。
 
 ## 19. 代码模型与 uv 包布局

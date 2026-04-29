@@ -106,7 +106,16 @@ Copy-Item configs\cortex.runtime.local.yaml configs\cortex.runtime.local.yaml
 ```text
 JINA_API_KEY=...
 LLAMA_CLOUD_API_KEY=...
+OPENAI_BASE_URL=https://api.openai.com/v1
 OPENAI_API_KEY=...
+OPENAI_MODEL_ID=gpt-4.1-mini
+OPENAI_EMBEDDING_MODEL_ID=text-embedding-3-small
+GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
+GEMINI_API_KEY=...
+GEMINI_MODEL_ID=gemini-2.5-flash
+QWEN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+QWEN_API_KEY=...
+QWEN_MODEL_ID=qwen-plus
 CORTEX_AUTH_MODE=dev
 CORTEX_ENV=local
 CORTEX_RUNTIME_CONFIG_PATH=configs/cortex.runtime.local.yaml
@@ -114,10 +123,18 @@ CORTEX_RUNTIME_CONFIG_PATH=configs/cortex.runtime.local.yaml
 
 `configs/cortex.runtime.local.yaml` 统一看护 Crawl4AI、Jina Reader、LlamaParse、Cognee、EvalScope、DeepEval、SDV 等引擎配置，避免散落在代码里。
 
+LLM / Embedding 供应商统一按“供应商槽位”接入：
+
+- `.env` 只声明供应商的 OpenAI-compatible `*_BASE_URL`、`*_API_KEY`、`*_MODEL_ID`、`*_EMBEDDING_MODEL_ID` 等值，例如 `OPENAI_*`、`GEMINI_*`、`QWEN_*`、`LOCAL_LLM_*`。
+- `configs/cortex.runtime.local.yaml` 决定不同 API 类型引用哪个槽位。默认示例中 Knowledge 引用 `OPENAI_*`，Evaluation 的 DeepEval 引用 `GEMINI_*`，Synthesis 的 DeepEval Synthesizer 引用 `QWEN_*`。
+- 如需切换供应商，只调整 runtime YAML 中的 `model_ref`、`api_url_ref`、`api_key_ref`，例如把 Evaluation 从 `env:GEMINI_BASE_URL` 改为 `env:OPENAI_BASE_URL`。
+- Cognee 所需的 `llm_provider`、`embedding_provider`、BAML LLM 字段由 Cortex 适配层按 OpenAI-compatible 默认值补齐；常规使用不需要在配置文件里重复填写。
+- Cortex 会在 Evaluation / Synthesis runtime worker 中按当前引擎引用的槽位同步设置 `OPENAI_API_URL`、`OPENAI_BASE_URL`、`OPENAI_API_BASE`、`LITELLM_API_BASE`，兼容 OpenAI SDK、LiteLLM 与 DeepEval 的常见读取方式。
+
 Evaluation / Synthesis 不再配置专属 API Key：
 
 - EvalScope 支持两种模式：`mode: external_http` 调用外部 EvalScope 服务；`mode: self_hosted_sdk` 由 Cortex 通过 `evalscope[service]` 和 `evalscope.service.run_service(...)` 在 runtime worker 内自部署服务后再调用 `/api/v1/eval`、`/api/v1/perf`。EvalScope 不需要所谓 vendor key；如果外部服务被网关保护，请在 `evaluation.engines.evalscope.headers` 中配置 `Authorization` 等服务访问 header。
-- DeepEval 与 DeepEval Synthesizer 使用 Worker 进程环境中的模型供应商凭证，例如 `OPENAI_API_KEY`，不再通过 `cortex.runtime.*.yaml` 的 `api_key_ref` 注入。
+- DeepEval 与 DeepEval Synthesizer 不再使用独立的 vendor API Key；它们分别跟随 runtime YAML 所引用的模型供应商槽位。
 
 ### 3. 启动依赖和服务
 
@@ -145,6 +162,8 @@ docker compose -p cortex-local -f compose.local.yaml --profile docling --profile
 本地重型模式下，API 镜像仍保持轻量，不直接安装 Docling、DeepEval、SDV 这类重 SDK。`/v1/eval/engines` 与 `/v1/synthesis/engines` 中看到 `degraded` 表示“API 进程不可同步执行，但已启用并可路由到 runtime worker”。这时请使用 `/v1/eval/jobs`、`/v1/synthesis/jobs`；`/sync` 只有在当前 API 进程也安装对应 runtime extra 时才适合使用。
 
 Parse Worker 也按 engine 能力领取任务：默认 `cortex-parse-worker` 只处理 `crawl4ai,jina_reader,llama_parse,markitdown`，`cortex-parse-worker-docling` 只处理 `docling`。因此 Swagger 中显式提交 `engine_id=docling` 时，请使用重型启动方式，避免任务没有 Docling worker 消费。
+
+Docling worker 日志中的 RapidOCR `Using engine_name`、`File exists and is valid`、`Loading weights` 通常是 OCR / layout 模型冷启动信息，不代表解析失败。本地和容器启动脚本现在会让 Parse Worker 长驻轮询，并在 Docling adapter 内复用 `DocumentConverter`，避免每一轮队列轮询都重启进程、重复加载模型；真正的作业失败会以 `cortex parse worker run: failed ...` 或 job event 形式出现。
 
 不重建镜像时：
 
@@ -278,7 +297,20 @@ POST /v1/dev/auth/token
 
 返回的 `object_id` 可用于 Parse、Knowledge、Evaluation 或 Synthesis。
 
-### 4. Evaluation Job 示例
+### 4. Knowledge 一键 Try it out 示例
+
+Swagger UI 中的 Knowledge 请求体已经内置了一组可直接复用的 examples。建议按下面顺序执行：
+
+1. `POST /v1/knowledge/datasets`，选择 `swaggerDemoDataset`，创建 `swagger_knowledge_demo`。
+2. `POST /v1/knowledge/add/jobs`，选择 `swaggerInlineTextIngest`，这条不依赖外部文件，最适合本地冒烟。
+3. 启动或等待 `cortex-knowledge-worker` 消费 Add job。
+4. `POST /v1/knowledge/cognify/jobs`，选择 `swaggerDemoCognify`。
+5. `POST /v1/knowledge/memify/jobs`，选择 `swaggerTripletMemify`。
+6. `POST /v1/knowledge/search`，选择 `swaggerDemoSearch`。
+
+如果想验证 Storage -> Knowledge 链路，先用 `POST /v1/storage/files` 上传一个 `README.md` 或 PDF，拿到响应里的 `object_id`，再在 `POST /v1/knowledge/add/jobs` 中选择 `storageObjectIngest`，把示例里的 `obj_a3da967e3ca446cab3631bb7` 替换为真实 `object_id`。
+
+### 5. Evaluation Job 示例
 
 ```json
 {
@@ -319,7 +351,7 @@ GET /v1/eval/jobs/{jobId}/result
 
 结果中会包含 `artifacts[].label=evaluation_report`。
 
-### 5. Synthesis Job 示例
+### 6. Synthesis Job 示例
 
 ```json
 {

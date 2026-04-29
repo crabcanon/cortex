@@ -10,7 +10,12 @@ import time
 from typing import Any
 
 import httpx
-from cortex_common import CortexError, utc_now
+from cortex_common import (
+    CortexError,
+    OpenAICompatibleConfig,
+    apply_openai_compatible_environment,
+    utc_now,
+)
 from cortex_contracts import (
     EvalEngineDescriptor,
     EvalMetricRequest,
@@ -328,6 +333,7 @@ class DeepEvalEvaluationEngine:
         available: bool,
         local_available: bool | None = None,
         model: str | None = None,
+        provider_config: OpenAICompatibleConfig | None = None,
         options: dict[str, Any] | None = None,
     ) -> None:
         self._local_available = available if local_available is None else local_available
@@ -349,6 +355,7 @@ class DeepEvalEvaluationEngine:
             else "Enable DeepEval in runtime config and install the optional dependency."
         )
         self._model = model
+        self._provider_config = provider_config or OpenAICompatibleConfig()
         self._options = dict(options or {})
         self._descriptor = EvalEngineDescriptor(
             engine_id="deepeval",
@@ -402,6 +409,7 @@ class DeepEvalEvaluationEngine:
                 status_code=501,
             )
 
+        apply_openai_compatible_environment(self._provider_config)
         metrics_module = importlib.import_module("deepeval.metrics")
         test_case_module = importlib.import_module("deepeval.test_case")
         metric_requests = request.metrics or _default_metric_requests(request.eval_type)

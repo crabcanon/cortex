@@ -56,15 +56,14 @@ knowledge:
     data_root_directory: ../.data/cognee/local/data
 
     llm:
-      llm_provider: openai
-      llm_model: gpt-5.4-mini
-      llm_api_key_ref: env:OPENAI_API_KEY
-
+      llm_model_ref: env:GEMINI_MODEL_ID
+      llm_endpoint_ref: env:GEMINI_BASE_URL
+      llm_api_key_ref: env:GEMINI_API_KEY
     embedding:
-      embedding_provider: openai
-      embedding_model: openai/text-embedding-3-large
-      embedding_dimensions: 3072
-      embedding_api_key_ref: env:OPENAI_API_KEY
+      embedding_model_ref: env:GEMINI_EMBEDDING_MODEL_ID
+      embedding_dimensions_ref: env:GEMINI_EMBEDDING_DIMENSIONS
+      embedding_endpoint_ref: env:GEMINI_BASE_URL
+      embedding_api_key_ref: env:GEMINI_API_KEY
 
     vector_db:
       vector_db_provider: lancedb
@@ -87,6 +86,8 @@ evaluation:
     deepeval:
       enabled: true
       model_ref: env:CORTEX_EVAL_DEEPEVAL_MODEL
+      api_url_ref: env:GEMINI_API_URL
+      api_key_ref: env:GEMINI_API_KEY
       options: {}
     evalscope:
       enabled: true
@@ -109,4 +110,6 @@ synthesis:
     deepeval:
       enabled: true
       model_ref: env:CORTEX_SYNTH_DEEPEVAL_MODEL
+      api_url_ref: env:GEMINI_API_URL
+      api_key_ref: env:GEMINI_API_KEY
       options: {}

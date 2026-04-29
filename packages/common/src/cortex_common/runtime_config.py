@@ -108,6 +108,8 @@ class KnowledgeRuntimeConfig(_RuntimeModel):
 class DeepEvalRuntimeConfig(_RuntimeModel):
     enabled: bool = False
     model_ref: str | None = None
+    api_url_ref: str | None = None
+    api_key_ref: str | None = None
     options: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -142,6 +144,8 @@ class SdvRuntimeConfig(_RuntimeModel):
 class DeepEvalSynthRuntimeConfig(_RuntimeModel):
     enabled: bool = False
     model_ref: str | None = None
+    api_url_ref: str | None = None
+    api_key_ref: str | None = None
     options: dict[str, Any] = Field(default_factory=dict)
 
 

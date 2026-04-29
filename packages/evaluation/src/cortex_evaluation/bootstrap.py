@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from importlib.util import find_spec
 
-from cortex_common import EvaluationSettings, LoadedRuntimeConfig, load_runtime_config
+from cortex_common import (
+    EvaluationSettings,
+    LoadedRuntimeConfig,
+    load_runtime_config,
+    resolve_openai_compatible_config,
+    strip_openai_compatible_options,
+)
 
 from .adapters import (
     DeepEvalEvaluationEngine,
@@ -31,11 +37,21 @@ def build_evaluation_service(
     registry = EvaluationEngineRegistry()
     eval_runtime = loaded_runtime.config.evaluation
 
+    deepeval_runtime = eval_runtime.engines.deepeval
+    deepeval_options = loaded_runtime.resolve_mapping(deepeval_runtime.options)
+    deepeval_provider_config = resolve_openai_compatible_config(
+        resolve_reference=loaded_runtime.resolve_reference,
+        api_url_ref=deepeval_runtime.api_url_ref,
+        api_key_ref=deepeval_runtime.api_key_ref,
+        options=deepeval_options,
+    )
+    deepeval_options = strip_openai_compatible_options(deepeval_options)
     deepeval_engine = DeepEvalEvaluationEngine(
-        available=bool(eval_runtime.engines.deepeval.enabled),
+        available=bool(deepeval_runtime.enabled),
         local_available=_module_available("deepeval"),
-        model=loaded_runtime.resolve_reference(eval_runtime.engines.deepeval.model_ref),
-        options=loaded_runtime.resolve_mapping(eval_runtime.engines.deepeval.options),
+        model=loaded_runtime.resolve_reference(deepeval_runtime.model_ref),
+        provider_config=deepeval_provider_config,
+        options=deepeval_options,
     )
     registry.register(deepeval_engine)
 

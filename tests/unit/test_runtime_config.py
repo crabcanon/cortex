@@ -347,12 +347,13 @@ def test_build_cognee_runtime_applies_unified_runtime_config(
                 "    system_root_directory: ./system",
                 "    data_root_directory: ./data",
                 "    llm:",
-                "      llm_provider: openai",
-                "      llm_model: gpt-4.1-mini",
+                "      llm_model_ref: env:TEST_OPENAI_MODEL_ID",
+                "      llm_endpoint_ref: env:TEST_OPENAI_BASE_URL",
                 "      llm_api_key_ref: env:TEST_COGNEE_TOKEN",
                 "    embedding:",
-                "      embedding_provider: openai",
-                "      embedding_model: text-embedding-3-small",
+                "      embedding_model_ref: env:TEST_OPENAI_EMBEDDING_MODEL_ID",
+                "      embedding_dimensions_ref: env:TEST_OPENAI_EMBEDDING_DIMENSIONS",
+                "      embedding_endpoint_ref: env:TEST_OPENAI_BASE_URL",
                 "      embedding_api_key_ref: env:TEST_COGNEE_TOKEN",
                 "    vector_db:",
                 "      vector_db_provider: lancedb",
@@ -370,6 +371,10 @@ def test_build_cognee_runtime_applies_unified_runtime_config(
         encoding="utf-8",
     )
     monkeypatch.setenv("TEST_COGNEE_TOKEN", "cognee-secret")
+    monkeypatch.setenv("TEST_OPENAI_BASE_URL", "https://llm.example/v1")
+    monkeypatch.setenv("TEST_OPENAI_MODEL_ID", "gpt-test")
+    monkeypatch.setenv("TEST_OPENAI_EMBEDDING_MODEL_ID", "text-embedding-test")
+    monkeypatch.setenv("TEST_OPENAI_EMBEDDING_DIMENSIONS", "1536")
     fake_module = _FakeCogneeModule()
     monkeypatch.setattr("cortex_knowledge.runtime._cognee_available", lambda: True)
     monkeypatch.setattr("cortex_knowledge.runtime._cognee_version", lambda: "1.2.test")
@@ -380,12 +385,19 @@ def test_build_cognee_runtime_applies_unified_runtime_config(
     assert runtime.descriptor.status == "active"
     assert fake_module.config.calls["llm"] == {
         "llm_provider": "openai",
-        "llm_model": "gpt-4.1-mini",
+        "llm_model": "gpt-test",
+        "llm_endpoint": "https://llm.example/v1",
         "llm_api_key": "cognee-secret",
+        "baml_llm_provider": "openai",
+        "baml_llm_model": "gpt-test",
+        "baml_llm_endpoint": "https://llm.example/v1",
+        "baml_llm_api_key": "cognee-secret",
     }
     assert fake_module.config.calls["embedding"] == {
         "embedding_provider": "openai",
-        "embedding_model": "text-embedding-3-small",
+        "embedding_model": "text-embedding-test",
+        "embedding_dimensions": 1536,
+        "embedding_endpoint": "https://llm.example/v1",
         "embedding_api_key": "cognee-secret",
     }
     assert fake_module.config.calls["vector_db"] == {

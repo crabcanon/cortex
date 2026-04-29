@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import sys
 import types
 from typing import Any, cast
 
 import pytest
-from cortex_common import ConfigError, CortexError
+from cortex_common import ConfigError, CortexError, OpenAICompatibleConfig
 from cortex_contracts import (
     EvalInput,
     EvalMetricRequest,
@@ -324,6 +325,39 @@ def test_deepeval_engine_applies_default_metrics(monkeypatch: pytest.MonkeyPatch
 
     assert len(result.metrics) == 4
     assert all(metric.engine_id == "deepeval" for metric in result.metrics)
+
+
+def test_deepeval_engine_applies_openai_compatible_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_fake_deepeval(monkeypatch)
+    for key in ("OPENAI_API_URL", "OPENAI_BASE_URL", "OPENAI_API_BASE", "LITELLM_API_BASE"):
+        monkeypatch.delenv(key, raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    engine = DeepEvalEvaluationEngine(
+        available=True,
+        provider_config=OpenAICompatibleConfig(
+            api_url="https://llm.example/v1",
+            api_key="provider-key",
+        ),
+    )
+    request = EvalSyncRequest(
+        name="rag-openai-compatible",
+        eval_type=EvalType.RAG,
+        input=EvalInput(
+            type="inline_test_cases",
+            test_cases=[EvalTestCase(user_input="q", actual_output="a")],
+        ),
+        metrics=[EvalMetricRequest(metric_key="quality.correctness", threshold=0.8)],
+    )
+
+    asyncio.run(engine.run(request))
+
+    assert os.environ["OPENAI_API_URL"] == "https://llm.example/v1"
+    assert os.environ["OPENAI_BASE_URL"] == "https://llm.example/v1"
+    assert os.environ["OPENAI_API_BASE"] == "https://llm.example/v1"
+    assert os.environ["LITELLM_API_BASE"] == "https://llm.example/v1"
+    assert os.environ["OPENAI_API_KEY"] == "provider-key"
 
 
 def test_sdv_engine_generates_single_table_preview(monkeypatch: pytest.MonkeyPatch) -> None:

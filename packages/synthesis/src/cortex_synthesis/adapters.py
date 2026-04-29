@@ -8,7 +8,12 @@ import inspect
 import json
 from typing import Any
 
-from cortex_common import CortexError, utc_now
+from cortex_common import (
+    CortexError,
+    OpenAICompatibleConfig,
+    apply_openai_compatible_environment,
+    utc_now,
+)
 from cortex_contracts import (
     StoredArtifactRef,
     SynthesisEngineDescriptor,
@@ -227,6 +232,7 @@ class DeepEvalSynthesisEngine:
         available: bool,
         local_available: bool | None = None,
         model: str | None = None,
+        provider_config: OpenAICompatibleConfig | None = None,
         options: dict[str, Any] | None = None,
     ) -> None:
         self._local_available = available if local_available is None else local_available
@@ -251,6 +257,7 @@ class DeepEvalSynthesisEngine:
             )
         )
         self._model = model
+        self._provider_config = provider_config or OpenAICompatibleConfig()
         self._options = dict(options or {})
         self._descriptor = SynthesisEngineDescriptor(
             engine_id="deepeval",
@@ -328,6 +335,7 @@ class DeepEvalSynthesisEngine:
         )
 
     def _generate_goldens(self, request: SynthesisSyncRequest) -> dict[str, Any]:
+        apply_openai_compatible_environment(self._provider_config)
         synthesizer_module = importlib.import_module("deepeval.synthesizer")
         synthesizer_class = synthesizer_module.Synthesizer
         synthesizer = _construct_supported(

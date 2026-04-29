@@ -56,14 +56,14 @@ knowledge:
     data_root_directory: ../.data/cognee/prod/data
 
     llm:
-      llm_provider: openai
-      llm_model: gpt-4.1
+      llm_model_ref: env:OPENAI_MODEL_ID
+      llm_endpoint_ref: env:OPENAI_BASE_URL
       llm_api_key_ref: env:OPENAI_API_KEY
 
     embedding:
-      embedding_provider: openai
-      embedding_model: text-embedding-3-large
-      embedding_dimensions: 3072
+      embedding_model_ref: env:OPENAI_EMBEDDING_MODEL_ID
+      embedding_dimensions_ref: env:OPENAI_EMBEDDING_DIMENSIONS
+      embedding_endpoint_ref: env:OPENAI_BASE_URL
       embedding_api_key_ref: env:OPENAI_API_KEY
 
     vector_db:
@@ -89,7 +89,9 @@ evaluation:
   engines:
     deepeval:
       enabled: false
-      model_ref: env:CORTEX_EVAL_DEEPEVAL_MODEL
+      model_ref: env:GEMINI_MODEL_ID
+      api_url_ref: env:GEMINI_BASE_URL
+      api_key_ref: env:GEMINI_API_KEY
       options: {}
     evalscope:
       enabled: false
@@ -111,5 +113,7 @@ synthesis:
       options: {}
     deepeval:
       enabled: false
-      model_ref: env:CORTEX_SYNTH_DEEPEVAL_MODEL
+      model_ref: env:QWEN_MODEL_ID
+      api_url_ref: env:QWEN_BASE_URL
+      api_key_ref: env:QWEN_API_KEY
       options: {}

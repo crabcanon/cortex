@@ -471,6 +471,10 @@ def _resolved_cognee_config(runtime_config: LoadedRuntimeConfig) -> dict[str, An
         payload = getattr(config, field_name)
         if payload:
             mapped = runtime_config.resolve_mapping(payload)
+            mapped = _normalize_provider_payload(
+                field_name,
+                {key: value for key, value in mapped.items() if value is not None},
+            )
             if field_name == "relational_db":
                 mapped = _translate_relational_payload(mapped)
             elif field_name == "migration_db":
@@ -484,6 +488,34 @@ def _normalize_monitoring_tool(value: str) -> str:
     if normalized in {"noop", "none", "disabled", "off", "false", "0"}:
         return "none"
     return value
+
+
+def _normalize_provider_payload(field_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(payload)
+    if field_name == "llm" and normalized:
+        normalized.setdefault("llm_provider", "openai")
+        normalized.setdefault("baml_llm_provider", normalized.get("llm_provider", "openai"))
+        _copy_if_absent(normalized, source_key="llm_model", target_key="baml_llm_model")
+        _copy_if_absent(normalized, source_key="llm_endpoint", target_key="baml_llm_endpoint")
+        _copy_if_absent(normalized, source_key="llm_api_key", target_key="baml_llm_api_key")
+        return normalized
+    if field_name == "embedding" and normalized:
+        normalized.setdefault("embedding_provider", "openai")
+        dimensions = normalized.get("embedding_dimensions")
+        if isinstance(dimensions, str) and dimensions.strip().isdigit():
+            normalized["embedding_dimensions"] = int(dimensions.strip())
+    return normalized
+
+
+def _copy_if_absent(
+    payload: dict[str, Any],
+    *,
+    source_key: str,
+    target_key: str,
+) -> None:
+    value = payload.get(source_key)
+    if target_key not in payload and value not in (None, ""):
+        payload[target_key] = value
 
 
 def _translate_relational_payload(payload: dict[str, Any]) -> dict[str, Any]:

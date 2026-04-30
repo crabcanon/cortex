@@ -65,5 +65,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    bind = op.get_bind()
+    insp = sa.inspect(bind)
+    existing_tables = insp.get_table_names()
     for table_name in TABLE_DROP_ORDER:
-        op.execute(sa.text(f"DROP TABLE IF EXISTS {table_name}"))
+        if table_name in existing_tables:
+            op.drop_table(table_name)

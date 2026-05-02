@@ -1,0 +1,3 @@
+## 2024-05-30 - Database aggregation for Job sequence numbers
+**Learning:** The codebase previously used an anti-pattern of loading large lists of records into memory just to determine the maximum sequence number (e.g., `existing_events = await uow.job_events.list_for_job(job_id, limit=1000)` followed by `next_sequence = existing_events[-1].sequence_no + 1 if existing_events else 1`). This is an O(N) operation that pulls unnecessary data into application memory.
+**Action:** Replace `list_for_job(...)[-1]` aggregations with a dedicated `get_max_sequence_no(job_id)` repository method utilizing `select(func.coalesce(func.max(JobEventModel.sequence_no), 0))` for an O(1) database-side calculation.

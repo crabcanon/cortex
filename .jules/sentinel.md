@@ -1,0 +1,4 @@
+## 2025-05-05 - Avoid SQL injection risks in Alembic Migrations
+**Vulnerability:** String interpolation in `op.execute(sa.text(...))` can lead to SQL injection vulnerabilities, especially when executing commands like `DROP TABLE IF EXISTS`.
+**Learning:** Alembic's `op.drop_table` does not properly support `if_exists=True`. Using raw SQL to achieve this creates a security vulnerability flag.
+**Prevention:** Always use Alembic's built-in schema operations. To safely drop a table only if it exists, use `sa.inspect(op.get_bind()).get_table_names()` to check for its existence before calling `op.drop_table()`.

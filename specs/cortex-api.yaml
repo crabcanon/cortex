@@ -52,11 +52,9 @@ paths:
       tags:
         - Health
       summary: Liveness probe / 存活探针
-      description: Returns the service liveness state. / 返回服务的存活状态。
+      description: Returns the service liveness state for unauthenticated container probes. / 返回服务存活状态，供容器探针无鉴权调用。
       operationId: getLiveness
-      security:
-        - OAuth2:
-            - health:read
+      security: []
       responses:
         '200':
           description: Service is running. / 服务运行中。

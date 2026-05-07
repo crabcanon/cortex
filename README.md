@@ -55,6 +55,7 @@ Cortex 是一套面向 AI 原生应用的数据与知识 API 平台，统一提�
 
 - 本地开发使用 `CORTEX_AUTH_MODE=dev`，并暴露 `POST /v1/dev/auth/token` 生成 Swagger 可用 Bearer token。
 - 生产建议接入 OIDC / JWT / Introspection，把 Cortex 作为资源服务器。
+- `/v1/health/live` 面向 Docker / Kubernetes liveness probe，无需 Bearer token；`/v1/health/ready` 仍需要 `health:read`。
 - 所有 API 和 Worker 统一接入 OpenTelemetry，可对接 Jaeger、Prometheus、Grafana。
 - Eval/Synthesis 已提供 `cortex.eval.run`、`cortex.synthesis.run` spans，以及 run count / duration 指标。
 
@@ -110,9 +111,21 @@ OPENAI_BASE_URL=https://api.openai.com/v1
 OPENAI_API_KEY=...
 OPENAI_MODEL_ID=gpt-4.1-mini
 OPENAI_EMBEDDING_MODEL_ID=text-embedding-3-small
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_API_KEY=...
+OPENROUTER_MODEL_ID=openrouter/auto
+OPENROUTER_EMBEDDING_MODEL_ID=openai/text-embedding-3-small
+OPENROUTER_EMBEDDING_DIMENSIONS=1536
+OLLAMA_BASE_URL=http://host.docker.internal:11434/v1
+OLLAMA_API_KEY=ollama
+OLLAMA_MODEL_ID=llama3.1:8b
+OLLAMA_EMBEDDING_MODEL_ID=nomic-embed-text
+OLLAMA_EMBEDDING_DIMENSIONS=768
 GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
 GEMINI_API_KEY=...
 GEMINI_MODEL_ID=gemini-2.5-flash
+GEMINI_EMBEDDING_MODEL_ID=gemini/gemini-embedding-001
+GEMINI_EMBEDDING_DIMENSIONS=768
 QWEN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 QWEN_API_KEY=...
 QWEN_MODEL_ID=qwen-plus
@@ -125,16 +138,21 @@ CORTEX_RUNTIME_CONFIG_PATH=configs/cortex.runtime.local.yaml
 
 LLM / Embedding 供应商统一按“供应商槽位”接入：
 
-- `.env` 只声明供应商的 OpenAI-compatible `*_BASE_URL`、`*_API_KEY`、`*_MODEL_ID`、`*_EMBEDDING_MODEL_ID` 等值，例如 `OPENAI_*`、`GEMINI_*`、`QWEN_*`、`LOCAL_LLM_*`。
-- `configs/cortex.runtime.local.yaml` 决定不同 API 类型引用哪个槽位。默认示例中 Knowledge 引用 `OPENAI_*`，Evaluation 的 DeepEval 引用 `GEMINI_*`，Synthesis 的 DeepEval Synthesizer 引用 `QWEN_*`。
-- 如需切换供应商，只调整 runtime YAML 中的 `model_ref`、`api_url_ref`、`api_key_ref`，例如把 Evaluation 从 `env:GEMINI_BASE_URL` 改为 `env:OPENAI_BASE_URL`。
-- Cognee 所需的 `llm_provider`、`embedding_provider`、BAML LLM 字段由 Cortex 适配层按 OpenAI-compatible 默认值补齐；常规使用不需要在配置文件里重复填写。
+- `.env` 只声明供应商的 OpenAI-compatible `*_BASE_URL`、`*_API_KEY`、`*_MODEL_ID`、`*_EMBEDDING_MODEL_ID` 等值，例如 `OPENAI_*`、`OPENROUTER_*`、`OLLAMA_*`、`GEMINI_*`、`QWEN_*`、`LOCAL_LLM_*`。
+- `configs/cortex.runtime.local.yaml` 决定不同 API 类型引用哪个槽位。默认示例中 Knowledge 的 Cognee LLM 与 embedding 都引用 `OPENROUTER_*`，Evaluation 的 DeepEval 与 Synthesis 的 DeepEval Synthesizer 仍可独立引用 `KIMI_*`。
+- 如需切换供应商，只调整 runtime YAML 中的 `model_ref`、`api_url_ref`、`api_key_ref`，例如把 Evaluation 从 `env:KIMI_BASE_URL` 改为 `env:OPENAI_BASE_URL`。
+- Cognee 所需的 `llm_provider`、`embedding_provider`、BAML LLM 字段由 Cortex 适配层按 OpenAI-compatible 默认值补齐；常规使用不需要在配置文件里重复填写。Cortex 也会把 Knowledge 选中的 LLM 槽位同步到 `OPENAI_BASE_URL`、`OPENAI_API_KEY`、`OPENAI_API_BASE`、`LITELLM_API_BASE`、`LITELLM_API_KEY`，防止 Cognee / LiteLLM 静默读取宿主或容器里的 OpenAI 默认值。
+- 本地 Knowledge 默认将 Cognee 的 `openrouter` provider alias 映射为 OpenAI-compatible SDK 调用；推荐 `OPENROUTER_BASE_URL=https://openrouter.ai/api/v1`、`OPENROUTER_MODEL_ID=openrouter/auto`、`OPENROUTER_EMBEDDING_MODEL_ID=openai/text-embedding-3-small`。
+- Ollama 也作为一等 provider slot 提供。容器内访问宿主机 Ollama 时使用 `OLLAMA_BASE_URL=http://host.docker.internal:11434/v1`，`OLLAMA_API_KEY=ollama` 是 OpenAI SDK 兼容路径需要的占位值。执行 `ollama pull llama3.1:8b` 与 `ollama pull nomic-embed-text` 后，将 `CORTEX_RUNTIME_CONFIG_PATH` 切到 `configs/cortex.runtime.ollama.yaml`，即可让 Knowledge、DeepEval Evaluation 和 DeepEval Synthesis 统一引用 `OLLAMA_*`。
 - Cortex 会在 Evaluation / Synthesis runtime worker 中按当前引擎引用的槽位同步设置 `OPENAI_API_URL`、`OPENAI_BASE_URL`、`OPENAI_API_BASE`、`LITELLM_API_BASE`，兼容 OpenAI SDK、LiteLLM 与 DeepEval 的常见读取方式。
 
 Evaluation / Synthesis 不再配置专属 API Key：
 
 - EvalScope 支持两种模式：`mode: external_http` 调用外部 EvalScope 服务；`mode: self_hosted_sdk` 由 Cortex 通过 `evalscope[service]` 和 `evalscope.service.run_service(...)` 在 runtime worker 内自部署服务后再调用 `/api/v1/eval`、`/api/v1/perf`。EvalScope 不需要所谓 vendor key；如果外部服务被网关保护，请在 `evaluation.engines.evalscope.headers` 中配置 `Authorization` 等服务访问 header。
 - DeepEval 与 DeepEval Synthesizer 不再使用独立的 vendor API Key；它们分别跟随 runtime YAML 所引用的模型供应商槽位。
+- DeepEval Evaluation 会优先构造 Cortex 的 OpenAI-compatible judge wrapper，显式把 `base_url`、`api_key`、`model` 传给 OpenAI SDK，避免 DeepEval 仅凭模型字符串进行隐式供应商路由。
+- 如果 Kimi、Moonshot 或其他模型服务在宿主机可访问但容器内连接失败，请在 `.env` 中配置 `HTTPS_PROXY` / `HTTP_PROXY` / `ALL_PROXY`，Compose 会透传给 Cortex 与 TensorZero Gateway 容器。本地 Docker Desktop 使用宿主机代理时，推荐写成 `http://host.docker.internal:7890`。
+- Knowledge / Evaluation / Synthesis Worker 默认 lease 为 300 秒、heartbeat 为 30 秒，可通过 `CORTEX_*_WORKER_LEASE_SECONDS` 和 `CORTEX_*_WORKER_HEARTBEAT_INTERVAL_SECONDS` 覆盖，避免长模型调用被 60 秒旧 lease 误判为 stale job。
 
 ### 3. 启动依赖和服务
 

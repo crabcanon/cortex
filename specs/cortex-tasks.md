@@ -702,3 +702,80 @@ Goal: let the TensorZero example keep synchronous Cortex Evaluation for smoke ch
 | CTX-20260429-152 | 2026-04-29 13:05:00 +08:00 | P1 | examples-resilience | Make `.env` override stale shell variables and keep `/tensorzero/status` as a short diagnostic that reports the effective Gateway URL | CTX-20260429-151 | done |
 | CTX-20260429-153 | 2026-04-29 13:25:00 +08:00 | P1 | examples-resilience | Disable environment proxy inheritance in the TensorZero and Cortex example HTTP clients so local `127.0.0.1` requests cannot be routed through `HTTP_PROXY` / `HTTPS_PROXY` and return proxy 502s | CTX-20260429-152 | done |
 | CTX-20260429-154 | 2026-04-29 13:45:00 +08:00 | P1 | examples-resilience | Make the TensorZero example degrade from Cortex Knowledge Search to parsed Markdown context when Cognee runtime is unavailable or knowledge jobs are skipped | CTX-20260429-153 | done |
+
+### Batch 2026-04-29 15:20:00 +08:00 | Phase AY TensorZero Cortex Matrix Evaluation
+
+Goal: upgrade `examples/tensorzero-cortex` from a single adaptive smoke run into a reproducible matrix experiment that compares parse engines, model variants, RAG contexts, and Cortex Evaluation profiles end to end.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260429-155 | 2026-04-29 15:20:00 +08:00 | P0 | examples-analysis | Review the latest TensorZero Cortex artifacts, classify Docling / async parse / async knowledge / model-routing failures, and decide which issues belong to Cortex core versus the example orchestration layer | CTX-20260429-154 | done |
+| CTX-20260429-156 | 2026-04-29 15:20:00 +08:00 | P0 | examples-api | Replace the MVP `/experiments/run` body with a backward-compatible structured request model covering parse, knowledge, TensorZero routing, and Cortex Evaluation options, plus one-click Swagger examples | CTX-20260429-155 | done |
+| CTX-20260429-157 | 2026-04-29 15:20:00 +08:00 | P0 | examples-parse | Add engine-aware parse execution so Docling and other worker-only engines automatically use async jobs while lightweight engines can keep sync execution | CTX-20260429-156 | done |
+| CTX-20260429-158 | 2026-04-29 15:20:00 +08:00 | P0 | examples-tensorzero | Implement context-grouped exhaustive TensorZero inference across OpenAI / Gemini / Kimi variants while preserving adaptive sampling as an explicit strategy | CTX-20260429-157 | done |
+| CTX-20260429-159 | 2026-04-29 15:20:00 +08:00 | P0 | examples-evaluation | Generate multi-case evaluation datasets and submit them to Cortex Evaluation with supported DeepEval-aligned RAG / custom / agentic metric profiles in sync or async mode | CTX-20260429-158 | done |
+| CTX-20260429-160 | 2026-04-29 15:20:00 +08:00 | P1 | docs-validation | Update README, task/log notes, TensorZero config defaults, and run compile/OpenAPI validation for the example | CTX-20260429-159 | done |
+| CTX-20260429-161 | 2026-04-29 17:20:00 +08:00 | P0 | eval-runtime-config | Fix local DeepEval provider binding so Gemini model/key/base-url are resolved as one OpenAI-compatible slot, and redact API-key-like fragments from async evaluation job errors | CTX-20260429-159 | done |
+| CTX-20260429-162 | 2026-04-29 17:45:00 +08:00 | P1 | examples-ops | Mount local runtime configs into Cortex Compose services so config-only fixes need container recreation but not image rebuild, and add Cognee graph HTML visualization artifacts for TensorZero Cortex runs | CTX-20260429-161 | done |
+
+### Batch 2026-04-29 18:20:00 +08:00 | Phase AZ DeepEval Kimi Runtime Slot
+
+Goal: move Cortex DeepEval judging away from Gemini quota-limited traffic and make Kimi model slots available to local and production Compose services.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260429-163 | 2026-04-29 18:20:00 +08:00 | P0 | eval-runtime-config | Switch Evaluation/Synthesis DeepEval runtime model refs to `KIMI_*`, pass `KIMI_*` through Compose environments, and document no-build restart steps for the runtime workers | CTX-20260429-162 | done |
+| CTX-20260429-164 | 2026-04-29 20:25:00 +08:00 | P0 | eval-knowledge-runtime | Add an explicit OpenAI-compatible DeepEval judge wrapper for Kimi and switch TensorZero Cortex Knowledge Add from unsupported `object_id` inputs to Cognee-supported parsed Markdown text inputs | CTX-20260429-163 | done |
+| CTX-20260429-165 | 2026-04-29 21:25:00 +08:00 | P0 | runtime-networking | Make Kimi provider failures diagnosable, pass proxy env vars into Cortex/TensorZero containers, and fix local Cognee Gemini embedding tokenizer configuration | CTX-20260429-164 | done |
+
+### Batch 2026-04-30 10:45:00 +08:00 | Phase BA Worker Lease Resilience And Container Provider Networking
+
+Goal: stop long model-backed jobs from being recovered while still running, keep provider timeout diagnostics accurate, and make container outbound proxy routing more reliable for Kimi/Moonshot.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260430-166 | 2026-04-30 10:45:00 +08:00 | P0 | worker-runtime | Raise Knowledge / Evaluation / Synthesis worker lease defaults to 300 seconds, expose lease and heartbeat env overrides, and prevent inner SDK `TimeoutError` values from being mislabeled as worker execution timeouts | CTX-20260429-165 | done |
+| CTX-20260430-167 | 2026-04-30 10:45:00 +08:00 | P0 | docker-dev | Pass worker lease envs through Compose and map `host.docker.internal` to the host gateway for Cortex local app/worker containers so host-side proxies are reachable from Docker | CTX-20260430-166 | done |
+| CTX-20260430-168 | 2026-04-30 10:45:00 +08:00 | P1 | docs-ops | Document Kimi container connectivity checks, proxy examples, and no-build vs rebuild restart guidance for TensorZero Cortex evaluation runs | CTX-20260430-167 | done |
+| CTX-20260430-169 | 2026-04-30 10:45:00 +08:00 | P1 | validation | Run lint, compile, and Compose config checks for worker lease and networking changes, recording any sandbox limits | CTX-20260430-168 | done |
+
+### Batch 2026-04-30 11:35:00 +08:00 | Phase BB Job Metrics And Probe Semantics
+
+Goal: make job polling robust against tiny timestamp skews and keep Docker liveness probes unauthenticated while preserving protected readiness checks.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260430-170 | 2026-04-30 11:35:00 +08:00 | P0 | jobs-api | Clamp derived `queue_latency_ms` and `run_latency_ms` to non-negative values so clock/precision skew cannot make `/v1/jobs/{jobId}` fail validation | CTX-20260430-169 | done |
+| CTX-20260430-171 | 2026-04-30 11:35:00 +08:00 | P0 | health-api | Make `/v1/health/live` unauthenticated for Docker/Kubernetes liveness probes while keeping `/v1/health/ready` protected by `health:read` | CTX-20260430-170 | done |
+| CTX-20260430-172 | 2026-04-30 11:35:00 +08:00 | P1 | validation | Add auth/jobs regression assertions for negative queue latency and unauthenticated liveness, then run focused validation | CTX-20260430-171 | done |
+
+### Batch 2026-04-30 12:10:00 +08:00 | Phase BC Cognee Model Slot Enforcement
+
+Goal: stop Cognee / LiteLLM from falling back to exhausted OpenAI defaults during Knowledge Add/Cognify and keep local TensorZero Cortex runs on the configured provider slots.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260430-173 | 2026-04-30 12:10:00 +08:00 | P0 | runtime-config | Switch local Cognee LLM refs from `OPENAI_*` to `KIMI_*`, switch local Cognee embedding refs to Gemini provider, and keep local DeepEval refs aligned with `KIMI_*` | CTX-20260430-172 | done |
+| CTX-20260430-174 | 2026-04-30 12:10:00 +08:00 | P0 | knowledge-runtime | Export the resolved Cognee LLM slot into OpenAI-compatible and LiteLLM environment variables, and fail fast when Cognee LLM/embedding credentials are incomplete | CTX-20260430-173 | done |
+| CTX-20260430-175 | 2026-04-30 12:10:00 +08:00 | P1 | docs-validation | Add Cognee/LiteLLM fallback documentation and focused unit coverage for provider-slot env propagation | CTX-20260430-174 | done |
+
+### Batch 2026-04-30 12:45:00 +08:00 | Phase BD OpenRouter Knowledge Provider Slot
+
+Goal: add OpenRouter as a first-class LLM/Embedding provider slot and move Knowledge/Cognee model traffic to that slot across runtime overlays.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260430-176 | 2026-04-30 12:45:00 +08:00 | P0 | runtime-config | Add `OPENROUTER_*` provider variables to env examples and Compose passthrough, using `https://openrouter.ai/api/v1` as the OpenAI-compatible base URL | CTX-20260430-175 | done |
+| CTX-20260430-177 | 2026-04-30 12:45:00 +08:00 | P0 | knowledge-runtime | Bind Knowledge/Cognee LLM and embedding configs to `OPENROUTER_*` across local/base/staging/prod runtime overlays, and map the `openrouter` alias to Cognee's OpenAI-compatible provider | CTX-20260430-176 | done |
+| CTX-20260430-178 | 2026-04-30 12:45:00 +08:00 | P1 | docs-validation | Document the OpenRouter Knowledge slot, add provider alias unit coverage, and run focused validation | CTX-20260430-177 | done |
+
+### Batch 2026-05-02 23:25:00 +08:00 | Phase BE Ollama Local Provider Slot
+
+Goal: add Ollama as a first-class OpenAI-compatible LLM and embedding provider slot while keeping existing OpenRouter / Kimi runtime bindings stable by default.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260502-179 | 2026-05-02 23:25:00 +08:00 | P0 | runtime-config | Add `OLLAMA_*` LLM and embedding provider variables to env examples and Compose passthrough, using the Docker-safe `host.docker.internal:11434/v1` base URL | CTX-20260430-178 | done |
+| CTX-20260502-180 | 2026-05-02 23:25:00 +08:00 | P0 | knowledge-runtime | Add an Ollama Knowledge runtime overlay and map the `ollama` alias to Cognee's OpenAI-compatible provider path without changing the current OpenRouter default overlays | CTX-20260502-179 | done |
+| CTX-20260502-181 | 2026-05-02 23:25:00 +08:00 | P1 | eval-synthesis-parse-review | Review Evaluation, Synthesis, and Parse runtime references so Ollama can be opted into through provider refs without accidental model-provider coupling | CTX-20260502-180 | done |
+| CTX-20260502-182 | 2026-05-02 23:25:00 +08:00 | P1 | docs-validation | Update README / technical design / log notes and run focused config, lint, and unit validation for the Ollama provider slot | CTX-20260502-181 | done |

@@ -2002,3 +2002,227 @@
   - `uv run --project examples/tensorzero-cortex python -m compileall examples/tensorzero-cortex/src`
 - Prevention:
   - Example pipelines should keep optional platform capabilities optional and provide a useful degraded path for smoke tests.
+
+### 2026-04-29 15:20:00 +08:00 update
+
+- Stage: `CTX-20260429-155` ~ `CTX-20260429-160`
+- Event: The latest TensorZero Cortex run showed Docling parse failures, no true parse -> storage -> knowledge -> evaluation loop, and TensorZero traffic concentrated on a single Gemini variant.
+- Cause:
+  - The example treated `PARSE_MODE=sync` as a global rule, so worker-only `docling` requests were sent to the slim API process instead of `cortex-parse-worker-docling`.
+  - `/experiments/run` still used the original MVP request shape, so users could not declare per-engine parse mode, TensorZero routing strategy, context grouping, or Cortex Evaluation profiles.
+  - TensorZero inference was called only once and relied on adaptive sampling, which is correct for online traffic but not enough for a deterministic offline model-by-engine comparison.
+  - The generated Cortex Eval dataset contained only one case, and the example used stale metric keys such as `rag.answer_relevancy` instead of the current Cortex catalog key `rag.answer_relevance`.
+- Action:
+  - Added structured `parse`, `knowledge`, `tensorzero`, and `evaluation` request sections while keeping legacy flat fields compatible.
+  - Routed `docling` to async parse jobs by default through `parse.engine_modes`, with user override support.
+  - Added `exhaustive`, `adaptive`, and `selected` TensorZero strategies. `exhaustive` pins every configured variant against every context group; `adaptive` leaves variant selection to the TensorZero Gateway.
+  - Added parse-engine context grouping, multi-variant inference records, tagged TensorZero feedback, multi-case JSONL generation, and multi-type Cortex Evaluation submission.
+  - Updated the FastAPI Swagger examples, `.env.example`, TensorZero max token defaults, and README guidance.
+- Validation:
+  - `uv run ruff check examples\\tensorzero-cortex\\src\\tensorzero_cortex`
+  - `uv run --project examples\\tensorzero-cortex python -m compileall examples\\tensorzero-cortex\\src\\tensorzero_cortex`
+  - `uv run --project examples\\tensorzero-cortex python -c "from tensorzero_cortex.main import app; schema=app.openapi(); ..."` returned OpenAPI `3.1.0` with `full_matrix_async`, `adaptive_smoke`, and `legacy_compatible` examples.
+  - Ran a fake-client pipeline smoke test that produced 2 parse artifacts, 2 context groups, 4 TensorZero inferences, and 4 evaluation cases without calling external services.
+- Prevention:
+  - Keep example orchestration deterministic for offline comparisons. Use TensorZero adaptive routing for live experiments, but use pinned exhaustive variants when the goal is model/engine evaluation fairness.
+
+### 2026-04-29 17:20:00 +08:00 update
+
+- Stage: `CTX-20260429-161`
+- Event: TensorZero Cortex run `tzcx_20260429_085020_bd0c1daa` completed the main pipeline, but async Cortex Evaluation jobs failed with OpenAI `invalid_api_key` while the visible key prefix was a Gemini / Google `AIza...` key.
+- Cause:
+  - `configs/cortex.runtime.local.yaml` referenced `env:GEMINI_API_URL` for local DeepEval Evaluation and DeepEval Synthesis. The project `.env*` files define `GEMINI_BASE_URL`, not `GEMINI_API_URL`.
+  - Because the base URL was empty while `GEMINI_API_KEY` was present, the DeepEval/OpenAI-compatible runtime fell back to the OpenAI default endpoint and sent a Gemini key to OpenAI.
+  - Async evaluation job errors persisted the upstream SDK error text, which can include API-key-like fragments.
+- Action:
+  - Updated local DeepEval Evaluation and Synthesis runtime binding to `model_ref: env:GEMINI_MODEL_ID`, `api_url_ref: env:GEMINI_BASE_URL`, and `api_key_ref: env:GEMINI_API_KEY`.
+  - Added secret-like redaction to evaluation job failure recording before writing job state, eval run summaries, and API-visible job errors.
+- Validation:
+  - Confirmed no `GEMINI_API_URL`, `CORTEX_EVAL_DEEPEVAL_MODEL`, or `CORTEX_SYNTH_DEEPEVAL_MODEL` references remain in local runtime env examples/config.
+  - Parsed `configs/cortex.runtime.local.yaml` with PyYAML and verified both DeepEval `api_url_ref` values are `env:GEMINI_BASE_URL`.
+  - `uv run ruff check packages\\evaluation\\src\\cortex_evaluation\\jobs.py`
+  - `python -m py_compile packages\\evaluation\\src\\cortex_evaluation\\jobs.py`
+- Prevention:
+  - Treat provider model, base URL, and API key as an indivisible slot. Never mix a non-OpenAI key with an unset OpenAI-compatible base URL.
+
+### 2026-04-29 17:45:00 +08:00 update
+
+- Stage: `CTX-20260429-162`
+- Event: Runtime YAML-only fixes required rebuilding the local heavy Docker images, and TensorZero Cortex runs had no first-class artifact for inspecting the Cognee knowledge graph.
+- Cause:
+  - Local Compose containers read `configs/cortex.runtime.local.yaml` from files copied into the image, so config changes were not visible until image rebuild.
+  - Cognee graph visualization was available through Cognee's `visualize_graph(path)` API, but the TensorZero Cortex example did not expose a repeatable way to run it against the Docker knowledge worker and copy the resulting HTML into the run artifacts directory.
+- Action:
+  - Mounted `./configs` into `/app/configs:ro` for all Cortex application and worker services in `compose.local.yaml`.
+  - Added `tensorzero-cortex visualize-knowledge --run-id ...`, which runs Cognee graph visualization inside the `cortex-knowledge-worker` container and copies `knowledge_graph.html` into `examples/tensorzero-cortex/artifacts/{run_id}`.
+  - Added optional automatic graph visualization after successful Knowledge Add/Cognify, controlled by `KNOWLEDGE_GRAPH_VISUALIZATION`.
+  - Documented config-only restart commands and graph visualization usage in the TensorZero Cortex README.
+- Validation:
+  - `docker compose -f compose.local.yaml config --quiet` passed, with only a user-level Docker `config.json` access warning unrelated to Compose syntax.
+  - `uv run ruff check examples\tensorzero-cortex\src\tensorzero_cortex packages\evaluation\src\cortex_evaluation\jobs.py` passed.
+  - `uv run --project examples\tensorzero-cortex python -m compileall examples\tensorzero-cortex\src\tensorzero_cortex` passed.
+  - `uv run --project examples\tensorzero-cortex tensorzero-cortex visualize-knowledge --help` exposed the expected `--run-id`, `--container`, and `--output-name` options.
+  - Direct `docker exec` graph export was not run in the Codex sandbox because Docker API access to `npipe:////./pipe/docker_engine` was denied; the exact host-side command is documented for the developer workstation.
+- Prevention:
+  - Keep runtime configuration mounted in local development, and reserve heavy image rebuilds for dependency, Dockerfile, or package changes.
+
+### 2026-04-29 18:20:00 +08:00 update
+
+- Stage: `CTX-20260429-163`
+- Event: TensorZero Cortex async DeepEval jobs failed with Gemini `RESOURCE_EXHAUSTED` / 429 quota errors after moving from invalid API key failures to valid Gemini traffic.
+- Cause:
+  - `configs/cortex.runtime.local.yaml` still routed Evaluation and Synthesis DeepEval engines to `GEMINI_*`, so the runtime worker exhausted Gemini's request-per-minute quota during multi-case RAG/custom judging.
+  - Compose did not pass `KIMI_*` environment variables into Cortex containers, so switching the YAML alone would have produced empty provider settings inside workers.
+- Action:
+  - Switched DeepEval model, base URL, and API key refs to `KIMI_MODEL_ID`, `KIMI_BASE_URL`, and `KIMI_API_KEY` across local/default/staging/prod runtime YAMLs.
+  - Added `KIMI_*` passthrough variables to local and production Compose environment anchors.
+  - Updated README guidance so local Evaluation/Synthesis DeepEval defaults are documented as Kimi-backed.
+- Validation:
+  - Runtime YAML parsing confirmed all Evaluation/Synthesis DeepEval refs now resolve to `env:KIMI_MODEL_ID`, `env:KIMI_BASE_URL`, and `env:KIMI_API_KEY`.
+  - `docker compose -f compose.local.yaml config --quiet` and `docker compose -f compose.prod.yaml config --quiet` passed, with only the existing user-level Docker `config.json` access warning.
+  - `uv run ruff check packages\evaluation\src\cortex_evaluation\jobs.py examples\tensorzero-cortex\src\tensorzero_cortex` passed.
+- Prevention:
+  - Treat DeepEval model provider refs as a full slot (`model_ref`, `api_url_ref`, `api_key_ref`) and ensure the selected slot is also exposed by Compose.
+
+### 2026-04-29 20:25:00 +08:00 update
+
+- Stage: `CTX-20260429-164`
+- Event: TensorZero Cortex async DeepEval jobs still failed after switching to Kimi, now with `RetryError[...] APIConnectionError`, and generated reports showed `knowledge_graph_html_path: null`.
+- Cause:
+  - DeepEval was still receiving a model string and could rely on its own implicit model/provider routing; for OpenAI-compatible Kimi endpoints this left base URL handling fragile.
+  - The latest run's Knowledge Add job failed before graph visualization because the example submitted Storage `object_id` inputs, while the current Cognee runtime adapter supports live execution for `text` and `uri` inputs only.
+- Action:
+  - Added an explicit Cortex OpenAI-compatible DeepEval judge wrapper that passes `base_url`, `api_key`, and `model` directly to the OpenAI SDK and supports DeepEval schema-based custom LLM calls.
+  - Updated TensorZero Cortex Knowledge ingestion to submit parsed Markdown text excerpts with source metadata instead of unsupported `object_id` inputs.
+  - Documented that config-only changes can use no-build container recreation, while this code-level DeepEval wrapper change requires rebuilding the evaluation runtime image.
+- Validation:
+  - `uv run ruff check packages\evaluation\src\cortex_evaluation\adapters.py examples\tensorzero-cortex\src\tensorzero_cortex` passed.
+  - `uv run --project examples\tensorzero-cortex python -m compileall examples\tensorzero-cortex\src\tensorzero_cortex` passed.
+  - `uv run --project examples\tensorzero-cortex python -m py_compile packages\evaluation\src\cortex_evaluation\adapters.py` passed.
+- Prevention:
+  - Use explicit provider clients for OpenAI-compatible non-OpenAI judge models, and keep example Knowledge inputs aligned with the currently supported Cognee runtime input types.
+
+### 2026-04-29 21:25:00 +08:00 update
+
+- Stage: `CTX-20260429-165`
+- Event: TensorZero Cortex still reported `knowledge_graph_html_path: null` and async DeepEval jobs failed with the generic OpenAI SDK message `Connection error.`.
+- Cause:
+  - The latest artifact showed Knowledge Add reached Cognee text ingestion but failed at embedding tokenization: `Could not automatically map gemini-embedding-2 to a tokeniser`. Local runtime config was not explicitly marking the embedding provider as Gemini, and the example `.env` guidance still allowed a bare Gemini embedding model name.
+  - Kimi calls failed from both TensorZero Gateway and Cortex Evaluation containers, which points to container outbound networking/proxy/DNS rather than a single API adapter. The stored error was too generic to identify endpoint and exception type.
+  - Evaluation job failure handling treated an SDK `code=None` attribute as a real error code, losing the `evaluation_worker_failed` fallback.
+- Action:
+  - Marked local Cognee embedding provider as `gemini`, removed the OpenAI-compatible embedding endpoint for Gemini, and normalized bare Gemini embedding model names to `gemini/<model>` before calling Cognee.
+  - Updated env examples to recommend `GEMINI_EMBEDDING_MODEL_ID=gemini/gemini-embedding-001` and `GEMINI_EMBEDDING_DIMENSIONS=768`.
+  - Passed `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, and `NO_PROXY` into Cortex and TensorZero Gateway containers.
+  - Expanded DeepEval provider connection failures into a Cortex error with endpoint origin, model, exception type, and cause chain.
+  - Fixed Evaluation job failure fallback so a falsy SDK `code` becomes `evaluation_worker_failed`.
+- Validation:
+  - `uv run ruff check packages\evaluation\src\cortex_evaluation\adapters.py packages\evaluation\src\cortex_evaluation\jobs.py packages\knowledge\src\cortex_knowledge\runtime.py examples\tensorzero-cortex\src\tensorzero_cortex` passed.
+  - `uv run --project examples\tensorzero-cortex python -m compileall examples\tensorzero-cortex\src\tensorzero_cortex` passed.
+  - `uv run --project examples\tensorzero-cortex python -m py_compile packages\evaluation\src\cortex_evaluation\adapters.py packages\evaluation\src\cortex_evaluation\jobs.py packages\knowledge\src\cortex_knowledge\runtime.py` passed.
+  - `docker compose -f compose.local.yaml config --quiet`, `docker compose -f compose.prod.yaml config --quiet`, and `docker compose -f examples\tensorzero-cortex\tensorzero\docker-compose.tensorzero.yaml config --quiet` passed, with only the existing user-level Docker `config.json` access warning.
+- Prevention:
+  - Keep provider family, model naming convention, and container outbound networking explicit in local examples; do not rely on SDK default model routing or host-only network reachability.
+
+### 2026-04-30 10:45:00 +08:00 update
+
+- Stage: `CTX-20260430-166` ~ `CTX-20260430-169`
+- Event: After restarting the local stack, TensorZero Cortex still showed `knowledge_graph_html_path: null`; async DeepEval RAG jobs failed with `evaluation_worker_lease_expired`, and custom jobs failed with a Kimi/Moonshot `deepeval_provider_connection_failed` connection diagnostic.
+- Cause:
+  - Knowledge / Evaluation / Synthesis workers still defaulted to a 60-second lease, so model-backed jobs running longer than one minute could be recovered or failed as stale even though their execution timeout budget was much larger.
+  - Worker bootstrap code caught any `TimeoutError` and converted it into a platform timeout. Upstream SDK or provider connection timeouts could therefore be mislabeled as `knowledge_worker_timeout` or `evaluation_worker_timeout`.
+  - Local Cortex containers could receive proxy variables, but did not explicitly map `host.docker.internal` to the host gateway, which can break host-side proxy usage on some Docker Desktop setups.
+- Action:
+  - Raised Knowledge / Evaluation / Synthesis worker lease defaults to 300 seconds with 30-second heartbeats, and exposed `CORTEX_*_WORKER_LEASE_SECONDS` / `CORTEX_*_WORKER_HEARTBEAT_INTERVAL_SECONDS` env overrides.
+  - Changed worker timeout handling so only an elapsed execution budget produces `*_worker_timeout`; early upstream `TimeoutError` values now surface as provider/runtime failures with their original error class or message.
+  - Added worker lease envs to local and production Compose anchors, and added local Cortex app/worker `extra_hosts` entries for `host.docker.internal:host-gateway`.
+  - Normalized the DeepEval OpenAI-compatible base URL before client creation and kept the full base URL, including `/v1`, in provider connection diagnostics.
+  - Documented container-side Kimi connectivity checks and proxy examples in README and TensorZero Cortex docs.
+- Validation:
+  - `uv run ruff check packages\evaluation\src\cortex_evaluation\adapters.py packages\evaluation\src\cortex_evaluation\jobs.py packages\knowledge\src\cortex_knowledge\jobs.py packages\synthesis\src\cortex_synthesis\jobs.py workers\evaluation-worker\src\cortex_worker_evaluation workers\knowledge-worker\src\cortex_worker_knowledge workers\synthesis-worker\src\cortex_worker_synthesis` passed.
+  - `docker compose -f compose.local.yaml config --quiet` and `docker compose -f compose.prod.yaml config --quiet` passed, with only the existing user-level Docker `config.json` access warning.
+  - Python compile could not run in the current Codex shell because both `uv run python` and `.venv\Scripts\python.exe` attempted to launch the missing/broken uv managed interpreter at `C:\Users\hy\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\python.exe`; Ruff parsing still validated syntax for the touched Python files.
+- Prevention:
+  - Treat long-running model calls as normal worker workloads with leases longer than the expected provider latency, and verify provider connectivity from inside the runtime worker container rather than from the host alone.
+
+### 2026-04-30 11:35:00 +08:00 update
+
+- Stage: `CTX-20260430-170` ~ `CTX-20260430-172`
+- Event: Docker logs showed `/v1/jobs/{jobId}` failing with a Pydantic validation error because `JobMetrics.queue_latency_ms` was `-15`; the same log stream also showed unauthenticated Docker liveness probes receiving `401 Unauthorized`.
+- Cause:
+  - Job metrics are derived from persisted timestamps. Small clock, precision, transaction, or write-order skews can make `started_at - submitted_at` slightly negative even though the status response should remain valid.
+  - `/v1/health/live` was protected by `health:read`, but local Docker healthchecks call it without a Bearer token.
+- Action:
+  - Clamped derived job duration metrics to `>= 0` before building `JobMetrics`.
+  - Made `/v1/health/live` unauthenticated for liveness probes, while leaving `/v1/health/ready` protected by `health:read`.
+  - Added integration-test assertions covering a negative queue-latency fixture and unauthenticated liveness behavior.
+- Validation:
+  - `uv run ruff check apps\api\src\cortex_api\services\jobs.py apps\api\src\cortex_api\routers\health.py tests\integration\test_api_auth_jobs.py` passed.
+  - `docker compose -f compose.local.yaml config --quiet` passed, with only the existing user-level Docker `config.json` access warning.
+  - `uv run python -m pytest tests\integration\test_api_auth_jobs.py -q` could not start because the local uv managed interpreter path `C:\Users\hy\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\python.exe` is unavailable in this Codex shell.
+- Prevention:
+  - Treat response metrics as observability summaries, not strict database invariants, and keep liveness endpoints free of application authorization dependencies.
+
+### 2026-04-30 12:10:00 +08:00 update
+
+- Stage: `CTX-20260430-173` ~ `CTX-20260430-175`
+- Event: Docker logs still showed Knowledge/Cognee failures, now as `litellm.RateLimitError: OpenAIException - You exceeded your current quota`, even after Evaluation worker fixes.
+- Cause:
+  - `configs/cortex.runtime.local.yaml` still pointed `knowledge.cognee.llm` and embedding at `OPENAI_*`, so Cognee Add/Cognify used OpenAI quota independently of the Evaluation DeepEval provider.
+  - Cognee/LiteLLM can also read OpenAI-compatible provider settings from process environment variables. Without explicitly syncing the selected Knowledge LLM slot, it can silently pick up stale container OpenAI defaults.
+- Action:
+  - Switched local Cognee LLM refs to `KIMI_MODEL_ID`, `KIMI_BASE_URL`, and `KIMI_API_KEY`.
+  - Switched local Cognee embedding refs to Gemini provider with `GEMINI_EMBEDDING_MODEL_ID`, `GEMINI_EMBEDDING_DIMENSIONS`, and `GEMINI_API_KEY`.
+  - Kept local DeepEval Evaluation/Synthesis refs aligned to `KIMI_*`.
+  - Applied the resolved Cognee LLM slot to `OPENAI_BASE_URL`, `OPENAI_API_URL`, `OPENAI_API_BASE`, `OPENAI_API_KEY`, `LITELLM_API_BASE`, and `LITELLM_API_KEY` before invoking Cognee.
+  - Added fail-fast validation so missing Cognee LLM or embedding credentials produce a Cortex config error instead of falling back to OpenAI defaults.
+- Validation:
+  - `uv run ruff check packages\common\src\cortex_common\openai_compatible.py packages\knowledge\src\cortex_knowledge\runtime.py tests\unit\test_knowledge_helpers.py` passed.
+  - `docker compose -f compose.local.yaml config --quiet` passed, with only the existing user-level Docker `config.json` access warning.
+  - `git diff --check` passed with only existing LF/CRLF warnings.
+  - `uv run python -m pytest tests\unit\test_knowledge_helpers.py -q` could not start because the local uv managed interpreter path `C:\Users\hy\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\python.exe` is unavailable in this Codex shell.
+- Prevention:
+  - Treat Knowledge, Evaluation, and Synthesis as separate model-provider consumers; switching Evaluation to Kimi does not automatically move Cognee unless `knowledge.cognee.llm` is also bound to the desired slot.
+
+### 2026-04-30 12:45:00 +08:00 update
+
+- Stage: `CTX-20260430-176` ~ `CTX-20260430-178`
+- Event: The operator requested a new OpenRouter LLM/Embedding provider slot and wanted Knowledge/Cognee traffic moved to OpenRouter instead of Kimi/Gemini/OpenAI.
+- Cause:
+  - The model-provider contract already supported OpenAI-compatible slots, but OpenRouter was not exposed in env examples or Compose passthrough.
+  - Cognee SDK expects provider labels it understands; using `openrouter` directly as `llm_provider` / `embedding_provider` could fail unless Cortex maps it to the OpenAI-compatible execution path.
+- Action:
+  - Added `OPENROUTER_BASE_URL`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL_ID`, `OPENROUTER_EMBEDDING_MODEL_ID`, and `OPENROUTER_EMBEDDING_DIMENSIONS` to env examples and local/prod Compose passthrough.
+  - Switched Knowledge/Cognee LLM and embedding runtime refs to `OPENROUTER_*` across local/base/staging/prod overlays.
+  - Added a `openrouter -> openai` Cognee provider alias mapping so Cortex config remains semantically OpenRouter while Cognee receives an OpenAI-compatible provider.
+  - Updated README / TensorZero Cortex docs / tech design to describe OpenRouter as the Knowledge default slot.
+- Validation:
+  - `uv run ruff check packages\knowledge\src\cortex_knowledge\runtime.py tests\unit\test_knowledge_helpers.py` passed.
+  - `docker compose -f compose.local.yaml config --quiet` and `docker compose -f compose.prod.yaml config --quiet` passed, with only the existing user-level Docker `config.json` access warning.
+  - Runtime overlay scan confirmed local/base/staging/prod Knowledge LLM and embedding refs now use `OPENROUTER_*`.
+  - `git diff --check` passed with only existing LF/CRLF warnings.
+  - `uv run python -m pytest tests\unit\test_knowledge_helpers.py -q` could not start because the local uv managed interpreter path `C:\Users\hy\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\python.exe` is unavailable in this Codex shell.
+- Prevention:
+  - Keep provider-slot names explicit in Cortex config, but normalize provider labels at SDK adapter boundaries where upstream tools only understand `openai` for OpenAI-compatible gateways.
+
+### 2026-05-02 23:25:00 +08:00 update
+
+- Stage: `CTX-20260502-179` ~ `CTX-20260502-182`
+- Event: The operator requested an Ollama LLM and embedding provider slot for Cortex API runtime configuration, with `.env`, config, Evaluation / Synthesis / Parse review, and documentation updates.
+- Cause:
+  - The provider-slot model already supported OpenAI-compatible services, but Ollama had no explicit env variables, Compose passthrough, runtime overlay, or Cognee provider alias.
+  - Docker containers cannot use `localhost:11434` to reach a host-side Ollama daemon; they need `host.docker.internal:11434` or an equivalent network route.
+- Action:
+  - Added `OLLAMA_BASE_URL`, `OLLAMA_API_KEY`, `OLLAMA_MODEL_ID`, `OLLAMA_EMBEDDING_MODEL_ID`, and `OLLAMA_EMBEDDING_DIMENSIONS` to env examples and local/prod Compose passthrough.
+  - Added `configs/cortex.runtime.ollama.yaml` so Knowledge/Cognee, DeepEval Evaluation, and DeepEval Synthesis can opt into the same local Ollama provider slot without changing the current OpenRouter/Kimi defaults.
+  - Added a `ollama -> openai` Cognee provider alias mapping because Cognee and its OpenAI-compatible clients expect the provider execution path to be named `openai`.
+  - Reviewed Parse runtime config and kept parser engines independent from LLM provider slots; Parse continues to use `parse.engines.*` for Crawl4AI, Jina Reader, LlamaParse, MarkItDown, and Docling.
+  - Added an optional Ollama variant to the TensorZero Cortex example so local model comparisons can include `TENSORZERO_VARIANTS=...,ollama`.
+- Validation:
+  - `uv run ruff check packages\knowledge\src\cortex_knowledge\runtime.py tests\unit\test_knowledge_helpers.py examples\tensorzero-cortex\src\tensorzero_cortex\render_tensorzero_config.py` passed.
+  - `docker compose -f compose.local.yaml config --quiet`, `docker compose -f compose.prod.yaml config --quiet`, and `docker compose -f examples\tensorzero-cortex\tensorzero\docker-compose.tensorzero.yaml config --quiet` passed, with only the existing user-level Docker `config.json` access warning.
+  - Runtime overlay scan confirmed `configs/cortex.runtime.ollama.yaml` binds Knowledge, DeepEval Evaluation, and DeepEval Synthesis to `OLLAMA_*`, while Parse remains on `parse.engines.*`.
+  - `git diff --check` passed with only existing LF/CRLF warnings.
+  - `uv run python -m pytest tests\unit\test_knowledge_helpers.py -q`, `uv run --project examples\tensorzero-cortex python -m py_compile ...`, and `.venv\Scripts\python.exe -m py_compile ...` could not start in this Codex shell because the uv-managed Python path `C:\Users\hy\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\python.exe` is unavailable and `python` is not on `PATH`; Ruff still validated syntax for the touched Python files.
+- Prevention:
+  - Keep local model services as explicit provider slots, document Docker-safe base URLs, and avoid changing production/default bindings when introducing a new local/offline provider.

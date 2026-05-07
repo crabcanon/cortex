@@ -551,11 +551,18 @@ src/cortex_parse/
 
 LLM / Embedding 相关能力统一采用“模型供应商槽位 + runtime 引用”的 OpenAI-compatible provider contract：
 
-- `.env` / secret manager 只声明供应商槽位，例如 `OPENAI_BASE_URL`、`OPENAI_API_KEY`、`OPENAI_MODEL_ID`、`OPENAI_EMBEDDING_MODEL_ID`，以及 `GEMINI_*`、`QWEN_*`、`LOCAL_LLM_*` 等同构变量。
-- runtime YAML 决定不同 API 类型引用哪个槽位，例如 Knowledge 引用 `OPENAI_*`，Evaluation DeepEval 可引用 `GEMINI_*`，Synthesis DeepEval Synthesizer 可引用 `QWEN_*`。
-- `llm_provider`、`embedding_provider`、BAML LLM 等 Cognee SDK 适配字段不是用户必须维护的配置项；Cortex 会在 Cognee adapter 中按 OpenAI-compatible 默认值补齐，并从 `llm_model_ref`、`llm_endpoint_ref`、`llm_api_key_ref` 自动派生 BAML LLM 字段。
+- `.env` / secret manager 只声明供应商槽位，例如 `OPENAI_BASE_URL`、`OPENAI_API_KEY`、`OPENAI_MODEL_ID`、`OPENAI_EMBEDDING_MODEL_ID`，以及 `OPENROUTER_*`、`OLLAMA_*`、`GEMINI_*`、`QWEN_*`、`LOCAL_LLM_*` 等同构变量。
+- runtime YAML 决定不同 API 类型引用哪个槽位，例如 Knowledge 引用 `OPENROUTER_*`，Evaluation DeepEval 可引用 `KIMI_*`，Synthesis DeepEval Synthesizer 可引用 `QWEN_*`，也可以通过 `configs/cortex.runtime.ollama.yaml` 把 Knowledge、Evaluation 和 Synthesis 统一切到本地 `OLLAMA_*`。
+- `llm_provider`、`embedding_provider`、BAML LLM 等 Cognee SDK 适配字段不是用户必须维护的配置项；Cortex 会在 Cognee adapter 中按 OpenAI-compatible 默认值补齐，并从 `llm_model_ref`、`llm_endpoint_ref`、`llm_api_key_ref` 自动派生 BAML LLM 字段。`openrouter` 与 `ollama` 作为 Cortex provider alias 会在调用 Cognee SDK 前映射为 OpenAI-compatible provider。
 - DeepEval 与 DeepEval Synthesizer 通过 runtime schema 中的 `model_ref`、`api_url_ref`、`api_key_ref` 读取当前引擎引用的 provider 槽位，并在运行前同步设置 `OPENAI_API_URL`、`OPENAI_BASE_URL`、`OPENAI_API_BASE`、`LITELLM_API_BASE`，兼容 OpenAI SDK、LiteLLM 与 DeepEval 的常见读取方式。
 - EvalScope 不引入模型供应商 API Key 字段；它要么调用外部 EvalScope HTTP service，要么在 runtime worker 内以 Python SDK self-hosted service 模式运行，外部服务鉴权通过 `evaluation.engines.evalscope.headers` 表达。
+
+Ollama 接入约定：
+
+- 使用 Ollama 的 OpenAI-compatible `/v1` 协议，宿主机直接访问可写 `http://localhost:11434/v1`，Docker Compose 内推荐写 `http://host.docker.internal:11434/v1`。
+- `OLLAMA_API_KEY=ollama` 是 OpenAI SDK / TensorZero 等兼容客户端要求的非空占位值；Ollama 本地服务默认会忽略这个值。
+- `OLLAMA_MODEL_ID` 与 `OLLAMA_EMBEDDING_MODEL_ID` 必须先在宿主机 `ollama pull`。默认示例使用 `llama3.1:8b` 和 `nomic-embed-text`，embedding 维度按 `768` 配置；如果改用其他 embedding 模型，需要同步更新 `OLLAMA_EMBEDDING_DIMENSIONS`。
+- Parse 域不默认消费 LLM provider slot；Crawl4AI、Jina Reader、LlamaParse、MarkItDown、Docling 仍通过 `parse.engines.*` 独立配置。Evaluation / Synthesis 的 DeepEval 引擎、Knowledge 的 Cognee 通过 runtime refs 引用 `OLLAMA_*`。
 
 推荐约定：
 
@@ -1505,6 +1512,17 @@ Cortex 的认证层保持厂商中立，但应遵循行业通用标准：
 - `observability:read`
 - `admin:read`
 - `admin:write`
+
+探针端点的权限边界：
+
+- `/v1/health/live` 面向 Docker / Kubernetes liveness probe，必须允许无鉴权访问，避免容器健康检查因缺少 Bearer token 被误判为失败。
+- `/v1/health/ready` 会触达依赖状态，仍按受保护 API 处理，需要 `health:read`。
+
+Knowledge / Cognee 模型槽位边界：
+
+- 本地 `configs/cortex.runtime.local.yaml` 默认将 Cognee LLM 与 embedding 绑定到 `OPENROUTER_*`，避免 Add / Cognify 阶段继续消耗 OpenAI 默认额度；OpenRouter base URL 默认为 `https://openrouter.ai/api/v1`，embedding 可使用 OpenRouter 支持的 embedding model，例如 `openai/text-embedding-3-small`。
+- Cortex 在构建 Cognee runtime 时会把已解析的 LLM endpoint/key 同步到 `OPENAI_BASE_URL`、`OPENAI_API_URL`、`OPENAI_API_BASE`、`OPENAI_API_KEY`、`LITELLM_API_BASE`、`LITELLM_API_KEY`，兼容 Cognee / LiteLLM 读取 OpenAI-compatible 环境变量的路径。
+- 如果所选 provider 槽位缺少 model 或 API key，Cortex 会直接抛出配置错误，不再允许 Cognee 静默回落到容器中的 OpenAI 默认环境变量。
 
 最佳实践是让 access token 只携带粗粒度功能权限，不把大规模资源白名单直接塞进 token。
 

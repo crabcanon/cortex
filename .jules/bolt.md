@@ -1,0 +1,3 @@
+## 2025-03-05 - Avoid using array indexing on repository list methods for aggregations
+**Learning:** In the Cortex database layer, fetching an entire list using `list_for_job` merely to extract the maximum sequence number (e.g., `list_for_job(limit=1000)[-1]`) introduces severe N+1 query-like inefficiencies because it forces SQLAlchemy to fetch, parse, and instantiate potentially thousands of unneeded model objects.
+**Action:** When only an aggregate scalar value (like maximum sequence number) is needed from a repository, always use direct SQLAlchemy aggregation queries (e.g., `select(func.coalesce(func.max(Model.field), 0))`) in a dedicated repository method to ensure $O(1)$ efficiency.

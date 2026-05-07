@@ -28,6 +28,15 @@ api_base = "${KIMI_BASE_URL}"
 api_key_location = "env::KIMI_API_KEY"
 model_name = "${KIMI_MODEL_ID}"
 
+[models.ollama_finance]
+routing = ["ollama_openai_compatible"]
+
+[models.ollama_finance.providers.ollama_openai_compatible]
+type = "openai"
+api_base = "${OLLAMA_BASE_URL}"
+api_key_location = "env::OLLAMA_API_KEY"
+model_name = "${OLLAMA_MODEL_ID}"
+
 [functions.cortex_rag_answer]
 type = "json"
 output_schema = "schemas/rag_answer.schema.json"
@@ -37,7 +46,7 @@ type = "chat_completion"
 model = "openai_finance"
 templates.system.path = "templates/rag_system.minijinja"
 temperature = 0.1
-max_tokens = 900
+max_tokens = 2200
 json_mode = "strict"
 
 [functions.cortex_rag_answer.variants.gemini]
@@ -45,7 +54,7 @@ type = "chat_completion"
 model = "gemini_finance"
 templates.system.path = "templates/rag_system.minijinja"
 temperature = 0.1
-max_tokens = 900
+max_tokens = 2200
 json_mode = "strict"
 
 [functions.cortex_rag_answer.variants.kimi]
@@ -53,7 +62,15 @@ type = "chat_completion"
 model = "kimi_finance"
 templates.system.path = "templates/rag_system.minijinja"
 temperature = 0.1
-max_tokens = 900
+max_tokens = 2200
+json_mode = "strict"
+
+[functions.cortex_rag_answer.variants.ollama]
+type = "chat_completion"
+model = "ollama_finance"
+templates.system.path = "templates/rag_system.minijinja"
+temperature = 0.1
+max_tokens = 2200
 json_mode = "strict"
 
 [functions.cortex_rag_answer.experimentation]

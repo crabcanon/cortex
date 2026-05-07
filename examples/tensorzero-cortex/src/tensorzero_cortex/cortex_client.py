@@ -211,6 +211,39 @@ class CortexClient:
         }
         return self.post("/v1/knowledge/add/jobs", json_body=payload)
 
+    def add_texts_to_knowledge(
+        self,
+        *,
+        dataset_key: str,
+        documents: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        inputs = [
+            {
+                "input_type": "text",
+                "text": str(document["text"]),
+                "label": str(document.get("label") or "Parsed Markdown"),
+                "node_set": ["tensorzero", "finance", "parsed_markdown"],
+                "metadata": {
+                    "source": "parse_artifact",
+                    "example": "tensorzero-cortex",
+                    **dict(document.get("metadata") or {}),
+                },
+            }
+            for document in documents
+            if str(document.get("text") or "").strip()
+        ]
+        payload = {
+            "dataset_key": dataset_key,
+            "inputs": inputs,
+            "options": {
+                "normalize_text": True,
+                "structured_ingest": True,
+                "incremental": True,
+                "persist_source_copy": True,
+            },
+        }
+        return self.post("/v1/knowledge/add/jobs", json_body=payload)
+
     def cognify(self, *, dataset_key: str) -> dict[str, Any]:
         payload = {
             "dataset_key": dataset_key,
@@ -253,10 +286,26 @@ class CortexClient:
         }
         return self.post("/v1/knowledge/search", json_body=payload)
 
-    def run_eval_sync(self, *, name: str, test_cases: list[dict[str, Any]]) -> dict[str, Any]:
+    def run_eval_sync(
+        self,
+        *,
+        name: str,
+        test_cases: list[dict[str, Any]],
+        eval_type: str = "rag",
+        engine_id: str = "deepeval",
+        metrics: list[dict[str, Any]] | None = None,
+        persist_report_object: bool = True,
+    ) -> dict[str, Any]:
         return self.post(
             "/v1/eval/sync",
-            json_body=self._eval_payload(name=name, test_cases=test_cases),
+            json_body=self._eval_payload(
+                name=name,
+                test_cases=test_cases,
+                eval_type=eval_type,
+                engine_id=engine_id,
+                metrics=metrics,
+                persist_report_object=persist_report_object,
+            ),
         )
 
     def run_eval_async(
@@ -264,11 +313,22 @@ class CortexClient:
         *,
         name: str,
         test_cases: list[dict[str, Any]],
+        eval_type: str = "rag",
+        engine_id: str = "deepeval",
+        metrics: list[dict[str, Any]] | None = None,
+        persist_report_object: bool = True,
         timeout_seconds: int = 1200,
     ) -> dict[str, Any]:
         accepted = self.post(
             "/v1/eval/jobs",
-            json_body=self._eval_payload(name=name, test_cases=test_cases),
+            json_body=self._eval_payload(
+                name=name,
+                test_cases=test_cases,
+                eval_type=eval_type,
+                engine_id=engine_id,
+                metrics=metrics,
+                persist_report_object=persist_report_object,
+            ),
         )
         job_id = str(accepted["job_id"])
         job = self.wait_job(job_id, timeout_seconds=timeout_seconds)
@@ -302,20 +362,24 @@ class CortexClient:
         )
 
     @staticmethod
-    def _eval_payload(*, name: str, test_cases: list[dict[str, Any]]) -> dict[str, Any]:
+    def _eval_payload(
+        *,
+        name: str,
+        test_cases: list[dict[str, Any]],
+        eval_type: str,
+        engine_id: str,
+        metrics: list[dict[str, Any]] | None,
+        persist_report_object: bool,
+    ) -> dict[str, Any]:
         return {
             "name": name,
-            "eval_type": "rag",
-            "engine_id": "deepeval",
+            "eval_type": eval_type,
+            "engine_id": engine_id,
             "input": {"type": "inline_test_cases", "test_cases": test_cases},
             "target": {"type": "existing_outputs"},
-            "metrics": [
-                {"metric_key": "rag.answer_relevancy", "threshold": 0.65, "weight": 0.4},
-                {"metric_key": "rag.faithfulness", "threshold": 0.65, "weight": 0.4},
-                {"metric_key": "rag.contextual_relevancy", "threshold": 0.6, "weight": 0.2},
-            ],
+            "metrics": metrics or _default_eval_metrics(eval_type),
             "output": {
-                "persist_report_object": True,
+                "persist_report_object": persist_report_object,
                 "include_sample_results": True,
                 "max_failures_reported": 20,
             },
@@ -362,3 +426,32 @@ class CortexClient:
 def write_json(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _default_eval_metrics(eval_type: str) -> list[dict[str, Any]]:
+    normalized = eval_type.strip().lower()
+    if normalized == "rag":
+        return [
+            {"metric_key": "rag.answer_relevance", "threshold": 0.65, "weight": 0.25},
+            {"metric_key": "rag.faithfulness", "threshold": 0.65, "weight": 0.25},
+            {"metric_key": "rag.contextual_precision", "threshold": 0.6, "weight": 0.2},
+            {"metric_key": "rag.contextual_recall", "threshold": 0.6, "weight": 0.2},
+            {"metric_key": "rag.contextual_relevance", "threshold": 0.6, "weight": 0.1},
+        ]
+    if normalized == "agentic":
+        return [
+            {"metric_key": "agent.task_completion", "threshold": 0.7, "weight": 0.45},
+            {"metric_key": "agent.goal_success", "threshold": 0.7, "weight": 0.35},
+            {"metric_key": "agent.reasoning_quality", "threshold": 0.65, "weight": 0.2},
+        ]
+    if normalized == "multi_turn":
+        return [
+            {"metric_key": "dialog.conversation_relevancy", "threshold": 0.7, "weight": 0.5},
+            {"metric_key": "dialog.conversation_completeness", "threshold": 0.7, "weight": 0.5},
+        ]
+    return [
+        {"metric_key": "quality.correctness", "threshold": 0.65, "weight": 0.35},
+        {"metric_key": "quality.completeness", "threshold": 0.65, "weight": 0.25},
+        {"metric_key": "quality.relevance", "threshold": 0.65, "weight": 0.25},
+        {"metric_key": "custom.g_eval", "threshold": 0.65, "weight": 0.15},
+    ]

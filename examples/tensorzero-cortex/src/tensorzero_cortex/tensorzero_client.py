@@ -49,7 +49,15 @@ class TensorZeroClient:
             f"{self.gateway_url}/status. Last error: {last_error}"
         )
 
-    def inference(self, *, question: str, context: str, metadata: dict[str, Any]) -> dict[str, Any]:
+    def inference(
+        self,
+        *,
+        question: str,
+        context: str,
+        metadata: dict[str, Any],
+        variant_name: str | None = None,
+        include_raw_response: bool = False,
+    ) -> dict[str, Any]:
         user_content = (
             "Question:\n"
             f"{question}\n\n"
@@ -58,10 +66,14 @@ class TensorZeroClient:
             "Metadata:\n"
             f"{json.dumps(metadata, ensure_ascii=False)}"
         )
-        payload = {
+        payload: dict[str, Any] = {
             "function_name": "cortex_rag_answer",
             "input": {"messages": [{"role": "user", "content": user_content}]},
         }
+        if variant_name:
+            payload["variant_name"] = variant_name
+        if include_raw_response:
+            payload["include_original_response"] = True
         response = self._client.post(f"{self.gateway_url}/inference", json=payload)
         if response.status_code >= 400:
             raise TensorZeroError(
@@ -73,10 +85,19 @@ class TensorZeroClient:
             "inference_id": data.get("inference_id"),
             "episode_id": data.get("episode_id"),
             "variant_name": data.get("variant_name") or data.get("variant"),
+            "usage": data.get("usage") or {},
+            "finish_reason": data.get("finish_reason"),
             "output": _extract_output(data),
         }
 
-    def feedback(self, *, metric_name: str, value: float | bool, inference_id: str | None) -> None:
+    def feedback(
+        self,
+        *,
+        metric_name: str,
+        value: float | bool,
+        inference_id: str | None,
+        tags: dict[str, str] | None = None,
+    ) -> None:
         if not inference_id:
             return
         payload = {
@@ -84,6 +105,8 @@ class TensorZeroClient:
             "value": value,
             "inference_id": inference_id,
         }
+        if tags:
+            payload["tags"] = tags
         response = self._client.post(f"{self.gateway_url}/feedback", json=payload)
         if response.status_code >= 400:
             raise TensorZeroError(
@@ -92,6 +115,20 @@ class TensorZeroClient:
 
 
 def _extract_output(data: dict[str, Any]) -> Any:
+    output = data.get("output")
+    if isinstance(output, dict):
+        parsed = output.get("parsed")
+        if parsed is not None:
+            return parsed
+        raw = output.get("raw")
+        if isinstance(raw, str):
+            try:
+                return json.loads(raw)
+            except json.JSONDecodeError:
+                return raw
+        return output
+    if output is not None:
+        return output
     for key in ("output", "parsed", "value"):
         if key in data:
             return data[key]

@@ -15,6 +15,8 @@ DEFAULTS = {
     "GEMINI_MODEL_ID": "gemini-2.5-flash",
     "KIMI_BASE_URL": "https://api.moonshot.cn/v1",
     "KIMI_MODEL_ID": "kimi-k2-0905-preview",
+    "OLLAMA_BASE_URL": "http://host.docker.internal:11434/v1",
+    "OLLAMA_MODEL_ID": "llama3.1:8b",
 }
 
 

@@ -55,6 +55,11 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       KIMI_API_KEY: ${KIMI_API_KEY:-}
+      OLLAMA_API_KEY: ${OLLAMA_API_KEY:-ollama}
+      HTTP_PROXY: ${HTTP_PROXY:-}
+      HTTPS_PROXY: ${HTTPS_PROXY:-}
+      ALL_PROXY: ${ALL_PROXY:-}
+      NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1,::1,clickhouse,postgres,gateway,ui}
     ports:
       - "${TENSORZERO_GATEWAY_HOST_PORT:-3002}:3000"
     extra_hosts:

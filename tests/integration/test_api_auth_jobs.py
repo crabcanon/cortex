@@ -4,7 +4,7 @@ import asyncio
 import base64
 import json
 import time
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -52,6 +52,7 @@ async def _seed_api_fixture(db_path: Path) -> None:
     session_factory = create_session_factory(engine)
     try:
         async with CortexUnitOfWork(session_factory) as uow:
+            now = datetime.now(UTC)
             await uow.tenants.add(
                 TenantRecord(
                     tenant_id="tenant_api",
@@ -67,8 +68,8 @@ async def _seed_api_fixture(db_path: Path) -> None:
                     job_type=JobType.PARSE,
                     status=JobStatus.RUNNING,
                     operation_name="parse_url",
-                    submitted_at=datetime.now(UTC),
-                    started_at=datetime.now(UTC),
+                    submitted_at=now,
+                    started_at=now - timedelta(milliseconds=15),
                     trace_id="trace-job-api",
                     span_id="span-job-api",
                     request_id="req-job-api",
@@ -135,6 +136,7 @@ def test_health_and_job_endpoints_round_trip(monkeypatch: pytest.MonkeyPatch) ->
     assert ready_response.json()["checks"][0]["name"] == "relational-db"
     assert job_response.status_code == 200
     assert job_response.json()["status"] == "running"
+    assert job_response.json()["metrics"]["queue_latency_ms"] == 0
     assert events_response.status_code == 200
     assert events_response.json()[0]["event_type"] == "job.running"
     assert cancel_response.status_code == 202
@@ -173,12 +175,15 @@ def test_missing_bearer_token_returns_unauthorized(monkeypatch: pytest.MonkeyPat
     asyncio.run(_seed_api_fixture(db_path))
 
     with _build_client(monkeypatch, db_path) as client:
-        response = client.get("/v1/health/live")
+        live_response = client.get("/v1/health/live")
+        ready_response = client.get("/v1/health/ready")
 
     load_settings.cache_clear()
 
-    assert response.status_code == 401
-    assert response.json()["error_code"] == "missing_authorization"
+    assert live_response.status_code == 200
+    assert live_response.json()["mode"] == "live"
+    assert ready_response.status_code == 401
+    assert ready_response.json()["error_code"] == "missing_authorization"
 
 
 def test_local_dev_token_endpoint_issues_swagger_ready_token(

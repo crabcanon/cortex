@@ -23,7 +23,7 @@ from cortex_domain import JobEventRecord, JobRecord, JobStatus
 def _duration_ms(started_at: datetime | None, finished_at: datetime | None) -> int | None:
     if started_at is None or finished_at is None:
         return None
-    return int((finished_at - started_at).total_seconds() * 1000)
+    return max(0, int((finished_at - started_at).total_seconds() * 1000))
 
 
 def _to_job_status(job: JobRecord) -> JobStatusDetail:

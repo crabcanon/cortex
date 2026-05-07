@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from dataclasses import dataclass
 
 import pytest
@@ -17,7 +18,12 @@ from cortex_contracts import (
 )
 from cortex_domain import DatasetRecord
 from cortex_knowledge.operations import KnowledgeOperationService, KnowledgeSearchService
-from cortex_knowledge.runtime import DisabledCogneeRuntime, build_cognee_runtime
+from cortex_knowledge.runtime import (
+    DisabledCogneeRuntime,
+    _apply_cognee_model_environment,
+    _normalize_provider_payload,
+    build_cognee_runtime,
+)
 from cortex_knowledge.service import KnowledgeDatasetService
 
 
@@ -131,3 +137,68 @@ def test_knowledge_search_service_normalizes_result_variants() -> None:
     assert response.graph_paths[0].nodes[0]["id"] == "n1"
     assert response.telemetry is not None
     assert response.telemetry.trace_id == "trace_1"
+
+
+def test_cognee_llm_config_sets_openai_compatible_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    for env_key in (
+        "OPENAI_BASE_URL",
+        "OPENAI_API_URL",
+        "OPENAI_API_BASE",
+        "OPENAI_API_KEY",
+        "LITELLM_API_BASE",
+        "LITELLM_API_KEY",
+    ):
+        monkeypatch.delenv(env_key, raising=False)
+
+    payload = _normalize_provider_payload(
+        "llm",
+        {
+            "llm_provider": "openrouter",
+            "llm_model": "kimi-k2-0905-preview",
+            "llm_endpoint": "https://api.moonshot.cn/v1",
+            "llm_api_key": "test-key",
+        },
+    )
+    _apply_cognee_model_environment({"llm": payload})
+
+    assert payload["baml_llm_endpoint"] == "https://api.moonshot.cn/v1"
+    assert payload["baml_llm_api_key"] == "test-key"
+    assert payload["llm_provider"] == "openai"
+    assert payload["baml_llm_provider"] == "openai"
+    assert os.environ["OPENAI_BASE_URL"] == "https://api.moonshot.cn/v1"
+    assert os.environ["OPENAI_API_BASE"] == "https://api.moonshot.cn/v1"
+    assert os.environ["LITELLM_API_BASE"] == "https://api.moonshot.cn/v1"
+    assert os.environ["OPENAI_API_KEY"] == "test-key"
+    assert os.environ["LITELLM_API_KEY"] == "test-key"
+
+
+def test_cognee_provider_payload_requires_explicit_credentials() -> None:
+    with pytest.raises(ConfigError, match="Cognee LLM runtime configuration is incomplete"):
+        _normalize_provider_payload(
+            "llm",
+            {
+                "llm_model": "kimi-k2-0905-preview",
+                "llm_endpoint": "https://api.moonshot.cn/v1",
+            },
+        )
+
+
+@pytest.mark.parametrize("provider", ["openrouter", "ollama"])
+def test_cognee_openai_compatible_embedding_aliases_map_to_openai(provider: str) -> None:
+    payload = _normalize_provider_payload(
+        "embedding",
+        {
+            "embedding_provider": provider,
+            "embedding_model": "openai/text-embedding-3-small",
+            "embedding_endpoint": "http://host.docker.internal:11434/v1",
+            "embedding_api_key": "test-provider-key",
+            "embedding_dimensions": "1536",
+        },
+    )
+
+    assert payload["embedding_provider"] == "openai"
+    assert payload["embedding_model"] == "openai/text-embedding-3-small"
+    assert payload["embedding_endpoint"] == "http://host.docker.internal:11434/v1"
+    assert payload["embedding_dimensions"] == 1536

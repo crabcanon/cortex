@@ -14,7 +14,14 @@ from pathlib import Path
 from typing import Any, cast
 from urllib.parse import unquote, urlparse
 
-from cortex_common import CogneeSettings, ConfigError, LoadedRuntimeConfig, load_runtime_config
+from cortex_common import (
+    CogneeSettings,
+    ConfigError,
+    LoadedRuntimeConfig,
+    OpenAICompatibleConfig,
+    apply_openai_compatible_environment,
+    load_runtime_config,
+)
 
 from .models import CogneeRuntimeDescriptor, CogneeRuntimeProtocol
 
@@ -130,6 +137,7 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
         )
         self._module = _load_cognee_module() if available else None
         if self._module is not None:
+            _apply_cognee_model_environment(self._config)
             self._apply_config()
 
     @property
@@ -494,17 +502,81 @@ def _normalize_provider_payload(field_name: str, payload: dict[str, Any]) -> dic
     normalized = dict(payload)
     if field_name == "llm" and normalized:
         normalized.setdefault("llm_provider", "openai")
+        normalized["llm_provider"] = _cognee_openai_compatible_provider(
+            normalized.get("llm_provider")
+        )
         normalized.setdefault("baml_llm_provider", normalized.get("llm_provider", "openai"))
+        normalized["baml_llm_provider"] = _cognee_openai_compatible_provider(
+            normalized.get("baml_llm_provider")
+        )
         _copy_if_absent(normalized, source_key="llm_model", target_key="baml_llm_model")
         _copy_if_absent(normalized, source_key="llm_endpoint", target_key="baml_llm_endpoint")
         _copy_if_absent(normalized, source_key="llm_api_key", target_key="baml_llm_api_key")
+        _require_provider_values(
+            normalized,
+            field_name="Cognee LLM",
+            required_keys=("llm_model", "llm_api_key"),
+        )
         return normalized
     if field_name == "embedding" and normalized:
         normalized.setdefault("embedding_provider", "openai")
+        provider = _cognee_openai_compatible_provider(normalized.get("embedding_provider"))
+        normalized["embedding_provider"] = provider
+        model = normalized.get("embedding_model")
+        if provider == "gemini" and isinstance(model, str) and "/" not in model:
+            normalized["embedding_model"] = f"gemini/{model.strip()}"
         dimensions = normalized.get("embedding_dimensions")
         if isinstance(dimensions, str) and dimensions.strip().isdigit():
             normalized["embedding_dimensions"] = int(dimensions.strip())
+        _require_provider_values(
+            normalized,
+            field_name="Cognee embedding",
+            required_keys=("embedding_model", "embedding_api_key"),
+        )
     return normalized
+
+
+def _cognee_openai_compatible_provider(value: Any) -> str:
+    provider = str(value or "openai").strip().lower()
+    if provider in {"ollama", "openrouter", "openai-compatible", "openai_compatible"}:
+        return "openai"
+    return provider
+
+
+def _apply_cognee_model_environment(config: dict[str, Any]) -> None:
+    llm = config.get("llm")
+    if not isinstance(llm, dict):
+        return
+    apply_openai_compatible_environment(
+        OpenAICompatibleConfig(
+            api_url=_strip_optional_string(llm.get("llm_endpoint")),
+            api_key=_strip_optional_string(llm.get("llm_api_key")),
+        )
+    )
+
+
+def _require_provider_values(
+    payload: dict[str, Any],
+    *,
+    field_name: str,
+    required_keys: tuple[str, ...],
+) -> None:
+    missing = [
+        key
+        for key in required_keys
+        if not isinstance(payload.get(key), str) or not str(payload.get(key)).strip()
+    ]
+    if missing:
+        raise ConfigError(
+            f"{field_name} runtime configuration is incomplete. Missing: {', '.join(missing)}."
+        )
+
+
+def _strip_optional_string(value: Any) -> str | None:
+    if not isinstance(value, str):
+        return None
+    stripped = value.strip()
+    return stripped or None
 
 
 def _copy_if_absent(

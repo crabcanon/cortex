@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -38,6 +39,17 @@ from cortex_observability import get_trace_context
 
 QUEUE_CONTEXT_KEY = "evaluation_worker"
 DEFAULT_EXECUTION_TIMEOUT_SECONDS = 1800
+_SECRET_LIKE_PATTERN = re.compile(
+    r"(?i)"
+    r"(api[_ -]?key(?:\s+provided)?[:=]?\s*)"
+    r"(['\"]?)"
+    r"("
+    r"sk-[A-Za-z0-9_-]{8,}"
+    r"|AIza[A-Za-z0-9_\-*]{8,}"
+    r"|[A-Za-z0-9_-]{4,}\*{4,}[A-Za-z0-9_-]{2,}"
+    r")"
+    r"(['\"]?)"
+)
 
 
 class EvaluationJobControlService:
@@ -294,16 +306,18 @@ class EvaluationJobControlService:
     async def record_failed(
         self, *, uow: CortexUnitOfWork, job: JobRecord, error: Exception
     ) -> str:
+        error_message = _redact_error_message(str(error) or error.__class__.__name__)
+        error_code = getattr(error, "code", None) or "evaluation_worker_failed"
         state = self._queue_state(job)
-        state["last_error"] = str(error)
-        state["last_error_code"] = getattr(error, "code", "evaluation_worker_failed")
+        state["last_error"] = error_message
+        state["last_error_code"] = error_code
         state["lease_owner"] = None
         state["lease_expires_at"] = None
         run = await self.get_run_by_job(uow=uow, job_id=job.job_id)
         run.summary_results = {
             "status": "failed",
-            "error_code": getattr(error, "code", "evaluation_worker_failed"),
-            "error_message": str(error),
+            "error_code": error_code,
+            "error_message": error_message,
         }
         if self._attempts_remaining(state):
             state["status"] = "queued"
@@ -329,8 +343,8 @@ class EvaluationJobControlService:
             job.job_id,
             status=JobStatus.FAILED,
             finished_at=utc_now(),
-            error_code=getattr(error, "code", "evaluation_worker_failed"),
-            error_message=str(error),
+            error_code=error_code,
+            error_message=error_message,
             deployment_context=self._with_queue_state(job, state),
         )
         await uow.eval_runs.update(run)
@@ -439,6 +453,10 @@ def _metric_record(
         sample_size=metric.sample_size,
         details=metric.details,
     )
+
+
+def _redact_error_message(message: str) -> str:
+    return _SECRET_LIKE_PATTERN.sub(r"\1\2<redacted>\4", message)
 
 
 def _artifact_object_id(result: EvalRunResult, *, preferred_label: str) -> str | None:

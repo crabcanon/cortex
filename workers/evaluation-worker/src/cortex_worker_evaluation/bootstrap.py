@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from dataclasses import dataclass
+from time import monotonic
 
 from cortex_common import (
     CortexError,
@@ -43,12 +45,21 @@ class EvaluationWorkerRunResult:
 @dataclass(slots=True)
 class EvaluationWorkerConfig:
     worker_id: str
-    lease_seconds: int = 60
-    heartbeat_interval_seconds: int = 15
+    lease_seconds: int = 300
+    heartbeat_interval_seconds: int = 30
 
     @classmethod
     def create(cls, worker_id: str | None = None) -> EvaluationWorkerConfig:
-        return cls(worker_id=worker_id or new_prefixed_id("eworker"))
+        lease_seconds = _int_env("CORTEX_EVALUATION_WORKER_LEASE_SECONDS", 300)
+        heartbeat_interval_seconds = _int_env(
+            "CORTEX_EVALUATION_WORKER_HEARTBEAT_INTERVAL_SECONDS",
+            min(30, max(5, lease_seconds // 3)),
+        )
+        return cls(
+            worker_id=worker_id or new_prefixed_id("eworker"),
+            lease_seconds=lease_seconds,
+            heartbeat_interval_seconds=min(heartbeat_interval_seconds, lease_seconds),
+        )
 
 
 class EvaluationWorker:
@@ -101,10 +112,23 @@ class EvaluationWorker:
                     storage_service=self._storage_service,
                     request=request,
                 )
-                result = await asyncio.wait_for(
-                    self._evaluation_service.run(request),
-                    timeout=timeout_seconds,
-                )
+                started_at = monotonic()
+                try:
+                    result = await asyncio.wait_for(
+                        self._evaluation_service.run(request),
+                        timeout=timeout_seconds,
+                    )
+                except TimeoutError as exc:
+                    if _elapsed_reached_timeout(started_at, timeout_seconds):
+                        raise CortexError(
+                            code="evaluation_worker_timeout",
+                            detail=(
+                                "Evaluation job exceeded timeout budget of "
+                                f"{timeout_seconds} seconds."
+                            ),
+                            status_code=504,
+                        ) from exc
+                    raise
                 result.job_id = current_job.job_id
                 run = await self._job_service.get_run_by_job(uow=uow, job_id=current_job.job_id)
                 result.eval_run_id = run.eval_run_id
@@ -125,13 +149,6 @@ class EvaluationWorker:
                     job_id=current_job.job_id,
                     eval_run_id=run.eval_run_id,
                 )
-        except TimeoutError:
-            error = CortexError(
-                code="evaluation_worker_timeout",
-                detail=f"Evaluation job exceeded timeout budget of {timeout_seconds} seconds.",
-                status_code=504,
-            )
-            return await self._record_failure(job.job_id, error)
         except Exception as exc:
             return await self._record_failure(job.job_id, exc)
         finally:
@@ -210,3 +227,17 @@ def build_worker(settings: CortexSettings | None = None) -> EvaluationWorkerRunt
 
 def bootstrap_message() -> str:
     return "cortex evaluation worker bootstrap ready"
+
+
+def _int_env(name: str, default: int) -> int:
+    raw_value = os.getenv(name)
+    if raw_value is None or raw_value.strip() == "":
+        return max(1, default)
+    try:
+        return max(1, int(raw_value))
+    except ValueError:
+        return max(1, default)
+
+
+def _elapsed_reached_timeout(started_at: float, timeout_seconds: int) -> bool:
+    return monotonic() - started_at >= max(0.0, float(timeout_seconds) - 1.0)

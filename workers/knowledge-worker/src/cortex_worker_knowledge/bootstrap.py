@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from dataclasses import dataclass
+from time import monotonic
 
 from cortex_common import (
     CortexError,
@@ -47,12 +49,21 @@ class KnowledgeWorkerRunResult:
 @dataclass(slots=True)
 class KnowledgeWorkerConfig:
     worker_id: str
-    lease_seconds: int = 60
-    heartbeat_interval_seconds: int = 15
+    lease_seconds: int = 300
+    heartbeat_interval_seconds: int = 30
 
     @classmethod
     def create(cls, worker_id: str | None = None) -> KnowledgeWorkerConfig:
-        return cls(worker_id=worker_id or new_prefixed_id("kworker"))
+        lease_seconds = _int_env("CORTEX_KNOWLEDGE_WORKER_LEASE_SECONDS", 300)
+        heartbeat_interval_seconds = _int_env(
+            "CORTEX_KNOWLEDGE_WORKER_HEARTBEAT_INTERVAL_SECONDS",
+            min(30, max(5, lease_seconds // 3)),
+        )
+        return cls(
+            worker_id=worker_id or new_prefixed_id("kworker"),
+            lease_seconds=lease_seconds,
+            heartbeat_interval_seconds=min(heartbeat_interval_seconds, lease_seconds),
+        )
 
 
 class KnowledgeWorker:
@@ -100,13 +111,26 @@ class KnowledgeWorker:
                         job_id=job.job_id,
                         message="Claimed knowledge job disappeared before execution.",
                     )
-                result = await asyncio.wait_for(
-                    self._operation_service.execute_job(
-                        uow=uow,
-                        job=current_job,
-                    ),
-                    timeout=timeout_seconds,
-                )
+                started_at = monotonic()
+                try:
+                    result = await asyncio.wait_for(
+                        self._operation_service.execute_job(
+                            uow=uow,
+                            job=current_job,
+                        ),
+                        timeout=timeout_seconds,
+                    )
+                except TimeoutError as exc:
+                    if _elapsed_reached_timeout(started_at, timeout_seconds):
+                        raise CortexError(
+                            code="knowledge_worker_timeout",
+                            detail=(
+                                "Knowledge job exceeded timeout budget of "
+                                f"{timeout_seconds} seconds."
+                            ),
+                            status_code=504,
+                        ) from exc
+                    raise
                 await self._job_service.record_succeeded(
                     uow=uow,
                     job=current_job,
@@ -118,16 +142,6 @@ class KnowledgeWorker:
                     knowledge_run_id=result.knowledge_run_id,
                     dataset_id=result.dataset_id,
                 )
-        except TimeoutError:
-            error = CortexError(
-                code="knowledge_worker_timeout",
-                detail=(
-                    "Knowledge job exceeded timeout budget of "
-                    f"{timeout_seconds} seconds."
-                ),
-                status_code=504,
-            )
-            return await self._record_failure(job.job_id, error)
         except Exception as exc:
             return await self._record_failure(job.job_id, exc)
         finally:
@@ -235,3 +249,17 @@ def build_worker(settings: CortexSettings | None = None) -> KnowledgeWorkerRunti
 def bootstrap_message() -> str:
     """Return a stable bootstrap message for smoke tests."""
     return "cortex knowledge worker bootstrap ready"
+
+
+def _int_env(name: str, default: int) -> int:
+    raw_value = os.getenv(name)
+    if raw_value is None or raw_value.strip() == "":
+        return max(1, default)
+    try:
+        return max(1, int(raw_value))
+    except ValueError:
+        return max(1, default)
+
+
+def _elapsed_reached_timeout(started_at: float, timeout_seconds: int) -> bool:
+    return monotonic() - started_at >= max(0.0, float(timeout_seconds) - 1.0)

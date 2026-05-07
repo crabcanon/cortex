@@ -5,9 +5,11 @@ from __future__ import annotations
 import asyncio
 import importlib
 import inspect
+import json
 import threading
 import time
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 from cortex_common import (
@@ -412,6 +414,11 @@ class DeepEvalEvaluationEngine:
         apply_openai_compatible_environment(self._provider_config)
         metrics_module = importlib.import_module("deepeval.metrics")
         test_case_module = importlib.import_module("deepeval.test_case")
+        judge_model = _build_deepeval_judge_model(
+            model=self._model,
+            provider_config=self._provider_config,
+            options=self._options,
+        )
         metric_requests = request.metrics or _default_metric_requests(request.eval_type)
         started_at = utc_now()
         metric_results = await asyncio.gather(
@@ -421,6 +428,7 @@ class DeepEvalEvaluationEngine:
                     metric_request=metric_request,
                     metrics_module=metrics_module,
                     test_case_module=test_case_module,
+                    judge_model=judge_model,
                 )
                 for metric_request in metric_requests
             ]
@@ -469,6 +477,7 @@ class DeepEvalEvaluationEngine:
         metric_request: EvalMetricRequest,
         metrics_module: Any,
         test_case_module: Any,
+        judge_model: Any,
     ) -> EvalMetricResult:
         applicable_cases = _select_test_cases(request, metric_request.metric_key)
         if not applicable_cases:
@@ -489,6 +498,7 @@ class DeepEvalEvaluationEngine:
                     case,
                     metrics_module,
                     test_case_module,
+                    judge_model,
                 )
                 for case in applicable_cases
             ]
@@ -528,13 +538,14 @@ class DeepEvalEvaluationEngine:
         case: EvalTestCase,
         metrics_module: Any,
         test_case_module: Any,
+        judge_model: Any,
     ) -> dict[str, Any]:
         deepeval_case = _build_deepeval_case(metric_request.metric_key, case, test_case_module)
         metric = _build_deepeval_metric(
             metric_request=metric_request,
             metrics_module=metrics_module,
             test_case_module=test_case_module,
-            model=self._model,
+            model=judge_model,
             options=self._options,
         )
         metric.measure(deepeval_case)
@@ -652,6 +663,202 @@ def _select_test_cases(request: EvalSyncRequest, metric_key: str) -> list[EvalTe
     if metric_key in _CONVERSATIONAL_METRICS:
         return [case for case in request.input.test_cases if case.conversation_turns]
     return request.input.test_cases
+
+
+def _build_deepeval_judge_model(
+    *,
+    model: str | None,
+    provider_config: OpenAICompatibleConfig,
+    options: dict[str, Any],
+) -> Any:
+    if not model or not provider_config.api_url or not provider_config.api_key:
+        return model
+    if options.get("use_native_deepeval_model") is True:
+        return model
+    try:
+        models_module = importlib.import_module("deepeval.models")
+        openai_module = importlib.import_module("openai")
+    except Exception:
+        return model
+
+    base_model = getattr(models_module, "DeepEvalBaseLLM", None)
+    openai_client = getattr(openai_module, "OpenAI", None)
+    async_openai_client = getattr(openai_module, "AsyncOpenAI", None)
+    if base_model is None or openai_client is None or async_openai_client is None:
+        return model
+
+    class OpenAICompatibleDeepEvalModel(base_model):  # type: ignore[misc, valid-type]
+        def __init__(self) -> None:
+            self._model_name = model
+            self._base_url = provider_config.api_url.rstrip("/")
+            self._api_key = provider_config.api_key
+            self._temperature = float(options.get("temperature", 0))
+            self._max_tokens = int(options.get("max_tokens", 4096))
+            self._timeout = float(options.get("timeout_seconds", 120))
+            self._client = openai_client(
+                base_url=self._base_url,
+                api_key=self._api_key,
+                timeout=self._timeout,
+            )
+            self._async_client = async_openai_client(
+                base_url=self._base_url,
+                api_key=self._api_key,
+                timeout=self._timeout,
+            )
+
+        def load_model(self) -> Any:
+            return self._client
+
+        def generate(self, prompt: str, schema: Any | None = None, **_: Any) -> Any:
+            try:
+                completion = self._client.chat.completions.create(
+                    **self._completion_payload(prompt, schema=schema)
+                )
+            except Exception as exc:
+                raise _provider_connection_error(
+                    exc,
+                    model=self._model_name,
+                    base_url=self._base_url,
+                ) from exc
+            content = _completion_text(completion)
+            return _coerce_deepeval_schema(content, schema)
+
+        async def a_generate(
+            self, prompt: str, schema: Any | None = None, **_: Any
+        ) -> Any:
+            try:
+                completion = await self._async_client.chat.completions.create(
+                    **self._completion_payload(prompt, schema=schema)
+                )
+            except Exception as exc:
+                raise _provider_connection_error(
+                    exc,
+                    model=self._model_name,
+                    base_url=self._base_url,
+                ) from exc
+            content = _completion_text(completion)
+            return _coerce_deepeval_schema(content, schema)
+
+        def get_model_name(self) -> str:
+            return f"openai-compatible:{self._model_name}"
+
+        def _completion_payload(
+            self, prompt: str, *, schema: Any | None = None
+        ) -> dict[str, Any]:
+            payload: dict[str, Any] = {
+                "model": self._model_name,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are a strict evaluation judge. Follow the user prompt "
+                            "exactly. When a JSON schema is provided, return only valid JSON."
+                        ),
+                    },
+                    {"role": "user", "content": _prompt_with_schema(prompt, schema)},
+                ],
+                "temperature": self._temperature,
+                "max_tokens": self._max_tokens,
+            }
+            extra_body = options.get("extra_body")
+            if isinstance(extra_body, dict):
+                payload["extra_body"] = dict(extra_body)
+            return payload
+
+    return OpenAICompatibleDeepEvalModel()
+
+
+def _prompt_with_schema(prompt: str, schema: Any | None) -> str:
+    if schema is None:
+        return prompt
+    return (
+        f"{prompt}\n\n"
+        "Return only valid JSON that matches this schema. Do not include Markdown fences.\n"
+        f"{_schema_description(schema)}"
+    )
+
+
+def _provider_connection_error(exc: Exception, *, model: str, base_url: str) -> CortexError:
+    parsed = urlparse(base_url)
+    endpoint = base_url.rstrip("/") if parsed.netloc else base_url
+    details = [
+        f"OpenAI-compatible judge call failed for model `{model}` at `{endpoint}`.",
+        f"exception={type(exc).__name__}",
+    ]
+    cause = exc.__cause__ or exc.__context__
+    if cause is not None:
+        details.append(f"cause={type(cause).__name__}: {_one_line(str(cause))}")
+    message = _one_line(str(exc))
+    if message:
+        details.append(f"message={message}")
+    details.append(
+        "Check container DNS/proxy/firewall access to the provider endpoint and verify "
+    )
+    return CortexError(
+        code="deepeval_provider_connection_failed",
+        detail=" ".join(details),
+        status_code=502,
+    )
+
+
+def _one_line(value: str, *, max_chars: int = 500) -> str:
+    return value.replace("\r", " ").replace("\n", " ")[:max_chars]
+
+
+def _schema_description(schema: Any) -> str:
+    try:
+        if hasattr(schema, "model_json_schema"):
+            return json.dumps(schema.model_json_schema(), ensure_ascii=False)
+        if hasattr(schema, "schema"):
+            return json.dumps(schema.schema(), ensure_ascii=False)
+    except Exception:
+        return str(schema)
+    return str(schema)
+
+
+def _completion_text(completion: Any) -> str:
+    choices = getattr(completion, "choices", None)
+    if not choices:
+        return ""
+    message = getattr(choices[0], "message", None)
+    content = getattr(message, "content", None)
+    return content if isinstance(content, str) else ""
+
+
+def _coerce_deepeval_schema(content: str, schema: Any | None) -> Any:
+    if schema is None:
+        return content
+    payload = _extract_json_payload(content)
+    try:
+        if hasattr(schema, "model_validate_json"):
+            return schema.model_validate_json(payload)
+        if hasattr(schema, "parse_raw"):
+            return schema.parse_raw(payload)
+        if hasattr(schema, "model_validate"):
+            return schema.model_validate(json.loads(payload))
+    except Exception:
+        return content
+    return content
+
+
+def _extract_json_payload(content: str) -> str:
+    text = content.strip()
+    if text.startswith("```"):
+        lines = text.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].startswith("```"):
+            lines = lines[:-1]
+        text = "\n".join(lines).strip()
+    object_start = text.find("{")
+    object_end = text.rfind("}")
+    array_start = text.find("[")
+    array_end = text.rfind("]")
+    if object_start >= 0 and object_end > object_start:
+        return text[object_start : object_end + 1]
+    if array_start >= 0 and array_end > array_start:
+        return text[array_start : array_end + 1]
+    return text
 
 
 def _build_deepeval_case(metric_key: str, case: EvalTestCase, test_case_module: Any) -> Any:

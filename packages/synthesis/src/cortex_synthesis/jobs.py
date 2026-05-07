@@ -288,15 +288,17 @@ class SynthesisJobControlService:
         self, *, uow: CortexUnitOfWork, job: JobRecord, error: Exception
     ) -> str:
         state = self._queue_state(job)
-        state["last_error"] = str(error)
-        state["last_error_code"] = getattr(error, "code", "synthesis_worker_failed")
+        error_message = str(error) or error.__class__.__name__
+        error_code = getattr(error, "code", None) or "synthesis_worker_failed"
+        state["last_error"] = error_message
+        state["last_error_code"] = error_code
         state["lease_owner"] = None
         state["lease_expires_at"] = None
         run = await self.get_run_by_job(uow=uow, job_id=job.job_id)
         run.output_summary = {
             "status": "failed",
-            "error_code": getattr(error, "code", "synthesis_worker_failed"),
-            "error_message": str(error),
+            "error_code": error_code,
+            "error_message": error_message,
         }
         if self._attempts_remaining(state):
             state["status"] = "queued"
@@ -322,8 +324,8 @@ class SynthesisJobControlService:
             job.job_id,
             status=JobStatus.FAILED,
             finished_at=utc_now(),
-            error_code=getattr(error, "code", "synthesis_worker_failed"),
-            error_message=str(error),
+            error_code=error_code,
+            error_message=error_message,
             deployment_context=self._with_queue_state(job, state),
         )
         await uow.synthesis_runs.update(run)

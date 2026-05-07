@@ -56,15 +56,17 @@ knowledge:
     data_root_directory: ../.data/cognee/staging/data
 
     llm:
-      llm_model_ref: env:OPENAI_MODEL_ID
-      llm_endpoint_ref: env:OPENAI_BASE_URL
-      llm_api_key_ref: env:OPENAI_API_KEY
+      llm_provider: openrouter
+      llm_model_ref: env:OPENROUTER_MODEL_ID
+      llm_endpoint_ref: env:OPENROUTER_BASE_URL
+      llm_api_key_ref: env:OPENROUTER_API_KEY
 
     embedding:
-      embedding_model_ref: env:OPENAI_EMBEDDING_MODEL_ID
-      embedding_dimensions_ref: env:OPENAI_EMBEDDING_DIMENSIONS
-      embedding_endpoint_ref: env:OPENAI_BASE_URL
-      embedding_api_key_ref: env:OPENAI_API_KEY
+      embedding_provider: openrouter
+      embedding_model_ref: env:OPENROUTER_EMBEDDING_MODEL_ID
+      embedding_dimensions_ref: env:OPENROUTER_EMBEDDING_DIMENSIONS
+      embedding_endpoint_ref: env:OPENROUTER_BASE_URL
+      embedding_api_key_ref: env:OPENROUTER_API_KEY
 
     vector_db:
       vector_db_provider: pgvector
@@ -89,9 +91,9 @@ evaluation:
   engines:
     deepeval:
       enabled: false
-      model_ref: env:GEMINI_MODEL_ID
-      api_url_ref: env:GEMINI_BASE_URL
-      api_key_ref: env:GEMINI_API_KEY
+      model_ref: env:KIMI_MODEL_ID
+      api_url_ref: env:KIMI_BASE_URL
+      api_key_ref: env:KIMI_API_KEY
       options: {}
     evalscope:
       enabled: false
@@ -113,7 +115,7 @@ synthesis:
       options: {}
     deepeval:
       enabled: false
-      model_ref: env:QWEN_MODEL_ID
-      api_url_ref: env:QWEN_BASE_URL
-      api_key_ref: env:QWEN_API_KEY
+      model_ref: env:KIMI_MODEL_ID
+      api_url_ref: env:KIMI_BASE_URL
+      api_key_ref: env:KIMI_API_KEY
       options: {}

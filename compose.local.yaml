@@ -96,6 +96,12 @@ x-cortex-env: &cortex-env
   CORTEX_REGION: local
   CORTEX_CLUSTER: docker-compose
   CORTEX_CRAWL4AI_PROXY: ${CORTEX_CRAWL4AI_PROXY:-}
+  CORTEX_KNOWLEDGE_WORKER_LEASE_SECONDS: ${CORTEX_KNOWLEDGE_WORKER_LEASE_SECONDS:-300}
+  CORTEX_KNOWLEDGE_WORKER_HEARTBEAT_INTERVAL_SECONDS: ${CORTEX_KNOWLEDGE_WORKER_HEARTBEAT_INTERVAL_SECONDS:-30}
+  CORTEX_EVALUATION_WORKER_LEASE_SECONDS: ${CORTEX_EVALUATION_WORKER_LEASE_SECONDS:-300}
+  CORTEX_EVALUATION_WORKER_HEARTBEAT_INTERVAL_SECONDS: ${CORTEX_EVALUATION_WORKER_HEARTBEAT_INTERVAL_SECONDS:-30}
+  CORTEX_SYNTHESIS_WORKER_LEASE_SECONDS: ${CORTEX_SYNTHESIS_WORKER_LEASE_SECONDS:-300}
+  CORTEX_SYNTHESIS_WORKER_HEARTBEAT_INTERVAL_SECONDS: ${CORTEX_SYNTHESIS_WORKER_HEARTBEAT_INTERVAL_SECONDS:-30}
   CORTEX_EVALUATION_WORKER_LOOP_SLEEP_SECONDS: "1"
   CORTEX_SYNTHESIS_WORKER_LOOP_SLEEP_SECONDS: "1"
   JINA_API_KEY: ${JINA_API_KEY:-}
@@ -115,17 +121,41 @@ x-cortex-env: &cortex-env
   QWEN_MODEL_ID: ${QWEN_MODEL_ID:-}
   QWEN_EMBEDDING_MODEL_ID: ${QWEN_EMBEDDING_MODEL_ID:-}
   QWEN_EMBEDDING_DIMENSIONS: ${QWEN_EMBEDDING_DIMENSIONS:-}
+  KIMI_BASE_URL: ${KIMI_BASE_URL:-}
+  KIMI_API_KEY: ${KIMI_API_KEY:-}
+  KIMI_MODEL_ID: ${KIMI_MODEL_ID:-}
+  KIMI_EMBEDDING_MODEL_ID: ${KIMI_EMBEDDING_MODEL_ID:-}
+  KIMI_EMBEDDING_DIMENSIONS: ${KIMI_EMBEDDING_DIMENSIONS:-}
+  OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-}
+  OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+  OPENROUTER_MODEL_ID: ${OPENROUTER_MODEL_ID:-}
+  OPENROUTER_EMBEDDING_MODEL_ID: ${OPENROUTER_EMBEDDING_MODEL_ID:-}
+  OPENROUTER_EMBEDDING_DIMENSIONS: ${OPENROUTER_EMBEDDING_DIMENSIONS:-}
+  OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-}
+  OLLAMA_API_KEY: ${OLLAMA_API_KEY:-}
+  OLLAMA_MODEL_ID: ${OLLAMA_MODEL_ID:-}
+  OLLAMA_EMBEDDING_MODEL_ID: ${OLLAMA_EMBEDDING_MODEL_ID:-}
+  OLLAMA_EMBEDDING_DIMENSIONS: ${OLLAMA_EMBEDDING_DIMENSIONS:-}
   LOCAL_LLM_BASE_URL: ${LOCAL_LLM_BASE_URL:-}
   LOCAL_LLM_API_KEY: ${LOCAL_LLM_API_KEY:-}
   LOCAL_LLM_MODEL_ID: ${LOCAL_LLM_MODEL_ID:-}
   LOCAL_EMBEDDING_MODEL_ID: ${LOCAL_EMBEDDING_MODEL_ID:-}
   LOCAL_EMBEDDING_DIMENSIONS: ${LOCAL_EMBEDDING_DIMENSIONS:-}
+  HTTP_PROXY: ${HTTP_PROXY:-}
+  HTTPS_PROXY: ${HTTPS_PROXY:-}
+  ALL_PROXY: ${ALL_PROXY:-}
+  NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1,::1,postgres,redis,minio,otel-collector,prometheus,grafana,jaeger-all-in-one,cortex-api}
   COGNEE_VECTOR_DB_URL: ${COGNEE_VECTOR_DB_URL:-}
   COGNEE_GRAPH_DB_URL: ${COGNEE_GRAPH_DB_URL:-}
   COGNEE_GRAPH_DB_USERNAME: ${COGNEE_GRAPH_DB_USERNAME:-}
   COGNEE_GRAPH_DB_PASSWORD: ${COGNEE_GRAPH_DB_PASSWORD:-}
   COGNEE_RELATIONAL_DB_URL: ${COGNEE_RELATIONAL_DB_URL:-}
   COGNEE_MIGRATION_DB_URL: ${COGNEE_MIGRATION_DB_URL:-}
+
+x-cortex-runtime-config-volume: &cortex-runtime-config-volume ./configs:/app/configs:ro
+
+x-cortex-extra-hosts: &cortex-extra-hosts
+  - "host.docker.internal:host-gateway"
 
 services:
   postgres:
@@ -225,6 +255,7 @@ services:
   cortex-migrate:
     image: cortex-api:local
     build: *cortex-build-api
+    extra_hosts: *cortex-extra-hosts
     environment:
       <<: *cortex-env
     entrypoint: ["/app/.venv/bin/cortex-db-migrate"]
@@ -235,12 +266,14 @@ services:
     restart: "no"
     volumes:
       - cortex-data:/app/.data
+      - *cortex-runtime-config-volume
 
   cortex-api:
     image: cortex-api:local
     build: *cortex-build-api
     init: true
     shm_size: "1gb"
+    extra_hosts: *cortex-extra-hosts
     environment:
       <<: *cortex-env
     depends_on:
@@ -265,12 +298,14 @@ services:
       start_period: 20s
     volumes:
       - cortex-data:/app/.data
+      - *cortex-runtime-config-volume
 
   cortex-parse-worker:
     image: cortex-parse-worker:local
     build: *cortex-build-parse-worker
     init: true
     shm_size: "1gb"
+    extra_hosts: *cortex-extra-hosts
     environment:
       <<: *cortex-env
       CORTEX_PARSE_WORKER_ENGINE_KEYS: crawl4ai,jina_reader,llama_parse,markitdown
@@ -288,6 +323,7 @@ services:
     restart: unless-stopped
     volumes:
       - cortex-data:/app/.data
+      - *cortex-runtime-config-volume
 
   cortex-parse-worker-docling:
     image: cortex-parse-worker-docling:local
@@ -295,6 +331,7 @@ services:
     profiles: ["docling"]
     init: true
     shm_size: "1gb"
+    extra_hosts: *cortex-extra-hosts
     environment:
       <<: *cortex-env
       CORTEX_PARSE_WORKER_ENGINE_KEYS: docling
@@ -312,10 +349,12 @@ services:
     restart: unless-stopped
     volumes:
       - cortex-data:/app/.data
+      - *cortex-runtime-config-volume
 
   cortex-knowledge-worker:
     image: cortex-knowledge-worker:local
     build: *cortex-build-knowledge-worker
+    extra_hosts: *cortex-extra-hosts
     environment:
       <<: *cortex-env
     depends_on:
@@ -332,10 +371,12 @@ services:
     restart: unless-stopped
     volumes:
       - cortex-data:/app/.data
+      - *cortex-runtime-config-volume
 
   cortex-evaluation-worker:
     image: cortex-evaluation-worker:local
     build: *cortex-build-evaluation-worker
+    extra_hosts: *cortex-extra-hosts
     environment:
       <<: *cortex-env
     depends_on:
@@ -352,11 +393,13 @@ services:
     restart: unless-stopped
     volumes:
       - cortex-data:/app/.data
+      - *cortex-runtime-config-volume
 
   cortex-evaluation-worker-runtime:
     image: cortex-evaluation-worker-runtime:local
     build: *cortex-build-evaluation-worker-runtime
     profiles: ["eval-runtime"]
+    extra_hosts: *cortex-extra-hosts
     environment:
       <<: *cortex-env
     depends_on:
@@ -373,10 +416,12 @@ services:
     restart: unless-stopped
     volumes:
       - cortex-data:/app/.data
+      - *cortex-runtime-config-volume
 
   cortex-synthesis-worker:
     image: cortex-synthesis-worker:local
     build: *cortex-build-synthesis-worker
+    extra_hosts: *cortex-extra-hosts
     environment:
       <<: *cortex-env
     depends_on:
@@ -393,11 +438,13 @@ services:
     restart: unless-stopped
     volumes:
       - cortex-data:/app/.data
+      - *cortex-runtime-config-volume
 
   cortex-synthesis-worker-runtime:
     image: cortex-synthesis-worker-runtime:local
     build: *cortex-build-synthesis-worker-runtime
     profiles: ["synthesis-runtime"]
+    extra_hosts: *cortex-extra-hosts
     environment:
       <<: *cortex-env
     depends_on:
@@ -414,6 +461,7 @@ services:
     restart: unless-stopped
     volumes:
       - cortex-data:/app/.data
+      - *cortex-runtime-config-volume
 
 volumes:
   postgres-data:

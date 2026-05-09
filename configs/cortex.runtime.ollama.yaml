@@ -66,6 +66,10 @@ knowledge:
       embedding_dimensions_ref: env:OLLAMA_EMBEDDING_DIMENSIONS
       embedding_endpoint_ref: env:OLLAMA_BASE_URL
       embedding_api_key_ref: env:OLLAMA_API_KEY
+      tokenizer:
+        strategy: auto
+        encoding: cl100k_base
+        fallback_strategy: tiktoken
 
     vector_db:
       vector_db_provider: lancedb
@@ -73,6 +77,9 @@ knowledge:
 
     graph_db:
       graph_database_provider: kuzu
+      graph_file_path_ref: path:../.data/cognee/local/graph/cognee_graph_kuzu
+      graph_filename: cognee_graph_kuzu
+      graph_dataset_database_handler: kuzu
 
     relational_db:
       db_provider: sqlite
@@ -90,7 +97,10 @@ evaluation:
       model_ref: env:OLLAMA_MODEL_ID
       api_url_ref: env:OLLAMA_BASE_URL
       api_key_ref: env:OLLAMA_API_KEY
-      options: {}
+      options:
+        timeout_seconds: 300
+        max_tokens: 512
+        temperature: 0
     evalscope:
       enabled: true
       mode: self_hosted_sdk
@@ -114,4 +124,7 @@ synthesis:
       model_ref: env:OLLAMA_MODEL_ID
       api_url_ref: env:OLLAMA_BASE_URL
       api_key_ref: env:OLLAMA_API_KEY
-      options: {}
+      options:
+        timeout_seconds: 300
+        max_tokens: 512
+        temperature: 0

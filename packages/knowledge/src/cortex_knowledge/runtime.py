@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import importlib
 import importlib.metadata
 import inspect
@@ -13,6 +14,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, cast
 from urllib.parse import unquote, urlparse
+from uuid import NAMESPACE_URL, UUID, uuid5
 
 from cortex_common import (
     CogneeSettings,
@@ -24,6 +26,15 @@ from cortex_common import (
 )
 
 from .models import CogneeRuntimeDescriptor, CogneeRuntimeProtocol
+
+_COGNEE_EMBEDDING_TOKENIZER_OPTIONS: dict[str, Any] = {}
+_COGNEE_EMBEDDING_TOKENIZER_INTERNAL_KEYS = {
+    "tokenizer",
+    "embedding_tokenizer_strategy",
+    "embedding_tokenizer_model",
+    "embedding_tokenizer_encoding",
+    "embedding_tokenizer_fallback_strategy",
+}
 
 try:  # pragma: no cover - import path depends on installed pydantic version
     from pydantic.warnings import PydanticDeprecatedSince20
@@ -138,6 +149,7 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
         self._module = _load_cognee_module() if available else None
         if self._module is not None:
             _apply_cognee_model_environment(self._config)
+            _patch_cognee_embedding_tokenizer_strategy(self._config)
             self._apply_config()
 
     @property
@@ -205,7 +217,8 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
         inputs = payload.get("inputs")
         if not isinstance(inputs, list) or not inputs:
             raise ConfigError("Cognee add requires at least one input.")
-        data_items: list[str] = []
+        data_items: list[Any] = []
+        seen_data_ids: set[str] = set()
         node_sets: set[str] = set()
         for raw_input in inputs:
             if not isinstance(raw_input, dict):
@@ -222,15 +235,37 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
                 )
             if not isinstance(value, str) or not value.strip():
                 raise ConfigError(f"Cognee add input `{input_type}` is missing its content.")
-            data_items.append(value.strip())
+            normalized_value = value.strip()
+            data_id = _cognee_stable_data_id(
+                dataset=dataset,
+                input_type=input_type,
+                raw_input=raw_input,
+                value=normalized_value,
+            )
+            data_id_key = str(data_id)
+            if data_id_key in seen_data_ids:
+                continue
+            seen_data_ids.add(data_id_key)
+            metadata = raw_input.get("metadata")
+            data_items.append(
+                _cognee_data_item(
+                    data=normalized_value,
+                    label=_strip_optional_string(raw_input.get("label")),
+                    data_id=data_id,
+                    metadata=metadata if isinstance(metadata, dict) else None,
+                )
+            )
             if isinstance(raw_input.get("node_set"), list):
                 node_sets.update(str(item) for item in raw_input["node_set"] if str(item).strip())
+
+        if not data_items:
+            raise ConfigError("Cognee add inputs were all duplicates after normalization.")
 
         options: dict[str, Any] = (
             dict(payload["options"]) if isinstance(payload.get("options"), dict) else {}
         )
         return {
-            "data": data_items[0] if len(data_items) == 1 else data_items,
+            "data": data_items,
             "dataset_name": dataset,
             "node_set": sorted(node_sets) or None,
             "incremental_loading": bool(options.get("incremental", True)),
@@ -390,20 +425,6 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
         config_api = getattr(self._module, "config", None)
         if config_api is None:
             return
-        for field_name, setter_name in (
-            ("llm", "set_llm_config"),
-            ("embedding", "set_embedding_config"),
-            ("vector_db", "set_vector_db_config"),
-            ("graph_db", "set_graph_db_config"),
-            ("relational_db", "set_relational_db_config"),
-            ("migration_db", "set_migration_db_config"),
-            ("chunking", "set_chunking_config"),
-        ):
-            payload = self._config.get(field_name)
-            setter = getattr(config_api, setter_name, None)
-            if isinstance(payload, dict) and payload and callable(setter):
-                setter(payload)
-
         for field_name, setter_names in (
             ("system_root_directory", ("set_system_root_directory", "system_root_directory")),
             ("data_root_directory", ("set_data_root_directory", "data_root_directory")),
@@ -416,6 +437,20 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
                 if callable(setter):
                     setter(value)
                     break
+
+        for field_name, setter_name in (
+            ("llm", "set_llm_config"),
+            ("embedding", "set_embedding_config"),
+            ("vector_db", "set_vector_db_config"),
+            ("graph_db", "set_graph_db_config"),
+            ("relational_db", "set_relational_db_config"),
+            ("migration_db", "set_migration_db_config"),
+            ("chunking", "set_chunking_config"),
+        ):
+            payload = self._config.get(field_name)
+            setter = getattr(config_api, setter_name, None)
+            if isinstance(payload, dict) and payload and callable(setter):
+                setter(_cognee_sdk_payload(field_name, payload))
 
         monitoring_tool = self._config.get("monitoring_tool")
         if isinstance(monitoring_tool, str) and monitoring_tool:
@@ -519,12 +554,16 @@ def _normalize_provider_payload(field_name: str, payload: dict[str, Any]) -> dic
         )
         return normalized
     if field_name == "embedding" and normalized:
-        normalized.setdefault("embedding_provider", "openai")
+        raw_provider = str(normalized.get("embedding_provider") or "openai").strip().lower()
+        normalized.setdefault("embedding_provider", raw_provider or "openai")
         provider = _cognee_openai_compatible_provider(normalized.get("embedding_provider"))
         normalized["embedding_provider"] = provider
         model = normalized.get("embedding_model")
-        if provider == "gemini" and isinstance(model, str) and "/" not in model:
-            normalized["embedding_model"] = f"gemini/{model.strip()}"
+        if isinstance(model, str):
+            normalized["embedding_model"] = _litellm_embedding_model_for_provider(
+                provider=raw_provider,
+                model=model,
+            )
         dimensions = normalized.get("embedding_dimensions")
         if isinstance(dimensions, str) and dimensions.strip().isdigit():
             normalized["embedding_dimensions"] = int(dimensions.strip())
@@ -534,6 +573,86 @@ def _normalize_provider_payload(field_name: str, payload: dict[str, Any]) -> dic
             required_keys=("embedding_model", "embedding_api_key"),
         )
     return normalized
+
+
+def _litellm_embedding_model_for_provider(*, provider: str, model: str) -> str:
+    cleaned_model = model.strip()
+    if not cleaned_model:
+        return cleaned_model
+    cleaned_provider = provider.strip().lower()
+    prefix = _litellm_embedding_provider_prefix(cleaned_provider)
+    if prefix is None:
+        return cleaned_model
+    if cleaned_model == prefix or cleaned_model.startswith(f"{prefix}/"):
+        return cleaned_model
+    return f"{prefix}/{cleaned_model}"
+
+
+def _litellm_embedding_provider_prefix(provider: str) -> str | None:
+    if provider in {"openrouter"}:
+        return "openrouter"
+    if provider in {"ollama"}:
+        return "ollama"
+    if provider in {"gemini"}:
+        return "gemini"
+    if provider in {"openai-compatible", "openai_compatible"}:
+        return "openai"
+    return None
+
+
+def _cognee_sdk_payload(field_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+    if field_name != "embedding":
+        return payload
+    return {
+        key: value
+        for key, value in payload.items()
+        if key not in _COGNEE_EMBEDDING_TOKENIZER_INTERNAL_KEYS
+    }
+
+
+def _cognee_data_item(
+    *,
+    data: str,
+    label: str | None,
+    data_id: UUID,
+    metadata: dict[str, Any] | None,
+) -> Any:
+    try:
+        data_item_module = _import_cognee_module("cognee.tasks.ingestion.data_item")
+        data_item_class = getattr(data_item_module, "DataItem", None)
+        if isinstance(data_item_class, type):
+            return data_item_class(
+                data=data,
+                label=label,
+                external_metadata=dict(metadata or {}),
+                data_id=data_id,
+            )
+    except Exception:
+        return data
+    return data
+
+
+def _cognee_stable_data_id(
+    *,
+    dataset: str,
+    input_type: str,
+    raw_input: dict[str, Any],
+    value: str,
+) -> UUID:
+    metadata = raw_input.get("metadata") if isinstance(raw_input.get("metadata"), dict) else {}
+    source_parts = [
+        str(dataset),
+        input_type,
+        _strip_optional_string(raw_input.get("label")) or "",
+        _strip_optional_string(metadata.get("source_url")) or "",
+        _strip_optional_string(metadata.get("source_name")) or "",
+        _strip_optional_string(metadata.get("engine_id")) or "",
+        _strip_optional_string(metadata.get("object_id")) or "",
+        _strip_optional_string(metadata.get("document_id")) or "",
+        _strip_optional_string(metadata.get("markdown_sha256")) or "",
+        hashlib.sha256(value.encode("utf-8")).hexdigest(),
+    ]
+    return uuid5(NAMESPACE_URL, "cortex:cognee-data:" + "\x1f".join(source_parts))
 
 
 def _cognee_openai_compatible_provider(value: Any) -> str:
@@ -553,6 +672,215 @@ def _apply_cognee_model_environment(config: dict[str, Any]) -> None:
             api_key=_strip_optional_string(llm.get("llm_api_key")),
         )
     )
+
+
+def _patch_cognee_embedding_tokenizer_strategy(config: dict[str, Any]) -> None:
+    """Let Cognee chunk arbitrary OpenAI-compatible embedding models.
+
+    Embedding provider model IDs and local tokenizer choices are separate
+    concerns. Provider catalogs such as OpenRouter, Ollama, TEI, vLLM, LocalAI,
+    or proxy gateways can expose model IDs that are valid for /embeddings but
+    unknown to tiktoken. Cortex therefore owns the tokenizer strategy used for
+    chunk sizing while preserving the configured embedding model ID for the
+    actual provider call.
+    """
+
+    global _COGNEE_EMBEDDING_TOKENIZER_OPTIONS
+    embedding = config.get("embedding")
+    _COGNEE_EMBEDDING_TOKENIZER_OPTIONS = _embedding_tokenizer_options(
+        embedding if isinstance(embedding, dict) else {}
+    )
+    _patch_cognee_litellm_embedding_tokenizer()
+    _patch_cognee_tiktoken_unknown_model_fallback()
+
+
+def _patch_cognee_litellm_embedding_tokenizer() -> None:
+    try:
+        engine_module = _import_cognee_module(
+            "cognee.infrastructure.databases.vector.embeddings.LiteLLMEmbeddingEngine"
+        )
+    except Exception:
+        return
+
+    engine_class = getattr(engine_module, "LiteLLMEmbeddingEngine", None)
+    if not isinstance(engine_class, type):
+        return
+    if getattr(engine_class, "_cortex_tokenizer_strategy_patch", False):
+        return
+
+    original_get_tokenizer = engine_class.get_tokenizer
+
+    def _get_tokenizer_with_strategy(self: Any) -> Any:
+        strategy = str(_COGNEE_EMBEDDING_TOKENIZER_OPTIONS.get("strategy") or "auto").lower()
+        if strategy in {"approximate", "none", "word"}:
+            return _CortexApproximateTokenizer(
+                max_completion_tokens=int(getattr(self, "max_completion_tokens", 8191) or 8191)
+            )
+        if strategy in {"tiktoken", "tiktoken_encoding", "cl100k_base"}:
+            return _CortexTiktokenEncodingTokenizer(
+                encoding_name=str(
+                    _COGNEE_EMBEDDING_TOKENIZER_OPTIONS.get("encoding") or "cl100k_base"
+                ),
+                max_completion_tokens=int(getattr(self, "max_completion_tokens", 8191) or 8191),
+            )
+        if strategy in {"huggingface", "hf"}:
+            return _build_huggingface_tokenizer(self)
+
+        try:
+            return original_get_tokenizer(self)
+        except Exception:
+            fallback = str(
+                _COGNEE_EMBEDDING_TOKENIZER_OPTIONS.get("fallback_strategy") or "tiktoken"
+            ).lower()
+            if fallback in {"approximate", "none", "word"}:
+                return _CortexApproximateTokenizer(
+                    max_completion_tokens=int(
+                        getattr(self, "max_completion_tokens", 8191) or 8191
+                    )
+                )
+            return _CortexTiktokenEncodingTokenizer(
+                encoding_name=str(
+                    _COGNEE_EMBEDDING_TOKENIZER_OPTIONS.get("encoding") or "cl100k_base"
+                ),
+                max_completion_tokens=int(getattr(self, "max_completion_tokens", 8191) or 8191),
+            )
+
+    engine_class.get_tokenizer = _get_tokenizer_with_strategy
+    engine_class._cortex_tokenizer_strategy_patch = True
+
+
+def _build_huggingface_tokenizer(engine: Any) -> Any:
+    model = _COGNEE_EMBEDDING_TOKENIZER_OPTIONS.get("model") or getattr(engine, "model", None)
+    try:
+        tokenizer_module = _import_cognee_module(
+            "cognee.infrastructure.llm.tokenizer.HuggingFace.adapter"
+        )
+        tokenizer_class = tokenizer_module.HuggingFaceTokenizer
+        return tokenizer_class(
+            model=str(model),
+            max_completion_tokens=int(getattr(engine, "max_completion_tokens", 8191) or 8191),
+        )
+    except Exception:
+        fallback = str(
+            _COGNEE_EMBEDDING_TOKENIZER_OPTIONS.get("fallback_strategy") or "tiktoken"
+        ).lower()
+        if fallback in {"approximate", "none", "word"}:
+            return _CortexApproximateTokenizer(
+                max_completion_tokens=int(getattr(engine, "max_completion_tokens", 8191) or 8191)
+            )
+        return _CortexTiktokenEncodingTokenizer(
+            encoding_name=str(_COGNEE_EMBEDDING_TOKENIZER_OPTIONS.get("encoding") or "cl100k_base"),
+            max_completion_tokens=int(getattr(engine, "max_completion_tokens", 8191) or 8191),
+        )
+
+
+def _patch_cognee_tiktoken_unknown_model_fallback() -> None:
+    try:
+        tokenizer_module = _import_cognee_module(
+            "cognee.infrastructure.llm.tokenizer.TikToken.adapter"
+        )
+        tiktoken_module = importlib.import_module("tiktoken")
+    except Exception:
+        return
+
+    tokenizer_class = getattr(tokenizer_module, "TikTokenTokenizer", None)
+    if not isinstance(tokenizer_class, type):
+        return
+    if getattr(tokenizer_class, "_cortex_unknown_model_fallback", False):
+        return
+
+    original_init = tokenizer_class.__init__
+
+    def _init_with_fallback(
+        self: Any,
+        model: str | None = None,
+        max_completion_tokens: int = 8191,
+    ) -> None:
+        try:
+            original_init(
+                self,
+                model=model,
+                max_completion_tokens=max_completion_tokens,
+            )
+        except Exception as exc:
+            if not _is_tiktoken_unknown_model_error(exc):
+                raise
+            self.model = model
+            self.max_completion_tokens = max_completion_tokens
+            self.tokenizer = tiktoken_module.get_encoding(
+                str(_COGNEE_EMBEDDING_TOKENIZER_OPTIONS.get("encoding") or "cl100k_base")
+            )
+
+    tokenizer_class.__init__ = _init_with_fallback
+    tokenizer_class._cortex_unknown_model_fallback = True
+
+
+def _is_tiktoken_unknown_model_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return (
+        "could not automatically map" in message
+        and ("tokeniser" in message or "tokenizer" in message)
+    )
+
+
+def _embedding_tokenizer_options(embedding: dict[str, Any]) -> dict[str, Any]:
+    raw = embedding.get("tokenizer")
+    nested = raw if isinstance(raw, dict) else {}
+    strategy = _strip_optional_string(
+        nested.get("strategy") or embedding.get("embedding_tokenizer_strategy")
+    )
+    model = _strip_optional_string(
+        nested.get("model") or embedding.get("embedding_tokenizer_model")
+    )
+    encoding = _strip_optional_string(
+        nested.get("encoding") or embedding.get("embedding_tokenizer_encoding")
+    )
+    fallback_strategy = _strip_optional_string(
+        nested.get("fallback_strategy") or embedding.get("embedding_tokenizer_fallback_strategy")
+    )
+    return {
+        "strategy": (strategy or "auto").lower(),
+        "model": model,
+        "encoding": encoding or "cl100k_base",
+        "fallback_strategy": (fallback_strategy or "tiktoken").lower(),
+    }
+
+
+class _CortexTiktokenEncodingTokenizer:
+    def __init__(self, *, encoding_name: str, max_completion_tokens: int) -> None:
+        self.encoding_name = encoding_name
+        self.max_completion_tokens = max_completion_tokens
+        tiktoken_module = importlib.import_module("tiktoken")
+        self.tokenizer = tiktoken_module.get_encoding(encoding_name)
+
+    def extract_tokens(self, text: str) -> list[Any]:
+        return list(self.tokenizer.encode(text))
+
+    def count_tokens(self, text: str) -> int:
+        return len(self.tokenizer.encode(text))
+
+    def decode_single_token(self, token: int) -> str:
+        return self.tokenizer.decode_single_token_bytes(token).decode(
+            "utf-8",
+            errors="replace",
+        )
+
+
+class _CortexApproximateTokenizer:
+    def __init__(self, *, max_completion_tokens: int) -> None:
+        self.max_completion_tokens = max_completion_tokens
+
+    def extract_tokens(self, text: str) -> list[str]:
+        return text.split()
+
+    def count_tokens(self, text: str) -> int:
+        words = text.split()
+        if words:
+            return len(words)
+        return 1 if text else 0
+
+    def decode_single_token(self, token: int) -> str:
+        return str(token)
 
 
 def _require_provider_values(

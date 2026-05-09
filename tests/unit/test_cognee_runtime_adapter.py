@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import warnings
 from enum import Enum
+from types import SimpleNamespace
 
 import pytest
 from cortex_common import ConfigError
@@ -23,11 +24,27 @@ class _FakeSearchResult:
         self.dataset_name = dataset_name
 
 
+class _FakeDataItem:
+    def __init__(
+        self,
+        *,
+        data: object,
+        label: str | None = None,
+        external_metadata: dict[str, object] | None = None,
+        data_id: object | None = None,
+    ) -> None:
+        self.data = data
+        self.label = label
+        self.external_metadata = external_metadata or {}
+        self.data_id = data_id
+
+
 class _FakeCogneeModule:
     SearchType = _FakeSearchType
 
     def __init__(self) -> None:
         self.calls: list[tuple[str, dict[str, object]]] = []
+        self.config: object | None = None
 
     async def add(self, **kwargs: object) -> dict[str, object]:
         self.calls.append(("add", dict(kwargs)))
@@ -55,6 +72,13 @@ def _build_runtime(
     monkeypatch.setattr("cortex_knowledge.runtime._cognee_available", lambda: True)
     monkeypatch.setattr("cortex_knowledge.runtime._cognee_version", lambda: "0.5.test")
     monkeypatch.setattr("cortex_knowledge.runtime._load_cognee_module", lambda: fake_module)
+    monkeypatch.setattr(
+        runtime_module,
+        "_import_cognee_module",
+        lambda name: SimpleNamespace(DataItem=_FakeDataItem)
+        if name == "cognee.tasks.ingestion.data_item"
+        else None,
+    )
     return PythonCogneeRuntime(), fake_module
 
 
@@ -86,7 +110,11 @@ def test_python_cognee_runtime_translates_add_and_cognify(
     )
 
     assert add_result["dataset_name"] == "docs"
-    assert add_result["data"] == ["hello world", "https://example.com/guide"]
+    assert [_cognee_input_value(item) for item in add_result["data"]] == [
+        "hello world",
+        "https://example.com/guide",
+    ]
+    assert all(_cognee_input_data_id(item) is not None for item in add_result["data"])
     assert add_result["incremental_loading"] is False
     assert add_result["node_set"] == ["alpha"]
     assert cognify_result["datasets"] == ["docs"]
@@ -111,6 +139,46 @@ def test_python_cognee_runtime_rejects_unresolved_object_inputs(
                 },
             )
         )
+
+
+def test_python_cognee_runtime_applies_root_directories_before_database_configs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class _FakeCogneeConfigApi:
+        def __init__(self) -> None:
+            self.calls: list[tuple[str, object]] = []
+
+        def set_system_root_directory(self, value: str) -> None:
+            self.calls.append(("system_root_directory", value))
+
+        def set_graph_db_config(self, payload: dict[str, object]) -> None:
+            self.calls.append(("graph_db", dict(payload)))
+
+    fake_module = _FakeCogneeModule()
+    fake_config = _FakeCogneeConfigApi()
+    fake_module.config = fake_config
+    monkeypatch.setattr("cortex_knowledge.runtime._cognee_available", lambda: True)
+    monkeypatch.setattr("cortex_knowledge.runtime._cognee_version", lambda: "0.5.test")
+    monkeypatch.setattr("cortex_knowledge.runtime._load_cognee_module", lambda: fake_module)
+
+    PythonCogneeRuntime(
+        config={
+            "system_root_directory": "/app/.data/cognee/system",
+            "graph_db": {
+                "graph_database_provider": "kuzu",
+                "graph_file_path": "/app/.data/cognee/graph/cognee_graph_kuzu",
+            },
+        }
+    )
+
+    assert fake_config.calls[0] == ("system_root_directory", "/app/.data/cognee/system")
+    assert fake_config.calls[1] == (
+        "graph_db",
+        {
+            "graph_database_provider": "kuzu",
+            "graph_file_path": "/app/.data/cognee/graph/cognee_graph_kuzu",
+        },
+    )
 
 
 def test_load_cognee_module_suppresses_known_upstream_deprecation_warnings(
@@ -168,6 +236,49 @@ def test_load_cognee_module_suppresses_known_upstream_deprecation_warnings(
     assert caught == []
 
 
+def test_cognee_tiktoken_fallback_handles_bge_embedding_models() -> None:
+    pytest.importorskip("cognee")
+    pytest.importorskip("tiktoken")
+
+    runtime_module._patch_cognee_tiktoken_unknown_model_fallback()
+    tokenizer_module = runtime_module._import_cognee_module(
+        "cognee.infrastructure.llm.tokenizer.TikToken.adapter"
+    )
+    tokenizer = tokenizer_module.TikTokenTokenizer(model="bge-m3")
+
+    assert tokenizer.model == "bge-m3"
+    assert tokenizer.count_tokens("OpenRouter bge-m3 embedding smoke text.") > 0
+
+
+def test_cognee_litellm_embedding_tokenizer_strategy_is_model_agnostic() -> None:
+    pytest.importorskip("cognee")
+    pytest.importorskip("tiktoken")
+
+    runtime_module._patch_cognee_embedding_tokenizer_strategy(
+        {
+            "embedding": {
+                "embedding_model": "provider-catalog/model-that-tiktoken-does-not-know",
+                "tokenizer": {
+                    "strategy": "tiktoken",
+                    "encoding": "cl100k_base",
+                },
+            }
+        }
+    )
+    engine_module = runtime_module._import_cognee_module(
+        "cognee.infrastructure.databases.vector.embeddings.LiteLLMEmbeddingEngine"
+    )
+
+    class _FakeEngine:
+        model = "provider-catalog/model-that-tiktoken-does-not-know"
+        provider = "openai"
+        max_completion_tokens = 8191
+
+    tokenizer = engine_module.LiteLLMEmbeddingEngine.get_tokenizer(_FakeEngine())
+
+    assert tokenizer.count_tokens("Any provider embedding model can share token estimation.") > 0
+
+
 def test_python_cognee_runtime_translates_memify_and_search(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -210,3 +321,47 @@ def test_python_cognee_runtime_translates_memify_and_search(
     assert search_result["answer"] == "answer:how does it work"
     assert len(search_result["context_items"]) == 1
     assert search_result["context_items"][0]["title"] == "docs"
+
+
+def test_python_cognee_runtime_builds_stable_data_items_and_deduplicates_inputs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runtime, _fake_module = _build_runtime(monkeypatch)
+
+    kwargs = runtime._build_add_kwargs(
+        dataset="docs",
+        payload={
+            "inputs": [
+                {
+                    "input_type": "text",
+                    "text": "same body",
+                    "label": "Doc A",
+                    "metadata": {"source_url": "https://example.com/a", "engine_id": "markitdown"},
+                },
+                {
+                    "input_type": "text",
+                    "text": "same body",
+                    "label": "Doc A",
+                    "metadata": {"source_url": "https://example.com/a", "engine_id": "markitdown"},
+                },
+                {
+                    "input_type": "text",
+                    "text": "same body",
+                    "label": "Doc A",
+                    "metadata": {"source_url": "https://example.com/a", "engine_id": "crawl4ai"},
+                },
+            ]
+        },
+    )
+
+    assert len(kwargs["data"]) == 2
+    assert [_cognee_input_value(item) for item in kwargs["data"]] == ["same body", "same body"]
+    assert len({_cognee_input_data_id(item) for item in kwargs["data"]}) == 2
+
+
+def _cognee_input_value(item: object) -> object:
+    return getattr(item, "data", item)
+
+
+def _cognee_input_data_id(item: object) -> object:
+    return getattr(item, "data_id", None)

@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, is_dataclass
+from datetime import date, datetime
+from enum import Enum
+from pathlib import Path
 from time import perf_counter
 from typing import Any
+from uuid import UUID
 
 from cortex_common import CortexError, json_dumps, new_prefixed_id, utc_now
 from cortex_contracts import (
@@ -343,12 +347,15 @@ class KnowledgeOperationService:
 
     @staticmethod
     def _normalize_runtime_result(result: Any) -> dict[str, Any]:
-        if isinstance(result, dict):
-            return dict(result)
-        return {"result": result}
+        normalized = _json_safe(result)
+        if isinstance(normalized, dict):
+            return normalized
+        return {"result": normalized}
 
     @staticmethod
-    def _extract_counter_delta(result: dict[str, Any]) -> dict[str, int]:
+    def _extract_counter_delta(result: Any) -> dict[str, int]:
+        if not isinstance(result, dict):
+            return {}
         payload = result.get("counters") if isinstance(result.get("counters"), dict) else result
         counter_delta: dict[str, int] = {}
         for key in ("objects", "documents", "chunks", "graph_nodes", "graph_edges"):
@@ -530,3 +537,30 @@ class KnowledgeSearchService:
                 if not key.startswith("_")
             }
         return {}
+
+
+def _json_safe(value: Any) -> Any:
+    if value is None or isinstance(value, str | int | float | bool):
+        return value
+    if isinstance(value, datetime | date):
+        return value.isoformat()
+    if isinstance(value, UUID | Path):
+        return str(value)
+    if isinstance(value, Enum):
+        return _json_safe(value.value)
+    if isinstance(value, dict):
+        return {str(key): _json_safe(item) for key, item in value.items()}
+    if isinstance(value, list | tuple | set | frozenset):
+        return [_json_safe(item) for item in value]
+    if hasattr(value, "model_dump"):
+        dumped = value.model_dump(mode="json")
+        return _json_safe(dumped)
+    if is_dataclass(value) and not isinstance(value, type):
+        return _json_safe(asdict(value))
+    if hasattr(value, "__dict__"):
+        return {
+            str(key): _json_safe(item)
+            for key, item in vars(value).items()
+            if not str(key).startswith("_")
+        }
+    return str(value)

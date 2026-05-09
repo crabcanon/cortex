@@ -4,7 +4,7 @@ x-cortex-build-api: &cortex-build-api
   args:
     PLAYWRIGHT_PYTHON_BASE_IMAGE: ${CORTEX_PLAYWRIGHT_PYTHON_BASE_IMAGE:-mcr.microsoft.com/playwright/python:v1.58.0-noble}
     UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
-    CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
+    CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.local.yaml}
     CORTEX_PREPARE_CRAWL4AI_RUNTIME: "1"
 
 x-cortex-build-parse-worker: &cortex-build-parse-worker
@@ -13,7 +13,7 @@ x-cortex-build-parse-worker: &cortex-build-parse-worker
   args:
     PLAYWRIGHT_PYTHON_BASE_IMAGE: ${CORTEX_PLAYWRIGHT_PYTHON_BASE_IMAGE:-mcr.microsoft.com/playwright/python:v1.58.0-noble}
     UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
-    CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
+    CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.local.yaml}
     CORTEX_PREPARE_CRAWL4AI_RUNTIME: "1"
 
 x-cortex-build-parse-worker-docling: &cortex-build-parse-worker-docling
@@ -22,7 +22,7 @@ x-cortex-build-parse-worker-docling: &cortex-build-parse-worker-docling
   args:
     PLAYWRIGHT_PYTHON_BASE_IMAGE: ${CORTEX_PLAYWRIGHT_PYTHON_BASE_IMAGE:-mcr.microsoft.com/playwright/python:v1.58.0-noble}
     UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
-    CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
+    CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.local.yaml}
     CORTEX_PREPARE_CRAWL4AI_RUNTIME: "1"
 
 x-cortex-build-knowledge-worker: &cortex-build-knowledge-worker
@@ -31,7 +31,7 @@ x-cortex-build-knowledge-worker: &cortex-build-knowledge-worker
   args:
     PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-ghcr.io/astral-sh/uv:python3.12-bookworm-slim}
     UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
-    CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
+    CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.local.yaml}
 
 x-cortex-build-evaluation-worker: &cortex-build-evaluation-worker
   context: .
@@ -39,7 +39,7 @@ x-cortex-build-evaluation-worker: &cortex-build-evaluation-worker
   args:
     PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-ghcr.io/astral-sh/uv:python3.12-bookworm-slim}
     UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
-    CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
+    CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.local.yaml}
 
 x-cortex-build-evaluation-worker-runtime: &cortex-build-evaluation-worker-runtime
   context: .
@@ -47,7 +47,7 @@ x-cortex-build-evaluation-worker-runtime: &cortex-build-evaluation-worker-runtim
   args:
     PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-ghcr.io/astral-sh/uv:python3.12-bookworm-slim}
     UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
-    CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
+    CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.local.yaml}
 
 x-cortex-build-synthesis-worker: &cortex-build-synthesis-worker
   context: .
@@ -55,7 +55,7 @@ x-cortex-build-synthesis-worker: &cortex-build-synthesis-worker
   args:
     PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-ghcr.io/astral-sh/uv:python3.12-bookworm-slim}
     UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
-    CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
+    CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.local.yaml}
 
 x-cortex-build-synthesis-worker-runtime: &cortex-build-synthesis-worker-runtime
   context: .
@@ -63,7 +63,7 @@ x-cortex-build-synthesis-worker-runtime: &cortex-build-synthesis-worker-runtime
   args:
     PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-ghcr.io/astral-sh/uv:python3.12-bookworm-slim}
     UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
-    CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
+    CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.local.yaml}
 
 x-cortex-env: &cortex-env
   CORTEX_ENV: local
@@ -84,7 +84,7 @@ x-cortex-env: &cortex-env
   CORTEX_AUTH_JWT_ALGORITHM: HS256
   CORTEX_AUTH_JWT_SHARED_SECRET: ${CORTEX_AUTH_JWT_SHARED_SECRET:-cortex-dev-shared-secret}
   CORTEX_AUTH_AUTO_PROVISION_PRINCIPALS: "true"
-  CORTEX_RUNTIME_CONFIG_PATH: configs/cortex.runtime.local.yaml
+  CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.local.yaml}
   CORTEX_CRAWL4AI_SKIP_PROBE: "0"
   CORTEX_CRAWL4AI_INSTALL_IF_MISSING: "0"
   CORTEX_CRAWL4AI_WITH_DEPS: "0"
@@ -151,6 +151,7 @@ x-cortex-env: &cortex-env
   COGNEE_GRAPH_DB_PASSWORD: ${COGNEE_GRAPH_DB_PASSWORD:-}
   COGNEE_RELATIONAL_DB_URL: ${COGNEE_RELATIONAL_DB_URL:-}
   COGNEE_MIGRATION_DB_URL: ${COGNEE_MIGRATION_DB_URL:-}
+  COGNEE_SKIP_CONNECTION_TEST: ${COGNEE_SKIP_CONNECTION_TEST:-true}
 
 x-cortex-runtime-config-volume: &cortex-runtime-config-volume ./configs:/app/configs:ro
 

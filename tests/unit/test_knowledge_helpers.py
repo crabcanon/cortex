@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 from dataclasses import dataclass
+from uuid import uuid4
 
 import pytest
 from cortex_common import CogneeSettings, ConfigError
@@ -17,10 +19,17 @@ from cortex_contracts import (
     SearchRequest,
 )
 from cortex_domain import DatasetRecord
-from cortex_knowledge.operations import KnowledgeOperationService, KnowledgeSearchService
+from cortex_knowledge.operations import (
+    KnowledgeOperationService,
+    KnowledgeSearchService,
+    _json_safe,
+)
 from cortex_knowledge.runtime import (
     DisabledCogneeRuntime,
     _apply_cognee_model_environment,
+    _cognee_sdk_payload,
+    _embedding_tokenizer_options,
+    _litellm_embedding_model_for_provider,
     _normalize_provider_payload,
     build_cognee_runtime,
 )
@@ -185,20 +194,97 @@ def test_cognee_provider_payload_requires_explicit_credentials() -> None:
         )
 
 
-@pytest.mark.parametrize("provider", ["openrouter", "ollama"])
-def test_cognee_openai_compatible_embedding_aliases_map_to_openai(provider: str) -> None:
+def test_cognee_openrouter_embedding_alias_maps_to_openai_with_litellm_model_prefix() -> None:
     payload = _normalize_provider_payload(
         "embedding",
         {
-            "embedding_provider": provider,
-            "embedding_model": "openai/text-embedding-3-small",
-            "embedding_endpoint": "http://host.docker.internal:11434/v1",
+            "embedding_provider": "openrouter",
+            "embedding_model": "baai/bge-m3",
+            "embedding_endpoint": "https://openrouter.ai/api/v1",
             "embedding_api_key": "test-provider-key",
-            "embedding_dimensions": "1536",
+            "embedding_dimensions": "1024",
         },
     )
 
     assert payload["embedding_provider"] == "openai"
-    assert payload["embedding_model"] == "openai/text-embedding-3-small"
+    assert payload["embedding_model"] == "openrouter/baai/bge-m3"
+    assert payload["embedding_endpoint"] == "https://openrouter.ai/api/v1"
+    assert payload["embedding_dimensions"] == 1024
+
+
+def test_cognee_ollama_embedding_alias_maps_to_openai_with_litellm_model_prefix() -> None:
+    payload = _normalize_provider_payload(
+        "embedding",
+        {
+            "embedding_provider": "ollama",
+            "embedding_model": "nomic-embed-text",
+            "embedding_endpoint": "http://host.docker.internal:11434/v1",
+            "embedding_api_key": "ollama",
+            "embedding_dimensions": "768",
+        },
+    )
+
+    assert payload["embedding_provider"] == "openai"
+    assert payload["embedding_model"] == "ollama/nomic-embed-text"
     assert payload["embedding_endpoint"] == "http://host.docker.internal:11434/v1"
-    assert payload["embedding_dimensions"] == 1536
+    assert payload["embedding_dimensions"] == 768
+
+
+def test_litellm_embedding_model_prefix_is_idempotent() -> None:
+    assert (
+        _litellm_embedding_model_for_provider(
+            provider="openrouter",
+            model="openrouter/baai/bge-m3",
+        )
+        == "openrouter/baai/bge-m3"
+    )
+
+
+def test_cognee_embedding_tokenizer_options_are_cortex_runtime_only() -> None:
+    payload = {
+        "embedding_provider": "openai",
+        "embedding_model": "bge-m3",
+        "embedding_dimensions": 1024,
+        "embedding_endpoint": "https://openrouter.ai/api/v1",
+        "embedding_api_key": "test-provider-key",
+        "tokenizer": {
+            "strategy": "huggingface",
+            "model": "BAAI/bge-m3",
+            "fallback_strategy": "tiktoken",
+        },
+    }
+
+    assert _embedding_tokenizer_options(payload) == {
+        "strategy": "huggingface",
+        "model": "BAAI/bge-m3",
+        "encoding": "cl100k_base",
+        "fallback_strategy": "tiktoken",
+    }
+    assert _cognee_sdk_payload("embedding", payload) == {
+        "embedding_provider": "openai",
+        "embedding_model": "bge-m3",
+        "embedding_dimensions": 1024,
+        "embedding_endpoint": "https://openrouter.ai/api/v1",
+        "embedding_api_key": "test-provider-key",
+    }
+
+
+def test_knowledge_runtime_result_normalization_is_json_safe() -> None:
+    class _PipelineRunCompletedLike:
+        def model_dump(self, mode: str = "json") -> dict[str, object]:
+            assert mode == "json"
+            return {
+                "status": "PipelineRunCompleted",
+                "dataset_id": uuid4(),
+                "details": {"nested": _RawHit("source", "title", "snippet")},
+            }
+
+    normalized = KnowledgeOperationService._normalize_runtime_result(
+        {"result": _PipelineRunCompletedLike()}
+    )
+
+    json.dumps(normalized)
+    assert normalized["result"]["status"] == "PipelineRunCompleted"
+    assert isinstance(normalized["result"]["dataset_id"], str)
+    assert normalized["result"]["details"]["nested"]["source_id"] == "source"
+    assert _json_safe({"value": uuid4()})["value"]

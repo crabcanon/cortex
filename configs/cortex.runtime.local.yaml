@@ -66,6 +66,10 @@ knowledge:
       embedding_dimensions_ref: env:OPENROUTER_EMBEDDING_DIMENSIONS
       embedding_endpoint_ref: env:OPENROUTER_BASE_URL
       embedding_api_key_ref: env:OPENROUTER_API_KEY
+      tokenizer:
+        strategy: auto
+        encoding: cl100k_base
+        fallback_strategy: tiktoken
 
     vector_db:
       vector_db_provider: lancedb
@@ -73,6 +77,9 @@ knowledge:
 
     graph_db:
       graph_database_provider: kuzu
+      graph_file_path_ref: path:../.data/cognee/local/graph/cognee_graph_kuzu
+      graph_filename: cognee_graph_kuzu
+      graph_dataset_database_handler: kuzu
 
     relational_db:
       db_provider: sqlite
@@ -87,9 +94,9 @@ evaluation:
   engines:
     deepeval:
       enabled: true
-      model_ref: env:KIMI_MODEL_ID
-      api_url_ref: env:KIMI_BASE_URL
-      api_key_ref: env:KIMI_API_KEY
+      model_ref: env:OPENROUTER_MODEL_ID
+      api_url_ref: env:OPENROUTER_BASE_URL
+      api_key_ref: env:OPENROUTER_API_KEY
       options: {}
     evalscope:
       enabled: true
@@ -111,7 +118,7 @@ synthesis:
       options: {}
     deepeval:
       enabled: true
-      model_ref: env:KIMI_MODEL_ID
-      api_url_ref: env:KIMI_BASE_URL
-      api_key_ref: env:KIMI_API_KEY
+      model_ref: env:OPENROUTER_MODEL_ID
+      api_url_ref: env:OPENROUTER_BASE_URL
+      api_key_ref: env:OPENROUTER_API_KEY
       options: {}

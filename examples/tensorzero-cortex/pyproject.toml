@@ -13,13 +13,14 @@ dependencies = [
 ]
 
 [project.scripts]
-tensorzero-cortex = "tensorzero_cortex.cli:main"
+tensorzero-cortex = "cli:main"
 
 [tool.uv]
 package = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/tensorzero_cortex"]
+only-include = ["src"]
+sources = ["src"]
 
 [build-system]
 requires = ["hatchling"]

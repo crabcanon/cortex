@@ -20,6 +20,18 @@ class CortexApiError(RuntimeError):
         self.response = response
 
 
+class CortexConnectionError(RuntimeError):
+    def __init__(self, method: str, path: str, *, base_url: str, cause: Exception) -> None:
+        super().__init__(
+            f"Cortex API is unreachable at {base_url} while calling {method} {path}: "
+            f"{cause}. Start Cortex API or set CORTEX_BASE_URL to the reachable address."
+        )
+        self.method = method
+        self.path = path
+        self.base_url = base_url
+        self.cause = cause
+
+
 class CortexClient:
     def __init__(
         self,
@@ -120,10 +132,14 @@ class CortexClient:
         deadline = time.monotonic() + timeout_seconds
         last_status: dict[str, Any] = {}
         while time.monotonic() < deadline:
-            response = self._client.get(
-                f"{self.base_url}/v1/parse/jobs/{job_id}/result",
-                headers={"Authorization": f"Bearer {self.ensure_token()}"},
-            )
+            path = f"/v1/parse/jobs/{job_id}/result"
+            try:
+                response = self._client.get(
+                    f"{self.base_url}{path}",
+                    headers={"Authorization": f"Bearer {self.ensure_token()}"},
+                )
+            except httpx.RequestError as exc:
+                raise CortexConnectionError("GET", path, base_url=self.base_url, cause=exc) from exc
             if response.status_code == 200:
                 return response.json()
             if response.status_code == 409:
@@ -415,7 +431,15 @@ class CortexClient:
         headers = dict(kwargs.pop("headers", {}) or {})
         if auth:
             headers["Authorization"] = f"Bearer {self.ensure_token()}"
-        response = self._client.request(method, f"{self.base_url}{path}", headers=headers, **kwargs)
+        try:
+            response = self._client.request(
+                method,
+                f"{self.base_url}{path}",
+                headers=headers,
+                **kwargs,
+            )
+        except httpx.RequestError as exc:
+            raise CortexConnectionError(method, path, base_url=self.base_url, cause=exc) from exc
         if response.status_code >= 400:
             raise CortexApiError(method, path, response)
         if not response.content:

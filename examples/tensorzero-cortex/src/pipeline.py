@@ -7,13 +7,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from .cortex_client import CortexApiError, CortexClient, write_json
-from .finance_urls import FINANCE_URLS
-from .knowledge_graph_visualization import (
+from cortex_client import CortexApiError, CortexClient, write_json
+from finance_urls import FINANCE_URLS
+from knowledge_graph_visualization import (
     KnowledgeGraphVisualizationError,
     visualize_knowledge_graph_from_container,
 )
-from .models import (
+from models import (
     ContextGroup,
     EvaluationCase,
     EvaluationOptions,
@@ -26,9 +26,9 @@ from .models import (
     TensorZeroInferenceRecord,
     TensorZeroOptions,
 )
-from .scoring import score_answer, score_context, score_markdown
-from .settings import ARTIFACTS_DIR, Settings
-from .tensorzero_client import TensorZeroClient
+from scoring import score_answer, score_context, score_markdown
+from settings import ARTIFACTS_DIR, Settings
+from tensorzero_client import TensorZeroClient
 
 
 class ExperimentPipeline:
@@ -109,6 +109,7 @@ class ExperimentPipeline:
                         graph_path = visualize_knowledge_graph_from_container(
                             run_id=run_id,
                             container_name=self.settings.knowledge_worker_container,
+                            dataset_key=dataset_key,
                         )
                         knowledge_events["graph_visualization_path"] = str(graph_path)
                     except KnowledgeGraphVisualizationError as exc:
@@ -175,6 +176,8 @@ class ExperimentPipeline:
             dataset_key=dataset_key,
             cortex_eval_mode=cortex_eval_mode,
             knowledge_events=knowledge_events,
+            max_cases=evaluation_options.max_cases,
+            max_context_chars_per_case=evaluation_options.max_context_chars_per_case,
         )
         eval_dataset_path = run_dir / "tensorzero_eval_dataset.jsonl"
         eval_dataset_path.write_text(
@@ -272,7 +275,7 @@ class ExperimentPipeline:
         artifacts: list[ParseArtifact] = []
         for source in urls:
             url = str(source["url"])
-            expected_keywords = [str(item) for item in source.get("expected_keywords", [])]
+            expected_keywords = [str(item) for item in source.get("expected_keywords", [])] # type: ignore
             for engine_id in engines:
                 engine_mode = _mode_for_engine(
                     engine_id,
@@ -360,7 +363,7 @@ class ExperimentPipeline:
         )
         documents = [
             {
-                "text": artifact.context_excerpt,
+                "text": _knowledge_ingest_text(artifact),
                 "label": f"{artifact.url_name} via {artifact.engine_id}",
                 "metadata": {
                     "source_url": artifact.url,
@@ -575,7 +578,10 @@ class ExperimentPipeline:
             }
             try:
                 if mode == "async":
-                    results["runs"][eval_type] = self.cortex.run_eval_async(**kwargs)
+                    results["runs"][eval_type] = self.cortex.run_eval_async(
+                        **kwargs,
+                        timeout_seconds=options.async_timeout_seconds or 3600,
+                    )
                 else:
                     results["runs"][eval_type] = self.cortex.run_eval_sync(**kwargs)
             except Exception as exc:  # noqa: BLE001 - one eval profile should not hide the rest.
@@ -742,6 +748,20 @@ def _context_excerpt(markdown: str, *, max_chars: int = 6000) -> str | None:
     return cleaned[:max_chars]
 
 
+def _knowledge_ingest_text(artifact: ParseArtifact) -> str:
+    metadata = {
+        "source_name": artifact.url_name,
+        "source_url": artifact.url,
+        "parse_engine": artifact.engine_id,
+        "parse_mode": artifact.parse_mode,
+        "object_id": artifact.object_id,
+        "document_id": artifact.document_id,
+        "markdown_chars": artifact.markdown_chars,
+    }
+    header = "---\n" + json.dumps(metadata, ensure_ascii=False, indent=2) + "\n---\n\n"
+    return header + (artifact.context_excerpt or "")
+
+
 def _fallback_search_result(
     *,
     parse_artifacts: list[ParseArtifact],
@@ -898,12 +918,16 @@ def _evaluation_cases(
     dataset_key: str,
     cortex_eval_mode: str,
     knowledge_events: dict[str, Any],
+    max_cases: int | None = None,
+    max_context_chars_per_case: int | None = None,
 ) -> list[EvaluationCase]:
     cases: list[EvaluationCase] = []
     for record in records:
         if record.error or not record.answer_text.strip():
             continue
         context = context_texts.get(record.context_id, "")
+        if max_context_chars_per_case:
+            context = context[:max_context_chars_per_case]
         cases.append(
             EvaluationCase(
                 query=query,
@@ -927,6 +951,8 @@ def _evaluation_cases(
                 },
             )
         )
+        if max_cases and len(cases) >= max_cases:
+            break
     return cases
 
 
@@ -952,7 +978,16 @@ def _metrics_for_eval_type(
         ]
 
     profile = options.metric_profile.strip().lower()
-    if profile == "deepeval_quality_core" or eval_type == "custom":
+    if profile == "deepeval_local_smoke":
+        if eval_type == "custom":
+            metrics = [
+                MetricConfig(metric_key="custom.g_eval", threshold=0.6, weight=1.0),
+            ]
+        else:
+            metrics = [
+                MetricConfig(metric_key="rag.answer_relevance", threshold=0.6, weight=1.0),
+            ]
+    elif profile == "deepeval_quality_core" or eval_type == "custom":
         metrics = [
             MetricConfig(metric_key="quality.correctness", threshold=0.65, weight=0.35),
             MetricConfig(metric_key="quality.completeness", threshold=0.65, weight=0.25),
@@ -996,7 +1031,7 @@ def _metric_to_payload(metric: MetricConfig) -> dict[str, Any]:
 def _expected_keywords(urls: list[dict[str, object]]) -> list[str]:
     keywords: list[str] = []
     for source in urls:
-        keywords.extend(str(item) for item in source.get("expected_keywords", []))
+        keywords.extend(str(item) for item in source.get("expected_keywords", [])) # type: ignore
     deduped = list(dict.fromkeys(keyword.lower() for keyword in keywords))
     return deduped[:30]
 

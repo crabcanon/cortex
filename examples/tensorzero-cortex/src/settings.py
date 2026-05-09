@@ -6,7 +6,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 ARTIFACTS_DIR = ROOT / "artifacts"
 TENSORZERO_DIR = ROOT / "tensorzero"
 
@@ -31,6 +31,9 @@ class Settings:
     cortex_eval_mode: str
     cortex_eval_types: tuple[str, ...]
     cortex_eval_metric_profile: str
+    cortex_eval_max_cases: int
+    cortex_eval_max_context_chars_per_case: int
+    cortex_eval_async_timeout_seconds: int
     tensorzero_strategy: str
     tensorzero_variants: tuple[str, ...]
     tensorzero_context_grouping: str
@@ -75,7 +78,12 @@ def load_settings(env_file: Path | None = None) -> Settings:
         submit_cortex_eval=_env("SUBMIT_CORTEX_EVAL", "false").lower() == "true",
         cortex_eval_mode=_env("CORTEX_EVAL_MODE", "sync").lower(),
         cortex_eval_types=_csv_env("CORTEX_EVAL_TYPES", "rag,custom"),
-        cortex_eval_metric_profile=_env("CORTEX_EVAL_METRIC_PROFILE", "deepeval_rag_core"),
+        cortex_eval_metric_profile=_env("CORTEX_EVAL_METRIC_PROFILE", "deepeval_local_smoke"),
+        cortex_eval_max_cases=int(_env("CORTEX_EVAL_MAX_CASES", "1")),
+        cortex_eval_max_context_chars_per_case=int(
+            _env("CORTEX_EVAL_MAX_CONTEXT_CHARS_PER_CASE", "2000")
+        ),
+        cortex_eval_async_timeout_seconds=int(_env("CORTEX_EVAL_ASYNC_TIMEOUT_SECONDS", "3600")),
         tensorzero_strategy=_env("TENSORZERO_STRATEGY", "exhaustive").lower(),
         tensorzero_variants=_csv_env("TENSORZERO_VARIANTS", "openai,gemini,kimi"),
         tensorzero_context_grouping=_env(
@@ -83,9 +91,9 @@ def load_settings(env_file: Path | None = None) -> Settings:
             "by_parse_engine",
         ).lower(),
         tensorzero_max_context_chars_per_group=int(
-            _env("TENSORZERO_MAX_CONTEXT_CHARS_PER_GROUP", "12000")
+            _env("TENSORZERO_MAX_CONTEXT_CHARS_PER_GROUP", "6000")
         ),
-        request_timeout_seconds=float(_env("REQUEST_TIMEOUT_SECONDS", "120")),
+        request_timeout_seconds=float(_env("REQUEST_TIMEOUT_SECONDS", "300")),
     )
 
 

@@ -33,7 +33,7 @@ examples/tensorzero-cortex/
     tensorzero.toml.tpl
     templates/rag_system.minijinja
     schemas/rag_answer.schema.json
-  src/tensorzero_cortex/
+  src/
     cli.py
     main.py
     pipeline.py
@@ -59,11 +59,25 @@ OPENROUTER_API_KEY=...
 OLLAMA_API_KEY=ollama
 ```
 
-如果你只想先测一个供应商，可以先只填对应 key，并在 `tensorzero/tensorzero.toml.tpl` 或 `.env` 中把候选模型改成可用模型。
+如果你只想先测一个供应商，可以先只填对应 key，并在 `.env` 中把候选模型改成可用模型。TensorZero 的最终配置由 `tensorzero/tensorzero.toml.tpl` 加 `.env` 渲染而来，`src/render_tensorzero_config.py` 不再保留任何内置默认值；模板中出现的每个变量都必须在 `.env` 或你通过 `--env-file` 指定的文件中填写。
 
 Parse 默认走同步模式。需要生产型长任务链路时，把 `.env` 中的 `PARSE_MODE` 改为 `async`，或在命令行传入 `--parse-mode async`。Docling 属于重型 worker-only 引擎，样例默认会把 `docling` 覆盖为 async，即使全局 `PARSE_MODE=sync` 也会提交 `/v1/parse/jobs`，让 `cortex-parse-worker-docling` 消费任务。
 
 Cortex Evaluation 默认也走同步模式。需要验证 worker-backed 评测链路时，把 `.env` 中的 `CORTEX_EVAL_MODE` 改为 `async`。如果希望每次运行都提交 Cortex Evaluation，把 `SUBMIT_CORTEX_EVAL` 改为 `true`。Cortex 本地 runtime 默认将 DeepEval / DeepEval Synthesizer 的 judge model 绑定到 `KIMI_*` 槽位；如果你刚从 Gemini 切换过来，确认仓库根目录 `.env` 已填写 `KIMI_BASE_URL`、`KIMI_API_KEY`、`KIMI_MODEL_ID`，并重启 `cortex-api` 与 `cortex-evaluation-worker-runtime`。DeepEval 会通过 Cortex 的 OpenAI-compatible judge wrapper 显式使用 Kimi 的 `base_url` 和 `api_key`，不再依赖 DeepEval 对模型字符串的隐式供应商路由。
+
+如果 Cortex Evaluation 也切到本地 Ollama，建议先使用轻量冒烟评测，避免 DeepEval 多指标、多 case 把本地 judge 模型压到超时：
+
+```text
+SUBMIT_CORTEX_EVAL=true
+CORTEX_EVAL_MODE=async
+CORTEX_EVAL_TYPES=rag
+CORTEX_EVAL_METRIC_PROFILE=deepeval_local_smoke
+CORTEX_EVAL_MAX_CASES=1
+CORTEX_EVAL_MAX_CONTEXT_CHARS_PER_CASE=2000
+CORTEX_EVAL_ASYNC_TIMEOUT_SECONDS=3600
+```
+
+`deepeval_local_smoke` 只提交一个 RAG 核心指标和少量 case，用来确认链路可用。确认稳定后，再逐步切回 `deepeval_rag_core`、增加 `CORTEX_EVAL_MAX_CASES`，或增加 `CORTEX_EVAL_TYPES=rag,custom`。
 
 Knowledge 的 Cognee LLM 和 embedding 在本地默认使用 `OPENROUTER_*`。OpenRouter 的 OpenAI-compatible base URL 是 `https://openrouter.ai/api/v1`，并支持 `/embeddings`。推荐在仓库根目录 `.env` 中配置：
 
@@ -74,6 +88,39 @@ OPENROUTER_MODEL_ID=openrouter/auto
 OPENROUTER_EMBEDDING_MODEL_ID=openai/text-embedding-3-small
 OPENROUTER_EMBEDDING_DIMENSIONS=1536
 ```
+
+如果把 embedding 切到 OpenRouter 的 BGE-M3，请同步把维度改成模型实际维度，例如：
+
+```text
+OPENROUTER_EMBEDDING_MODEL_ID=baai/bge-m3
+OPENROUTER_EMBEDDING_DIMENSIONS=1024
+```
+
+Cognee 的 OpenAI/LiteLLM embedding 路径会用 tiktoken 做 chunk token 估算，而 `baai/bge-m3` 不是 tiktoken 内置模型名。Cortex 已在 Knowledge runtime 中加了兜底：遇到这类 OpenAI-compatible 非 OpenAI embedding 模型时，token 估算退回 `cl100k_base`；实际 `/embeddings` 请求会按 provider alias 自动路由为 LiteLLM 的 `openrouter/baai/bge-m3`。
+
+更通用地说，Knowledge 的 embedding 服务与 tokenizer 估算策略已经解耦。你可以在仓库根目录 `configs/cortex.runtime.local.yaml` 的 `knowledge.cognee.embedding.tokenizer` 下切换策略：
+
+```yaml
+tokenizer:
+  # auto: 先让 Cognee 按 provider/model 自己选择；失败后走 fallback_strategy
+  # tiktoken: 固定使用指定 tiktoken encoding
+  # huggingface: 使用 HuggingFace tokenizer，model 可写 BAAI/bge-m3 等
+  # approximate / none: 不依赖 tokenizer 包，按词数做保守估算
+  strategy: auto
+  encoding: cl100k_base
+  fallback_strategy: tiktoken
+```
+
+如果你希望 BGE-M3 token 估算也贴近原模型，可以改成：
+
+```yaml
+tokenizer:
+  strategy: huggingface
+  model: BAAI/bge-m3
+  fallback_strategy: tiktoken
+```
+
+这只影响本地 chunk/token 估算，不会改变发给 OpenRouter 的 embedding 模型 ID。
 
 如果日志里出现 `litellm.RateLimitError: OpenAIException`，说明 Knowledge 仍在打 OpenAI 默认通道，请确认 `configs/cortex.runtime.local.yaml` 已把 Cognee LLM 与 embedding 指向 `OPENROUTER_*`，并重建/重启 `cortex-knowledge-worker`。Cortex 会把 `openrouter` provider alias 映射为 OpenAI-compatible SDK 调用，并把 OpenRouter 槽位写入 `OPENAI_BASE_URL` / `LITELLM_API_BASE` 等 Cognee/LiteLLM 会读取的环境变量。如果 OpenRouter 在宿主机可访问但 Docker 容器内连接失败，请在 `.env` 里配置 `HTTPS_PROXY` / `HTTP_PROXY` / `ALL_PROXY`，本样例和 Cortex Compose 都会透传这些代理变量。本地 Docker Desktop 使用宿主机代理时建议写成 `http://host.docker.internal:7890`，Cortex 本地 Compose 会把 `host.docker.internal` 映射到宿主机网关。
 
@@ -88,7 +135,60 @@ OLLAMA_EMBEDDING_DIMENSIONS=768
 CORTEX_RUNTIME_CONFIG_PATH=configs/cortex.runtime.ollama.yaml
 ```
 
-宿主机先执行 `ollama pull llama3.1:8b` 与 `ollama pull nomic-embed-text`。如果只想让 TensorZero 矩阵里额外比较 Ollama LLM，也可以在本样例 `.env` 里设置 `TENSORZERO_VARIANTS=openai,gemini,kimi,ollama`；adaptive A/B test 的默认候选仍只包含 `openai,gemini,kimi`，避免未启动 Ollama 时自动采样失败。
+宿主机先执行 `ollama pull llama3.1:8b` 与 `ollama pull nomic-embed-text`。如果想让 TensorZero 矩阵或 adaptive A/B test 额外比较 Ollama LLM，在本样例 `.env` 里设置 `TENSORZERO_VARIANTS=openai,gemini,kimi,ollama`，并重新渲染 TensorZero 配置。
+
+修改 `TENSORZERO_VARIANTS` 或 `tensorzero/tensorzero.toml.tpl` 后，必须重新渲染并重启 Gateway；TensorZero Gateway 只在启动时读取 `/app/config/tensorzero.toml`：
+
+```powershell
+uv run tensorzero-cortex render-config
+docker compose --env-file .env -f tensorzero\docker-compose.tensorzero.yaml up -d --force-recreate gateway ui
+```
+
+如果报告里出现 `Unknown variant: ollama`，说明运行中的 Gateway 仍在使用旧版 `tensorzero.toml`。先确认生成文件里已经存在 `[functions.cortex_rag_answer.variants.ollama]`，再重启 Gateway：
+
+```powershell
+Select-String -Path tensorzero\tensorzero.toml -Pattern "variants.ollama"
+```
+
+如果 `ollama` variant 显示 `timed out`，通常是本地模型冷启动、上下文过长或 Gateway 容器无法访问 Ollama。先用最小请求确认宿主机 Ollama 正常：
+
+```powershell
+$body = @{
+  model = $env:OLLAMA_MODEL_ID
+  messages = @(@{ role = "user"; content = "Say ok." })
+  stream = $false
+  max_tokens = 32
+} | ConvertTo-Json -Depth 8
+
+Invoke-RestMethod `
+  -Method Post `
+  -Uri "http://127.0.0.1:11434/v1/chat/completions" `
+  -ContentType "application/json" `
+  -Body $body `
+  -TimeoutSec 300
+```
+
+再确认 TensorZero Gateway 容器能访问宿主机 Ollama：
+
+```powershell
+docker exec tensorzero-gateway-1 wget -qO- http://host.docker.internal:11434/api/tags
+```
+
+本地 Ollama 推荐先把上下文和输出 token 调小，再逐步放大：
+
+```text
+TENSORZERO_VARIANTS=ollama
+TENSORZERO_MAX_CONTEXT_CHARS_PER_GROUP=3000
+TENSORZERO_OLLAMA_MAX_TOKENS=512
+REQUEST_TIMEOUT_SECONDS=600
+```
+
+修改后重新渲染并重启 Gateway：
+
+```powershell
+uv run tensorzero-cortex render-config
+docker compose --env-file .env -f tensorzero\docker-compose.tensorzero.yaml up -d --force-recreate gateway ui
+```
 
 矩阵实验相关的推荐配置：
 
@@ -99,8 +199,11 @@ TENSORZERO_VARIANTS=openai,gemini,kimi
 TENSORZERO_CONTEXT_GROUPING=by_parse_engine
 SUBMIT_CORTEX_EVAL=true
 CORTEX_EVAL_MODE=async
-CORTEX_EVAL_TYPES=rag,custom
-CORTEX_EVAL_METRIC_PROFILE=deepeval_rag_core
+CORTEX_EVAL_TYPES=rag
+CORTEX_EVAL_METRIC_PROFILE=deepeval_local_smoke
+CORTEX_EVAL_MAX_CASES=1
+CORTEX_EVAL_MAX_CONTEXT_CHARS_PER_CASE=2000
+CORTEX_EVAL_ASYNC_TIMEOUT_SECONDS=3600
 KNOWLEDGE_GRAPH_VISUALIZATION=true
 CORTEX_KNOWLEDGE_WORKER_CONTAINER=cortex-local-cortex-knowledge-worker-1
 ```
@@ -123,6 +226,12 @@ TensorZero 的 gateway 启动前需要静态 `tensorzero.toml`。本样例用 `.
 
 ```powershell
 uv run tensorzero-cortex render-config
+```
+
+也可以显式指定配置文件，便于 CI 或本地多套模型配置切换：
+
+```powershell
+uv run tensorzero-cortex render-config --env-file .env.openrouter
 ```
 
 会生成：
@@ -410,7 +519,7 @@ Cortex Evaluation 默认使用 DeepEval 对齐的核心指标：
 
 ## 7. Cognee 知识图谱可视化
 
-Cognee 官方提供 `visualize_graph(path)`，可以把当前知识图谱渲染为一个可交互的静态 HTML 文件，包含节点、边、标签、缩放、拖拽和 hover tooltip。
+Cognee 官方提供图谱可视化能力。TensorZero Cortex 样例不会直接读取默认全局图，而是根据本次 run 的 `dataset_key` 进入 Cognee 的 dataset-scoped graph context，再把该数据集下的节点和边渲染为可交互 HTML。
 
 当 `knowledge.enabled=true` 且 Knowledge Add/Cognify 成功时，样例会尝试通过 Docker 中的 `cortex-knowledge-worker` 运行 Cognee 可视化，并把结果写入：
 
@@ -426,6 +535,14 @@ cd D:\code\codex\cortex\examples\tensorzero-cortex
 uv run tensorzero-cortex visualize-knowledge --run-id tzcx_20260429_085020_bd0c1daa
 ```
 
+如果要显式指定数据集：
+
+```powershell
+uv run tensorzero-cortex visualize-knowledge `
+  --run-id tzcx_20260429_085020_bd0c1daa `
+  --dataset-key tensorzero_cortex_tzcx_20260429_085020_bd0c1daa
+```
+
 如果你的容器名不同：
 
 ```powershell
@@ -436,9 +553,36 @@ uv run tensorzero-cortex visualize-knowledge `
 
 如果 Knowledge runtime 没有成功构建图谱，或者当前 API 退回到了 `parse_artifact_fallback`，这个 HTML 可能无法生成；这种情况下先确认 `cortex-knowledge-worker` 正常运行，并且本次 run 的 Add/Cognify job 已经成功。
 
+如果报告里 `knowledge_graph_html_path=null`，先看同一个 `report.json` 中的 `knowledge_events`。只要 `knowledge_events.status=failed`，样例就会自动退回到 parse artifacts，并不会进入 Cognee `visualize_graph(path)`。常见原因是 Knowledge Add 阶段的 embedding provider 预检超时，错误中会出现 `Embedding connection test timed out after 30s`。本地 Docker 可以在仓库根目录 `.env` 中保留：
+
+```text
+COGNEE_SKIP_CONNECTION_TEST=true
+```
+
+然后重启 Cortex API 与 Knowledge Worker：
+
+```powershell
+docker compose --env-file ..\..\.env -f ..\..\compose.local.yaml up -d --no-build --force-recreate cortex-api cortex-knowledge-worker
+```
+
+本地 Kuzu 图数据库有两个容易混淆的位置：
+
+- 默认/全局图路径由 `configs/cortex.runtime.local.yaml` 或 `configs/cortex.runtime.ollama.yaml` 显式管理，默认是仓库根目录 `.data/cognee/local/graph/cognee_graph_kuzu`。
+- Cognee 在启用 backend access control 时会为每个用户和数据集生成独立图数据库，通常位于容器内 `/app/.data/cognee/local/system/databases/{cognee_user_id}/{dataset_uuid}.pkl`。因此没有看到名为 `kuzu` 的目录并不代表图谱没有写入。
+
+如果 `knowledge_graph.html` 打开后显示 `No graph data available`，通常是可视化读取了默认全局图，而不是本次 run 的 dataset graph。当前样例会从 `report.json` 读取 `dataset_key`，并调用 Cognee 的 multi-user aggregation 路径导出该 dataset 的图谱；旧版生成的空 HTML 可以用上面的 `visualize-knowledge` 命令重新生成。
+
+如果最近的 Knowledge job 报：
+
+```text
+UNIQUE constraint failed: data.id
+```
+
+说明 Cognee 在 Add 阶段写入自己的 `data` 表时遇到了重复内容 ID。Cortex 现在会把 Add 输入包装为 Cognee `DataItem`，使用 dataset、source、parse engine 和正文 hash 生成稳定 `data_id`，避免同一批 URL 在多个解析器/多次 run 中互相撞库。更新代码后重启 `cortex-knowledge-worker` 并重新跑 example；旧失败 job 不会自动生成 Kuzu，需要重新提交。
+
 ## 8. 内置 URL 类型
 
-`src/tensorzero_cortex/finance_urls.py` 内置 20 个金融 / 宏观经济来源，覆盖：
+`src/finance_urls.py` 内置 20 个金融 / 宏观经济来源，覆盖：
 
 - HTML 页面
 - PDF 报告

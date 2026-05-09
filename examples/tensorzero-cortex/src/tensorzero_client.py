@@ -14,6 +14,7 @@ class TensorZeroError(RuntimeError):
 class TensorZeroClient:
     def __init__(self, *, gateway_url: str, timeout_seconds: float) -> None:
         self.gateway_url = gateway_url.rstrip("/")
+        self.timeout_seconds = timeout_seconds
         self._client = httpx.Client(timeout=timeout_seconds, trust_env=False)
 
     def close(self) -> None:
@@ -74,7 +75,24 @@ class TensorZeroClient:
             payload["variant_name"] = variant_name
         if include_raw_response:
             payload["include_original_response"] = True
-        response = self._client.post(f"{self.gateway_url}/inference", json=payload)
+        try:
+            response = self._client.post(f"{self.gateway_url}/inference", json=payload)
+        except httpx.TimeoutException as exc:
+            variant = variant_name or "adaptive"
+            raise TensorZeroError(
+                "TensorZero inference timed out after "
+                f"{self.timeout_seconds:.0f}s for variant `{variant}` at "
+                f"{self.gateway_url}/inference. If this is a local Ollama run, "
+                "verify the Gateway container can reach OLLAMA_BASE_URL, reduce "
+                "TENSORZERO_MAX_CONTEXT_CHARS_PER_GROUP / TENSORZERO_OLLAMA_MAX_TOKENS, "
+                "or increase REQUEST_TIMEOUT_SECONDS."
+            ) from exc
+        except httpx.RequestError as exc:
+            variant = variant_name or "adaptive"
+            raise TensorZeroError(
+                f"TensorZero inference request failed for variant `{variant}` at "
+                f"{self.gateway_url}/inference: {exc}"
+            ) from exc
         if response.status_code >= 400:
             raise TensorZeroError(
                 f"TensorZero inference failed: {response.status_code} {response.text}"

@@ -75,7 +75,7 @@ class TensorZeroOptions(BaseModel):
         default="by_parse_engine",
         description="combined, by_parse_engine, or knowledge_or_parse.",
     )
-    max_context_chars_per_group: int = Field(default=12000, ge=1000, le=48000)
+    max_context_chars_per_group: int = Field(default=6000, ge=1000, le=48000)
     feedback_enabled: bool = True
     include_raw_response: bool = False
 
@@ -97,6 +97,24 @@ class EvaluationOptions(BaseModel):
     )
     metrics_by_type: dict[str, list[MetricConfig]] | None = Field(default=None)
     persist_report_object: bool = True
+    max_cases: int | None = Field(
+        default=None,
+        ge=1,
+        le=100,
+        description="Limit the generated evaluation cases submitted to Cortex Evaluation.",
+    )
+    max_context_chars_per_case: int | None = Field(
+        default=None,
+        ge=500,
+        le=24000,
+        description="Truncate retrieval context per evaluation case for local judges.",
+    )
+    async_timeout_seconds: int | None = Field(
+        default=None,
+        ge=60,
+        le=7200,
+        description="Client-side wait budget for async Cortex Evaluation jobs.",
+    )
 
 
 class ExperimentRequest(BaseModel):

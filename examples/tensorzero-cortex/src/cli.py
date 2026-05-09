@@ -2,19 +2,19 @@ from __future__ import annotations
 
 import argparse
 import json
+from pathlib import Path
 
-from rich.console import Console
-
-from .finance_urls import FINANCE_URLS
-from .knowledge_graph_visualization import (
+from finance_urls import FINANCE_URLS
+from knowledge_graph_visualization import (
     KnowledgeGraphVisualizationError,
     latest_run_id,
     visualize_knowledge_graph_from_container,
 )
-from .models import EvaluationOptions, ExperimentRequest, ParseOptions, TensorZeroOptions
-from .pipeline import ExperimentPipeline
-from .render_tensorzero_config import render_config
-from .settings import load_settings
+from models import EvaluationOptions, ExperimentRequest, ParseOptions, TensorZeroOptions
+from pipeline import ExperimentPipeline
+from render_tensorzero_config import render_config
+from rich.console import Console
+from settings import load_settings
 
 console = Console()
 
@@ -78,12 +78,13 @@ def main() -> None:
         help="Render Cognee knowledge graph HTML into a TensorZero Cortex artifact folder.",
     )
     graph_parser.add_argument("--run-id", default=None)
+    graph_parser.add_argument("--dataset-key", default=None)
     graph_parser.add_argument("--container", default=None)
     graph_parser.add_argument("--output-name", default="knowledge_graph.html")
 
     args = parser.parse_args()
     if args.command == "render-config":
-        path = render_config()
+        path = render_config(Path(args.env_file) if args.env_file else None)
         console.print(f"[green]Rendered[/green] {path}")
         return
     if args.command == "list-urls":
@@ -92,7 +93,7 @@ def main() -> None:
     if args.command == "serve":
         import uvicorn
 
-        uvicorn.run("tensorzero_cortex.main:app", host=args.host, port=args.port, reload=False)
+        uvicorn.run("main:app", host=args.host, port=args.port, reload=False)
         return
     if args.command == "visualize-knowledge":
         settings = load_settings()
@@ -101,6 +102,7 @@ def main() -> None:
             output_path = visualize_knowledge_graph_from_container(
                 run_id=run_id,
                 container_name=args.container or settings.knowledge_worker_container,
+                dataset_key=args.dataset_key,
                 output_name=args.output_name,
             )
         except KnowledgeGraphVisualizationError as exc:

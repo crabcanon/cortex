@@ -102,6 +102,7 @@ def _build_client(
     monkeypatch.setenv("CORTEX_ENV", environment)
     monkeypatch.setenv("CORTEX_AUTH_MODE", auth_mode)
     monkeypatch.setenv("CORTEX_OTEL_ENABLED", "false")
+    monkeypatch.setenv("CORTEX_COGNEE_ENABLED", "false")
     monkeypatch.setenv("CORTEX_CRAWL4AI_SKIP_PROBE", "1")
     load_settings.cache_clear()
     return TestClient(create_app())

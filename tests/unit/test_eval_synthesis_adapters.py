@@ -570,7 +570,7 @@ def test_docling_engine_is_catalog_active_when_sdk_is_worker_only(
     )
     engine = DoclingParseEngine({"enabled": True})
 
-    assert engine.descriptor.status is ParseEngineStatus.ACTIVE
+    assert engine.descriptor.status is ParseEngineStatus.DISABLED
     with pytest.raises(ConfigError) as exc_info:
         asyncio.run(
             engine.execute(

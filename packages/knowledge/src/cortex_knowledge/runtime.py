@@ -643,13 +643,13 @@ def _cognee_stable_data_id(
     source_parts = [
         str(dataset),
         input_type,
-        _strip_optional_string(raw_input.get("label")) or "",
-        _strip_optional_string(metadata.get("source_url")) or "",
-        _strip_optional_string(metadata.get("source_name")) or "",
-        _strip_optional_string(metadata.get("engine_id")) or "",
-        _strip_optional_string(metadata.get("object_id")) or "",
-        _strip_optional_string(metadata.get("document_id")) or "",
-        _strip_optional_string(metadata.get("markdown_sha256")) or "",
+        _strip_optional_string((raw_input or {}).get("label")) or "",
+        _strip_optional_string((metadata or {}).get("source_url")) or "",
+        _strip_optional_string((metadata or {}).get("source_name")) or "",
+        _strip_optional_string((metadata or {}).get("engine_id")) or "",
+        _strip_optional_string((metadata or {}).get("object_id")) or "",
+        _strip_optional_string((metadata or {}).get("document_id")) or "",
+        _strip_optional_string((metadata or {}).get("markdown_sha256")) or "",
         hashlib.sha256(value.encode("utf-8")).hexdigest(),
     ]
     return uuid5(NAMESPACE_URL, "cortex:cognee-data:" + "\x1f".join(source_parts))
@@ -793,20 +793,16 @@ def _patch_cognee_tiktoken_unknown_model_fallback() -> None:
 
     def _init_with_fallback(
         self: Any,
-        model: str | None = None,
-        max_completion_tokens: int = 8191,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         try:
-            original_init(
-                self,
-                model=model,
-                max_completion_tokens=max_completion_tokens,
-            )
+            original_init(self, *args, **kwargs)
         except Exception as exc:
             if not _is_tiktoken_unknown_model_error(exc):
                 raise
-            self.model = model
-            self.max_completion_tokens = max_completion_tokens
+            self.model = kwargs.get("model")
+            self.max_completion_tokens = kwargs.get("max_completion_tokens", 8191)
             self.tokenizer = tiktoken_module.get_encoding(
                 str(_COGNEE_EMBEDDING_TOKENIZER_OPTIONS.get("encoding") or "cl100k_base")
             )

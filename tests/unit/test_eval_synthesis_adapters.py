@@ -25,6 +25,7 @@ from cortex_contracts import (
 from cortex_evaluation.adapters import (
     DeepEvalEvaluationEngine,
     EvalScopeSelfHostedSdkEvaluationEngine,
+    _build_deepeval_judge_model,
 )
 from cortex_parse.adapters.docling import DoclingParseEngine
 from cortex_synthesis.adapters import DeepEvalSynthesisEngine, SDVSynthesisEngine
@@ -171,6 +172,10 @@ class _FakeSynthesizer:
         ]
 
 
+class _FakeDeepEvalBaseLLM:
+    pass
+
+
 def _install_fake_deepeval(monkeypatch: pytest.MonkeyPatch) -> None:
     metrics_module = types.ModuleType("deepeval.metrics")
     for name in [
@@ -202,10 +207,14 @@ def _install_fake_deepeval(monkeypatch: pytest.MonkeyPatch) -> None:
     synthesizer_module = types.ModuleType("deepeval.synthesizer")
     synthesizer_module.__dict__["Synthesizer"] = _FakeSynthesizer
 
+    models_module = types.ModuleType("deepeval.models")
+    models_module.__dict__["DeepEvalBaseLLM"] = _FakeDeepEvalBaseLLM
+
     monkeypatch.setitem(sys.modules, "deepeval", types.ModuleType("deepeval"))
     monkeypatch.setitem(sys.modules, "deepeval.metrics", metrics_module)
     monkeypatch.setitem(sys.modules, "deepeval.test_case", test_case_module)
     monkeypatch.setitem(sys.modules, "deepeval.synthesizer", synthesizer_module)
+    monkeypatch.setitem(sys.modules, "deepeval.models", models_module)
 
 
 def _install_fake_sdv(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -226,6 +235,78 @@ def _install_fake_sdv(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setitem(sys.modules, "sdv.metadata", metadata_module)
     monkeypatch.setitem(sys.modules, "sdv.single_table", single_table_module)
     monkeypatch.setitem(sys.modules, "sdv.multi_table", multi_table_module)
+
+
+def _install_fake_openai(monkeypatch: pytest.MonkeyPatch) -> type:
+    openai_module = types.ModuleType("openai")
+
+    class _FakeCompletions:
+        def __init__(self, owner) -> None:
+            self._owner = owner
+
+        def create(self, **kwargs):
+            self._owner.requests.append(kwargs)
+            return types.SimpleNamespace(
+                choices=[
+                    types.SimpleNamespace(
+                        message=types.SimpleNamespace(content='{"score": 1}')
+                    )
+                ]
+            )
+
+    class _FakeAsyncCompletions:
+        def __init__(self, owner) -> None:
+            self._owner = owner
+
+        async def create(self, **kwargs):
+            self._owner.requests.append(kwargs)
+            self._owner.loops.append(asyncio.get_running_loop())
+            return types.SimpleNamespace(
+                choices=[
+                    types.SimpleNamespace(
+                        message=types.SimpleNamespace(content='{"score": 1}')
+                    )
+                ]
+            )
+
+    class _FakeChat:
+        def __init__(self, owner, completions_class) -> None:
+            self.completions = completions_class(owner)
+
+    class _FakeOpenAI:
+        instances: list[Any] = []
+        requests: list[dict[str, Any]] = []
+        closed = 0
+
+        def __init__(self, **kwargs) -> None:
+            self.kwargs = kwargs
+            self.requests = self.__class__.requests
+            self.chat = _FakeChat(self, _FakeCompletions)
+            self.__class__.instances.append(self)
+
+        def close(self) -> None:
+            self.__class__.closed += 1
+
+    class _FakeAsyncOpenAI:
+        instances: list[Any] = []
+        requests: list[dict[str, Any]] = []
+        loops: list[Any] = []
+        closed = 0
+
+        def __init__(self, **kwargs) -> None:
+            self.kwargs = kwargs
+            self.requests = self.__class__.requests
+            self.loops = self.__class__.loops
+            self.chat = _FakeChat(self, _FakeAsyncCompletions)
+            self.__class__.instances.append(self)
+
+        async def close(self) -> None:
+            self.__class__.closed += 1
+
+    openai_module.__dict__["OpenAI"] = _FakeOpenAI
+    openai_module.__dict__["AsyncOpenAI"] = _FakeAsyncOpenAI
+    monkeypatch.setitem(sys.modules, "openai", openai_module)
+    return _FakeAsyncOpenAI
 
 
 def test_deepeval_engine_runs_inline_test_cases(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -358,6 +439,30 @@ def test_deepeval_engine_applies_openai_compatible_environment(
     assert os.environ["OPENAI_API_BASE"] == "https://llm.example/v1"
     assert os.environ["LITELLM_API_BASE"] == "https://llm.example/v1"
     assert os.environ["OPENAI_API_KEY"] == "provider-key"
+
+
+def test_deepeval_openai_compatible_judge_does_not_reuse_async_clients_across_loops(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_fake_deepeval(monkeypatch)
+    fake_async_openai = _install_fake_openai(monkeypatch)
+    judge = _build_deepeval_judge_model(
+        model="openrouter/auto",
+        provider_config=OpenAICompatibleConfig(
+            api_url="https://openrouter.ai/api/v1",
+            api_key="provider-key",
+        ),
+        options={"timeout_seconds": 5, "max_tokens": 64},
+    )
+
+    first = asyncio.run(judge.a_generate("judge prompt one"))
+    second = asyncio.run(judge.a_generate("judge prompt two"))
+
+    assert first == '{"score": 1}'
+    assert second == '{"score": 1}'
+    assert len(fake_async_openai.instances) == 2
+    assert fake_async_openai.closed == 2
+    assert fake_async_openai.loops[0] is not fake_async_openai.loops[1]
 
 
 def test_sdv_engine_generates_single_table_preview(monkeypatch: pytest.MonkeyPatch) -> None:

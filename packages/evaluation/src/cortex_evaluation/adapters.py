@@ -695,23 +695,14 @@ def _build_deepeval_judge_model(
             self._temperature = float(options.get("temperature", 0))
             self._max_tokens = int(options.get("max_tokens", 4096))
             self._timeout = float(options.get("timeout_seconds", 120))
-            self._client = openai_client(
-                base_url=self._base_url,
-                api_key=self._api_key,
-                timeout=self._timeout,
-            )
-            self._async_client = async_openai_client(
-                base_url=self._base_url,
-                api_key=self._api_key,
-                timeout=self._timeout,
-            )
 
         def load_model(self) -> Any:
-            return self._client
+            return self._new_sync_client()
 
         def generate(self, prompt: str, schema: Any | None = None, **_: Any) -> Any:
+            client = self._new_sync_client()
             try:
-                completion = self._client.chat.completions.create(
+                completion = client.chat.completions.create(
                     **self._completion_payload(prompt, schema=schema)
                 )
             except Exception as exc:
@@ -720,14 +711,19 @@ def _build_deepeval_judge_model(
                     model=self._model_name,
                     base_url=self._base_url,
                 ) from exc
+            finally:
+                close = getattr(client, "close", None)
+                if callable(close):
+                    close()
             content = _completion_text(completion)
             return _coerce_deepeval_schema(content, schema)
 
         async def a_generate(
             self, prompt: str, schema: Any | None = None, **_: Any
         ) -> Any:
+            client = self._new_async_client()
             try:
-                completion = await self._async_client.chat.completions.create(
+                completion = await client.chat.completions.create(
                     **self._completion_payload(prompt, schema=schema)
                 )
             except Exception as exc:
@@ -736,11 +732,31 @@ def _build_deepeval_judge_model(
                     model=self._model_name,
                     base_url=self._base_url,
                 ) from exc
+            finally:
+                close = getattr(client, "close", None)
+                if callable(close):
+                    result = close()
+                    if inspect.isawaitable(result):
+                        await result
             content = _completion_text(completion)
             return _coerce_deepeval_schema(content, schema)
 
         def get_model_name(self) -> str:
             return f"openai-compatible:{self._model_name}"
+
+        def _new_sync_client(self) -> Any:
+            return openai_client(
+                base_url=self._base_url,
+                api_key=self._api_key,
+                timeout=self._timeout,
+            )
+
+        def _new_async_client(self) -> Any:
+            return async_openai_client(
+                base_url=self._base_url,
+                api_key=self._api_key,
+                timeout=self._timeout,
+            )
 
         def _completion_payload(
             self, prompt: str, *, schema: Any | None = None
@@ -793,6 +809,8 @@ def _provider_connection_error(exc: Exception, *, model: str, base_url: str) -> 
         details.append(f"message={message}")
     details.append(
         "Check container DNS/proxy/firewall access to the provider endpoint and verify "
+        "the configured base URL, API key, and model ID are present inside the "
+        "evaluation worker container."
     )
     return CortexError(
         code="deepeval_provider_connection_failed",

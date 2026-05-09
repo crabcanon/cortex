@@ -779,3 +779,82 @@ Goal: add Ollama as a first-class OpenAI-compatible LLM and embedding provider s
 | CTX-20260502-180 | 2026-05-02 23:25:00 +08:00 | P0 | knowledge-runtime | Add an Ollama Knowledge runtime overlay and map the `ollama` alias to Cognee's OpenAI-compatible provider path without changing the current OpenRouter default overlays | CTX-20260502-179 | done |
 | CTX-20260502-181 | 2026-05-02 23:25:00 +08:00 | P1 | eval-synthesis-parse-review | Review Evaluation, Synthesis, and Parse runtime references so Ollama can be opted into through provider refs without accidental model-provider coupling | CTX-20260502-180 | done |
 | CTX-20260502-182 | 2026-05-02 23:25:00 +08:00 | P1 | docs-validation | Update README / technical design / log notes and run focused config, lint, and unit validation for the Ollama provider slot | CTX-20260502-181 | done |
+
+### Batch 2026-05-07 15:50:00 +08:00 | Phase BF TensorZero Cortex Connectivity Diagnostics
+
+Goal: make TensorZero Cortex example failures actionable when Cortex API is not running or `CORTEX_BASE_URL` points to the wrong endpoint.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260507-183 | 2026-05-07 15:50:00 +08:00 | P0 | examples-resilience | Convert Cortex API connection failures in the TensorZero example from raw ASGI 500 traces into structured 503 diagnostics with the effective `CORTEX_BASE_URL` and startup hint | CTX-20260502-182 | done |
+| CTX-20260507-184 | 2026-05-07 15:50:00 +08:00 | P1 | examples-diagnostics | Add a `/cortex/status` diagnostic endpoint that checks `/v1/health/live` before running `/experiments/run` | CTX-20260507-183 | done |
+| CTX-20260507-185 | 2026-05-07 15:50:00 +08:00 | P1 | docker-config | Make local Compose honor `.env` / shell `CORTEX_RUNTIME_CONFIG_PATH` so `configs/cortex.runtime.ollama.yaml` can be used without editing Compose | CTX-20260502-182 | done |
+| CTX-20260507-186 | 2026-05-07 15:50:00 +08:00 | P1 | docs-validation | Document the preflight check and run focused lint / Compose validation for the TensorZero Cortex connectivity and Ollama startup fixes | CTX-20260507-184, CTX-20260507-185 | done |
+| CTX-20260507-187 | 2026-05-07 16:05:00 +08:00 | P1 | examples-tensorzero | Add Ollama to TensorZero adaptive candidate variants and document the required render-config plus Gateway restart flow when variant config changes | CTX-20260507-186 | done |
+| CTX-20260507-188 | 2026-05-07 16:20:00 +08:00 | P1 | examples-ollama | Add local Ollama-friendly TensorZero token/context defaults and clearer timeout diagnostics for slow or unreachable Ollama inference | CTX-20260507-187 | done |
+| CTX-20260507-189 | 2026-05-07 16:35:00 +08:00 | P1 | examples-evaluation | Add local Ollama-friendly Cortex Evaluation case limits, smoke metric profile, async wait budget, and Swagger example to avoid DeepEval judge timeouts on local models | CTX-20260507-188 | done |
+
+### Batch 2026-05-08 15:35:00 +08:00 | Phase BG OpenRouter BGE-M3 Knowledge Embedding Compatibility
+
+Goal: allow Cortex Knowledge/Cognee to use OpenRouter-hosted BGE-M3 embedding models without failing during local chunk token estimation.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260508-190 | 2026-05-08 15:35:00 +08:00 | P0 | knowledge-runtime | Patch Cognee's tiktoken tokenizer path from the Cortex adapter so unknown OpenAI-compatible embedding model names such as `bge-m3` fall back to `cl100k_base` for chunk sizing while preserving the configured provider model ID | CTX-20260430-178 | done |
+| CTX-20260508-191 | 2026-05-08 15:35:00 +08:00 | P1 | docs-validation | Document OpenRouter BGE-M3 dimensions/restart guidance and add focused unit coverage for the tokenizer fallback | CTX-20260508-190 | done |
+| CTX-20260508-192 | 2026-05-08 15:55:00 +08:00 | P0 | knowledge-runtime | Generalize Knowledge embedding token estimation into a runtime tokenizer strategy layer so arbitrary OpenAI-compatible embedding model IDs are not coupled to tiktoken model maps | CTX-20260508-190 | done |
+| CTX-20260508-193 | 2026-05-08 15:55:00 +08:00 | P1 | config-docs-validation | Add tokenizer strategy examples to runtime overlays and documentation, plus unit coverage that tokenizer metadata is stripped before Cognee SDK config calls | CTX-20260508-192 | done |
+
+### Batch 2026-05-08 16:05:00 +08:00 | Phase BH TensorZero Example Config Single Source And Flat Source Layout
+
+Goal: make TensorZero Cortex example model configuration come only from `.env` / explicit env files and simplify the example source layout so users can read `src/*.py` directly.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260508-194 | 2026-05-08 16:05:00 +08:00 | P0 | examples-config | Remove `render_tensorzero_config.py` fallback defaults and require every TensorZero template variable to be supplied by `.env` or `--env-file` | CTX-20260507-189 | done |
+| CTX-20260508-195 | 2026-05-08 16:05:00 +08:00 | P1 | examples-layout | Flatten `examples/tensorzero-cortex/src/tensorzero_cortex/*` into direct `src/*.py` modules and update CLI / build entry points | CTX-20260508-194 | done |
+| CTX-20260508-196 | 2026-05-08 16:05:00 +08:00 | P1 | docs | Update TensorZero Cortex README to document the single-source env model and flat source layout | CTX-20260508-195 | done |
+| CTX-20260508-197 | 2026-05-08 16:05:00 +08:00 | P1 | validation | Run lint, CLI config rendering, compose config, and import checks for the TensorZero example refactor | CTX-20260508-196 | done |
+
+### Batch 2026-05-08 17:40:00 +08:00 | Phase BI DeepEval OpenAI-Compatible Judge Event Loop Isolation
+
+Goal: stop Cortex Evaluation DeepEval jobs from failing when OpenAI-compatible provider clients are invoked across DeepEval's mixed async/threaded execution paths.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260508-198 | 2026-05-08 17:40:00 +08:00 | P0 | evaluation-runtime | Change the DeepEval OpenAI-compatible judge wrapper to create and close sync/async provider clients per call instead of caching `AsyncOpenAI` on the shared judge model | CTX-20260508-193 | done |
+| CTX-20260508-199 | 2026-05-08 17:40:00 +08:00 | P1 | tests-docs | Add regression coverage for invoking the same judge model across multiple event loops and improve provider connection diagnostics | CTX-20260508-198 | done |
+
+### Batch 2026-05-09 15:20:00 +08:00 | Phase BJ Cognee Graph Runtime And Local Preflight Stability
+
+Goal: explain and fix TensorZero Cortex `knowledge_graph_html_path=null` cases caused by Knowledge Add failing before Cognify/graph visualization, while making local Cognee/Kuzu paths explicit.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260509-200 | 2026-05-09 15:20:00 +08:00 | P0 | diagnosis | Inspect the latest TensorZero Cortex artifact and identify whether `knowledge_graph_html_path=null` comes from graph visualization or earlier Knowledge Add/Cognify failure | CTX-20260508-199 | done |
+| CTX-20260509-201 | 2026-05-09 15:20:00 +08:00 | P0 | knowledge-runtime | Apply Cognee root directories before DB configs and explicitly configure the local/Ollama Kuzu `graph_file_path` so graph data does not fall back to Cognee package defaults | CTX-20260509-200 | done |
+| CTX-20260509-202 | 2026-05-09 15:20:00 +08:00 | P0 | docker-config | Pass `COGNEE_SKIP_CONNECTION_TEST` through Docker Compose, defaulting to `true` for local and `false` for production | CTX-20260509-200 | done |
+| CTX-20260509-203 | 2026-05-09 15:20:00 +08:00 | P1 | docs-validation | Document the failure mode, restart guidance, and run focused runtime/Compose/unit validation | CTX-20260509-201, CTX-20260509-202 | done |
+| CTX-20260509-204 | 2026-05-09 16:24:00 +08:00 | P0 | knowledge-runtime | Wrap Cognee Add text/uri inputs as `DataItem` with Cortex-generated stable `data_id` to avoid Cognee SQLite `UNIQUE constraint failed: data.id` across repeated runs and parse-engine duplicates | CTX-20260509-201 | done |
+| CTX-20260509-205 | 2026-05-09 16:24:00 +08:00 | P1 | examples-tensorzero | Add source metadata front matter to TensorZero Cortex Knowledge ingest text so Cognee graph extraction keeps parse engine and source provenance | CTX-20260509-204 | done |
+| CTX-20260509-206 | 2026-05-09 16:24:00 +08:00 | P1 | docs-validation | Document the Cognee duplicate data-id failure and run focused lint/syntax validation | CTX-20260509-204, CTX-20260509-205 | done |
+| CTX-20260509-207 | 2026-05-09 16:45:00 +08:00 | P0 | knowledge-runtime | Recursively normalize Cognee runtime return values such as `PipelineRunCompleted` into JSON-safe dict/list/scalar structures before persisting job and run summaries | CTX-20260509-204 | done |
+| CTX-20260509-208 | 2026-05-09 16:45:00 +08:00 | P1 | tests-validation | Add regression coverage for JSON-safe Knowledge runtime result normalization and run focused lint/syntax checks | CTX-20260509-207 | done |
+
+### Batch 2026-05-09 17:10:00 +08:00 | Phase BK LiteLLM Embedding Provider Prefix Normalization
+
+Goal: fix OpenRouter-hosted BGE-M3 Knowledge embedding failures where Cognee calls LiteLLM with a provider-less model id such as `baai/bge-m3`.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260509-209 | 2026-05-09 17:10:00 +08:00 | P0 | knowledge-runtime | Normalize Cognee embedding model ids for LiteLLM-routed provider aliases so OpenRouter/Ollama/Gemini/OpenAI-compatible embeddings include the required provider prefix before `/embeddings` calls | CTX-20260509-208 | done |
+| CTX-20260509-210 | 2026-05-09 17:10:00 +08:00 | P1 | docs-validation | Document the OpenRouter BGE-M3 model id and provider-prefix behavior, update env examples, and run focused lint/syntax checks | CTX-20260509-209 | done |
+
+### Batch 2026-05-09 17:45:00 +08:00 | Phase BL Cognee Dataset-Scoped Graph Visualization
+
+Goal: fix TensorZero Cortex graph HTML artifacts that were generated successfully but displayed `No graph data available` because the visualization read Cognee's default graph instead of the experiment dataset graph.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260509-211 | 2026-05-09 17:45:00 +08:00 | P0 | examples-knowledge | Change TensorZero Cortex graph visualization to resolve the run `dataset_key`, apply the same Cortex runtime config inside the worker container, and render Cognee's dataset-scoped graph via multi-user aggregation | CTX-20260509-210 | done |
+| CTX-20260509-212 | 2026-05-09 17:45:00 +08:00 | P1 | docs-validation | Document why local Kuzu files appear under Cognee `system/databases/{user}/{dataset}.pkl`, add the explicit `--dataset-key` regeneration flow, and run focused validation | CTX-20260509-211 | done |

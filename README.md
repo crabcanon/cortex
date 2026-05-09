@@ -116,6 +116,9 @@ OPENROUTER_API_KEY=...
 OPENROUTER_MODEL_ID=openrouter/auto
 OPENROUTER_EMBEDDING_MODEL_ID=openai/text-embedding-3-small
 OPENROUTER_EMBEDDING_DIMENSIONS=1536
+# BGE-M3 on OpenRouter:
+# OPENROUTER_EMBEDDING_MODEL_ID=baai/bge-m3
+# OPENROUTER_EMBEDDING_DIMENSIONS=1024
 OLLAMA_BASE_URL=http://host.docker.internal:11434/v1
 OLLAMA_API_KEY=ollama
 OLLAMA_MODEL_ID=llama3.1:8b
@@ -142,7 +145,11 @@ LLM / Embedding 供应商统一按“供应商槽位”接入：
 - `configs/cortex.runtime.local.yaml` 决定不同 API 类型引用哪个槽位。默认示例中 Knowledge 的 Cognee LLM 与 embedding 都引用 `OPENROUTER_*`，Evaluation 的 DeepEval 与 Synthesis 的 DeepEval Synthesizer 仍可独立引用 `KIMI_*`。
 - 如需切换供应商，只调整 runtime YAML 中的 `model_ref`、`api_url_ref`、`api_key_ref`，例如把 Evaluation 从 `env:KIMI_BASE_URL` 改为 `env:OPENAI_BASE_URL`。
 - Cognee 所需的 `llm_provider`、`embedding_provider`、BAML LLM 字段由 Cortex 适配层按 OpenAI-compatible 默认值补齐；常规使用不需要在配置文件里重复填写。Cortex 也会把 Knowledge 选中的 LLM 槽位同步到 `OPENAI_BASE_URL`、`OPENAI_API_KEY`、`OPENAI_API_BASE`、`LITELLM_API_BASE`、`LITELLM_API_KEY`，防止 Cognee / LiteLLM 静默读取宿主或容器里的 OpenAI 默认值。
-- 本地 Knowledge 默认将 Cognee 的 `openrouter` provider alias 映射为 OpenAI-compatible SDK 调用；推荐 `OPENROUTER_BASE_URL=https://openrouter.ai/api/v1`、`OPENROUTER_MODEL_ID=openrouter/auto`、`OPENROUTER_EMBEDDING_MODEL_ID=openai/text-embedding-3-small`。
+- 本地 Knowledge 默认将 Cognee 的 `openrouter` provider alias 映射为 OpenAI-compatible SDK 调用；推荐 `OPENROUTER_BASE_URL=https://openrouter.ai/api/v1`、`OPENROUTER_MODEL_ID=openrouter/auto`、`OPENROUTER_EMBEDDING_MODEL_ID=openai/text-embedding-3-small`。如果切到 BGE-M3 这类 OpenRouter embedding 模型，推荐使用 `OPENROUTER_EMBEDDING_MODEL_ID=baai/bge-m3`；Cortex 会在 Cognee/LiteLLM 调用前自动规范化为 `openrouter/baai/bge-m3`，同时请把 `OPENROUTER_EMBEDDING_DIMENSIONS` 改成模型实际维度，例如 BGE-M3 常用 `1024`。
+- Embedding 服务和 tokenizer 估算策略是解耦的：`knowledge.cognee.embedding` 下的 `tokenizer.strategy` 可选 `auto`、`tiktoken`、`huggingface`、`approximate` / `none`，并可配置 `model`、`encoding`、`fallback_strategy`。这些字段只由 Cortex 适配层消费，不会传入 Cognee SDK 的 embedding config；真实 embedding 请求始终使用 `embedding_model_ref` 指向的模型 ID。
+- 本地 Knowledge 图数据库使用 Cognee + Kuzu。默认/全局图路径由 `configs/cortex.runtime.local.yaml` 与 `configs/cortex.runtime.ollama.yaml` 显式设置为 `.data/cognee/local/graph/cognee_graph_kuzu`；启用 Cognee backend access control 后，实际 Add/Cognify 会为每个用户和数据集生成独立图数据库，通常在容器内 `/app/.data/cognee/local/system/databases/{cognee_user_id}/{dataset_uuid}.pkl`。Cognee 启动早期日志里的 `graph_database_name=` 可能仍为空，因为那条日志在 Cortex runtime config 应用前输出；真正判断以 Add/Cognify job 和 dataset-scoped graph context 为准。
+- 本地 Docker 默认透传 `COGNEE_SKIP_CONNECTION_TEST=true`，用于绕过 Cognee 在 Add 阶段对 LLM/Embedding provider 的预检超时。生产 Compose 默认是 `false`，建议保留严格预检，只有在已有外部健康检查或 provider 网关预热机制时再改为 `true`。
+- Cortex 会把 Knowledge Add 的 text/uri 输入包装为 Cognee `DataItem`，并用 dataset、source、engine、content hash 生成稳定 `data_id`；这避免多次实验或多解析器解析相同内容时触发 Cognee SQLite `UNIQUE constraint failed: data.id`。如果历史失败 job 仍存在，重新提交新的 Add/Cognify job 即可，旧失败记录不会自动补写 Kuzu。
 - Ollama 也作为一等 provider slot 提供。容器内访问宿主机 Ollama 时使用 `OLLAMA_BASE_URL=http://host.docker.internal:11434/v1`，`OLLAMA_API_KEY=ollama` 是 OpenAI SDK 兼容路径需要的占位值。执行 `ollama pull llama3.1:8b` 与 `ollama pull nomic-embed-text` 后，将 `CORTEX_RUNTIME_CONFIG_PATH` 切到 `configs/cortex.runtime.ollama.yaml`，即可让 Knowledge、DeepEval Evaluation 和 DeepEval Synthesis 统一引用 `OLLAMA_*`。
 - Cortex 会在 Evaluation / Synthesis runtime worker 中按当前引擎引用的槽位同步设置 `OPENAI_API_URL`、`OPENAI_BASE_URL`、`OPENAI_API_BASE`、`LITELLM_API_BASE`，兼容 OpenAI SDK、LiteLLM 与 DeepEval 的常见读取方式。
 

@@ -2226,3 +2226,239 @@
   - `uv run python -m pytest tests\unit\test_knowledge_helpers.py -q`, `uv run --project examples\tensorzero-cortex python -m py_compile ...`, and `.venv\Scripts\python.exe -m py_compile ...` could not start in this Codex shell because the uv-managed Python path `C:\Users\hy\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\python.exe` is unavailable and `python` is not on `PATH`; Ruff still validated syntax for the touched Python files.
 - Prevention:
   - Keep local model services as explicit provider slots, document Docker-safe base URLs, and avoid changing production/default bindings when introducing a new local/offline provider.
+
+### 2026-05-07 15:50:00 +08:00 update
+
+- Stage: `CTX-20260507-183` ~ `CTX-20260507-186`
+- Event: Running `examples/tensorzero-cortex` through FastAPI returned `500 Internal Server Error`; the stack trace showed `httpx.ConnectError [WinError 10061]` while calling `POST /v1/dev/auth/token`.
+- Cause:
+  - The TensorZero example service was running on `127.0.0.1:8090`, but the Cortex API endpoint configured by `CORTEX_BASE_URL` was not accepting connections, most likely because Cortex API was not started on `127.0.0.1:8080` or the example `.env` pointed at the wrong host/port.
+  - The example client only converted Cortex HTTP error responses into `CortexApiError`; network connection failures escaped as raw `httpx.ConnectError`, so FastAPI surfaced an ASGI stack trace instead of an actionable diagnostic.
+  - Local Compose hard-coded `CORTEX_RUNTIME_CONFIG_PATH=configs/cortex.runtime.local.yaml`, so `.env` could not switch the full stack to `configs/cortex.runtime.ollama.yaml`.
+- Action:
+  - Added `CortexConnectionError` and wrapped Cortex client request failures, including parse result polling, with the effective base URL and startup hint.
+  - Added `GET /cortex/status` to the TensorZero example, checking Cortex `/v1/health/live` before users run `POST /experiments/run`.
+  - Updated the example route error handling so Cortex connection failures return `503` with `base_url`, message, and hint.
+  - Fixed local Compose so `CORTEX_RUNTIME_CONFIG_PATH` can be overridden from `.env` or the shell.
+  - Documented the Cortex and TensorZero preflight status endpoints in the TensorZero Cortex README.
+- Validation:
+  - `uv run ruff check examples\tensorzero-cortex\src\tensorzero_cortex\cortex_client.py examples\tensorzero-cortex\src\tensorzero_cortex\main.py` passed.
+  - `docker compose -f compose.local.yaml config --quiet` passed, with only the existing user-level Docker `config.json` access warning.
+  - `git diff --check` passed with only existing LF/CRLF warnings.
+- Prevention:
+  - Always provide a local preflight endpoint for multi-service examples, and keep deployment profile selectors overridable from `.env` rather than hard-coded in Compose anchors.
+
+### 2026-05-07 16:05:00 +08:00 update
+
+- Stage: `CTX-20260507-187`
+- Event: TensorZero Cortex reports showed every `ollama` inference failing with `404 {"error":"Unknown variant: ollama"}`.
+- Cause:
+  - The example pipeline was configured to request `variant_name=ollama`, but the running TensorZero Gateway did not have an `ollama` variant loaded in its startup config.
+  - `tensorzero/tensorzero.toml.tpl` already had an Ollama variant, but `tensorzero/tensorzero.toml` is generated and Gateway only reads it at startup; users must rerender the config and recreate/restart Gateway after changing variants.
+  - Adaptive candidate variants still listed only OpenAI / Gemini / Kimi, so adaptive mode would not sample Ollama even after the explicit variant existed.
+- Action:
+  - Added `ollama` to TensorZero adaptive `candidate_variants`.
+  - Documented the required `uv run tensorzero-cortex render-config` and Gateway restart flow.
+  - Added a quick `Select-String` verification command so users can confirm the generated `tensorzero.toml` contains `[functions.cortex_rag_answer.variants.ollama]`.
+- Validation:
+  - `uv run ruff check examples\tensorzero-cortex\src\tensorzero_cortex\cortex_client.py examples\tensorzero-cortex\src\tensorzero_cortex\main.py` passed.
+  - `docker compose -f examples\tensorzero-cortex\tensorzero\docker-compose.tensorzero.yaml config --quiet` passed, with only the existing user-level Docker `config.json` access warning.
+  - `uv run tensorzero-cortex render-config` could not run in this Codex shell because uv failed to initialize `C:\Users\hy\AppData\Local\uv\cache` with `os error 183`; rerun the documented render command in the user's normal terminal before restarting Gateway.
+- Prevention:
+  - Treat generated TensorZero config as a runtime artifact and restart Gateway after every model/variant template change.
+
+### 2026-05-07 16:20:00 +08:00 update
+
+- Stage: `CTX-20260507-188`
+- Event: TensorZero Cortex reports showed every `ollama` inference failing with `timed out` after the Gateway started recognizing the Ollama variant.
+- Cause:
+  - The generated TensorZero config used the local Ollama model `qwen3.5:4b`, but the variant still allowed `max_tokens=2200` and the example `.env` kept `TENSORZERO_MAX_CONTEXT_CHARS_PER_GROUP=12000`.
+  - Local Ollama models are sensitive to first-load latency, long prompts, JSON-mode constraints, and host/container networking; a generic `timed out` message did not identify which knob to adjust.
+- Action:
+  - Split TensorZero max-token defaults into `TENSORZERO_REMOTE_MAX_TOKENS` and `TENSORZERO_OLLAMA_MAX_TOKENS`, with the Ollama default lowered to `768`.
+  - Lowered the example default context budget to `6000` chars and raised the default request timeout to `300` seconds.
+  - Made TensorZero inference timeout errors include the variant, Gateway URL, timeout budget, and the recommended Ollama tuning knobs.
+  - Added `deepeval_local_smoke`, `CORTEX_EVAL_MAX_CASES`, `CORTEX_EVAL_MAX_CONTEXT_CHARS_PER_CASE`, and `CORTEX_EVAL_ASYNC_TIMEOUT_SECONDS` so Cortex Evaluation can first validate one short local-Ollama judge case before expanding to full DeepEval RAG/custom metrics.
+  - Added Ollama runtime DeepEval options (`timeout_seconds`, `max_tokens`, `temperature`) to keep the local judge call bounded.
+  - Added a Swagger example for a local Ollama smoke run.
+  - Documented host-side and Gateway-container Ollama connectivity probes plus a conservative local Ollama profile (`3000` context chars, `512` max tokens, `600` second timeout).
+- Validation:
+  - `uv run ruff check examples\tensorzero-cortex\src\tensorzero_cortex\models.py examples\tensorzero-cortex\src\tensorzero_cortex\settings.py examples\tensorzero-cortex\src\tensorzero_cortex\pipeline.py examples\tensorzero-cortex\src\tensorzero_cortex\main.py examples\tensorzero-cortex\src\tensorzero_cortex\tensorzero_client.py examples\tensorzero-cortex\src\tensorzero_cortex\render_tensorzero_config.py` passed.
+  - `docker compose -f compose.local.yaml config --quiet` passed, with only the existing user-level Docker `config.json` access warning.
+  - `docker compose -f examples\tensorzero-cortex\tensorzero\docker-compose.tensorzero.yaml config --quiet` passed, with only the existing user-level Docker `config.json` access warning.
+  - `git diff --check` passed with only existing LF/CRLF warnings.
+- Prevention:
+  - Treat local model variants as a separate latency class from hosted providers, with smaller output budgets and explicit connectivity probes.
+
+### 2026-05-08 15:35:00 +08:00 update
+
+- Stage: `CTX-20260508-190` ~ `CTX-20260508-191`
+- Event: TensorZero Cortex Knowledge Add failed when OpenRouter embedding was set to `bge-m3`; the job error was `Could not automatically map bge-m3 to a tokeniser`.
+- Cause:
+  - Cortex correctly routed Knowledge/Cognee embedding traffic through the OpenRouter provider slot, but Cognee's OpenAI/LiteLLM embedding engine still initializes a tiktoken tokenizer with the embedding model name for chunk token estimation.
+  - `bge-m3` is a valid provider-side embedding model ID, but it is not in tiktoken's OpenAI model map, so the chunking step failed before the actual OpenRouter `/embeddings` request.
+- Action:
+  - Added a Cortex-side compatibility patch for Cognee's `TikTokenTokenizer`: if `tiktoken.encoding_for_model(model)` rejects an unknown OpenAI-compatible model, Cortex falls back to `cl100k_base` for local token estimation.
+  - Kept the configured `OPENROUTER_EMBEDDING_MODEL_ID` unchanged for the real embedding request.
+  - Documented that BGE-M3 should use its actual vector dimension, commonly `OPENROUTER_EMBEDDING_DIMENSIONS=1024`.
+- Validation:
+  - Added a focused unit test that instantiates Cognee's tiktoken tokenizer with `model="bge-m3"` and verifies token counting works after the Cortex patch.
+- Prevention:
+  - Treat OpenAI-compatible provider model IDs and local tokenizer model maps as separate concerns; unknown tokenizer names should degrade to conservative token estimation rather than blocking provider execution.
+
+### 2026-05-08 15:55:00 +08:00 update
+
+- Stage: `CTX-20260508-192` ~ `CTX-20260508-193`
+- Event: Review found that the first BGE-M3 fix was still too model-specific and did not fully express Cortex's requirement to support arbitrary embedding model services.
+- Cause:
+  - Cognee's embedding engine config combines provider/model execution with tokenizer selection in the same runtime path.
+  - Cortex provider slots can point to OpenRouter, Ollama, TEI, vLLM, LocalAI, or private OpenAI-compatible gateways, but those provider model IDs do not always have a matching tiktoken model map.
+- Action:
+  - Added a Cortex-owned tokenizer strategy layer under `knowledge.cognee.embedding.tokenizer`.
+  - Supported `auto`, `tiktoken`, `huggingface`, and `approximate` / `none` strategies with independent `model`, `encoding`, and `fallback_strategy` controls.
+  - Ensured tokenizer metadata is stripped before calling Cognee `set_embedding_config`, keeping Cortex runtime schema independent from Cognee's upstream config schema.
+  - Added default tokenizer strategy examples to runtime overlays.
+- Validation:
+  - Added unit coverage that runtime tokenizer options are parsed and not sent to Cognee SDK embedding config.
+  - Added unit coverage that arbitrary provider model IDs can use explicit tiktoken encoding for token estimation.
+- Prevention:
+  - Treat embedding model ID, embedding vector dimensions, and tokenizer strategy as three separate runtime concerns; switching one should not require code changes in the others.
+
+### 2026-05-08 16:05:00 +08:00 update
+
+- Stage: `CTX-20260508-194` ~ `CTX-20260508-197`
+- Event: TensorZero Cortex example model `BASE_URL` / model slot changes in `.env` did not reliably affect generated TensorZero config, and the example source had an extra `src/tensorzero_cortex` package layer that made quick inspection noisier.
+- Cause:
+  - `render_tensorzero_config.py` still had code-level fallback defaults, so missing or blank `.env` values could silently be replaced outside the single runtime config file.
+  - Moving to a direct example layout required recalculating `settings.ROOT`; the old `parents[2]` path pointed at `examples/` after flattening.
+- Action:
+  - Removed TensorZero render fallback defaults and made `tensorzero.toml.tpl` placeholders fail fast unless values are supplied by `.env` or `--env-file`.
+  - Flattened `examples/tensorzero-cortex/src/tensorzero_cortex/*` into direct `src/*.py` modules, updated imports, CLI entry point, and Hatch wheel source mapping.
+  - Updated `render-config --env-file` so relative env files are resolved against the example root when needed.
+  - Updated the example README to document the single-source env model and flat source layout.
+- Validation:
+  - `.venv\Scripts\ruff.exe check examples\tensorzero-cortex\src` passed.
+  - Imported `cli`, `main.app`, and `render_tensorzero_config` with `PYTHONPATH=examples/tensorzero-cortex/src`.
+  - Rendered `tensorzero/tensorzero.toml` from `.env.example`.
+  - `uv build --project examples\tensorzero-cortex --wheel` passed and the wheel contains direct top-level example modules.
+  - `docker compose -f examples\tensorzero-cortex\tensorzero\docker-compose.tensorzero.yaml config --quiet` passed, with only the existing user-level Docker `config.json` access warning.
+  - `uv run --project examples\tensorzero-cortex tensorzero-cortex --help` could not replace `examples/tensorzero-cortex/.venv/Scripts/tensorzero-cortex.exe` because another process was holding it; direct import/CLI `main()` validation was used instead.
+- Prevention:
+  - Keep generated TensorZero config deterministic: template variables live in `.env` files, while Python code validates and renders only.
+
+### 2026-05-08 17:40:00 +08:00 update
+
+- Stage: `CTX-20260508-198` ~ `CTX-20260508-199`
+- Event: TensorZero Cortex example async Evaluation jobs failed in DeepEval with `deepeval_provider_connection_failed`; the provider exception included `<asyncio.locks.Event ...> is bound to a different event loop`.
+- Cause:
+  - Cortex's DeepEval OpenAI-compatible judge wrapper cached `OpenAI` and `AsyncOpenAI` clients on a shared judge model instance.
+  - DeepEval can evaluate metrics/cases through mixed sync, async, and thread-backed paths; a cached `AsyncOpenAI` client can carry httpx/anyio event-loop state from one loop into another.
+- Action:
+  - Changed the judge wrapper to create a fresh sync/async OpenAI-compatible client for each `generate` / `a_generate` call and close it after the request.
+  - Improved provider failure text so diagnostics no longer end with an unfinished `verify` hint.
+  - Added a regression test that invokes the same judge model across two `asyncio.run()` event loops and verifies separate async clients are created and closed.
+- Validation:
+  - `.venv\Scripts\ruff.exe check packages\evaluation\src\cortex_evaluation\adapters.py tests\unit\test_eval_synthesis_adapters.py` passed.
+  - `uv run --all-packages python -m pytest tests\unit\test_eval_synthesis_adapters.py -q` passed, 12 tests.
+- Prevention:
+  - Do not cache async provider clients in adapter objects that may be called by third-party SDKs across multiple loops or worker threads.
+
+### 2026-05-09 15:20:00 +08:00 update
+
+- Stage: `CTX-20260509-200` ~ `CTX-20260509-203`
+- Event: TensorZero Cortex reports still showed `knowledge_graph_html_path: null` even after Evaluation became healthy.
+- Cause:
+  - The latest artifact's `knowledge_events.status` was `failed`, not `built`; the Knowledge Add job failed before Cognify and before Cognee graph visualization could run.
+  - The failing Add job reported `Embedding connection test timed out after 30s`, so the pipeline correctly fell back to parse artifacts and never called `visualize_graph(path)`.
+  - Cognee's first initialization log is emitted before Cortex applies runtime YAML, so it can show package-default `database_path` and an empty `graph_database_name`; that log is not the final Cortex/Cognee runtime graph configuration.
+- Action:
+  - Changed `PythonCogneeRuntime` to apply `system_root_directory` / `data_root_directory` before vector/graph/relational DB configs.
+  - Made local and Ollama overlays explicitly configure Kuzu graph storage at `.data/cognee/local/graph/cognee_graph_kuzu`.
+  - Added `COGNEE_SKIP_CONNECTION_TEST` to Compose environments, defaulting to `true` for local Docker and `false` for production.
+  - Updated README, TensorZero Cortex README, and technical design notes with the null-path diagnostic flow and restart guidance.
+- Validation:
+  - Resolved `configs/cortex.runtime.local.yaml` locally and verified the graph DB payload includes `graph_database_provider=kuzu`, `graph_filename=cognee_graph_kuzu`, and the expected `graph_file_path`.
+  - `docker compose -f compose.local.yaml config --quiet` passed, with only the existing user-level Docker `config.json` access warning.
+  - `docker compose -f compose.prod.yaml config --quiet` passed, with only the existing user-level Docker `config.json` access warning.
+  - `.venv\Scripts\ruff.exe check packages\knowledge\src\cortex_knowledge\runtime.py tests\unit\test_cognee_runtime_adapter.py tests\unit\test_knowledge_helpers.py` passed.
+  - `.venv\Scripts\python.exe -m pytest tests\unit\test_cognee_runtime_adapter.py tests\unit\test_knowledge_helpers.py -q` passed, 17 tests.
+  - `uv run --all-packages python -m pytest ...` could not start because uv could not read `C:\Users\hy\AppData\Roaming\uv\python`; the same tests passed through the pinned repository `.venv`.
+  - `git diff --check` passed with only existing LF/CRLF warnings.
+- Prevention:
+  - Treat graph visualization as a post-Knowledge-build artifact; when it is null, inspect `knowledge_events` first, then verify Add/Cognify success and embedding provider reachability.
+
+### 2026-05-09 16:24:00 +08:00 update
+
+- Stage: `CTX-20260509-204` ~ `CTX-20260509-206`
+- Event: After enabling local Cognee provider preflight bypass, the next Knowledge Add job failed with Cognee SQLite `UNIQUE constraint failed: data.id`.
+- Cause:
+  - Cognee 0.5.x derives `data.id` from raw content and user/tenant when text or URI inputs are passed as plain strings.
+  - TensorZero Cortex intentionally sends the same URL content through multiple parse engines and across multiple experiment runs, so semantically identical or byte-identical text can collide in Cognee's global `data` table before Cognify creates Kuzu graph data.
+- Action:
+  - Changed Cortex's Cognee runtime adapter to wrap Add text/URI inputs in Cognee `DataItem`.
+  - Cortex now generates a stable UUIDv5 `data_id` from dataset, input type, source URL/name, parse engine, object/document id, markdown hash, and content hash.
+  - Added per-job deduplication by generated `data_id`, preserving idempotency for duplicate inputs within one Add request.
+  - Added source metadata front matter to TensorZero Cortex Knowledge ingest text to improve graph provenance and reduce ambiguous duplicate content.
+  - Documented that old failed jobs cannot backfill Kuzu; a new Add/Cognify run is required.
+- Validation:
+  - `.venv\Scripts\ruff.exe check packages\knowledge\src\cortex_knowledge\runtime.py examples\tensorzero-cortex\src\pipeline.py tests\unit\test_cognee_runtime_adapter.py tests\unit\test_knowledge_helpers.py` passed.
+  - `.uv-python\cpython-3.12.12-windows-x86_64-none\python.exe -m py_compile packages\knowledge\src\cortex_knowledge\runtime.py examples\tensorzero-cortex\src\pipeline.py tests\unit\test_cognee_runtime_adapter.py` passed.
+  - Full pytest could not be run in the current shell because the repository `.venv\Scripts\python.exe` points at an inaccessible uv managed Python and the fallback standalone Python does not have all workspace dependencies installed.
+- Prevention:
+  - Do not pass bulk, provenance-free text strings directly to Cognee Add when Cortex can provide stable input identity; all runtime adapters should preserve source identity separately from content identity.
+
+### 2026-05-09 16:45:00 +08:00 update
+
+- Stage: `CTX-20260509-207` ~ `CTX-20260509-208`
+- Event: After the stable Cognee `DataItem.data_id` fix, the latest Knowledge Add job failed with `Object of type PipelineRunCompleted is not JSON serializable`.
+- Cause:
+  - Cognee Add returned a SDK/Pydantic object (`PipelineRunCompleted`) instead of a plain JSON dict.
+  - Cortex stored the runtime return value in `knowledge_runs.result_summary` and job result JSON without recursively converting third-party SDK objects to JSON-safe primitives.
+- Action:
+  - Added recursive JSON-safe normalization for Knowledge runtime results.
+  - Supported dict/list/set/tuple, pydantic `model_dump`, dataclasses, enums, `UUID`, `Path`, `datetime`/`date`, and generic `__dict__` objects.
+  - Applied the normalized result for Add/Cognify/Memify summaries so future Cognee SDK object returns do not break job persistence.
+  - Added unit coverage for a `PipelineRunCompleted`-like object nested inside a runtime result.
+- Validation:
+  - `.venv\Scripts\ruff.exe check packages\knowledge\src\cortex_knowledge\operations.py tests\unit\test_knowledge_helpers.py` passed.
+  - `.uv-python\cpython-3.12.12-windows-x86_64-none\python.exe -m py_compile packages\knowledge\src\cortex_knowledge\operations.py tests\unit\test_knowledge_helpers.py` passed.
+- Prevention:
+  - Treat all third-party SDK return values as untrusted for persistence boundaries; serialize through Cortex-owned JSON-safe adapters before writing to SQL JSON/TEXT fields.
+
+### 2026-05-09 17:10:00 +08:00 update
+
+- Stage: `CTX-20260509-209` ~ `CTX-20260509-210`
+- Event: Docker logs showed Knowledge/Cognee embedding failures for OpenRouter BGE-M3: `LLM Provider NOT provided. You passed model=baai/bge-m3`.
+- Cause:
+  - Cognee's `LiteLLMEmbeddingEngine` passes `model`, `api_key`, and `api_base` to `litellm.aembedding(...)` without passing an explicit `custom_llm_provider`.
+  - LiteLLM therefore infers the provider from the model id; `baai/bge-m3` is a valid OpenRouter model id but not a LiteLLM-routed id, so provider inference failed before the request reached OpenRouter.
+- Action:
+  - Added Cortex-side LiteLLM embedding model normalization for provider aliases before Cognee receives embedding config.
+  - `openrouter + baai/bge-m3` is now passed as `openrouter/baai/bge-m3`; `ollama` becomes `ollama/<model>`, `gemini` becomes `gemini/<model>`, and generic OpenAI-compatible gateways become `openai/<model>`.
+  - The normalization is idempotent, so already-prefixed model ids such as `openrouter/baai/bge-m3` are left unchanged.
+  - Updated README, TensorZero Cortex README, technical design notes, and env examples to use `OPENROUTER_EMBEDDING_MODEL_ID=baai/bge-m3` for OpenRouter BGE-M3 and explain the LiteLLM prefix.
+- Validation:
+  - `.venv\Scripts\ruff.exe check packages\knowledge\src\cortex_knowledge\runtime.py tests\unit\test_knowledge_helpers.py` passed.
+  - `.uv-python\cpython-3.12.12-windows-x86_64-none\python.exe -m py_compile packages\knowledge\src\cortex_knowledge\runtime.py tests\unit\test_knowledge_helpers.py` passed.
+  - `.venv\Scripts\python.exe -m pytest tests\unit\test_knowledge_helpers.py -q` could not start because the script points at an inaccessible uv-managed Python under `C:\Users\hy\AppData\Roaming\uv\python`.
+  - A fallback run through the repository fixed Python plus package source paths reached pytest collection but the current `.venv` lacks `opentelemetry`, so runtime unit execution is still blocked in this shell; lint and syntax checks were used as the reliable validation.
+- Prevention:
+  - Treat provider catalog model ids and LiteLLM route ids as separate values at adapter boundaries; normalize the route id close to the Cognee/LiteLLM call while keeping user-facing `.env` values provider-native.
+
+### 2026-05-09 17:45:00 +08:00 update
+
+- Stage: `CTX-20260509-211` ~ `CTX-20260509-212`
+- Event: TensorZero Cortex generated `knowledge_graph.html`, but opening the file showed `No graph data available` while the Knowledge Worker logs showed successful graph extraction with non-zero nodes and edges.
+- Cause:
+  - Cognee was successfully extracting graph data during Cognify.
+  - The example visualization helper called Cognee's default `visualize_graph(path)`, which reads the current/global graph engine.
+  - With Cognee backend access control enabled, Add/Cognify writes graph data into a dataset-scoped context under the default Cognee user and dataset database, typically `/app/.data/cognee/local/system/databases/{cognee_user_id}/{dataset_uuid}.pkl`, so the default graph can be empty even when the experiment dataset graph is populated.
+- Action:
+  - Updated the TensorZero Cortex visualization helper to resolve `dataset_key` from `report.json` or the run id, apply the active Cortex runtime config inside the worker container, fetch the Cognee default user and matching dataset, and render through Cognee's multi-user graph aggregation path.
+  - Added `--dataset-key` to `uv run tensorzero-cortex visualize-knowledge` for manual regeneration against a specific dataset.
+  - Documented the difference between the configured default/global Kuzu path and Cognee's per-user/per-dataset Kuzu `.pkl` files.
+- Validation:
+  - Focused lint and syntax validation were run for the updated TensorZero Cortex visualization modules.
+  - Direct Docker inspection from this shell is still blocked by local Docker Desktop permission errors, so live container graph export should be rerun from the user's terminal after restarting or using the currently running worker.
+- Prevention:
+  - Treat Cognee graph visualization as dataset-context-sensitive. Any future graph export path must carry dataset/user context instead of assuming the global graph engine contains the latest Knowledge run.

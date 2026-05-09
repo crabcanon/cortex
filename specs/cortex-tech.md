@@ -1,5 +1,30 @@
 # Cortex Technical Design
 
+## 0.2 2026-05-08 Embedding Provider And Tokenizer Decoupling
+
+Cortex Knowledge treats embedding provider execution and local token estimation as two independent concerns.
+
+- `embedding_provider` / `embedding_model_ref` / `embedding_endpoint_ref` / `embedding_api_key_ref` decide where the real `/embeddings` request is sent.
+- `knowledge.cognee.embedding.tokenizer` decides how Cortex/Cognee estimates chunk token counts before embedding.
+- Runtime tokenizer fields are Cortex-only adapter metadata and are stripped before calling Cognee `set_embedding_config`, so they do not depend on upstream Cognee adding the same schema.
+
+Supported tokenizer strategies:
+
+- `auto`: let Cognee choose the provider default first; if the provider model ID is unknown to tiktoken, fall back to the configured `fallback_strategy`.
+- `tiktoken`: use a fixed tiktoken encoding such as `cl100k_base`, regardless of provider model ID.
+- `huggingface`: use a HuggingFace tokenizer model such as `BAAI/bge-m3`; if unavailable, fall back by policy.
+- `approximate` / `none`: avoid tokenizer packages and estimate by words, useful for custom/private embedding services where exact tokenizer parity is not required.
+
+This allows users to switch between OpenRouter, Ollama, OpenAI-compatible gateways, TEI, vLLM, LocalAI, or private embedding services by changing provider slots and model IDs, while independently choosing a tokenizer strategy that fits the deployment environment and performance budget.
+
+For LiteLLM-routed embedding providers, Cortex also normalizes the provider
+prefix before calling Cognee. For example, `embedding_provider=openrouter` with
+`embedding_model=baai/bge-m3` is passed to LiteLLM as
+`openrouter/baai/bge-m3`; `ollama` becomes `ollama/<model>`, `gemini` becomes
+`gemini/<model>`, and generic OpenAI-compatible gateways become
+`openai/<model>`. The normalization is idempotent, so already-prefixed model
+IDs are left unchanged.
+
 ## 0.1 2026-04-19 Crawl4AI 容器运行时修正
 
 本节优先级高于前文较早版本中“本地 Compose 暂时跳过 Crawl4AI 浏览器准备”的说明。
@@ -1520,9 +1545,13 @@ Cortex 的认证层保持厂商中立，但应遵循行业通用标准：
 
 Knowledge / Cognee 模型槽位边界：
 
-- 本地 `configs/cortex.runtime.local.yaml` 默认将 Cognee LLM 与 embedding 绑定到 `OPENROUTER_*`，避免 Add / Cognify 阶段继续消耗 OpenAI 默认额度；OpenRouter base URL 默认为 `https://openrouter.ai/api/v1`，embedding 可使用 OpenRouter 支持的 embedding model，例如 `openai/text-embedding-3-small`。
+- 本地 `configs/cortex.runtime.local.yaml` 默认将 Cognee LLM 与 embedding 绑定到 `OPENROUTER_*`，避免 Add / Cognify 阶段继续消耗 OpenAI 默认额度；OpenRouter base URL 默认为 `https://openrouter.ai/api/v1`，embedding 可使用 OpenRouter 支持的 embedding model，例如 `openai/text-embedding-3-small` 或 `baai/bge-m3`。当 `embedding_provider=openrouter` 时，Cortex 会在传给 Cognee/LiteLLM 前把模型 ID 规范化为 `openrouter/<model>`，避免 LiteLLM 报 `LLM Provider NOT provided`。
 - Cortex 在构建 Cognee runtime 时会把已解析的 LLM endpoint/key 同步到 `OPENAI_BASE_URL`、`OPENAI_API_URL`、`OPENAI_API_BASE`、`OPENAI_API_KEY`、`LITELLM_API_BASE`、`LITELLM_API_KEY`，兼容 Cognee / LiteLLM 读取 OpenAI-compatible 环境变量的路径。
 - 如果所选 provider 槽位缺少 model 或 API key，Cortex 会直接抛出配置错误，不再允许 Cognee 静默回落到容器中的 OpenAI 默认环境变量。
+- 本地与 Ollama overlay 使用 Cognee + Kuzu 图数据库，并显式配置默认/全局 `graph_file_path` 到 `.data/cognee/local/graph/cognee_graph_kuzu`；这避免默认图数据落入 Cognee 包目录。启用 Cognee backend access control 时，Add/Cognify 会切换到 dataset-scoped graph context，实际 Kuzu 图通常位于 `/app/.data/cognee/local/system/databases/{cognee_user_id}/{dataset_uuid}.pkl`。TensorZero Cortex example 导出 `knowledge_graph.html` 时必须按 `dataset_key` 调用 Cognee multi-user graph aggregation，不能直接读取默认全局图。
+- Cognee 的 import-time 日志可能先打印默认 `database_path` 和空 `graph_database_name`，Cortex 在创建 `PythonCogneeRuntime` 后才应用 runtime YAML。运行态判断以 `_resolved_cognee_config(...).graph_db` 与 Cognee SDK 最终 config 为准，不以第一条 import 日志为准。
+- 本地 Compose 默认透传 `COGNEE_SKIP_CONNECTION_TEST=true`，防止 OpenRouter/Ollama/代理链路预检慢导致 Knowledge Add 尚未写图就失败；生产 Compose 默认 `false`，推荐通过外部健康检查与 provider 网关保证连接质量。
+- Cortex 调用 Cognee Add 时不再把 text/uri 作为裸字符串列表传入，而是包装为 Cognee `DataItem` 并显式设置稳定 `data_id`。`data_id` 由 dataset、input type、source URL/name、parse engine、object/document id、markdown hash 与正文 hash 派生，解决 Cognee 0.5.x 在相同内容跨 dataset/run 摄入时可能触发的 SQLite `UNIQUE constraint failed: data.id`。
 
 最佳实践是让 access token 只携带粗粒度功能权限，不把大规模资源白名单直接塞进 token。
 

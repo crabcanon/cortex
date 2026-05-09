@@ -191,6 +191,7 @@ def _build_client(
     monkeypatch.setenv("CORTEX_DB_DSN", _async_sqlite_url(db_path))
     monkeypatch.setenv("CORTEX_AUTH_MODE", "dev")
     monkeypatch.setenv("CORTEX_OTEL_ENABLED", "false")
+    monkeypatch.setenv("CORTEX_COGNEE_ENABLED", "false")
     monkeypatch.setenv("CORTEX_CRAWL4AI_SKIP_PROBE", "1")
     if direct_upload_max_bytes is not None:
         monkeypatch.setenv(

@@ -57,6 +57,10 @@ def test_build_cognee_runtime_returns_disabled_when_configuration_or_module_disa
 
     monkeypatch.setattr("cortex_knowledge.runtime._cognee_available", lambda: False)
     monkeypatch.setattr("cortex_knowledge.runtime._cognee_version", lambda: "0.0-test")
+
+    # Mock _resolved_cognee_config to avoid triggering config requirements
+    monkeypatch.setattr("cortex_knowledge.runtime._resolved_cognee_config", lambda _: {})
+
     unavailable = build_cognee_runtime(CogneeSettings(CORTEX_COGNEE_ENABLED=True))
 
     assert disabled.descriptor.status == "disabled"

@@ -52,12 +52,17 @@ class DoclingParseEngine(ParseEngineProtocol):
         self._converter_cache_key: str | None = None
         enabled = bool(self._config.get("enabled", True))
         self._local_available = _docling_available()
+
+        status = ParseEngineStatus.ACTIVE if enabled else ParseEngineStatus.DISABLED
+        if enabled and not self._local_available:
+            status = ParseEngineStatus.DISABLED
+
         self._descriptor = ParseEngineDescriptor(
             engine_key="docling",
             display_name="Docling",
             engine_family="document_local",
             deployment_mode=ParseEngineDeploymentMode.LOCAL,
-            status=ParseEngineStatus.ACTIVE if enabled else ParseEngineStatus.DISABLED,
+            status=status,
             supported_source_types=[
                 ParseInputKind.URI.value,
                 ParseInputKind.URL.value,

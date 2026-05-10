@@ -479,7 +479,13 @@ def build_cognee_runtime(
     enabled = settings.enabled if settings.enabled is not None else cognee_config.enabled
     if not enabled:
         return DisabledCogneeRuntime(reason="Cognee runtime is disabled by configuration.")
-    runtime = PythonCogneeRuntime(config=_resolved_cognee_config(loaded_runtime))
+    if not _cognee_available():
+        return DisabledCogneeRuntime(reason="Cognee runtime module is unavailable.")
+    try:
+        resolved_config = _resolved_cognee_config(loaded_runtime)
+    except ConfigError as exc:
+        return DisabledCogneeRuntime(reason=str(exc))
+    runtime = PythonCogneeRuntime(config=resolved_config)
     if runtime.descriptor.status != "active":
         return DisabledCogneeRuntime(
             reason=runtime.descriptor.reason or "Cognee runtime module is unavailable."
@@ -639,7 +645,8 @@ def _cognee_stable_data_id(
     raw_input: dict[str, Any],
     value: str,
 ) -> UUID:
-    metadata = raw_input.get("metadata") if isinstance(raw_input.get("metadata"), dict) else {}
+    metadata_val = raw_input.get("metadata")
+    metadata = metadata_val if isinstance(metadata_val, dict) else {}
     source_parts = [
         str(dataset),
         input_type,
@@ -797,7 +804,7 @@ def _patch_cognee_tiktoken_unknown_model_fallback() -> None:
         max_completion_tokens: int = 8191,
     ) -> None:
         try:
-            original_init(
+            original_init(  # type: ignore[call-overload]
                 self,
                 model=model,
                 max_completion_tokens=max_completion_tokens,
@@ -811,7 +818,7 @@ def _patch_cognee_tiktoken_unknown_model_fallback() -> None:
                 str(_COGNEE_EMBEDDING_TOKENIZER_OPTIONS.get("encoding") or "cl100k_base")
             )
 
-    tokenizer_class.__init__ = _init_with_fallback
+    tokenizer_class.__init__ = _init_with_fallback  # type: ignore[misc]
     tokenizer_class._cortex_unknown_model_fallback = True
 
 

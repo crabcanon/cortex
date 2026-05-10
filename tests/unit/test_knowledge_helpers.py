@@ -55,14 +55,18 @@ def test_build_cognee_runtime_returns_disabled_when_configuration_or_module_disa
 ) -> None:
     disabled = build_cognee_runtime(CogneeSettings(CORTEX_COGNEE_ENABLED=False))
 
+    monkeypatch.setattr("cortex_knowledge.runtime._cognee_version", lambda: None)
+
+    # We must also mock the module import attempt, else it builds a PythonCogneeRuntime.
     monkeypatch.setattr("cortex_knowledge.runtime._cognee_available", lambda: False)
-    monkeypatch.setattr("cortex_knowledge.runtime._cognee_version", lambda: "0.0-test")
+
     unavailable = build_cognee_runtime(CogneeSettings(CORTEX_COGNEE_ENABLED=True))
 
     assert disabled.descriptor.status == "disabled"
     assert disabled.descriptor.reason == "Cognee runtime is disabled by configuration."
     assert unavailable.descriptor.status == "disabled"
-    assert unavailable.descriptor.version == "0.0-test"
+    assert unavailable.descriptor.reason == "Cognee runtime module is unavailable."
+    assert unavailable.descriptor.version is None
 
 
 def test_knowledge_dataset_service_normalizes_access_policy_and_context() -> None:

@@ -565,8 +565,8 @@ def test_docling_engine_is_catalog_active_when_sdk_is_worker_only(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "cortex_parse.adapters.docling._docling_available",
-        lambda: False,
+        "cortex_parse.adapters.docling._docling_version",
+        lambda: None,
     )
     engine = DoclingParseEngine({"enabled": True})
 

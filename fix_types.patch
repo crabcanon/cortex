@@ -1,0 +1,11 @@
+<<<<<<< SEARCH
+        def __init__(self) -> None:
+            self._model_name = model
+            self._base_url = provider_config.api_url.rstrip("/")
+            self._api_key = provider_config.api_key
+=======
+        def __init__(self) -> None:
+            self._model_name = model
+            self._base_url = (provider_config.api_url or "").rstrip("/")
+            self._api_key = provider_config.api_key
+>>>>>>> REPLACE

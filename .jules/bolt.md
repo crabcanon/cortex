@@ -1,0 +1,3 @@
+## 2025-02-18 - Optimize job events maximum sequence number lookup
+**Learning:** In SQLAlchemy, avoid using list array indexing (e.g. `existing_events[-1]`) on bounded list responses to calculate the maximum sequence number. Loading up to `limit=1000` items into memory simply to query the highest sequence ID creates an N+1 query-like data-fetching anti-pattern and heavy memory overhead.
+**Action:** Implemented a new generic `.get_max_sequence_no` repository method that explicitly uses SQL's native aggregate function `select(func.coalesce(func.max(Model.sequence_no), 0))` to retrieve the highest record immediately with $O(1)$ transfer and data-loading efficiency.

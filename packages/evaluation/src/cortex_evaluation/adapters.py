@@ -690,7 +690,9 @@ def _build_deepeval_judge_model(
     class OpenAICompatibleDeepEvalModel(base_model):  # type: ignore[misc, valid-type]
         def __init__(self) -> None:
             self._model_name = model
-            self._base_url = provider_config.api_url.rstrip("/")
+            self._base_url = (
+                provider_config.api_url.rstrip("/") if provider_config.api_url else None
+            )
             self._api_key = provider_config.api_key
             self._temperature = float(options.get("temperature", 0))
             self._max_tokens = int(options.get("max_tokens", 4096))
@@ -709,7 +711,7 @@ def _build_deepeval_judge_model(
                 raise _provider_connection_error(
                     exc,
                     model=self._model_name,
-                    base_url=self._base_url,
+                    base_url=self._base_url or "",
                 ) from exc
             finally:
                 close = getattr(client, "close", None)
@@ -730,7 +732,7 @@ def _build_deepeval_judge_model(
                 raise _provider_connection_error(
                     exc,
                     model=self._model_name,
-                    base_url=self._base_url,
+                    base_url=self._base_url or "",
                 ) from exc
             finally:
                 close = getattr(client, "close", None)

@@ -47,6 +47,11 @@ export const metadata: Metadata = {
   },
   description: siteDescription,
   alternates: { canonical: '/' },
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
   openGraph: {
     type: 'website',
     siteName: appName,
@@ -87,7 +92,7 @@ const organizationJsonLd = {
   name: 'Cortex',
   alternateName: 'Cortex - Vendor-neutral AI Data and Knowledge API Platform',
   url: siteUrl,
-  logo: `${siteUrl}/favicon.ico`,
+  logo: `${siteUrl}/icons/logo.svg`,
   sameAs: [
     'https://github.com/crabcanon/cortex',
   ],

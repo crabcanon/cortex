@@ -53,6 +53,21 @@
   line-height: 1.5;
 }
 
+.attribution {
+  max-width: 320px;
+  line-height: 1.5;
+
+  a {
+    color: var(--color-fd-muted-foreground);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+
+    &:hover {
+      color: var(--color-fd-foreground);
+    }
+  }
+}
+
 .starButton {
   display: inline-flex;
   align-items: center;

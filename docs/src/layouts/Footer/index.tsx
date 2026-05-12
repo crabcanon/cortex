@@ -70,6 +70,8 @@ const FOOTER_COPY: Record<
     tagline: string;
     star: string;
     copyright: string;
+    designCredit: string;
+    designCreditLink: string;
   }
 > = {
   en: {
@@ -77,12 +79,16 @@ const FOOTER_COPY: Record<
       "Vendor-neutral AI data and knowledge API platform for parsing, storage, knowledge graphs, evaluation, and synthesis.",
     star: "Star us on GitHub",
     copyright: "Apache 2.0 licensed.",
+    designCredit: "Design template based on",
+    designCreditLink: "DeepEval's official website redesign",
   },
   zh: {
     tagline:
       "面向 AI 原生应用的中立数据与知识 API 平台，覆盖解析、存储、知识图谱、评测与合成。",
     star: "在 GitHub 上收藏",
     copyright: "Apache 2.0 开源许可。",
+    designCredit: "设计模板基于",
+    designCreditLink: "DeepEval 官方网站新版设计",
   },
 };
 
@@ -158,6 +164,17 @@ const Footer = ({ locale = "en" }: { locale?: Locale }) => {
             </a>
             <span>
               &copy; {new Date().getFullYear()} Cortex. {copy.copyright}
+            </span>
+            <span className={styles.attribution}>
+              {copy.designCredit}{" "}
+              <a
+                href="https://deepeval.com/blog/deepeval-got-a-new-look"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {copy.designCreditLink}
+              </a>
+              .
             </span>
           </div>
 

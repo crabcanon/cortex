@@ -90,7 +90,7 @@ export function buildArticleSchema({
       url: BASE_URL,
       logo: { 
         "@type": "ImageObject", 
-        url: `${BASE_URL}/favicon.ico`
+        url: `${BASE_URL}/icons/logo.svg`
       },
     },
   };
@@ -169,7 +169,7 @@ export function buildBlogHomeSchema(posts: BlogPost[]): object {
       name: appName,
       logo: {
         "@type": "ImageObject",
-        url: `${BASE_URL}/favicon.ico`,
+        url: `${BASE_URL}/icons/logo.svg`,
       },
     },
     blogPost: posts.map((post) => ({

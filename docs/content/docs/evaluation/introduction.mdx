@@ -1,0 +1,26 @@
+---
+title: Evaluation Introduction
+description: Understand Cortex Evaluation for quality, RAG, agent, multi-turn, custom, and performance tests.
+---
+
+Cortex Evaluation gives Parse, Knowledge, model, RAG, and agent workflows a repeatable scoring surface. It accepts inline test cases, datasets, traces, Storage objects, or built-in benchmark inputs, then returns a scorecard, metric results, sample counters, artifacts, and telemetry.
+
+The Evaluation domain is engine-neutral:
+
+| Engine | Best fit | Notes |
+| --- | --- | --- |
+| `deepeval` | RAG, agentic, multi-turn, safety, quality, custom G-Eval style checks | DeepEval positions itself as an open-source LLM evaluation framework with 50+ metrics. |
+| `evalscope` | Performance benchmarking and model/service evaluation | EvalScope is suited for throughput, latency, and benchmark-style effectiveness or performance tests. |
+| `auto` | Route by `eval_type` and runtime availability | Cortex chooses the registered engine and profile. |
+
+## Evaluation types
+
+Common `eval_type` values include:
+
+- `rag`: answer relevance, faithfulness, contextual precision/recall/relevance;
+- `agentic`: task completion, goal success, tool correctness, reasoning quality;
+- `multi_turn`: conversation relevancy and completeness;
+- `custom`: correctness, completeness, relevance, custom G-Eval criteria;
+- `perf`: QPS, latency, token throughput, concurrency, streaming behavior.
+
+Use synchronous evaluation for fast feedback and asynchronous jobs for larger regression suites, performance runs, or worker-backed reports.

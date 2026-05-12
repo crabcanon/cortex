@@ -1,0 +1,26 @@
+---
+title: Evaluation Quickstart 快速上手
+description: 运行同步 RAG 评测，提交异步评测 job，并读取报告。
+---
+
+这个快速上手使用内联测试用例，所以无需提前准备数据集也能验证 Evaluation API。下面的 API 片段是 AI 生成的 Python、JavaScript 和 Java 客户端示例。
+
+## 1. 查看引擎和指标
+
+<ApiExampleTabs example="eval-engines-metrics" />
+
+## 2. 运行同步 RAG 评测
+
+<ApiExampleTabs example="eval-sync" />
+
+## 3. 用异步方式提交同一请求
+
+<ApiExampleTabs example="eval-job" />
+
+然后轮询通用 job endpoint，并读取 Evaluation 结果：
+
+<ApiExampleTabs example="job-status" />
+
+<ApiExampleTabs example="eval-job-result" />
+
+当输入用例很多、需要调用外部 target API，或要路由到性能压测 worker 时，建议使用异步模式。

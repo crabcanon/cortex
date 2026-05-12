@@ -1,0 +1,44 @@
+---
+title: Parse and Knowledge
+description: Parse a web page, create a dataset, ingest content, build knowledge, and search it.
+---
+
+This flow starts with a public URL, parses it into Markdown, ingests text into a knowledge dataset, and searches the dataset. API snippets are AI-generated client examples for Python, JavaScript, and Java.
+
+## Parse a URL
+
+<ApiExampleTabs example="parse-sync" />
+
+For heavy document parsing, submit an async job:
+
+<ApiExampleTabs example="parse-job" />
+
+Poll the shared job endpoint, then fetch the parse result:
+
+<ApiExampleTabs example="job-status" />
+
+<ApiExampleTabs example="parse-job-result" />
+
+## Upload a small file
+
+<ApiExampleTabs example="storage-upload" />
+
+The returned `object_id` can be used by Parse, Knowledge, Evaluation, or Synthesis.
+
+## Create a dataset
+
+<ApiExampleTabs example="knowledge-dataset" />
+
+## Add inline text
+
+<ApiExampleTabs example="knowledge-add-job" />
+
+Start or wait for `cortex-knowledge-worker`, then use the job APIs to inspect completion.
+
+## Build the graph
+
+<ApiExampleTabs example="knowledge-cognify-job" />
+
+## Search
+
+<ApiExampleTabs example="knowledge-search" />

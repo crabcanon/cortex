@@ -1,0 +1,30 @@
+---
+title: Parse API Reference
+description: 将 URL、文件和 Storage 对象解析为标准化 Markdown 的接口。
+---
+
+当输入仍是原始内容，而输出需要 Markdown 与结构化元数据时，使用 Parse。下面的 API 示例以 AI 生成的 Python、JavaScript 和 Java 客户端代码展示。
+
+| 方法 | 路径 | Scope | 作用 |
+| --- | --- | --- | --- |
+| `GET` | `/v1/parse/engines` | `parse:read` | 列出已注册解析引擎和支持场景。 |
+| `GET` | `/v1/parse/profiles` | `parse:read` | 查看内部 parser profiles，供运维和调试使用。 |
+| `POST` | `/v1/parse/sync` | `parse:write` | 同步解析一个或多个 sources。 |
+| `POST` | `/v1/parse/jobs` | `parse:write` | 提交异步解析 job。 |
+| `GET` | `/v1/parse/jobs/{jobId}/result` | `parse:read` | 读取已完成的异步解析结果。 |
+
+## 查看引擎
+
+<ApiExampleTabs example="parse-engines" />
+
+## 同步解析
+
+<ApiExampleTabs example="parse-sync" />
+
+常规路由使用 `engine_id: "auto"`。对比引擎或需要特定解析器时，可指定 `crawl4ai`、`jina_reader`、`markitdown`、`llama_parse` 或 `docling`。
+
+## 异步解析 job
+
+<ApiExampleTabs example="parse-job" />
+
+异步响应会返回一个或多个 `job_id`。先轮询 `GET /v1/jobs/{jobId}`，完成后读取 `GET /v1/parse/jobs/{jobId}/result`。

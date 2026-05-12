@@ -1,0 +1,30 @@
+---
+title: Examples
+description: Runnable Cortex examples for local auth, parsing, storage, knowledge, evaluation, and synthesis workflows.
+---
+
+These examples assume a local Cortex stack at `http://127.0.0.1:8080` and `CORTEX_AUTH_MODE=dev`. API snippets are AI-generated client examples for Python, JavaScript, and Java.
+
+## Get a local token
+
+<ApiExampleTabs example="auth-token" />
+
+Use the returned access token as `CORTEX_TOKEN` in later snippets. You can also authorize directly in Swagger at `http://127.0.0.1:8080/docs`.
+
+## Choose a flow
+
+| Flow | Use it when |
+| --- | --- |
+| [TensorZero + Cortex Matrix Evaluation](/examples/tensorzero-cortex) | You want a full Parse -> Storage -> Knowledge -> TensorZero -> Evaluation loop with optional Synthesis extension. |
+| [Parse and Knowledge](/examples/parse-and-knowledge) | You want to parse a URL or object, ingest it into a dataset, and search it. |
+| [Evaluation and Synthesis](/examples/evaluation-and-synthesis) | You want to run RAG evaluation or generate RAG goldens through async jobs. |
+
+## Local services
+
+| Service | URL |
+| --- | --- |
+| Swagger UI | `http://127.0.0.1:8080/docs` |
+| MinIO Console | `http://127.0.0.1:9001` |
+| Jaeger | `http://127.0.0.1:16686` |
+| Prometheus | `http://127.0.0.1:9090` |
+| Grafana | `http://127.0.0.1:3000` |

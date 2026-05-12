@@ -1,0 +1,16 @@
+{
+  "title": "API Reference",
+  "pages": [
+    "index",
+    "---[Braces]分域接口---",
+    "parse",
+    "storage",
+    "knowledge",
+    "evaluation",
+    "synthesis",
+    "jobs",
+    "---[FileText]OpenAPI---",
+    "openapi-specs",
+    "cortex-api"
+  ]
+}

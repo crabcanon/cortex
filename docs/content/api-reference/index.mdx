@@ -1,0 +1,74 @@
+---
+title: API Reference
+description: Cortex exposes OpenAPI 3.1 specs for parse, storage, knowledge, evaluation, synthesis, jobs, health, and observability APIs.
+---
+
+Cortex publishes a single OpenAPI 3.1 contract for all first-class domains. The source spec is maintained as `specs/cortex-api.yaml` in the Cortex repository.
+
+## Contract summary
+
+| Field | Value |
+| --- | --- |
+| OpenAPI | `3.1.0` |
+| Title | `Cortex API` |
+| Version | `1.0.0-draft` |
+| Production server | `https://api.cortex.example.com` |
+| Sandbox server | `https://sandbox.cortex.example.com` |
+| Local Swagger UI | `http://127.0.0.1:8080/docs` |
+
+## Tags
+
+| Tag | Purpose |
+| --- | --- |
+| Health | Liveness and readiness probes. |
+| Observability | Prometheus scrape endpoint and telemetry integration. |
+| Jobs | Generic long-running job inspection, events, and cancellation. |
+| Parse | URL/file parsing, engine catalogs, profiles, sync parsing, and async jobs. |
+| Storage | Upload sessions, small-file upload, object metadata, and download URLs. |
+| Knowledge | Dataset lifecycle, Add, Cognify, Memify, and Search. |
+| Evaluation | Evaluation engines, metric catalogs, sync runs, async jobs, and results. |
+| Synthesis | Synthesis engines, sync generation, async jobs, and results. |
+| Dev Auth | Local-development token issuance helper. |
+
+## Authentication
+
+Production deployments should use OAuth2/OIDC, JWT/JWKS, or token introspection. Local development can enable `CORTEX_AUTH_MODE=dev` and call:
+
+```http
+POST /v1/dev/auth/token
+```
+
+The response includes a `swagger_authorize_value` that can be pasted into Swagger UI's Authorize dialog.
+
+## Common scopes
+
+| Scope | Usage |
+| --- | --- |
+| `health:read` | Read readiness state. Liveness is unauthenticated. |
+| `parse:read`, `parse:write` | List parse engines/profiles and submit parse work. |
+| `storage:read`, `storage:write`, `storage:download` | Manage objects and presigned URLs. |
+| `knowledge:read`, `knowledge:write` | Manage datasets and knowledge jobs. |
+| `eval:read`, `eval:write` | List eval catalogs and run evaluations. |
+| `synthesis:read`, `synthesis:write` | List synthesis engines and run generation jobs. |
+| `jobs:read`, `jobs:cancel` | Inspect, stream, and cancel async jobs. |
+
+## Async job contract
+
+Long-running operations return or reference a `job_id`. Clients can inspect the shared job resource:
+
+```http
+GET /v1/jobs/{jobId}
+GET /v1/jobs/{jobId}/events
+POST /v1/jobs/{jobId}/cancel
+```
+
+Domain-specific result endpoints return the final payload after completion:
+
+```http
+GET /v1/parse/jobs/{jobId}/result
+GET /v1/eval/jobs/{jobId}/result
+GET /v1/synthesis/jobs/{jobId}/result
+```
+
+Pending result polling returns a non-success state instead of a completed result, so SDKs can use the same polling loop across Parse, Evaluation, and Synthesis.
+

@@ -1,0 +1,114 @@
+---
+title: 部署
+description: 使用 Docker Compose、Worker profiles、供应商槽位和可观测性配置运行 Cortex。
+---
+
+Cortex 既可以作为本地开箱即用的 Docker Compose 栈运行，也可以在生产环境接入托管基础设施。本地 Compose 包含 Postgres、Redis、MinIO、OpenTelemetry Collector、Jaeger、Prometheus、Grafana、API 和 Workers。
+
+## 前置条件
+
+- 一个兼容 bash 的 shell。
+- Python 3.12，与项目 `.python-version` 保持一致。
+- `uv`，用于 workspace 依赖管理和包命令。
+- Docker Engine 或 Docker Desktop，并安装 Compose plugin。
+- Swagger/OpenAPI 访问能力，用于 API 探索和契约校验。
+- 为需要启用的引擎准备供应商 API key。
+
+## 安装依赖
+
+```bash
+git clone https://github.com/crabcanon/cortex.git
+cd cortex
+
+uv sync --all-packages
+```
+
+开发命令统一使用 `uv run ...`，以保持 workspace 的 `.venv` 稳定。
+
+## 配置环境
+
+```bash
+cp .env.example .env
+```
+
+关键配置组：
+
+| 配置组 | 变量 |
+| --- | --- |
+| 应用 | `CORTEX_ENV`, `CORTEX_HOST`, `CORTEX_PORT` |
+| 数据库 | `CORTEX_DB_DSN` |
+| 对象存储 | `CORTEX_S3_ENDPOINT`, `CORTEX_S3_PUBLIC_ENDPOINT`, `CORTEX_S3_BUCKET`, `CORTEX_STORAGE_DIRECT_UPLOAD_MAX_BYTES` |
+| 队列 | `CORTEX_QUEUE_URL` |
+| 认证 | `CORTEX_AUTH_MODE`, `CORTEX_AUTH_JWT_SHARED_SECRET`, OIDC/JWKS/introspection 设置 |
+| 运行时配置 | `CORTEX_RUNTIME_CONFIG_PATH` |
+| 供应商槽位 | `OPENAI_*`, `GEMINI_*`, `QWEN_*`, `KIMI_*`, `OPENROUTER_*`, `LOCAL_LLM_*` |
+| Worker | `CORTEX_*_WORKER_LEASE_SECONDS`, `CORTEX_*_WORKER_HEARTBEAT_INTERVAL_SECONDS` |
+| 可观测性 | `CORTEX_OTEL_ENABLED`, `CORTEX_OTEL_EXPORTER_OTLP_ENDPOINT` |
+
+供应商槽位需要保持完整。不要把 Gemini API key 和空的 OpenAI-compatible base URL 混用，也不要把 Kimi model 指向其他供应商 endpoint。
+
+## 启动本地栈
+
+```bash
+docker compose --env-file .env -p cortex-local -f compose.local.yaml up -d --build
+```
+
+Docling、DeepEval/EvalScope runtime、SDV/DeepEval synthesis 等重依赖可以通过 profiles 启用：
+
+```bash
+docker compose --env-file .env -p cortex-local -f compose.local.yaml \
+  --profile docling \
+  --profile eval-runtime \
+  --profile synthesis-runtime \
+  build
+
+docker compose --env-file .env -p cortex-local -f compose.local.yaml \
+  --profile docling \
+  --profile eval-runtime \
+  --profile synthesis-runtime \
+  up -d --build
+```
+
+Swagger 地址是 `http://127.0.0.1:8080/docs`，原始 OpenAPI spec 地址是 `http://127.0.0.1:8080/openapi.json`。
+
+## 仅本地运行 API 和 Workers
+
+先启动依赖：
+
+```bash
+docker compose --env-file .env -p cortex-local -f compose.local.yaml \
+  up -d postgres redis minio otel-collector prometheus grafana
+```
+
+然后在 bash shell 中运行迁移、API 和 Workers：
+
+```bash
+uv run --package cortex-db cortex-db-migrate upgrade head
+uv run --package cortex-api cortex-api
+uv run --package cortex-worker-parse cortex-parse-worker
+uv run --package cortex-worker-knowledge cortex-knowledge-worker
+uv run --package cortex-worker-evaluation cortex-evaluation-worker
+uv run --package cortex-worker-synthesis cortex-synthesis-worker
+```
+
+如果在 Docker 外同时运行多个服务，请使用多个终端或进程管理器。
+
+## 生产建议
+
+- 使用托管 Postgres、Redis 和 S3-compatible storage。
+- 使用 `CORTEX_AUTH_MODE=oidc`、JWT/JWKS 或 introspection，不使用本地 dev auth。
+- 设置 `CORTEX_S3_AUTO_CREATE_BUCKET=false`，由基础设施预先创建 bucket。
+- 将 `CORTEX_OTEL_EXPORTER_OTLP_ENDPOINT` 指向统一 Collector。
+- API、Parse Worker、Knowledge Worker、Evaluation Worker、Synthesis Worker 独立扩缩容。
+- 将重依赖放到 `cortex-parse-worker-docling`、`cortex-evaluation-worker-runtime`、`cortex-synthesis-worker-runtime` 等 worker 镜像中。
+
+## 校验变更
+
+常用检查：
+
+```bash
+uv run python scripts/ci/validate_yaml.py specs/cortex-api.yaml
+uv run python -m pytest tests/contract/test_openapi_contract.py -q
+```
+
+再根据修改范围运行对应的 Ruff、Pyright 和 pytest。API 文档发布前，优先校验 Swagger/OpenAPI 暴露面。

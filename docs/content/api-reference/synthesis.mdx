@@ -1,0 +1,30 @@
+---
+title: Synthesis API Reference
+description: Endpoints for synthetic data engines, synchronous previews, asynchronous generation jobs, and result retrieval.
+---
+
+Synthesis generates structured records, relational data, RAG goldens, QA pairs, conversations, agent trajectories, or custom artifacts. API examples are rendered as AI-generated Python, JavaScript, and Java client snippets.
+
+| Method | Path | Scope | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/v1/synthesis/engines` | `synthesis:read` | List synthesis engines and supported types. |
+| `POST` | `/v1/synthesis/sync` | `synthesis:write` | Generate a small synchronous preview. |
+| `POST` | `/v1/synthesis/jobs` | `synthesis:write` | Submit an async generation job. |
+| `GET` | `/v1/synthesis/jobs/{jobId}/result` | `synthesis:read` | Read generated outputs and quality gates. |
+| `POST` | `/v1/synthesis/jobs/{jobId}/result` | `synthesis:write` | Worker-side result persistence callback. |
+
+## Engines
+
+<ApiExampleTabs example="synthesis-engines" />
+
+## Structured single-table request
+
+<ApiExampleTabs example="synthesis-structured-sync" />
+
+## Unstructured QA request
+
+<ApiExampleTabs example="synthesis-qa-sync" />
+
+## Async generation job
+
+<ApiExampleTabs example="synthesis-job" />

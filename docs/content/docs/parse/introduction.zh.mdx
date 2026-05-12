@@ -1,0 +1,38 @@
+---
+title: Parse Introduction 介绍
+description: 了解 Cortex Parse 如何将 URL、文件和存储对象转成标准化 Markdown 与元数据。
+---
+
+Cortex Parse 是 Cortex 的摄入入口。它接收公开 URL、Storage 对象和文件类 locator，将每个来源路由到合适的解析引擎，并返回可被 Storage、Knowledge、Evaluation、Synthesis 复用的标准化 Markdown 与元数据。
+
+Parse 不绑定单一解析器。调用方可以使用 `engine_id: "auto"` 交给 Cortex 自动路由，也可以显式指定某个引擎：
+
+| 引擎 | 适合场景 | 说明 |
+| --- | --- | --- |
+| `crawl4ai` | 网页、文档站、动态 HTML | Crawl4AI 是面向 LLM 的开源爬虫与网页解析工具，适合在线 Web 内容。 |
+| `markitdown` | Office、PDF、图片、HTML、CSV/JSON/XML、ZIP | MarkItDown 是 Microsoft 的文件转 Markdown 工具，适合 LLM 数据管线。 |
+| `docling` | 重型文档 AI、版面敏感 PDF | Docling 专注文档转换，可输出结构化结果和 Markdown。 |
+| `llama_parse` | 复杂 PDF 的云端文档解析 | LlamaParse 是 LlamaIndex 面向复杂文档和 RAG 的解析器。 |
+| `jina_reader` | 快速 URL 转 Markdown | Jina Reader 提供简单的 reader 服务，把 URL 转为 LLM 友好的文本。 |
+
+## 运行模式
+
+Parse 同时提供同步与异步接口：
+
+| 模式 | 接口 | 何时使用 |
+| --- | --- | --- |
+| 同步 | `POST /v1/parse/sync` | 小批量 URL、冒烟测试、快速预览。 |
+| 异步 | `POST /v1/parse/jobs` | 大批量、PDF、Docling、LlamaParse、Webhook、生产 worker 链路。 |
+
+每个异步请求都会创建 Cortex Job。你可以用通用 Jobs API 查询状态，再通过 `GET /v1/parse/jobs/{jobId}/result` 读取结果。
+
+## 输出契约
+
+成功的 parse result 通常包含：
+
+- 来源元数据：原始 locator、parser、source format、title、checksum、telemetry；
+- 可检索和可提示的标准化 Markdown；
+- 可选 `document_id`，用于 Cortex 元数据表；
+- 可选 Storage artifact 引用，用于持久化派生产物。
+
+当输入仍是“原始形态”时就应该使用 Parse：URL、PDF、CSV、Office 文件，或尚未标准化的 S3 兼容存储对象。

@@ -1,0 +1,49 @@
+---
+title: Parse Quickstart 快速上手
+description: 本地启动 Cortex，签发开发 token，同步解析 URL，并运行异步解析 job。
+---
+
+这个快速上手从本地 Docker 开始，然后完整调用 Parse。下面的 API 片段是 AI 生成的 Python、JavaScript 和 Java 客户端示例。
+
+## 1. 启动 Cortex
+
+```bash
+cd /path/to/cortex
+test -f .env || cp .env.local.example .env
+
+docker compose --env-file .env -p cortex-local -f compose.local.yaml \
+  --profile docling \
+  --profile eval-runtime \
+  --profile synthesis-runtime \
+  up -d --build
+```
+
+打开 Swagger：`http://127.0.0.1:8080/docs`。
+
+## 2. 创建本地 token
+
+<ApiExampleTabs example="auth-token" />
+
+运行后续示例时，把返回的 token 设置为 `CORTEX_TOKEN`。
+
+## 3. 查看可用引擎
+
+<ApiExampleTabs example="parse-engines" />
+
+## 4. 同步解析一个 URL
+
+<ApiExampleTabs example="parse-sync" />
+
+## 5. 运行异步 job
+
+Docling、LlamaParse 或大批量解析建议使用异步模式。
+
+<ApiExampleTabs example="parse-job" />
+
+然后轮询通用 job endpoint，并读取 Parse 结果：
+
+<ApiExampleTabs example="job-status" />
+
+<ApiExampleTabs example="parse-job-result" />
+
+现在你已经把原始 Web 内容转换成了标准化 Markdown，可以继续上传到 Storage 或摄入 Knowledge。

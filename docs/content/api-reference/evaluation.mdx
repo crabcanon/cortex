@@ -1,0 +1,30 @@
+---
+title: Evaluation API Reference
+description: Endpoints for evaluation engines, metric catalogs, synchronous checks, asynchronous jobs, and reports.
+---
+
+Evaluation returns scorecards and metric-level results for quality, RAG, agentic, multi-turn, custom, and performance workloads. API examples are rendered as AI-generated Python, JavaScript, and Java client snippets.
+
+| Method | Path | Scope | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/v1/eval/engines` | `eval:read` | List available evaluation engines. |
+| `GET` | `/v1/eval/metrics` | `eval:read` | List metric definitions and engine bindings. |
+| `POST` | `/v1/eval/sync` | `eval:write` | Run a small synchronous evaluation. |
+| `POST` | `/v1/eval/jobs` | `eval:write` | Submit an async evaluation job. |
+| `GET` | `/v1/eval/jobs/{jobId}/result` | `eval:read` | Read the completed evaluation report. |
+
+## Engines and metrics
+
+<ApiExampleTabs example="eval-engines-metrics" />
+
+## RAG sync request
+
+<ApiExampleTabs example="eval-sync" />
+
+## Async evaluation job
+
+<ApiExampleTabs example="eval-job" />
+
+## EvalScope performance request
+
+<ApiExampleTabs example="eval-perf-job" />

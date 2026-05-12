@@ -1,0 +1,31 @@
+---
+title: Knowledge API Reference
+description: Endpoints for datasets, Add, Cognify, Memify, and Search.
+---
+
+Knowledge exposes dataset lifecycle and Cognee-backed knowledge workflows. API examples are rendered as AI-generated Python, JavaScript, and Java client snippets.
+
+| Method | Path | Scope | Purpose |
+| --- | --- | --- | --- |
+| `POST` | `/v1/knowledge/datasets` | `knowledge:write` | Create a knowledge dataset. |
+| `GET` | `/v1/knowledge/datasets/{datasetId}` | `knowledge:read` | Read dataset metadata. |
+| `POST` | `/v1/knowledge/add/jobs` | `knowledge:write` | Ingest text, URI, document, or object inputs. |
+| `POST` | `/v1/knowledge/cognify/jobs` | `knowledge:write` | Build graph-aware chunks and structure. |
+| `POST` | `/v1/knowledge/memify/jobs` | `knowledge:write` | Run memory enrichment pipelines. |
+| `POST` | `/v1/knowledge/search` | `knowledge:read` | Search chunks or graph completion context. |
+
+## Dataset
+
+<ApiExampleTabs example="knowledge-dataset" />
+
+## Add
+
+<ApiExampleTabs example="knowledge-add-job" />
+
+## Cognify
+
+<ApiExampleTabs example="knowledge-cognify-job" />
+
+## Search
+
+<ApiExampleTabs example="knowledge-search" />

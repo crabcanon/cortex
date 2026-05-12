@@ -1,0 +1,74 @@
+---
+title: API Reference
+description: Cortex 通过 OpenAPI 3.1 统一描述 Parse、Storage、Knowledge、Evaluation、Synthesis、Jobs、Health 与 Observability API。
+---
+
+Cortex 使用单一 OpenAPI 3.1 契约描述所有一等 API 域。源规格文件维护在 Cortex 仓库的 `specs/cortex-api.yaml`。
+
+## 契约摘要
+
+| 字段 | 值 |
+| --- | --- |
+| OpenAPI | `3.1.0` |
+| Title | `Cortex API` |
+| Version | `1.0.0-draft` |
+| Production server | `https://api.cortex.example.com` |
+| Sandbox server | `https://sandbox.cortex.example.com` |
+| 本地 Swagger UI | `http://127.0.0.1:8080/docs` |
+
+## Tags
+
+| Tag | 用途 |
+| --- | --- |
+| Health | 存活和就绪探针。 |
+| Observability | Prometheus scrape endpoint 和遥测集成。 |
+| Jobs | 通用长任务查询、事件和取消。 |
+| Parse | URL/文件解析、引擎目录、profiles、同步解析和异步作业。 |
+| Storage | 上传会话、小文件上传、对象元数据和下载 URL。 |
+| Knowledge | 数据集生命周期、Add、Cognify、Memify 和 Search。 |
+| Evaluation | 评测引擎、指标目录、同步运行、异步作业和结果。 |
+| Synthesis | 合成引擎、同步生成、异步作业和结果。 |
+| Dev Auth | 本地开发 token 生成辅助接口。 |
+
+## 认证
+
+生产部署建议使用 OAuth2/OIDC、JWT/JWKS 或 token introspection。本地开发可以启用 `CORTEX_AUTH_MODE=dev` 并调用：
+
+```http
+POST /v1/dev/auth/token
+```
+
+响应中的 `swagger_authorize_value` 可直接粘贴到 Swagger UI 的 Authorize 弹窗。
+
+## 常用 scopes
+
+| Scope | 用途 |
+| --- | --- |
+| `health:read` | 读取 readiness。liveness 不需要鉴权。 |
+| `parse:read`, `parse:write` | 列出 parse 引擎/profile，提交解析任务。 |
+| `storage:read`, `storage:write`, `storage:download` | 管理对象和预签名 URL。 |
+| `knowledge:read`, `knowledge:write` | 管理数据集和知识作业。 |
+| `eval:read`, `eval:write` | 列出评测目录并运行评测。 |
+| `synthesis:read`, `synthesis:write` | 列出合成引擎并运行生成任务。 |
+| `jobs:read`, `jobs:cancel` | 查询、拉取事件和取消异步作业。 |
+
+## 异步 Job 契约
+
+长任务会返回或引用 `job_id`。客户端通过通用 Job 资源查询：
+
+```http
+GET /v1/jobs/{jobId}
+GET /v1/jobs/{jobId}/events
+POST /v1/jobs/{jobId}/cancel
+```
+
+领域结果接口在完成后返回最终 payload：
+
+```http
+GET /v1/parse/jobs/{jobId}/result
+GET /v1/eval/jobs/{jobId}/result
+GET /v1/synthesis/jobs/{jobId}/result
+```
+
+未完成时，结果轮询会返回非成功状态，而不是伪造完成结果，因此 SDK 可以在 Parse、Evaluation 和 Synthesis 中复用同一套 polling loop。
+

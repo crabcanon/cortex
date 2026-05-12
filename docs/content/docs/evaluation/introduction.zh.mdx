@@ -1,0 +1,26 @@
+---
+title: Evaluation Introduction 介绍
+description: 理解 Cortex Evaluation 如何支持质量、RAG、Agent、多轮、自定义和性能测试。
+---
+
+Cortex Evaluation 为 Parse、Knowledge、模型、RAG 和 Agent 工作流提供可重复的评分面。它可以接收内联测试用例、数据集、trace、Storage 对象或内置 benchmark 输入，并返回 scorecard、指标结果、样本计数、产物和 telemetry。
+
+Evaluation 域不绑定单一引擎：
+
+| 引擎 | 适合场景 | 说明 |
+| --- | --- | --- |
+| `deepeval` | RAG、Agent、多轮、安全、质量、自定义 G-Eval 类检查 | DeepEval 定位为开源 LLM 评测框架，覆盖 50+ 指标。 |
+| `evalscope` | 性能压测、模型/服务评估 | EvalScope 适合吞吐、延迟、benchmark 风格的效果测试与性能测试。 |
+| `auto` | 根据 `eval_type` 和运行时可用性自动路由 | Cortex 选择已注册的 engine 与 profile。 |
+
+## 评测类型
+
+常见 `eval_type` 包括：
+
+- `rag`：answer relevance、faithfulness、contextual precision/recall/relevance；
+- `agentic`：task completion、goal success、tool correctness、reasoning quality；
+- `multi_turn`：conversation relevancy、conversation completeness；
+- `custom`：correctness、completeness、relevance、自定义 G-Eval criteria；
+- `perf`：QPS、延迟、token 吞吐、并发、streaming 行为。
+
+小规模反馈用同步评测；大型回归、性能压测或 worker-backed 报告用异步 job。

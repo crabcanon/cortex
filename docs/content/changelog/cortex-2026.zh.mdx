@@ -1,0 +1,71 @@
+---
+id: cortex-2026
+title: Cortex 2026
+description: Cortex 当前 API、运行时、Worker 和文档里程碑的开发变更记录。
+sidebar_label: Cortex 2026
+---
+
+本页汇总 Cortex PRD、OpenAPI spec、技术设计、Schema、任务台账和开发日志中近期完成的主要变更。
+
+## 2026 年 4 月
+
+### OpenAPI 契约扩展
+
+- 将 Evaluation 和 Synthesis 提升为与 Parse、Storage、Knowledge、Jobs、Health、Observability 并列的一等 API 域。
+- 新增 `/v1/eval/*` 与 `/v1/synthesis/*` 路径、scopes、请求模型、结果 payload、artifacts、quality gates 和目录接口。
+- 围绕 `specs/cortex-api.yaml` 保持运行时 OpenAPI、文档 OpenAPI 和 contract tests 对齐。
+
+### Evaluation 与 Synthesis runtime
+
+- 实现领域包、API routers、worker entrypoints、runtime config wiring、startup catalog sync 和 job-control services。
+- 新增 DeepEval evaluation adapter，支持 inline RAG metrics、conversational metrics、GEval fallback、namespace 聚合和默认指标选择。
+- 新增 SDV structured single-table 与 relational synthesis。
+- 新增 DeepEval Synthesizer 的 context/document goldens 生成流程。
+- 支持异步 Worker 从 datasets、objects、JSON/JSONL/CSV、document chunks 和 inline payloads 水合输入。
+- 将标准 `evaluation_report` 与 `synthesis_output` 持久化为对象，并回写运行元数据。
+
+### Storage 与对象处理
+
+- 通过 `CORTEX_S3_PUBLIC_ENDPOINT` 拆分内部 S3 控制面 endpoint 和面向调用方的 presigned URL endpoint。
+- 新增 `POST /v1/storage/files`，用于 Swagger、本地测试和小文件上传，并通过 `CORTEX_STORAGE_DIRECT_UPLOAD_MAX_BYTES` 限制大小。
+- 为 Worker 增加内部对象读取能力，使异步 evaluation/synthesis job 可以水合引用对象。
+
+### 本地 runtime 与 Docker 拓扑
+
+- 将 `./configs` 挂载进本地 Cortex 容器，runtime YAML 变更不再需要重建镜像。
+- 增加 Docling parse、DeepEval/EvalScope evaluation runtime、SDV/DeepEval synthesis 的 heavy worker profiles。
+- API 镜像保持轻量，重型可选依赖路由到 runtime workers。
+- 增加 `host.docker.internal:host-gateway` 和代理环境变量透传，改善容器内 provider 连接。
+
+### 供应商配置
+
+- 将模型供应商标准化为完整槽位：base URL、API key、model ID、embedding model ID 和 embedding dimensions。
+- 新增 OpenRouter provider 变量和 Compose passthrough。
+- 将 Knowledge/Cognee 默认切到 OpenRouter，并在适配器边界将 Cognee provider label 规范化到 OpenAI-compatible 调用路径。
+- 改进 DeepEval provider 连接诊断，包含 endpoint origin、model、异常类型和 cause chain。
+- 写入 API 可见 job failure 前会脱敏疑似 secret。
+
+### Job 可靠性与健康检查
+
+- 将 Knowledge、Evaluation、Synthesis worker 默认 lease 提升到 300 秒，heartbeat 为 30 秒。
+- 区分执行预算超时和上游 provider `TimeoutError`。
+- 将派生 job timing 指标 clamp 到非负值。
+- `/v1/health/live` 改为无鉴权容器探针，`/v1/health/ready` 继续受 `health:read` 保护。
+
+### Knowledge 工作流更新
+
+- 为 TensorZero Cortex runs 增加可重复的知识图谱可视化导出。
+- 调整示例 Knowledge ingestion，在当前 Cognee runtime 支持 text 和 URI live execution 的前提下提交 parsed Markdown text excerpts。
+- 增加 Cognee LLM/embedding 凭据缺失的 fail-fast 校验，避免静默回退到 OpenAI 默认值。
+
+### 文档与运维指导
+
+- 随公共契约演进同步更新 README、runtime examples、Compose files、OpenAPI、PRD、Schema、DFD、技术设计和任务台账。
+- 补充本地 token、Swagger 工作流、heavy worker profiles、config-only restart、provider slots、proxy settings、worker lease controls 和校验命令。
+
+## 当前状态
+
+- Parse、Storage、Knowledge、Evaluation、Synthesis 已在 REST API、OpenAPI 契约、元数据模型、Worker 模型、运行时配置和本地 Compose 拓扑中覆盖。
+- Evaluation 与 Synthesis 已具备 pluggable adapters、async jobs、input hydration、artifact persistence、OpenTelemetry spans 和测试覆盖。
+- 后续重点是接入更多真实评测/合成场景、完善 Grafana dashboards，并补充生产 CI/CD 发布流水线。
+

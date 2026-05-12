@@ -1,0 +1,32 @@
+---
+title: Storage Introduction
+description: Understand Cortex Storage as the S3-backed object layer shared by Parse, Knowledge, Evaluation, and Synthesis.
+---
+
+Cortex Storage is the durable object layer for Cortex. It keeps source files, parsed Markdown, evaluation reports, synthetic datasets, and generated artifacts in S3-compatible storage while Cortex SQL tables track metadata, versions, access policy, and audit context.
+
+Storage gives API callers two upload paths:
+
+| Path | Endpoint | Best fit |
+| --- | --- | --- |
+| Direct upload | `POST /v1/storage/files` | Small files and Markdown artifacts that should be uploaded in one request. |
+| Signed upload session | `POST /v1/storage/uploads` then `POST /v1/storage/uploads/{uploadId}/complete` | Browser clients, large files, multipart uploads, and workflows that upload directly to object storage. |
+
+## Object identity
+
+Each completed object receives an `object_id`. Other Cortex APIs accept that id directly:
+
+- Parse can parse `cortex://objects/{object_id}` or S3-style locators.
+- Knowledge can ingest `input_type: "object_id"`.
+- Evaluation can hydrate JSON, JSONL, or CSV test cases from `object_id`.
+- Synthesis can read source records or documents from `object_id`.
+
+## Access and metadata
+
+Storage requests can attach:
+
+- `metadata`, such as source system, department, run id, or parser engine;
+- `tags`, such as `finance`, `docs`, `parsed-markdown`;
+- `access_policy`, such as tenant-shared access, classification labels, allowed roles, and purpose tags.
+
+The object store remains vendor-neutral, while Cortex owns the control plane: object records, versions, permissions, download URLs, and lifecycle metadata.

@@ -1,0 +1,30 @@
+---
+title: Evaluation API Reference
+description: 评测引擎、指标目录、同步检查、异步 job 和报告接口。
+---
+
+Evaluation 为质量、RAG、Agent、多轮、自定义和性能工作负载返回 scorecard 与指标级结果。下面的 API 示例以 AI 生成的 Python、JavaScript 和 Java 客户端代码展示。
+
+| 方法 | 路径 | Scope | 作用 |
+| --- | --- | --- | --- |
+| `GET` | `/v1/eval/engines` | `eval:read` | 列出可用评测引擎。 |
+| `GET` | `/v1/eval/metrics` | `eval:read` | 列出指标定义和 engine binding。 |
+| `POST` | `/v1/eval/sync` | `eval:write` | 运行小规模同步评测。 |
+| `POST` | `/v1/eval/jobs` | `eval:write` | 提交异步评测 job。 |
+| `GET` | `/v1/eval/jobs/{jobId}/result` | `eval:read` | 读取已完成评测报告。 |
+
+## 引擎和指标
+
+<ApiExampleTabs example="eval-engines-metrics" />
+
+## RAG 同步请求
+
+<ApiExampleTabs example="eval-sync" />
+
+## 异步评测 job
+
+<ApiExampleTabs example="eval-job" />
+
+## EvalScope 性能请求
+
+<ApiExampleTabs example="eval-perf-job" />

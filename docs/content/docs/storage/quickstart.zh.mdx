@@ -1,0 +1,34 @@
+---
+title: Storage Quickstart 快速上手
+description: 上传一个 Markdown 文件，查看对象元数据，并生成签名下载 URL。
+---
+
+这个快速上手复用 Parse quickstart 中的 token。如果还没有 token，请先调用 `POST /v1/dev/auth/token`。下面的 API 片段是 AI 生成的 Python、JavaScript 和 Java 客户端示例。
+
+## 1. 创建示例文件
+
+```bash
+cat > cortex-storage-quickstart.md <<'EOF'
+# Cortex Storage
+
+This file was uploaded through Cortex.
+EOF
+```
+
+## 2. 直接上传
+
+<ApiExampleTabs example="storage-upload" />
+
+响应中会包含 `object_id`。
+
+## 3. 查看对象
+
+把示例中的 `obj_xxx` 替换为返回的 `object_id`。
+
+<ApiExampleTabs example="storage-object" />
+
+## 4. 创建下载 URL
+
+<ApiExampleTabs example="storage-download-url" />
+
+现在你可以把 `object_id` 传给 Knowledge、Evaluation、Synthesis 或 Parse。

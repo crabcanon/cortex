@@ -1,0 +1,34 @@
+---
+title: Storage API Reference
+description: Endpoints for direct uploads, signed upload sessions, object inspection, and signed downloads.
+---
+
+Storage keeps files and artifacts in S3-compatible object storage and exposes Cortex-managed metadata and permissions. API examples are rendered as AI-generated Python, JavaScript, and Java client snippets.
+
+| Method | Path | Scope | Purpose |
+| --- | --- | --- | --- |
+| `POST` | `/v1/storage/files` | `storage:write` | Direct multipart form upload for small files. |
+| `POST` | `/v1/storage/uploads` | `storage:write` | Create a signed upload session. |
+| `POST` | `/v1/storage/uploads/{uploadId}/complete` | `storage:write` | Complete a single-part or multipart upload session. |
+| `GET` | `/v1/storage/objects/{objectId}` | `storage:read` | Inspect object metadata and policy. |
+| `GET` | `/v1/storage/objects/{objectId}/download-url` | `storage:read` | Create a signed download URL. |
+
+## Direct file upload
+
+`POST /v1/storage/files` is a `multipart/form-data` endpoint.
+
+<ApiExampleTabs example="storage-upload" />
+
+## Signed upload session
+
+<ApiExampleTabs example="storage-upload-session" />
+
+Complete multipart uploads with provider ETags:
+
+<ApiExampleTabs example="storage-complete-upload" />
+
+## Inspect and download
+
+<ApiExampleTabs example="storage-object" />
+
+<ApiExampleTabs example="storage-download-url" />

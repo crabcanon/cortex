@@ -1,0 +1,24 @@
+---
+title: Knowledge Use Cases 使用场景
+description: 将 Cortex Knowledge 用于 RAG、图谱搜索、记忆、溯源和数据集运营。
+---
+
+## 产品文档 RAG
+
+把文档页 Parse 成 Markdown，上传产物到 Storage，摄入数据集，执行 Cognify，然后用带溯源和图路径的上下文回答问题。
+
+## 企业制度助手
+
+用 metadata 记录司法辖区、制度类型、部门、生效日期。Search 可以在模型回答前过滤政策上下文。
+
+## 图谱感知金融研究
+
+TensorZero 示例摄入宏观经济和金融 URL，按 parser engine 分组上下文，再用 Knowledge Search 对比不同来源中的风险。
+
+## Agent 记忆
+
+用 Memify pipeline 做会话持久化、三元组 embedding 或 coding-rule 增强。把 session id 和 node name 写入 metadata，方便 Agent 检索长期记忆。
+
+## 知识质量闭环
+
+把 Knowledge Search 上下文交给 Evaluation。如果 RAG faithfulness 或 contextual recall 低，就调整 parse engine、node set、chunking 或 graph prompt profile。

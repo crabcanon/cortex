@@ -1,0 +1,93 @@
+---
+title: Cortex API
+description: Endpoint inventory and generated client examples for the Cortex OpenAPI contract.
+---
+
+This page summarizes the current Cortex API surface from the OpenAPI spec. Detailed schemas are available in the Swagger/OpenAPI renderer; the snippets here are AI-generated Python, JavaScript, and Java API calls.
+
+## Health and observability
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/v1/health/live` | Unauthenticated liveness probe. |
+| `GET` | `/v1/health/ready` | Dependency readiness probe requiring `health:read`. |
+| `GET` | `/metrics` | Prometheus scrape endpoint. |
+
+## Development auth
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `POST` | `/v1/dev/auth/token` | Issue a local-development bearer token when dev auth is enabled. |
+
+<ApiExampleTabs example="auth-token" />
+
+## Jobs
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/v1/jobs/{jobId}` | Get job status and timing metrics. |
+| `GET` | `/v1/jobs/{jobId}/events` | List job events. |
+| `POST` | `/v1/jobs/{jobId}/cancel` | Cancel a queued or running job. |
+
+<ApiExampleTabs example="job-status" />
+
+## Parse
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/v1/parse/engines` | List available parse engines. |
+| `GET` | `/v1/parse/profiles` | List parser profiles. |
+| `POST` | `/v1/parse/sync` | Parse content synchronously. |
+| `POST` | `/v1/parse/jobs` | Submit async parse jobs. |
+| `GET` | `/v1/parse/jobs/{jobId}/result` | Get a completed parse result. |
+
+<ApiExampleTabs example="parse-sync" />
+
+## Storage
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `POST` | `/v1/storage/uploads` | Initiate a presigned upload session. |
+| `POST` | `/v1/storage/files` | Upload a small file through the API. |
+| `POST` | `/v1/storage/uploads/{uploadId}/complete` | Complete an upload session. |
+| `GET` | `/v1/storage/objects/{objectId}` | Get object metadata. |
+| `GET` | `/v1/storage/objects/{objectId}/download-url` | Create a short-lived download URL. |
+
+<ApiExampleTabs example="storage-upload" />
+
+## Knowledge
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `POST` | `/v1/knowledge/datasets` | Create a knowledge dataset. |
+| `GET` | `/v1/knowledge/datasets/{datasetId}` | Get dataset metadata and counters. |
+| `POST` | `/v1/knowledge/add/jobs` | Submit a Cognee Add job. |
+| `POST` | `/v1/knowledge/cognify/jobs` | Submit a Cognify job. |
+| `POST` | `/v1/knowledge/memify/jobs` | Submit a Memify job. |
+| `POST` | `/v1/knowledge/search` | Search datasets and knowledge graphs. |
+
+<ApiExampleTabs example="knowledge-search" />
+
+## Evaluation
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/v1/eval/engines` | List evaluation engines. |
+| `GET` | `/v1/eval/metrics` | List normalized evaluation metrics. |
+| `POST` | `/v1/eval/sync` | Execute a small synchronous evaluation. |
+| `POST` | `/v1/eval/jobs` | Submit an async evaluation job. |
+| `GET` | `/v1/eval/jobs/{jobId}/result` | Get a completed evaluation result. |
+
+<ApiExampleTabs example="eval-sync" />
+
+## Synthesis
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/v1/synthesis/engines` | List synthesis engines. |
+| `POST` | `/v1/synthesis/sync` | Execute a small synchronous synthesis run. |
+| `POST` | `/v1/synthesis/jobs` | Submit an async synthesis job. |
+| `GET` | `/v1/synthesis/jobs/{jobId}/result` | Get a completed synthesis result. |
+| `POST` | `/v1/synthesis/jobs/{jobId}/result` | Job status webhook target. |
+
+<ApiExampleTabs example="synthesis-job" />

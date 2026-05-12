@@ -1,0 +1,24 @@
+---
+title: Synthesis Use Cases 使用场景
+description: 将 Synthesis 用于结构化数据、RAG golden、会话、Agent 轨迹、隐私保护和评测闭环。
+---
+
+## 结构化测试数据
+
+用 SDV-backed 单表或关系型合成生成客户、订单、交易、事件记录。导出 JSONL、CSV 或 Parquet 前，开启 `anonymize_pii` 和 quality gates。
+
+## RAG golden 数据集
+
+基于文档或 Knowledge 上下文生成问答对、期望输出和检索上下文。生成结果可以直接交给 Evaluation。
+
+## 会话模拟
+
+根据客服制度、产品文档或合规规则生成多轮会话，再用 multi-turn 和 agentic 指标评测 Agent。
+
+## 隐私保护分析
+
+生成结构相似的数据，用于 demo、notebook、CI 和伙伴集成，避免暴露生产记录。
+
+## 失败复现
+
+把 Evaluation 中失败的样本扩展成合成变体，在已知失败点附近扩大回归集，特别适合 TensorZero 实验后的质量闭环。

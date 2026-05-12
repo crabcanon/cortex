@@ -1,0 +1,149 @@
+---
+title: TensorZero + Cortex Matrix Evaluation
+description: Run a financial research RAG experiment that exercises Parse, Storage, Knowledge, Evaluation, and Synthesis workflows.
+---
+
+The `examples/tensorzero-cortex` project demonstrates a realistic financial research workflow:
+
+1. parse 20 macroeconomic and financial URLs with multiple Cortex Parse engines;
+2. upload each parsed Markdown artifact to Cortex Storage;
+3. ingest the artifacts into Cortex Knowledge and build graph-aware context;
+4. run TensorZero exhaustive or adaptive A/B tests across OpenAI, Gemini, Kimi, or other variants;
+5. turn TensorZero inference and feedback records into Cortex Evaluation cases;
+6. optionally use Cortex Synthesis to expand QA, RAG golden, or structured benchmark datasets.
+
+## API map
+
+| Cortex API | How the example uses it |
+| --- | --- |
+| Parse | Calls `/v1/parse/sync` or `/v1/parse/jobs` for each URL and parse engine. |
+| Storage | Calls `/v1/storage/files` to persist normalized Markdown artifacts. |
+| Knowledge | Creates a dataset, submits Add and Cognify jobs, then calls Search for RAG context. |
+| Evaluation | Submits generated RAG/custom cases to `/v1/eval/sync` or `/v1/eval/jobs`. |
+| Synthesis | Can extend the run by generating QA pairs, RAG goldens, or structured benchmark records from artifacts. |
+
+## 1. Prepare Cortex
+
+Start Cortex from the repository root:
+
+```bash
+cd /path/to/cortex
+test -f .env || cp .env.local.example .env
+
+docker compose --env-file .env -p cortex-local -f compose.local.yaml \
+  --profile docling \
+  --profile eval-runtime \
+  --profile synthesis-runtime \
+  up -d --build
+```
+
+When you only changed runtime config and want to recreate the services used by the full example:
+
+```bash
+docker compose --env-file .env -p cortex-local -f compose.local.yaml \
+  --profile docling \
+  --profile eval-runtime \
+  --profile synthesis-runtime \
+  up -d --no-build --force-recreate \
+  cortex-api \
+  cortex-parse-worker-docling \
+  cortex-knowledge-worker \
+  cortex-evaluation-worker-runtime \
+  cortex-synthesis-worker-runtime
+```
+
+## 2. Configure the TensorZero example
+
+```bash
+cd /path/to/cortex/examples/tensorzero-cortex
+test -f .env || cp .env.example .env
+uv sync
+```
+
+Fill the provider keys you plan to test:
+
+```text
+OPENAI_API_KEY=...
+GEMINI_API_KEY=...
+KIMI_API_KEY=...
+OPENROUTER_API_KEY=...
+```
+
+Useful defaults for a complete local run:
+
+```text
+PARSE_ENGINES=auto,crawl4ai,jina_reader,markitdown,llama_parse,docling
+TENSORZERO_STRATEGY=exhaustive
+TENSORZERO_VARIANTS=openai,gemini,kimi
+TENSORZERO_CONTEXT_GROUPING=by_parse_engine
+SUBMIT_CORTEX_EVAL=true
+CORTEX_EVAL_MODE=async
+CORTEX_EVAL_TYPES=rag,custom
+CORTEX_EVAL_METRIC_PROFILE=deepeval_rag_core
+KNOWLEDGE_GRAPH_VISUALIZATION=true
+```
+
+Render TensorZero configuration and start its stack:
+
+```bash
+uv run tensorzero-cortex render-config
+docker compose --env-file .env -f tensorzero/docker-compose.tensorzero.yaml up -d
+```
+
+TensorZero Gateway is usually available at `http://127.0.0.1:3002`, and TensorZero UI at `http://127.0.0.1:4000`.
+
+## 3. Run a smoke test
+
+Start with one URL and one parser:
+
+```bash
+uv run tensorzero-cortex run --max-urls 1 --parse-engines markitdown --skip-knowledge-jobs
+```
+
+This exercises Parse, Storage, TensorZero inference, and fallback RAG context without requiring Knowledge workers.
+
+## 4. Run the full matrix
+
+```bash
+uv run tensorzero-cortex run \
+  --max-urls 5 \
+  --parse-engines auto,crawl4ai,jina_reader,markitdown,llama_parse,docling \
+  --parse-mode sync \
+  --tensorzero-strategy exhaustive \
+  --tensorzero-variants openai,gemini,kimi \
+  --context-grouping by_parse_engine \
+  --submit-cortex-eval \
+  --cortex-eval-mode async \
+  --cortex-eval-types rag,custom \
+  --query "What macroeconomic and financial stability risks are highlighted across these documents?"
+```
+
+Docling is worker-heavy. The example overrides `docling` to async mode even when the global parse mode is sync.
+
+## 5. Read outputs
+
+Each run writes artifacts under:
+
+```text
+examples/tensorzero-cortex/artifacts/{run_id}
+```
+
+Important files:
+
+| File | Meaning |
+| --- | --- |
+| `report.md` | Human-readable experiment report. |
+| `report.json` | Structured report. |
+| `tensorzero_eval_dataset.jsonl` | Evaluation cases derived from TensorZero records. |
+| `raw_tensorzero_result.json` | TensorZero inference summary. |
+| `raw_search_result.json` | Knowledge Search response or parse fallback. |
+| `knowledge_graph.html` | Optional Cognee graph visualization. |
+| `parse/*.json` | Parse and Storage response per URL and engine. |
+
+## 6. Add Synthesis after the run
+
+The example currently focuses on Parse, Storage, Knowledge, TensorZero, and Evaluation. To exercise the fifth Cortex domain, submit a Synthesis job from the same parsed content:
+
+<ApiExampleTabs example="tensorzero-synthesis-job" />
+
+Use the generated QA pairs as additional Evaluation cases, or persist them as a dataset for future TensorZero experiments.

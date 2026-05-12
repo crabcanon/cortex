@@ -44,6 +44,8 @@ eggs/
 .eggs/
 lib/
 lib64/
+!docs/lib/
+!docs/lib/**
 parts/
 sdist/
 var/

@@ -1,0 +1,32 @@
+---
+title: Storage Introduction 介绍
+description: 理解 Cortex Storage 作为 Parse、Knowledge、Evaluation、Synthesis 共享的 S3 对象层。
+---
+
+Cortex Storage 是 Cortex 的持久化对象层。它用 S3 兼容存储保存源文件、解析后的 Markdown、评测报告、合成数据集和生成产物，同时由 Cortex SQL 表维护元数据、版本、访问策略和审计上下文。
+
+Storage 提供两条上传路径：
+
+| 路径 | 接口 | 适合场景 |
+| --- | --- | --- |
+| 直接上传 | `POST /v1/storage/files` | 小文件、Markdown 产物、一次请求即可完成的上传。 |
+| 签名上传会话 | `POST /v1/storage/uploads` 后接 `POST /v1/storage/uploads/{uploadId}/complete` | 浏览器客户端、大文件、多分片上传、客户端直传对象存储。 |
+
+## 对象身份
+
+每个完成的对象都会获得 `object_id`。其他 Cortex API 可以直接复用这个 id：
+
+- Parse 可以解析 `cortex://objects/{object_id}` 或 S3 风格 locator。
+- Knowledge 可以摄入 `input_type: "object_id"`。
+- Evaluation 可以从 `object_id` 读取 JSON、JSONL、CSV 测试集。
+- Synthesis 可以从 `object_id` 读取源记录或文档。
+
+## 权限与元数据
+
+Storage 请求可以附带：
+
+- `metadata`：来源系统、部门、run id、parser engine 等；
+- `tags`：如 `finance`、`docs`、`parsed-markdown`；
+- `access_policy`：租户共享、分类标签、允许角色、用途标签等。
+
+对象存储保持厂商中立，Cortex 负责控制面：对象记录、版本、权限、下载 URL 与生命周期元数据。

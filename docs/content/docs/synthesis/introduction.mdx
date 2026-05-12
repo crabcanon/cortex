@@ -1,0 +1,25 @@
+---
+title: Synthesis Introduction
+description: Understand Cortex Synthesis for structured records, relational data, QA pairs, conversations, and agent trajectories.
+---
+
+Cortex Synthesis creates synthetic data through one contract. It can generate structured records with SDV-style engines, unstructured QA or conversation goldens with DeepEval-style synthesizers, and custom artifacts that are persisted back to Storage or datasets.
+
+| Engine | Best fit | Example synthesis types |
+| --- | --- | --- |
+| `sdv` | Structured tabular, relational, privacy-preserving samples | `structured_single_table`, `structured_relational` |
+| `deepeval` | Unstructured QA, RAG goldens, conversation goldens | `qa_pairs`, `rag_goldens`, `conversation_goldens` |
+| `auto` | Route by source and `synthesis_type` | Any registered type with an available engine |
+
+## Sources and outputs
+
+Synthesis accepts:
+
+- inline records or rows;
+- relational metadata;
+- documents;
+- Storage objects;
+- Cortex datasets;
+- traces or agent trajectories.
+
+It can return previews directly and optionally persist canonical outputs as JSON, JSONL, CSV, Parquet, Markdown, or conversation JSON objects. Use quality gates to block low-quality generated data before it reaches downstream tests.

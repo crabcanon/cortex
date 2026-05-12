@@ -1,0 +1,28 @@
+---
+title: Synthesis Quickstart
+description: Generate structured SDV samples and unstructured QA pairs through Cortex Synthesis.
+---
+
+This quickstart shows both structured and unstructured generation. Use sync mode for previews and async jobs for larger datasets. API snippets are AI-generated client examples for Python, JavaScript, and Java.
+
+## 1. List engines
+
+<ApiExampleTabs example="synthesis-engines" />
+
+## 2. Generate structured records with SDV
+
+<ApiExampleTabs example="synthesis-structured-sync" />
+
+## 3. Generate QA pairs with DeepEval
+
+<ApiExampleTabs example="synthesis-qa-sync" />
+
+## 4. Submit an async generation job
+
+<ApiExampleTabs example="synthesis-job" />
+
+Poll the shared job endpoint, then read the Synthesis result:
+
+<ApiExampleTabs example="job-status" />
+
+<ApiExampleTabs example="synthesis-job-result" />

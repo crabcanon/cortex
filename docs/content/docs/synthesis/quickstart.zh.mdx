@@ -1,0 +1,28 @@
+---
+title: Synthesis Quickstart 快速上手
+description: 通过 Cortex Synthesis 生成结构化 SDV 样本和非结构化 QA 对。
+---
+
+这个快速上手同时展示结构化和非结构化生成。预览用同步模式，大数据集用异步 job。下面的 API 片段是 AI 生成的 Python、JavaScript 和 Java 客户端示例。
+
+## 1. 查看引擎
+
+<ApiExampleTabs example="synthesis-engines" />
+
+## 2. 用 SDV 生成结构化记录
+
+<ApiExampleTabs example="synthesis-structured-sync" />
+
+## 3. 用 DeepEval 生成 QA 对
+
+<ApiExampleTabs example="synthesis-qa-sync" />
+
+## 4. 提交异步生成 job
+
+<ApiExampleTabs example="synthesis-job" />
+
+然后轮询通用 job endpoint，并读取 Synthesis 结果：
+
+<ApiExampleTabs example="job-status" />
+
+<ApiExampleTabs example="synthesis-job-result" />

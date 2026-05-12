@@ -1,0 +1,30 @@
+---
+title: Jobs API Reference
+description: Shared endpoints for inspecting, streaming, and cancelling Cortex long-running jobs.
+---
+
+Jobs are shared by Parse, Knowledge, Evaluation, and Synthesis. Use the same status, event, and cancellation contract across domains. The snippets below are AI-generated client examples for Python, JavaScript, and Java.
+
+| Method | Path | Scope | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/v1/jobs/{jobId}` | `jobs:read` | Get current status, timestamps, progress, and result pointers. |
+| `GET` | `/v1/jobs/{jobId}/events` | `jobs:read` | Read ordered job events for debugging or UI timelines. |
+| `POST` | `/v1/jobs/{jobId}/cancel` | `jobs:cancel` | Request cancellation for queued or running jobs. |
+
+## Status polling
+
+Replace `job_xxx` in the snippet with the job id returned by a domain API.
+
+<ApiExampleTabs example="job-status" />
+
+Terminal statuses include `succeeded`, `failed`, `cancelled`, and `timed_out`. Read the domain-specific result endpoint only after the job succeeds.
+
+## Events
+
+<ApiExampleTabs example="job-events" />
+
+Events are useful for worker claims, retries, lease expiry, progress updates, and operator-visible failure reasons.
+
+## Cancellation
+
+<ApiExampleTabs example="job-cancel" />

@@ -1,0 +1,24 @@
+---
+title: Parse Use Cases
+description: Learn where Parse fits in web, document, storage-backed, and evaluation workflows.
+---
+
+## Web-to-RAG ingestion
+
+Use `crawl4ai`, `jina_reader`, or `auto` to convert public pages into Markdown before Knowledge ingestion. This is the default path for docs sites, policy pages, release notes, and public research pages.
+
+## Document AI for PDFs and Office files
+
+Use `docling`, `llama_parse`, or `markitdown` when the input is a PDF, DOCX, PPTX, or mixed file. Prefer async jobs when layout extraction, OCR, or cloud parsing can take more than a few seconds.
+
+## Storage-backed parsing
+
+Upload files to Storage first, then submit locators such as `cortex://objects/{object_id}` or S3-style paths to Parse. This keeps raw source files, parsed Markdown, and downstream Knowledge lineage connected.
+
+## Parser comparison
+
+Run the same URL batch across multiple engines, store each Markdown result, and compare downstream RAG quality. The TensorZero + Cortex example uses this pattern to measure how parser choice affects retrieval and answer quality.
+
+## Regression data generation
+
+Use Parse output as the source for Evaluation and Synthesis. Parsed Markdown can become inline test cases, RAG contexts, or seed documents for synthetic QA pairs.

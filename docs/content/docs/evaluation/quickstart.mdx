@@ -1,0 +1,26 @@
+---
+title: Evaluation Quickstart
+description: Run a synchronous RAG evaluation, submit an async evaluation job, and retrieve the report.
+---
+
+This quickstart uses inline test cases so you can validate the Evaluation API without preparing a dataset first. API snippets are AI-generated client examples for Python, JavaScript, and Java.
+
+## 1. List engines and metrics
+
+<ApiExampleTabs example="eval-engines-metrics" />
+
+## 2. Run a synchronous RAG evaluation
+
+<ApiExampleTabs example="eval-sync" />
+
+## 3. Submit the same request asynchronously
+
+<ApiExampleTabs example="eval-job" />
+
+Poll the shared job endpoint, then read the Evaluation result:
+
+<ApiExampleTabs example="job-status" />
+
+<ApiExampleTabs example="eval-job-result" />
+
+Use async mode when the input has many cases, calls an external target API, or routes to a performance worker.

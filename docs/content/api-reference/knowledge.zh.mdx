@@ -1,0 +1,31 @@
+---
+title: Knowledge API Reference
+description: 数据集、Add、Cognify、Memify 和 Search 接口。
+---
+
+Knowledge 提供数据集生命周期，以及基于 Cognee 的知识工作流。下面的 API 示例以 AI 生成的 Python、JavaScript 和 Java 客户端代码展示。
+
+| 方法 | 路径 | Scope | 作用 |
+| --- | --- | --- | --- |
+| `POST` | `/v1/knowledge/datasets` | `knowledge:write` | 创建知识数据集。 |
+| `GET` | `/v1/knowledge/datasets/{datasetId}` | `knowledge:read` | 读取数据集元数据。 |
+| `POST` | `/v1/knowledge/add/jobs` | `knowledge:write` | 摄入 text、URI、document 或 object 输入。 |
+| `POST` | `/v1/knowledge/cognify/jobs` | `knowledge:write` | 构建图谱感知 chunks 和结构。 |
+| `POST` | `/v1/knowledge/memify/jobs` | `knowledge:write` | 运行 memory enrichment pipelines。 |
+| `POST` | `/v1/knowledge/search` | `knowledge:read` | 搜索 chunks 或 graph completion context。 |
+
+## Dataset
+
+<ApiExampleTabs example="knowledge-dataset" />
+
+## Add
+
+<ApiExampleTabs example="knowledge-add-job" />
+
+## Cognify
+
+<ApiExampleTabs example="knowledge-cognify-job" />
+
+## Search
+
+<ApiExampleTabs example="knowledge-search" />

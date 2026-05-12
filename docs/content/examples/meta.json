@@ -1,0 +1,9 @@
+{
+  "title": "Examples",
+  "pages": [
+    "index",
+    "tensorzero-cortex",
+    "parse-and-knowledge",
+    "evaluation-and-synthesis"
+  ]
+}

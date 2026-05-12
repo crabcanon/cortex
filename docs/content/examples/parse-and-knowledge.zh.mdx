@@ -1,0 +1,44 @@
+---
+title: Parse 和 Knowledge
+description: 解析网页，创建数据集，摄入内容，构建知识并执行搜索。
+---
+
+这个流程从公开 URL 开始，将其解析为 Markdown，再把文本摄入知识数据集并执行搜索。下面的 API 片段是 AI 生成的 Python、JavaScript 和 Java 客户端示例。
+
+## 解析 URL
+
+<ApiExampleTabs example="parse-sync" />
+
+重型文档解析建议提交异步 Job：
+
+<ApiExampleTabs example="parse-job" />
+
+轮询通用 Job，并获取解析结果：
+
+<ApiExampleTabs example="job-status" />
+
+<ApiExampleTabs example="parse-job-result" />
+
+## 上传小文件
+
+<ApiExampleTabs example="storage-upload" />
+
+返回的 `object_id` 可用于 Parse、Knowledge、Evaluation 或 Synthesis。
+
+## 创建数据集
+
+<ApiExampleTabs example="knowledge-dataset" />
+
+## 摄入内联文本
+
+<ApiExampleTabs example="knowledge-add-job" />
+
+启动或等待 `cortex-knowledge-worker` 消费任务，然后通过 Job API 查看完成状态。
+
+## 构建图谱
+
+<ApiExampleTabs example="knowledge-cognify-job" />
+
+## 搜索
+
+<ApiExampleTabs example="knowledge-search" />

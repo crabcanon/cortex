@@ -1,0 +1,149 @@
+---
+title: TensorZero + Cortex 矩阵评测
+description: 运行一个金融研究 RAG 实验，覆盖 Parse、Storage、Knowledge、Evaluation 和 Synthesis 工作流。
+---
+
+`examples/tensorzero-cortex` 项目演示了一个接近真实业务的金融研究流水线：
+
+1. 用多个 Cortex Parse engine 解析 20 个宏观经济和金融 URL；
+2. 将每个解析出的 Markdown 上传到 Cortex Storage；
+3. 摄入 Cortex Knowledge，构建图谱感知上下文；
+4. 通过 TensorZero 在 OpenAI、Gemini、Kimi 或其他 variant 之间做 exhaustive / adaptive A/B test；
+5. 将 TensorZero inference 与 feedback 记录转成 Cortex Evaluation cases；
+6. 可选使用 Cortex Synthesis 扩展 QA、RAG golden 或结构化 benchmark 数据集。
+
+## API 对照
+
+| Cortex API | 示例如何使用 |
+| --- | --- |
+| Parse | 对每个 URL 和 parse engine 调用 `/v1/parse/sync` 或 `/v1/parse/jobs`。 |
+| Storage | 调用 `/v1/storage/files` 持久化标准化 Markdown。 |
+| Knowledge | 创建 dataset，提交 Add/Cognify jobs，再用 Search 生成 RAG context。 |
+| Evaluation | 将生成的 RAG/custom cases 提交给 `/v1/eval/sync` 或 `/v1/eval/jobs`。 |
+| Synthesis | 可在 run 后基于产物生成 QA pairs、RAG goldens 或结构化 benchmark 记录。 |
+
+## 1. 准备 Cortex
+
+在 Cortex 仓库根目录启动：
+
+```bash
+cd /path/to/cortex
+test -f .env || cp .env.local.example .env
+
+docker compose --env-file .env -p cortex-local -f compose.local.yaml \
+  --profile docling \
+  --profile eval-runtime \
+  --profile synthesis-runtime \
+  up -d --build
+```
+
+如果只是修改了运行时配置，可以只重建完整示例依赖的服务：
+
+```bash
+docker compose --env-file .env -p cortex-local -f compose.local.yaml \
+  --profile docling \
+  --profile eval-runtime \
+  --profile synthesis-runtime \
+  up -d --no-build --force-recreate \
+  cortex-api \
+  cortex-parse-worker-docling \
+  cortex-knowledge-worker \
+  cortex-evaluation-worker-runtime \
+  cortex-synthesis-worker-runtime
+```
+
+## 2. 配置 TensorZero 示例
+
+```bash
+cd /path/to/cortex/examples/tensorzero-cortex
+test -f .env || cp .env.example .env
+uv sync
+```
+
+填写你要测试的模型供应商密钥：
+
+```text
+OPENAI_API_KEY=...
+GEMINI_API_KEY=...
+KIMI_API_KEY=...
+OPENROUTER_API_KEY=...
+```
+
+完整本地实验常用配置：
+
+```text
+PARSE_ENGINES=auto,crawl4ai,jina_reader,markitdown,llama_parse,docling
+TENSORZERO_STRATEGY=exhaustive
+TENSORZERO_VARIANTS=openai,gemini,kimi
+TENSORZERO_CONTEXT_GROUPING=by_parse_engine
+SUBMIT_CORTEX_EVAL=true
+CORTEX_EVAL_MODE=async
+CORTEX_EVAL_TYPES=rag,custom
+CORTEX_EVAL_METRIC_PROFILE=deepeval_rag_core
+KNOWLEDGE_GRAPH_VISUALIZATION=true
+```
+
+渲染 TensorZero 配置并启动：
+
+```bash
+uv run tensorzero-cortex render-config
+docker compose --env-file .env -f tensorzero/docker-compose.tensorzero.yaml up -d
+```
+
+TensorZero Gateway 通常在 `http://127.0.0.1:3002`，TensorZero UI 在 `http://127.0.0.1:4000`。
+
+## 3. 先跑冒烟测试
+
+先用 1 个 URL 和 1 个 parser：
+
+```bash
+uv run tensorzero-cortex run --max-urls 1 --parse-engines markitdown --skip-knowledge-jobs
+```
+
+这个最小链路会覆盖 Parse、Storage、TensorZero inference 和 fallback RAG context，不要求 Knowledge worker 可用。
+
+## 4. 运行完整矩阵
+
+```bash
+uv run tensorzero-cortex run \
+  --max-urls 5 \
+  --parse-engines auto,crawl4ai,jina_reader,markitdown,llama_parse,docling \
+  --parse-mode sync \
+  --tensorzero-strategy exhaustive \
+  --tensorzero-variants openai,gemini,kimi \
+  --context-grouping by_parse_engine \
+  --submit-cortex-eval \
+  --cortex-eval-mode async \
+  --cortex-eval-types rag,custom \
+  --query "What macroeconomic and financial stability risks are highlighted across these documents?"
+```
+
+Docling 属于重型 worker。即使全局 parse mode 是 sync，示例也会把 `docling` 覆盖为 async。
+
+## 5. 查看输出
+
+每次运行都会写入：
+
+```text
+examples/tensorzero-cortex/artifacts/{run_id}
+```
+
+关键文件：
+
+| 文件 | 含义 |
+| --- | --- |
+| `report.md` | 人类可读实验报告。 |
+| `report.json` | 结构化报告。 |
+| `tensorzero_eval_dataset.jsonl` | 从 TensorZero 记录生成的评测集。 |
+| `raw_tensorzero_result.json` | TensorZero inference 摘要。 |
+| `raw_search_result.json` | Knowledge Search 响应或 parse fallback。 |
+| `knowledge_graph.html` | 可选 Cognee 知识图谱可视化。 |
+| `parse/*.json` | 每个 URL + engine 的 Parse 和 Storage 响应。 |
+
+## 6. 在 run 后补充 Synthesis
+
+示例当前重点覆盖 Parse、Storage、Knowledge、TensorZero、Evaluation。要覆盖第五类 Cortex API，可以基于同一批解析内容提交 Synthesis job：
+
+<ApiExampleTabs example="tensorzero-synthesis-job" />
+
+生成的 QA pairs 可以作为新的 Evaluation cases，也可以持久化成数据集，供后续 TensorZero 实验复用。

@@ -1,0 +1,42 @@
+---
+title: Evaluation 和 Synthesis
+description: 通过 Cortex Evaluation 和 Synthesis Job 运行评测、生成数据，并持久化报告与输出对象。
+---
+
+Cortex Evaluation 和 Synthesis 复用 Parse 和 Knowledge 使用的 Job、Storage、授权和遥测基础能力。下面的 API 片段是 AI 生成的 Python、JavaScript 和 Java 客户端示例。
+
+## 列出评测引擎和指标
+
+<ApiExampleTabs example="eval-engines-metrics" />
+
+## 提交 RAG 评测 Job
+
+<ApiExampleTabs example="eval-job" />
+
+轮询并获取结果：
+
+<ApiExampleTabs example="job-status" />
+
+<ApiExampleTabs example="eval-job-result" />
+
+异步评测完成后可以持久化 `evaluation_report` 对象，并回写 `eval_runs.report_object_id`。
+
+## 列出合成引擎
+
+<ApiExampleTabs example="synthesis-engines" />
+
+## 生成 RAG goldens
+
+<ApiExampleTabs example="synthesis-job" />
+
+获取结果：
+
+<ApiExampleTabs example="synthesis-job-result" />
+
+异步合成完成后可以持久化 `synthesis_output` 对象，并回写 `synthesis_runs.output_object_id`。
+
+## 供应商提示
+
+- Evaluation 和 Synthesis 适配器应接收完整供应商槽位配置。
+- 本地 runtime profile 可将 DeepEval 路由到 Kimi、OpenRouter、OpenAI-compatible endpoint 或其他配置供应商。
+- 长耗时模型 Job 应使用大于预期 provider latency 的 lease；当前本地示例使用 300 秒 lease 和 30 秒 heartbeat。

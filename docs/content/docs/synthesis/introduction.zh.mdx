@@ -1,0 +1,25 @@
+---
+title: Synthesis Introduction 介绍
+description: 理解 Cortex Synthesis 如何生成结构化记录、关系数据、QA 对、多轮会话和 Agent 轨迹。
+---
+
+Cortex Synthesis 通过统一契约生成合成数据。它可以用 SDV 风格引擎生成结构化记录，用 DeepEval 风格 synthesizer 生成非结构化 QA 或会话 golden，并把自定义产物持久化回 Storage 或数据集。
+
+| 引擎 | 适合场景 | 示例 synthesis type |
+| --- | --- | --- |
+| `sdv` | 结构化表格、关系数据、隐私保护样本 | `structured_single_table`, `structured_relational` |
+| `deepeval` | 非结构化 QA、RAG golden、会话 golden | `qa_pairs`, `rag_goldens`, `conversation_goldens` |
+| `auto` | 根据 source 与 `synthesis_type` 自动路由 | 任意已注册且可用的类型 |
+
+## 来源与输出
+
+Synthesis 可以接收：
+
+- inline records 或 rows；
+- relational metadata；
+- documents；
+- Storage objects；
+- Cortex datasets；
+- traces 或 Agent trajectories。
+
+它可以直接返回 preview，也可以将标准输出持久化为 JSON、JSONL、CSV、Parquet、Markdown 或 conversation JSON。使用 quality gates 可以在合成数据进入下游测试前拦截低质量结果。

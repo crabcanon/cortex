@@ -1,0 +1,24 @@
+---
+title: Parse Use Cases 使用场景
+description: 了解 Parse 在网页、文档、Storage 对象和评测工作流中的位置。
+---
+
+## Web 到 RAG 摄入
+
+使用 `crawl4ai`、`jina_reader` 或 `auto` 将公开网页转成 Markdown，再交给 Knowledge 摄入。适合文档站、政策页面、release notes、公开研究网页。
+
+## PDF 与 Office 文档 AI
+
+当输入是 PDF、DOCX、PPTX 或混合文件时，使用 `docling`、`llama_parse` 或 `markitdown`。涉及版面抽取、OCR 或云端解析时，优先使用异步 job。
+
+## Storage 对象解析
+
+先把文件上传到 Storage，再把 `cortex://objects/{object_id}` 或 S3 风格路径提交给 Parse。这样原始文件、解析 Markdown 和后续 Knowledge lineage 都能串起来。
+
+## 解析器对比
+
+用多个 engine 解析同一批 URL，保存每个 Markdown 结果，再比较下游 RAG 质量。TensorZero + Cortex 示例就是用这种模式衡量解析器选择对检索和回答质量的影响。
+
+## 回归数据生成
+
+把 Parse 输出作为 Evaluation 和 Synthesis 的来源。解析后的 Markdown 可以变成内联测试用例、RAG context，或合成 QA 对的种子文档。

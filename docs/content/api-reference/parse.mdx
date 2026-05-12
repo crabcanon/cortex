@@ -1,0 +1,30 @@
+---
+title: Parse API Reference
+description: Endpoints for parsing URLs, files, and storage-backed objects into normalized Markdown.
+---
+
+Use Parse when the input is raw content and the output should be Markdown plus structured metadata. API examples are rendered as AI-generated Python, JavaScript, and Java client snippets.
+
+| Method | Path | Scope | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/v1/parse/engines` | `parse:read` | List registered parse engines and supported scenes. |
+| `GET` | `/v1/parse/profiles` | `parse:read` | Inspect internal parser profiles for operators and debugging. |
+| `POST` | `/v1/parse/sync` | `parse:write` | Parse one or more sources synchronously. |
+| `POST` | `/v1/parse/jobs` | `parse:write` | Submit async parse jobs. |
+| `GET` | `/v1/parse/jobs/{jobId}/result` | `parse:read` | Read the completed async parse result. |
+
+## List engines
+
+<ApiExampleTabs example="parse-engines" />
+
+## Synchronous parse
+
+<ApiExampleTabs example="parse-sync" />
+
+Use `engine_id: "auto"` for normal routing. Pin `crawl4ai`, `jina_reader`, `markitdown`, `llama_parse`, or `docling` when you are comparing engines or need a specific parser.
+
+## Async parse job
+
+<ApiExampleTabs example="parse-job" />
+
+Async responses return one or more `job_id` values. Poll `GET /v1/jobs/{jobId}` and then read `GET /v1/parse/jobs/{jobId}/result`.

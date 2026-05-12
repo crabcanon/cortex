@@ -1,0 +1,24 @@
+---
+title: Evaluation Use Cases
+description: Apply Cortex Evaluation to RAG regression, parser comparison, agent workflows, custom criteria, and performance tests.
+---
+
+## RAG regression gates
+
+Evaluate generated answers with RAG metrics such as answer relevance, faithfulness, contextual precision, contextual recall, and contextual relevance. Use Storage artifacts or Knowledge Search output as retrieval contexts.
+
+## Parser and retrieval comparison
+
+Parse the same sources with multiple engines, generate answers against each context group, then compare metric summaries. This reveals whether parser choice improves retrieval and answer quality.
+
+## Agent and tool workflows
+
+Use `agentic` metrics for task completion, goal success, tool correctness, and reasoning quality. Attach trace metadata so failed cases can be replayed.
+
+## Custom quality review
+
+Use `custom` with correctness, completeness, relevance, and caller-provided criteria. This is useful for domain-specific review rubrics that do not fit a standard metric.
+
+## Performance and service load tests
+
+Use EvalScope-backed `perf` evaluations to measure QPS, p90/p99 latency, output token throughput, and concurrency behavior against an API or model endpoint.

@@ -1,0 +1,38 @@
+---
+title: Parse Introduction
+description: Understand how Cortex Parse turns URLs, files, and stored objects into normalized Markdown and metadata.
+---
+
+Cortex Parse is the ingestion edge of Cortex. It accepts public URLs, storage objects, and file-oriented locators, routes each source to a parsing engine, and returns normalized Markdown plus metadata that downstream Storage, Knowledge, Evaluation, and Synthesis workflows can reuse.
+
+Parse is intentionally engine-neutral. A caller chooses `engine_id: "auto"` for routing, or pins an engine when they need a particular tradeoff:
+
+| Engine | Best fit | Notes |
+| --- | --- | --- |
+| `crawl4ai` | Web pages, docs sites, dynamic HTML | Crawl4AI is an LLM-friendly open-source crawler and scraper, useful when the source is a live web surface. |
+| `markitdown` | Office files, PDFs, images, HTML, CSV/JSON/XML, ZIPs | MarkItDown is a Microsoft utility that converts many file formats into Markdown for LLM pipelines. |
+| `docling` | Heavy document AI and layout-sensitive PDFs | Docling focuses on document conversion and can export structured representations and Markdown. |
+| `llama_parse` | Cloud document parsing for complex PDFs | LlamaParse is the LlamaIndex document parser for complex, agentic RAG ingestion. |
+| `jina_reader` | Fast URL-to-Markdown reading | Jina Reader exposes a simple reader service that turns URLs into LLM-friendly text. |
+
+## Runtime model
+
+Parse exposes both synchronous and asynchronous execution:
+
+| Mode | Endpoint | When to use |
+| --- | --- | --- |
+| Sync | `POST /v1/parse/sync` | Small URL batches, smoke tests, quick UI previews. |
+| Async | `POST /v1/parse/jobs` | Large batches, PDFs, Docling, LlamaParse, webhooks, worker-backed production flows. |
+
+Every async request creates Cortex jobs. You inspect them through the shared Jobs API, then read the parse result from `GET /v1/parse/jobs/{jobId}/result`.
+
+## Output contract
+
+A successful parse result contains:
+
+- source metadata: original locator, parser, source format, title, checksum, and telemetry;
+- normalized Markdown for retrieval and LLM prompting;
+- optional `document_id` for Cortex metadata tables;
+- optional storage artifact references when a worker persists derived output.
+
+Use Parse whenever the input is still "raw": a URL, a PDF, a CSV, an Office file, or an object in S3-compatible storage that has not yet been normalized.

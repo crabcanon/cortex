@@ -1,0 +1,30 @@
+---
+title: Synthesis API Reference
+description: 合成数据引擎、同步预览、异步生成 job 和结果读取接口。
+---
+
+Synthesis 可生成结构化记录、关系数据、RAG goldens、QA pairs、对话、agent trajectories 或自定义产物。下面的 API 示例以 AI 生成的 Python、JavaScript 和 Java 客户端代码展示。
+
+| 方法 | 路径 | Scope | 作用 |
+| --- | --- | --- | --- |
+| `GET` | `/v1/synthesis/engines` | `synthesis:read` | 列出合成引擎和支持类型。 |
+| `POST` | `/v1/synthesis/sync` | `synthesis:write` | 生成小规模同步预览。 |
+| `POST` | `/v1/synthesis/jobs` | `synthesis:write` | 提交异步生成 job。 |
+| `GET` | `/v1/synthesis/jobs/{jobId}/result` | `synthesis:read` | 读取生成输出和 quality gates。 |
+| `POST` | `/v1/synthesis/jobs/{jobId}/result` | `synthesis:write` | Worker-side 结果持久化回调。 |
+
+## 引擎
+
+<ApiExampleTabs example="synthesis-engines" />
+
+## 结构化单表请求
+
+<ApiExampleTabs example="synthesis-structured-sync" />
+
+## 非结构化 QA 请求
+
+<ApiExampleTabs example="synthesis-qa-sync" />
+
+## 异步生成 job
+
+<ApiExampleTabs example="synthesis-job" />

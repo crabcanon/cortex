@@ -1,0 +1,30 @@
+---
+title: 样例
+description: Cortex 本地认证、解析、存储、知识、评测和合成工作流样例。
+---
+
+以下样例假设本地 Cortex 运行在 `http://127.0.0.1:8080`，并启用了 `CORTEX_AUTH_MODE=dev`。下面的 API 片段是 AI 生成的 Python、JavaScript 和 Java 客户端示例。
+
+## 获取本地 token
+
+<ApiExampleTabs example="auth-token" />
+
+后续片段使用返回的 access token 作为 `CORTEX_TOKEN`。你也可以直接在 `http://127.0.0.1:8080/docs` 的 Swagger 中授权。
+
+## 选择流程
+
+| 流程 | 适用场景 |
+| --- | --- |
+| [TensorZero + Cortex 矩阵评测](/zh/examples/tensorzero-cortex) | 需要完整 Parse -> Storage -> Knowledge -> TensorZero -> Evaluation 闭环，并可扩展 Synthesis。 |
+| [Parse 和 Knowledge](/zh/examples/parse-and-knowledge) | 解析 URL 或对象，摄入数据集并搜索。 |
+| [Evaluation 和 Synthesis](/zh/examples/evaluation-and-synthesis) | 通过异步 Job 运行 RAG 评测或生成 RAG goldens。 |
+
+## 本地服务
+
+| 服务 | 地址 |
+| --- | --- |
+| Swagger UI | `http://127.0.0.1:8080/docs` |
+| MinIO Console | `http://127.0.0.1:9001` |
+| Jaeger | `http://127.0.0.1:16686` |
+| Prometheus | `http://127.0.0.1:9090` |
+| Grafana | `http://127.0.0.1:3000` |

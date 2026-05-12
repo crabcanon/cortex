@@ -1,0 +1,114 @@
+---
+title: Deployment
+description: Configure and run Cortex locally or in production with Docker Compose, worker profiles, provider slots, and observability.
+---
+
+Cortex can run as a local batteries-included stack or as production services wired to managed infrastructure. Local Docker Compose includes Postgres, Redis, MinIO, OpenTelemetry Collector, Jaeger, Prometheus, Grafana, the API, and workers.
+
+## Prerequisites
+
+- A bash-compatible shell.
+- Python 3.12, aligned with the project `.python-version`.
+- `uv` for workspace dependency management and package commands.
+- Docker Engine or Docker Desktop with the Compose plugin.
+- Swagger/OpenAPI access for API exploration and contract verification.
+- Provider API keys for the engines you enable.
+
+## Install dependencies
+
+```bash
+git clone https://github.com/crabcanon/cortex.git
+cd cortex
+
+uv sync --all-packages
+```
+
+Use `uv run ...` for development commands so the workspace keeps a stable `.venv`.
+
+## Configure environment
+
+```bash
+cp .env.example .env
+```
+
+Important groups:
+
+| Group | Variables |
+| --- | --- |
+| App | `CORTEX_ENV`, `CORTEX_HOST`, `CORTEX_PORT` |
+| Database | `CORTEX_DB_DSN` |
+| Object storage | `CORTEX_S3_ENDPOINT`, `CORTEX_S3_PUBLIC_ENDPOINT`, `CORTEX_S3_BUCKET`, `CORTEX_STORAGE_DIRECT_UPLOAD_MAX_BYTES` |
+| Queue | `CORTEX_QUEUE_URL` |
+| Auth | `CORTEX_AUTH_MODE`, `CORTEX_AUTH_JWT_SHARED_SECRET`, OIDC/JWKS/introspection settings |
+| Runtime config | `CORTEX_RUNTIME_CONFIG_PATH` |
+| Provider slots | `OPENAI_*`, `GEMINI_*`, `QWEN_*`, `KIMI_*`, `OPENROUTER_*`, `LOCAL_LLM_*` |
+| Workers | `CORTEX_*_WORKER_LEASE_SECONDS`, `CORTEX_*_WORKER_HEARTBEAT_INTERVAL_SECONDS` |
+| Observability | `CORTEX_OTEL_ENABLED`, `CORTEX_OTEL_EXPORTER_OTLP_ENDPOINT` |
+
+Provider slots should stay complete. Do not mix a Gemini API key with an empty OpenAI-compatible base URL, or a Kimi model with another provider's endpoint.
+
+## Start the local stack
+
+```bash
+docker compose --env-file .env -p cortex-local -f compose.local.yaml up -d --build
+```
+
+Heavy runtime profiles are available for Docling, DeepEval/EvalScope runtime execution, and SDV/DeepEval synthesis:
+
+```bash
+docker compose --env-file .env -p cortex-local -f compose.local.yaml \
+  --profile docling \
+  --profile eval-runtime \
+  --profile synthesis-runtime \
+  build
+
+docker compose --env-file .env -p cortex-local -f compose.local.yaml \
+  --profile docling \
+  --profile eval-runtime \
+  --profile synthesis-runtime \
+  up -d --build
+```
+
+Open Swagger at `http://127.0.0.1:8080/docs` and the raw OpenAPI spec at `http://127.0.0.1:8080/openapi.json`.
+
+## Run only local API and workers
+
+Start dependencies first:
+
+```bash
+docker compose --env-file .env -p cortex-local -f compose.local.yaml \
+  up -d postgres redis minio otel-collector prometheus grafana
+```
+
+Then run migrations, API, and workers from your bash shell:
+
+```bash
+uv run --package cortex-db cortex-db-migrate upgrade head
+uv run --package cortex-api cortex-api
+uv run --package cortex-worker-parse cortex-parse-worker
+uv run --package cortex-worker-knowledge cortex-knowledge-worker
+uv run --package cortex-worker-evaluation cortex-evaluation-worker
+uv run --package cortex-worker-synthesis cortex-synthesis-worker
+```
+
+Use separate terminals or a process supervisor when running multiple services locally outside Docker.
+
+## Production recommendations
+
+- Use managed Postgres, Redis, and S3-compatible storage.
+- Use `CORTEX_AUTH_MODE=oidc`, JWT/JWKS, or introspection instead of local dev auth.
+- Set `CORTEX_S3_AUTO_CREATE_BUCKET=false` and provision buckets through infrastructure.
+- Point `CORTEX_OTEL_EXPORTER_OTLP_ENDPOINT` at a central collector.
+- Scale API, Parse Worker, Knowledge Worker, Evaluation Worker, and Synthesis Worker independently.
+- Keep heavy dependencies in worker images such as `cortex-parse-worker-docling`, `cortex-evaluation-worker-runtime`, and `cortex-synthesis-worker-runtime`.
+
+## Validate changes
+
+Common checks:
+
+```bash
+uv run python scripts/ci/validate_yaml.py specs/cortex-api.yaml
+uv run python -m pytest tests/contract/test_openapi_contract.py -q
+```
+
+Use targeted Ruff, Pyright, and pytest commands for the packages touched by a change. For API documentation, validate the Swagger/OpenAPI surface before publishing.

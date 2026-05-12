@@ -1,0 +1,71 @@
+---
+id: cortex-2026
+title: Cortex 2026
+description: Cortex development changelog for the current API, runtime, worker, and documentation milestones.
+sidebar_label: Cortex 2026
+---
+
+This changelog summarizes the recent Cortex development stream reflected in the PRD, OpenAPI spec, technical design, schema, task ledger, and implementation log.
+
+## April 2026
+
+### OpenAPI contract expansion
+
+- Promoted Evaluation and Synthesis into first-class API domains alongside Parse, Storage, Knowledge, Jobs, Health, and Observability.
+- Added `/v1/eval/*` and `/v1/synthesis/*` paths, scopes, request models, result payloads, artifacts, quality gates, and catalog endpoints.
+- Kept runtime OpenAPI, documented OpenAPI, and contract tests aligned around a single `specs/cortex-api.yaml` source.
+
+### Evaluation and Synthesis runtime
+
+- Implemented domain packages, API routers, worker entrypoints, runtime config wiring, startup catalog sync, and job-control services.
+- Added DeepEval evaluation adapters for inline RAG metrics, conversational metrics, GEval fallbacks, namespace aggregation, and default metric selection.
+- Added SDV synthesis for structured single-table and relational data.
+- Added DeepEval Synthesizer flows for context/document-based goldens.
+- Added async worker hydration from datasets, objects, JSON/JSONL/CSV files, document chunks, and inline payloads.
+- Persisted canonical `evaluation_report` and `synthesis_output` objects, then linked them back to run metadata.
+
+### Storage and object handling
+
+- Split internal S3 control-plane endpoint usage from public presigned URL generation with `CORTEX_S3_PUBLIC_ENDPOINT`.
+- Added `POST /v1/storage/files` for Swagger, local testing, and small-file uploads, guarded by `CORTEX_STORAGE_DIRECT_UPLOAD_MAX_BYTES`.
+- Added internal object-read helpers for workers so async evaluation and synthesis jobs can hydrate referenced objects.
+
+### Local runtime and Docker topology
+
+- Mounted `./configs` into local Cortex containers so runtime YAML changes no longer require image rebuilds.
+- Added heavy worker profiles for Docling parse, DeepEval/EvalScope runtime evaluation, and SDV/DeepEval synthesis.
+- Kept API images lightweight while routing heavy optional dependencies to runtime workers.
+- Added `host.docker.internal:host-gateway` and proxy passthrough variables for provider connectivity from containers.
+
+### Provider configuration
+
+- Standardized model providers as complete slots: base URL, API key, model ID, embedding model ID, and embedding dimensions.
+- Added OpenRouter provider variables and Compose passthrough.
+- Moved Knowledge/Cognee defaults to OpenRouter and normalized Cognee provider labels through an OpenAI-compatible adapter boundary.
+- Improved DeepEval provider diagnostics by reporting endpoint origin, model, exception type, and cause chains.
+- Redacted secret-like values before writing job failures to API-visible state.
+
+### Job reliability and health checks
+
+- Raised Knowledge, Evaluation, and Synthesis worker lease defaults to 300 seconds with 30-second heartbeats.
+- Distinguished execution-budget timeouts from upstream provider `TimeoutError` values.
+- Clamped derived job timing metrics to non-negative values.
+- Made `/v1/health/live` unauthenticated for container probes while keeping `/v1/health/ready` protected.
+
+### Knowledge workflow updates
+
+- Added repeatable knowledge graph visualization for TensorZero Cortex runs.
+- Adjusted example Knowledge ingestion to submit parsed Markdown text excerpts when runtime Cognee supports live execution for text and URI inputs.
+- Added fail-fast validation for missing Cognee LLM or embedding credentials to prevent silent fallback to OpenAI defaults.
+
+### Documentation and operator guidance
+
+- Updated README, runtime examples, Compose files, OpenAPI, PRD, schema, DFD, technical design, and task ledger as the public contract evolved.
+- Documented local token issuance, Swagger workflows, heavy worker profiles, config-only restarts, provider slots, proxy settings, worker lease controls, and validation commands.
+
+## Current status
+
+- Parse, Storage, Knowledge, Evaluation, and Synthesis are represented in the REST API, OpenAPI contract, metadata model, worker model, runtime configuration, and local Compose topology.
+- Evaluation and Synthesis have pluggable adapters, async jobs, input hydration, artifact persistence, OpenTelemetry spans, and test coverage.
+- Follow-up work focuses on more real-world evaluation and synthesis scenarios, Grafana dashboards, and production CI/CD release flows.
+

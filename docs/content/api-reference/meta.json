@@ -1,0 +1,16 @@
+{
+  "title": "API Reference",
+  "pages": [
+    "index",
+    "---[Braces]Domains---",
+    "parse",
+    "storage",
+    "knowledge",
+    "evaluation",
+    "synthesis",
+    "jobs",
+    "---[FileText]OpenAPI---",
+    "openapi-specs",
+    "cortex-api"
+  ]
+}

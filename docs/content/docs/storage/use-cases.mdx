@@ -1,0 +1,24 @@
+---
+title: Storage Use Cases
+description: Use Storage for raw files, derived artifacts, datasets, reports, and audit-friendly object lineage.
+---
+
+## Raw source retention
+
+Keep every uploaded PDF, CSV, document, or web export in S3-compatible storage before parsing. The raw object gives auditors and downstream systems a stable source of truth.
+
+## Derived Markdown artifacts
+
+After Parse, upload normalized Markdown back to Storage. Knowledge can ingest it by `object_id`, and Evaluation can reference the same artifact when building regression suites.
+
+## Evaluation and Synthesis outputs
+
+Persist evaluation reports, JSONL datasets, synthetic records, and preview files as Storage objects. This makes a generated report shareable by signed URL and reproducible by `object_id`.
+
+## Browser and large-file uploads
+
+Use signed upload sessions when clients should upload directly to object storage. This keeps API servers out of the data plane for large files while preserving Cortex metadata and permissions.
+
+## Multi-tenant governance
+
+Attach access policies, classification labels, and purpose tags to objects. Downstream APIs can respect those controls while still using a vendor-neutral object backend.

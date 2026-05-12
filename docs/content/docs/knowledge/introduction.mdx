@@ -1,0 +1,28 @@
+---
+title: Knowledge Introduction
+description: Understand Cortex Knowledge as a Cognee-backed dataset, graph, memory, and search workflow.
+---
+
+Cortex Knowledge turns parsed or uploaded material into queryable knowledge. It wraps dataset lifecycle, ingestion, graph construction, memory enrichment, and retrieval behind one API surface.
+
+Knowledge is backed by Cognee-style workflows:
+
+| Operation | Endpoint | Purpose |
+| --- | --- | --- |
+| Dataset | `POST /v1/knowledge/datasets` | Create a tenant-scoped knowledge collection. |
+| Add | `POST /v1/knowledge/add/jobs` | Ingest text, URIs, parsed documents, or Storage objects. |
+| Cognify | `POST /v1/knowledge/cognify/jobs` | Chunk, extract structure, and build graph-aware knowledge. |
+| Memify | `POST /v1/knowledge/memify/jobs` | Enrich memory, triplets, sessions, or coding-rule style knowledge. |
+| Search | `POST /v1/knowledge/search` | Retrieve chunks, graph completion context, provenance, and graph paths. |
+
+## Graph and ontology thinking
+
+Knowledge works best when callers model domain boundaries explicitly:
+
+- **Dataset** is the product or tenant-level knowledge boundary.
+- **Node sets** group related material, such as `finance`, `policy`, `manuals`, or `support`.
+- **Metadata** captures ontology hints: document type, source system, department, jurisdiction, product, or version.
+- **Cognify** turns raw text into graph-ready entities, relations, chunks, and provenance.
+- **Search** can return chunk-level context or graph-aware completions depending on `search_type`.
+
+You do not need a perfect ontology on day one. Start with dataset keys, node sets, and metadata that match your retrieval questions, then refine graph prompts and chunking once you can inspect search quality.

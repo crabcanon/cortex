@@ -1,0 +1,34 @@
+---
+title: Storage Quickstart
+description: Upload a Markdown file, inspect the object, and create a signed download URL.
+---
+
+This quickstart uses the token from the Parse quickstart. If you do not have one yet, create it with `POST /v1/dev/auth/token`. API snippets are AI-generated client examples for Python, JavaScript, and Java.
+
+## 1. Create a sample file
+
+```bash
+cat > cortex-storage-quickstart.md <<'EOF'
+# Cortex Storage
+
+This file was uploaded through Cortex.
+EOF
+```
+
+## 2. Upload it directly
+
+<ApiExampleTabs example="storage-upload" />
+
+The response contains an `object_id`.
+
+## 3. Inspect the object
+
+Replace `obj_xxx` in the snippet with the returned `object_id`.
+
+<ApiExampleTabs example="storage-object" />
+
+## 4. Create a download URL
+
+<ApiExampleTabs example="storage-download-url" />
+
+You can now pass the `object_id` into Knowledge, Evaluation, Synthesis, or Parse.

@@ -1,0 +1,24 @@
+---
+title: Evaluation Use Cases 使用场景
+description: 将 Cortex Evaluation 用于 RAG 回归、解析器对比、Agent 工作流、自定义准则和性能压测。
+---
+
+## RAG 回归门禁
+
+用 answer relevance、faithfulness、contextual precision、contextual recall、contextual relevance 等 RAG 指标评测生成回答。检索上下文可以来自 Storage 产物或 Knowledge Search 输出。
+
+## 解析器与检索对比
+
+用多个 engine 解析同一批来源，基于每个 context group 生成回答，再比较指标摘要。这样可以看到 parser 选择是否改善检索和回答质量。
+
+## Agent 与工具工作流
+
+用 `agentic` 指标评测 task completion、goal success、tool correctness、reasoning quality。把 trace metadata 带上，失败用例可以回放。
+
+## 自定义质量评审
+
+用 `custom` 结合 correctness、completeness、relevance 和调用方自定义 criteria。适合不完全匹配标准指标的领域评审规则。
+
+## 性能与服务压测
+
+用 EvalScope-backed `perf` 评测 API 或模型端点的 QPS、p90/p99 延迟、输出 token 吞吐和并发行为。

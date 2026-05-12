@@ -1,0 +1,93 @@
+---
+title: Cortex API
+description: Cortex OpenAPI 契约的接口清单和生成式客户端示例。
+---
+
+本页汇总当前 Cortex API 暴露面。完整 schema 可在 Swagger/OpenAPI 渲染器中查看；这里的片段是 AI 生成的 Python、JavaScript 和 Java API 调用。
+
+## 健康检查和可观测性
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| `GET` | `/v1/health/live` | 无需认证的 liveness probe。 |
+| `GET` | `/v1/health/ready` | 需要 `health:read` 的依赖 readiness probe。 |
+| `GET` | `/metrics` | Prometheus scrape endpoint。 |
+
+## 开发认证
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| `POST` | `/v1/dev/auth/token` | dev auth 启用时签发本地开发 bearer token。 |
+
+<ApiExampleTabs example="auth-token" />
+
+## Jobs
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| `GET` | `/v1/jobs/{jobId}` | 获取 job 状态和耗时指标。 |
+| `GET` | `/v1/jobs/{jobId}/events` | 列出 job events。 |
+| `POST` | `/v1/jobs/{jobId}/cancel` | 取消排队或运行中的 job。 |
+
+<ApiExampleTabs example="job-status" />
+
+## Parse
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| `GET` | `/v1/parse/engines` | 列出可用解析引擎。 |
+| `GET` | `/v1/parse/profiles` | 列出 parser profiles。 |
+| `POST` | `/v1/parse/sync` | 同步解析内容。 |
+| `POST` | `/v1/parse/jobs` | 提交异步解析 job。 |
+| `GET` | `/v1/parse/jobs/{jobId}/result` | 获取已完成解析结果。 |
+
+<ApiExampleTabs example="parse-sync" />
+
+## Storage
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| `POST` | `/v1/storage/uploads` | 创建预签名上传会话。 |
+| `POST` | `/v1/storage/files` | 通过 API 上传小文件。 |
+| `POST` | `/v1/storage/uploads/{uploadId}/complete` | 完成上传会话。 |
+| `GET` | `/v1/storage/objects/{objectId}` | 获取对象元数据。 |
+| `GET` | `/v1/storage/objects/{objectId}/download-url` | 创建短期下载 URL。 |
+
+<ApiExampleTabs example="storage-upload" />
+
+## Knowledge
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| `POST` | `/v1/knowledge/datasets` | 创建知识数据集。 |
+| `GET` | `/v1/knowledge/datasets/{datasetId}` | 获取数据集元数据和计数。 |
+| `POST` | `/v1/knowledge/add/jobs` | 提交 Cognee Add job。 |
+| `POST` | `/v1/knowledge/cognify/jobs` | 提交 Cognify job。 |
+| `POST` | `/v1/knowledge/memify/jobs` | 提交 Memify job。 |
+| `POST` | `/v1/knowledge/search` | 搜索数据集和知识图谱。 |
+
+<ApiExampleTabs example="knowledge-search" />
+
+## Evaluation
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| `GET` | `/v1/eval/engines` | 列出评测引擎。 |
+| `GET` | `/v1/eval/metrics` | 列出标准化评测指标。 |
+| `POST` | `/v1/eval/sync` | 执行小规模同步评测。 |
+| `POST` | `/v1/eval/jobs` | 提交异步评测 job。 |
+| `GET` | `/v1/eval/jobs/{jobId}/result` | 获取已完成评测结果。 |
+
+<ApiExampleTabs example="eval-sync" />
+
+## Synthesis
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| `GET` | `/v1/synthesis/engines` | 列出合成引擎。 |
+| `POST` | `/v1/synthesis/sync` | 执行小规模同步合成。 |
+| `POST` | `/v1/synthesis/jobs` | 提交异步合成 job。 |
+| `GET` | `/v1/synthesis/jobs/{jobId}/result` | 获取已完成合成结果。 |
+| `POST` | `/v1/synthesis/jobs/{jobId}/result` | Job 状态 webhook 目标。 |
+
+<ApiExampleTabs example="synthesis-job" />

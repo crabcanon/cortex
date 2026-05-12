@@ -1,0 +1,42 @@
+---
+title: Evaluation and Synthesis
+description: Run Cortex evaluation and synthesis jobs with persisted reports and generated objects.
+---
+
+Cortex Evaluation and Synthesis reuse the same Job, Storage, authorization, and telemetry foundations as Parse and Knowledge. API snippets are AI-generated client examples for Python, JavaScript, and Java.
+
+## List evaluation engines and metrics
+
+<ApiExampleTabs example="eval-engines-metrics" />
+
+## Submit a RAG evaluation job
+
+<ApiExampleTabs example="eval-job" />
+
+Poll and fetch the result:
+
+<ApiExampleTabs example="job-status" />
+
+<ApiExampleTabs example="eval-job-result" />
+
+Completed async runs can persist an `evaluation_report` object and link it back to `eval_runs.report_object_id`.
+
+## List synthesis engines
+
+<ApiExampleTabs example="synthesis-engines" />
+
+## Generate RAG goldens
+
+<ApiExampleTabs example="synthesis-job" />
+
+Fetch the result:
+
+<ApiExampleTabs example="synthesis-job-result" />
+
+Completed async synthesis can persist a `synthesis_output` object and link it back to `synthesis_runs.output_object_id`.
+
+## Provider notes
+
+- Evaluation and synthesis adapters should receive model provider settings as complete slots.
+- Local runtime profiles can route DeepEval to Kimi, OpenRouter, OpenAI-compatible endpoints, or other configured providers.
+- Long model-backed jobs should use leases longer than expected provider latency; the current local examples use 300-second worker leases with 30-second heartbeats.

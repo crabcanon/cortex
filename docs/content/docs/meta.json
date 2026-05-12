@@ -1,0 +1,34 @@
+{
+  "title": "Docs",
+  "pages": [
+    "---[BookOpen]Cortex---",
+    "cortex",
+    "cortex-architecture",
+    "cortex-deployment",
+
+    "---[FileSearch]Parse---",
+    "parse/introduction",
+    "parse/quickstart",
+    "parse/use-cases",
+
+    "---[HardDrive]Storage---",
+    "storage/introduction",
+    "storage/quickstart",
+    "storage/use-cases",
+
+    "---[Network]Knowledge---",
+    "knowledge/introduction",
+    "knowledge/quickstart",
+    "knowledge/use-cases",
+
+    "---[Gauge]Evaluation---",
+    "evaluation/introduction",
+    "evaluation/quickstart",
+    "evaluation/use-cases",
+
+    "---[Sparkles]Synthesis---",
+    "synthesis/introduction",
+    "synthesis/quickstart",
+    "synthesis/use-cases"
+  ]
+}

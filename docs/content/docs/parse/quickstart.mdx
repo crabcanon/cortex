@@ -1,0 +1,49 @@
+---
+title: Parse Quickstart
+description: Start Cortex locally, issue a development token, parse a URL synchronously, and run an async parser job.
+---
+
+This quickstart starts with local Docker, then calls Parse end to end. API snippets are AI-generated client examples for Python, JavaScript, and Java.
+
+## 1. Start Cortex
+
+```bash
+cd /path/to/cortex
+test -f .env || cp .env.local.example .env
+
+docker compose --env-file .env -p cortex-local -f compose.local.yaml \
+  --profile docling \
+  --profile eval-runtime \
+  --profile synthesis-runtime \
+  up -d --build
+```
+
+Open Swagger at `http://127.0.0.1:8080/docs`.
+
+## 2. Create a local token
+
+<ApiExampleTabs example="auth-token" />
+
+Set the returned token as `CORTEX_TOKEN` when you run later snippets.
+
+## 3. List engines
+
+<ApiExampleTabs example="parse-engines" />
+
+## 4. Parse one URL synchronously
+
+<ApiExampleTabs example="parse-sync" />
+
+## 5. Run an async job
+
+Use async mode for heavier engines such as Docling or LlamaParse.
+
+<ApiExampleTabs example="parse-job" />
+
+Poll the shared job endpoint, then read the Parse result:
+
+<ApiExampleTabs example="job-status" />
+
+<ApiExampleTabs example="parse-job-result" />
+
+You have now moved from raw web content to normalized Markdown that can be uploaded to Storage or ingested into Knowledge.

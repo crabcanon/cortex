@@ -1,0 +1,24 @@
+---
+title: Synthesis Use Cases
+description: Use Synthesis for structured data, RAG goldens, conversations, agent trajectories, privacy, and evaluation loops.
+---
+
+## Structured test data
+
+Use SDV-backed single-table or relational synthesis to create customer, order, transaction, or event records. Add `anonymize_pii` and quality gates before exporting to JSONL, CSV, or Parquet.
+
+## RAG golden datasets
+
+Use document or Knowledge-derived context to generate question-answer pairs, expected outputs, and retrieval contexts. Feed the result directly into Evaluation.
+
+## Conversation simulation
+
+Generate multi-turn conversations from support policies, product docs, or compliance rules. Evaluate the resulting agent with multi-turn and agentic metrics.
+
+## Privacy-preserving analytics
+
+Generate structurally similar data for demos, notebooks, CI, and partner integrations without exposing production records.
+
+## Failure reproduction
+
+Turn failed Evaluation samples into synthetic variants. This helps broaden a regression suite around cases that already failed in production or in a TensorZero experiment.

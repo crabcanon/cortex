@@ -1,0 +1,34 @@
+{
+  "title": "文档",
+  "pages": [
+    "---[BookOpen]Cortex---",
+    "cortex",
+    "cortex-architecture",
+    "cortex-deployment",
+
+    "---[FileSearch]Parse 解析器---",
+    "parse/introduction",
+    "parse/quickstart",
+    "parse/use-cases",
+
+    "---[HardDrive]Storage 存储器---",
+    "storage/introduction",
+    "storage/quickstart",
+    "storage/use-cases",
+
+    "---[Network]Knowledge 知识库---",
+    "knowledge/introduction",
+    "knowledge/quickstart",
+    "knowledge/use-cases",
+
+    "---[Gauge]Evaluation 评估器---",
+    "evaluation/introduction",
+    "evaluation/quickstart",
+    "evaluation/use-cases",
+
+    "---[Sparkles]Synthesis 数据合成---",
+    "synthesis/introduction",
+    "synthesis/quickstart",
+    "synthesis/use-cases"
+  ]
+}

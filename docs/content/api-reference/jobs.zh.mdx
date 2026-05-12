@@ -1,0 +1,30 @@
+---
+title: Jobs API Reference
+description: 查询、事件流和取消 Cortex 长任务的通用接口。
+---
+
+Jobs 被 Parse、Knowledge、Evaluation、Synthesis 共享。所有域使用同一套状态、事件和取消契约。下面的片段是 AI 生成的 Python、JavaScript 和 Java 客户端示例。
+
+| 方法 | 路径 | Scope | 作用 |
+| --- | --- | --- | --- |
+| `GET` | `/v1/jobs/{jobId}` | `jobs:read` | 获取当前状态、时间戳、进度和结果指针。 |
+| `GET` | `/v1/jobs/{jobId}/events` | `jobs:read` | 读取有序 job events，用于调试或 UI timeline。 |
+| `POST` | `/v1/jobs/{jobId}/cancel` | `jobs:cancel` | 请求取消排队或运行中的 job。 |
+
+## 状态轮询
+
+把示例中的 `job_xxx` 替换为各领域 API 返回的 job id。
+
+<ApiExampleTabs example="job-status" />
+
+终态包括 `succeeded`、`failed`、`cancelled`、`timed_out`。只有 job 成功后才读取对应域的 result endpoint。
+
+## 事件
+
+<ApiExampleTabs example="job-events" />
+
+Events 适合排查 worker claim、retry、lease expiry、进度更新和面向运维的失败原因。
+
+## 取消
+
+<ApiExampleTabs example="job-cancel" />

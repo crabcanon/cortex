@@ -1,0 +1,34 @@
+---
+title: Storage API Reference
+description: 直接上传、签名上传会话、对象查询和签名下载的接口。
+---
+
+Storage 将文件和产物保存到 S3 兼容对象存储中，并由 Cortex 管理元数据与权限。下面的 API 示例以 AI 生成的 Python、JavaScript 和 Java 客户端代码展示。
+
+| 方法 | 路径 | Scope | 作用 |
+| --- | --- | --- | --- |
+| `POST` | `/v1/storage/files` | `storage:write` | 小文件直接 multipart form 上传。 |
+| `POST` | `/v1/storage/uploads` | `storage:write` | 创建签名上传会话。 |
+| `POST` | `/v1/storage/uploads/{uploadId}/complete` | `storage:write` | 完成单分片或多分片上传会话。 |
+| `GET` | `/v1/storage/objects/{objectId}` | `storage:read` | 查看对象元数据和策略。 |
+| `GET` | `/v1/storage/objects/{objectId}/download-url` | `storage:read` | 创建签名下载 URL。 |
+
+## 直接上传文件
+
+`POST /v1/storage/files` 是 `multipart/form-data` 接口。
+
+<ApiExampleTabs example="storage-upload" />
+
+## 签名上传会话
+
+<ApiExampleTabs example="storage-upload-session" />
+
+使用 provider ETag 完成 multipart upload：
+
+<ApiExampleTabs example="storage-complete-upload" />
+
+## 查看和下载
+
+<ApiExampleTabs example="storage-object" />
+
+<ApiExampleTabs example="storage-download-url" />

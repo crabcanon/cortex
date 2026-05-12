@@ -1,0 +1,24 @@
+---
+title: Storage Use Cases 使用场景
+description: 用 Storage 管理原始文件、派生产物、数据集、报告和可审计对象 lineage。
+---
+
+## 原始来源留存
+
+在解析前，把每个 PDF、CSV、文档或 Web 导出文件保存在 S3 兼容存储里。原始对象是审计和下游系统的稳定事实来源。
+
+## 派生 Markdown 产物
+
+Parse 完成后，把标准化 Markdown 再上传回 Storage。Knowledge 可以通过 `object_id` 摄入，Evaluation 也可以引用同一产物构建回归集。
+
+## Evaluation 与 Synthesis 输出
+
+把评测报告、JSONL 数据集、合成记录和 preview 文件持久化为 Storage 对象。报告可以通过签名 URL 分享，也可以通过 `object_id` 复现。
+
+## 浏览器和大文件上传
+
+当客户端需要直传对象存储时，使用签名上传会话。这样大文件不经过 API server 数据面，同时仍保留 Cortex 元数据和权限。
+
+## 多租户治理
+
+给对象附加访问策略、分类标签和用途标签。下游 API 可以遵守这些控制，同时继续使用厂商中立对象后端。

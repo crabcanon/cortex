@@ -1,0 +1,28 @@
+---
+title: Knowledge Introduction 介绍
+description: 理解 Cortex Knowledge 如何基于 Cognee 风格流程构建数据集、知识图谱、记忆与检索。
+---
+
+Cortex Knowledge 将解析或上传的材料变成可查询的知识。它把数据集生命周期、摄入、图谱构建、记忆增强和检索封装在统一 API 里。
+
+Knowledge 基于 Cognee 风格工作流：
+
+| 操作 | 接口 | 作用 |
+| --- | --- | --- |
+| Dataset | `POST /v1/knowledge/datasets` | 创建租户级知识集合。 |
+| Add | `POST /v1/knowledge/add/jobs` | 摄入文本、URI、解析文档或 Storage 对象。 |
+| Cognify | `POST /v1/knowledge/cognify/jobs` | 分块、抽取结构、构建图谱感知知识。 |
+| Memify | `POST /v1/knowledge/memify/jobs` | 增强记忆、三元组、会话或 coding-rule 类知识。 |
+| Search | `POST /v1/knowledge/search` | 检索 chunk、图谱补全上下文、溯源和图路径。 |
+
+## 知识图谱与本体建模
+
+Knowledge 最适合和明确的领域边界一起使用：
+
+- **Dataset** 是产品或租户级知识边界。
+- **Node set** 用于分组材料，例如 `finance`、`policy`、`manuals`、`support`。
+- **Metadata** 记录本体线索：文档类型、来源系统、部门、司法辖区、产品、版本。
+- **Cognify** 将原始文本转换成图谱可用的实体、关系、chunk 与溯源。
+- **Search** 根据 `search_type` 返回 chunk 级上下文或图谱感知补全。
+
+第一天不需要完美本体。先用 dataset key、node set、metadata 对齐你的检索问题，再根据搜索质量逐步优化 graph prompt 和分块策略。

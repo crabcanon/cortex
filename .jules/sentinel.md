@@ -1,0 +1,4 @@
+## 2024-05-13 - SQL Injection vulnerability in Alembic migrations
+**Vulnerability:** Raw SQL execution `op.execute(sa.text(f"DROP TABLE IF EXISTS {table_name}"))` in `packages/db/migrations/versions/20260412_220800_baseline.py` was susceptible to SQL injection and unsafe identifier quoting.
+**Learning:** `op.drop_table` does not properly support `if_exists=True`. The standard operations to check for existence first use `sa.inspect(op.get_bind()).get_table_names()`.
+**Prevention:** Instead of using raw SQL execution and f-strings, check for table existence using `sa.inspect(op.get_bind()).get_table_names()` and then execute `op.drop_table(table_name)`.

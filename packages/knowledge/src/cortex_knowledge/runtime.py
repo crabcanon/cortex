@@ -6,6 +6,7 @@ import asyncio
 import hashlib
 import importlib
 import importlib.metadata
+import logging
 import inspect
 import warnings
 from collections.abc import Awaitable, Callable
@@ -26,6 +27,8 @@ from cortex_common import (
 )
 
 from .models import CogneeRuntimeDescriptor, CogneeRuntimeProtocol
+
+logger = logging.getLogger(__name__)
 
 _COGNEE_EMBEDDING_TOKENIZER_OPTIONS: dict[str, Any] = {}
 _COGNEE_EMBEDDING_TOKENIZER_INTERNAL_KEYS = {
@@ -305,8 +308,8 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
             except KeyError:
                 try:
                     kwargs["query_type"] = search_type_enum(search_type_name)
-                except Exception:
-                    pass
+                except ValueError as exc:
+                    logger.warning("Invalid search_type `%s`: %s", search_type_name, exc)
         return kwargs
 
     @staticmethod

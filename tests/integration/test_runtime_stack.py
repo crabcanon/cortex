@@ -136,9 +136,7 @@ def _temporary_postgres_database(prefix: str) -> Iterator[tuple[str, str]]:
     database_name = f"{prefix}_{time.time_ns()}".replace("-", "_")
     with psycopg.connect(config.admin_driverless_dsn, autocommit=True) as conn:
         with conn.cursor() as cur:
-            cur.execute(
-                sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database_name))
-            )
+            cur.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database_name)))
     try:
         yield config.sync_dsn(database_name), config.async_dsn(database_name)
     finally:
@@ -153,9 +151,7 @@ def _temporary_postgres_database(prefix: str) -> Iterator[tuple[str, str]]:
                     (database_name,),
                 )
                 cur.execute(
-                    sql.SQL("DROP DATABASE IF EXISTS {}").format(
-                        sql.Identifier(database_name)
-                    )
+                    sql.SQL("DROP DATABASE IF EXISTS {}").format(sql.Identifier(database_name))
                 )
 
 

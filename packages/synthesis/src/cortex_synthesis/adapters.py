@@ -252,8 +252,7 @@ class DeepEvalSynthesisEngine:
             )
             if status == "degraded"
             else (
-                "Enable DeepEval Synthesizer in runtime config and install the optional "
-                "dependency."
+                "Enable DeepEval Synthesizer in runtime config and install the optional dependency."
             )
         )
         self._model = model
@@ -470,11 +469,7 @@ def _coerce_preview_row(golden: Any) -> dict[str, Any]:
     if isinstance(golden, dict):
         return {str(key): value for key, value in golden.items()}
     if hasattr(golden, "__dict__"):
-        return {
-            str(key): value
-            for key, value in vars(golden).items()
-            if not key.startswith("_")
-        }
+        return {str(key): value for key, value in vars(golden).items() if not key.startswith("_")}
     return {"value": str(golden)}
 
 

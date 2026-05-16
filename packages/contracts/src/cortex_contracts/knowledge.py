@@ -120,8 +120,7 @@ class KnowledgeInput(BaseModel):
     metadata: dict[str, Any] = Field(
         default_factory=dict,
         description=(
-            "Optional input metadata copied into downstream "
-            "processing. Best default: empty object."
+            "Optional input metadata copied into downstream processing. Best default: empty object."
         ),
         examples=[{"source": "parse"}],
     )
@@ -203,8 +202,7 @@ class CognifyJobRequest(BaseModel):
     incremental_loading: bool = Field(
         default=True,
         description=(
-            "Only process newly added or changed content when "
-            "possible. Best default: `true`."
+            "Only process newly added or changed content when possible. Best default: `true`."
         ),
     )
     graph_prompt_profile: GraphPromptProfile = Field(
@@ -255,8 +253,7 @@ class MemifyJobRequest(BaseModel):
     session_ids: list[str] = Field(
         default_factory=list,
         description=(
-            "Optional session filters for session-aware "
-            "pipelines. Best default: empty list."
+            "Optional session filters for session-aware pipelines. Best default: empty list."
         ),
         examples=[["session_demo_001"]],
     )

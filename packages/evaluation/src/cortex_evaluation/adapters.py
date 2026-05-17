@@ -690,7 +690,7 @@ def _build_deepeval_judge_model(
     class OpenAICompatibleDeepEvalModel(base_model):  # type: ignore[misc, valid-type]
         def __init__(self) -> None:
             self._model_name = model
-            self._base_url = provider_config.api_url.rstrip("/")
+            self._base_url = (provider_config.api_url or "").rstrip("/")
             self._api_key = provider_config.api_key
             self._temperature = float(options.get("temperature", 0))
             self._max_tokens = int(options.get("max_tokens", 4096))

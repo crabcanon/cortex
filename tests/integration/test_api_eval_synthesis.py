@@ -77,9 +77,11 @@ def _dev_bearer_token(*, tenant_id: str, actor_id: str, scopes: list[str]) -> st
         "actor_ref": f"{actor_id}@example.com",
         "scope": " ".join(scopes),
     }
-    encoded = base64.urlsafe_b64encode(
-        json.dumps(claims, separators=(",", ":")).encode("utf-8")
-    ).decode("ascii").rstrip("=")
+    encoded = (
+        base64.urlsafe_b64encode(json.dumps(claims, separators=(",", ":")).encode("utf-8"))
+        .decode("ascii")
+        .rstrip("=")
+    )
     return f"Bearer dev:{encoded}"
 
 
@@ -419,8 +421,7 @@ async def _seed_eval_dataset(db_path: Path, *, tenant_id: str, dataset_id: str) 
                     metadata={
                         "question": "What does Cortex provide?",
                         "answer": (
-                            "Cortex provides parse, storage, knowledge, eval, "
-                            "and synthesis APIs."
+                            "Cortex provides parse, storage, knowledge, eval, and synthesis APIs."
                         ),
                         "expected": "A unified AI data and evaluation API plane.",
                         "contexts": [
@@ -595,9 +596,7 @@ def test_synthesis_api_lists_catalog_and_runs_sync_job(
                 },
                 "config": {
                     "sample_count": 5,
-                    "quality_gates": [
-                        {"metric_key": "quality.correctness", "threshold": 0.8}
-                    ],
+                    "quality_gates": [{"metric_key": "quality.correctness", "threshold": 0.8}],
                 },
                 "output": {"output_format": "json"},
             },
@@ -634,16 +633,12 @@ def test_synthesis_job_submit_worker_and_result(monkeypatch: pytest.MonkeyPatch)
                 "source": {
                     "type": "inline_records",
                     "inline_records": [
-                        {
-                            "document": "Cortex uses pluggable engines for parsing and evaluation."
-                        }
+                        {"document": "Cortex uses pluggable engines for parsing and evaluation."}
                     ],
                 },
                 "config": {
                     "sample_count": 3,
-                    "quality_gates": [
-                        {"metric_key": "quality.correctness", "threshold": 0.8}
-                    ],
+                    "quality_gates": [{"metric_key": "quality.correctness", "threshold": 0.8}],
                 },
                 "output": {"output_format": "jsonl"},
             },
@@ -658,16 +653,12 @@ def test_synthesis_job_submit_worker_and_result(monkeypatch: pytest.MonkeyPatch)
                 "source": {
                     "type": "inline_records",
                     "inline_records": [
-                        {
-                            "document": "Cortex uses pluggable engines for parsing and evaluation."
-                        }
+                        {"document": "Cortex uses pluggable engines for parsing and evaluation."}
                     ],
                 },
                 "config": {
                     "sample_count": 3,
-                    "quality_gates": [
-                        {"metric_key": "quality.correctness", "threshold": 0.8}
-                    ],
+                    "quality_gates": [{"metric_key": "quality.correctness", "threshold": 0.8}],
                 },
                 "output": {"output_format": "jsonl"},
             },
@@ -687,8 +678,7 @@ def test_synthesis_job_submit_worker_and_result(monkeypatch: pytest.MonkeyPatch)
     assert completed_result.json()["synthesis_run_id"].startswith("srun_")
     assert completed_result.json()["output_dataset_id"] == "ds_synth_preview"
     assert any(
-        output["label"] == "synthesis_output"
-        and output["object_id"].startswith("obj_")
+        output["label"] == "synthesis_output" and output["object_id"].startswith("obj_")
         for output in completed_result.json()["outputs"]
     )
     assert [event["event_type"] for event in events_response.json()] == [

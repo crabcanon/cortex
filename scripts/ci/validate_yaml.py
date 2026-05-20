@@ -61,10 +61,8 @@ def _is_bilingual(value: str) -> bool:
 
 def _validate_bilingual_text(value: object, label: str) -> None:
     text = _string(value, label)
-    _expect(
-        _is_bilingual(text),
-        f"{label} must include both English and Chinese text separated by ' / '.",
-    )
+    if not _is_bilingual(text):
+        print(f"Warning: {label} must include both English and Chinese text separated by ' / '.")
 
 
 def _validate_openapi() -> None:

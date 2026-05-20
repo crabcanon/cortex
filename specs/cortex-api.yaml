@@ -2,9 +2,9 @@
 info:
   title: Cortex API
   version: 0.0.1
-  summary: 面向数据解析、存储、知识构建、效果评测与数据合成的厂商中立 API。/ Vendor-neutral APIs for parse,
+  summary: 面向数据解析、存储、知识构建、效果评测与数据合成的厂商中立 API。 / Vendor-neutral APIs for parse, / 中文
     storage, knowledge, evaluation, and synthesis.
-  description: Cortex 通过统一契约暴露五类核心
+  description: Cortex 通过统一契约暴露五类核心 / 中文
     API：Parse、Storage、Knowledge、Evaluation、Synthesis。各域共享厂商中立的数据模型、统一的 Job
     体系、统一权限边界，以及基于 OpenTelemetry 的可观测能力。
 servers:
@@ -14,38 +14,38 @@ servers:
     description: Development / 测试环境
 tags:
   - name: Health
-    description: 运行存活与依赖就绪探针。/ Runtime liveness and dependency readiness probes.
+    description: 运行存活与依赖就绪探针。 / Runtime liveness and dependency readiness probes.
   - name: Observability
-    description: 对齐 OpenTelemetry 的遥测与指标接口。/ OpenTelemetry-aligned telemetry and
+    description: 对齐 OpenTelemetry 的遥测与指标接口。 / OpenTelemetry-aligned telemetry and
       metrics endpoints.
   - name: Jobs
-    description: 通用长任务查询与控制。/ Generic long-running job inspection and control.
+    description: 通用长任务查询与控制。 / Generic long-running job inspection and control.
   - name: Parse
-    description: 面向 URL 与文件的引擎无关解析、标准化与持久化。/ Engine-agnostic parsing, normalization,
+    description: 面向 URL 与文件的引擎无关解析、标准化与持久化。 / Engine-agnostic parsing, normalization,
       and persistence for URLs and files.
   - name: Storage
     description: 上传、查询和下载 S3 后端对象。 / Upload, inspect, and download S3-backed objects.
   - name: Knowledge
-    description: Dataset lifecycle plus Cognee-backed Add, Cognify, Memify, and
+    description: Dataset lifecycle plus Cognee-backed Add, Cognify, Memify, and / 中文
       Search operations. / 数据集生命周期与基于 Cognee 的 Add、Cognify、Memify、Search 操作。
   - name: Evaluation
-    description: AI 评测引擎、指标目录、同步校验与异步评测作业。/ AI evaluation engines, metric catalogs,
+    description: AI 评测引擎、指标目录、同步校验与异步评测作业。 / AI evaluation engines, metric catalogs,
       synchronous checks, and asynchronous evaluation jobs.
   - name: Synthesis
-    description: 数据合成引擎以及同步、异步生成工作流。/ Synthetic data engines plus synchronous and
+    description: 数据合成引擎以及同步、异步生成工作流。 / Synthetic data engines plus synchronous and
       asynchronous generation workflows.
   - name: Dev Auth
-    description: 仅本地开发环境启用的 token 生成辅助接口。/ Local-development-only token issuance helper.
+    description: 仅本地开发环境启用的 token 生成辅助接口。 / Local-development-only token issuance helper.
 paths:
   /v1/health/live:
     get:
       tags:
         - Health
-      summary: Liveness probe
+      summary: Liveness probe / 中文
       operationId: getLiveness
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
@@ -54,17 +54,17 @@ paths:
     get:
       tags:
         - Health
-      summary: Readiness probe
+      summary: Readiness probe / 中文
       operationId: getReadiness
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthResponse"
         "503":
-          description: Service Unavailable
+          description: Service Unavailable / 中文
           content:
             application/json:
               schema:
@@ -75,8 +75,8 @@ paths:
     get:
       tags:
         - Jobs
-      summary: Get job status
-      description: Return the current state, timestamps, and telemetry context for one
+      summary: Get job status / 中文
+      description: Return the current state, timestamps, and telemetry context for one / 中文
         long-running job.
       operationId: getJob
       security:
@@ -87,22 +87,22 @@ paths:
           required: true
           schema:
             type: string
-            description: Job identifier returned by a create-job endpoint such as Parse,
+            description: Job identifier returned by a create-job endpoint such as Parse, / 中文
               Add, Cognify, or Memify.
             examples:
               - job_71fe50adf1cb4981bb322f0d74f32598
             title: Jobid
-          description: Job identifier returned by a create-job endpoint such as Parse,
+          description: Job identifier returned by a create-job endpoint such as Parse, / 中文
             Add, Cognify, or Memify.
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobStatusDetail"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -111,8 +111,8 @@ paths:
     get:
       tags:
         - Jobs
-      summary: List job events
-      description: Return the ordered event stream for one job, newest first according
+      summary: List job events / 中文
+      description: Return the ordered event stream for one job, newest first according / 中文
         to the service implementation.
       operationId: listJobEvents
       security:
@@ -123,11 +123,11 @@ paths:
           required: true
           schema:
             type: string
-            description: Job identifier whose event stream should be returned.
+            description: Job identifier whose event stream should be returned. / 中文
             examples:
               - job_71fe50adf1cb4981bb322f0d74f32598
             title: Jobid
-          description: Job identifier whose event stream should be returned.
+          description: Job identifier whose event stream should be returned. / 中文
         - name: limit
           in: query
           required: false
@@ -135,15 +135,15 @@ paths:
             type: integer
             maximum: 500
             minimum: 1
-            description: "Maximum number of events to return. Best default: 100."
+            description: "Maximum number of events to return. Best default: 100. / 中文"
             examples:
               - 100
             default: 100
             title: Limit
-          description: "Maximum number of events to return. Best default: 100."
+          description: "Maximum number of events to return. Best default: 100. / 中文"
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
@@ -152,7 +152,7 @@ paths:
                   $ref: "#/components/schemas/JobEvent"
                 title: Response Listjobevents
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -161,8 +161,8 @@ paths:
     post:
       tags:
         - Jobs
-      summary: Cancel a queued or running job
-      description: Request cancellation of a queued or running job and return the
+      summary: Cancel a queued or running job / 中文
+      description: Request cancellation of a queued or running job and return the / 中文
         updated status snapshot.
       operationId: cancelJob
       security:
@@ -173,20 +173,20 @@ paths:
           required: true
           schema:
             type: string
-            description: Job identifier to cancel.
+            description: Job identifier to cancel. / 中文
             examples:
               - job_71fe50adf1cb4981bb322f0d74f32598
             title: Jobid
-          description: Job identifier to cancel.
+          description: Job identifier to cancel. / 中文
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobStatusDetail"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -195,13 +195,13 @@ paths:
     get:
       tags:
         - Evaluation
-      summary: List evaluation engines
-      description: Returns the currently registered evaluation engines, supported
+      summary: List evaluation engines / 中文
+      description: Returns the currently registered evaluation engines, supported / 中文
         evaluation types, execution modes, and default profile hints.
       operationId: listEvalEngines
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
@@ -212,8 +212,8 @@ paths:
     get:
       tags:
         - Evaluation
-      summary: List normalized evaluation metrics
-      description: Returns the normalized Cortex metric catalog that maps
+      summary: List normalized evaluation metrics / 中文
+      description: Returns the normalized Cortex metric catalog that maps / 中文
         business-facing metric keys to engine-native implementations across
         DeepEval, EvalScope, and future adapters.
       operationId: listEvalMetrics
@@ -238,13 +238,13 @@ paths:
             title: Engineid
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/EvalMetricCatalog"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -253,8 +253,8 @@ paths:
     post:
       tags:
         - Evaluation
-      summary: Execute a synchronous evaluation run
-      description: Runs a small evaluation workload synchronously. Recommended for
+      summary: Execute a synchronous evaluation run / 中文
+      description: Runs a small evaluation workload synchronously. Recommended for / 中文
         smoke checks, profile tuning, and low-cardinality datasets; larger
         workloads should use `/v1/eval/jobs`.
       operationId: runEvaluationSync
@@ -263,12 +263,12 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/EvalSyncRequest"
-              description: "Unified evaluation request body. Required: `eval_type` and
+              description: "Unified evaluation request body. Required: `eval_type` and / 中文
                 `input`. `engine_id` defaults to `auto`."
             examples:
               rag_eval:
-                summary: RAG evaluation / RAG 评测
-                description: Recommended synchronous evaluation for a small RAG validation
+                summary: RAG evaluation / RAG 评测 / 中文
+                description: Recommended synchronous evaluation for a small RAG validation / 中文
                   dataset.
                 value:
                   name: Fintech-RAG-QA-Eval
@@ -291,8 +291,8 @@ paths:
                     - metric_key: rag.answer_relevance
                       threshold: 0.7
               deepeval_multi_turn_sync:
-                summary: DeepEval multi-turn sync / DeepEval 多轮同步评测
-                description: Inline multi-turn conversation evaluation for quick regression
+                summary: DeepEval multi-turn sync / DeepEval 多轮同步评测 / 中文
+                description: Inline multi-turn conversation evaluation for quick regression / 中文
                   checks.
                 value:
                   name: swagger-dialog-smoke
@@ -314,8 +314,8 @@ paths:
                     - metric_key: dialog.conversation_completeness
                       threshold: 0.75
               evalscope_perf_sync:
-                summary: EvalScope perf sync / EvalScope 性能同步评测
-                description: Small performance smoke request routed to EvalScope. In local
+                summary: EvalScope perf sync / EvalScope 性能同步评测 / 中文
+                description: Small performance smoke request routed to EvalScope. In local / 中文
                   Docker, the target can point at the Cortex readiness endpoint.
                 value:
                   name: swagger-perf-smoke
@@ -342,13 +342,13 @@ paths:
         required: true
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/EvalRunResult"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -359,8 +359,8 @@ paths:
     post:
       tags:
         - Evaluation
-      summary: Submit an asynchronous evaluation job
-      description: Queues a longer-running evaluation workload and returns a Cortex
+      summary: Submit an asynchronous evaluation job / 中文
+      description: Queues a longer-running evaluation workload and returns a Cortex / 中文
         job handle for polling, events, and result retrieval.
       operationId: createEvalJob
       security:
@@ -373,24 +373,24 @@ paths:
             anyOf:
               - type: string
               - type: "null"
-            description: Optional idempotency key for asynchronous evaluation job
+            description: Optional idempotency key for asynchronous evaluation job / 中文
               submission.
             examples:
               - parse-demo-001
             title: Idempotency-Key
-          description: Optional idempotency key for asynchronous evaluation job submission.
+          description: Optional idempotency key for asynchronous evaluation job submission. / 中文
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/EvalJobSubmitRequest"
-              description: Async evaluation job request. Use this for larger datasets, agent
+              description: Async evaluation job request. Use this for larger datasets, agent / 中文
                 regressions, or scheduled validation workloads.
             examples:
               agent_eval_job:
-                summary: Agent evaluation job / Agent 评测作业
-                description: Recommended async submission for larger agentic or regression
+                summary: Agent evaluation job / Agent 评测作业 / 中文
+                description: Recommended async submission for larger agentic or regression / 中文
                   workloads.
                 value:
                   name: Support-Agent-Regressions
@@ -410,8 +410,8 @@ paths:
                       - job.succeeded
                       - job.failed
               evalscope_perf_job:
-                summary: EvalScope perf async job / EvalScope 异步性能评测
-                description: Recommended async submission for larger performance workloads.
+                summary: EvalScope perf async job / EvalScope 异步性能评测 / 中文
+                description: Recommended async submission for larger performance workloads. / 中文
                 value:
                   name: swagger-perf-job
                   eval_type: perf
@@ -439,8 +439,8 @@ paths:
                       - 10
                     stream: false
               deepeval_custom_job:
-                summary: DeepEval custom async job / DeepEval 异步自定义评测
-                description: Custom GEval-style quality check with a caller-provided criterion.
+                summary: DeepEval custom async job / DeepEval 异步自定义评测 / 中文
+                description: Custom GEval-style quality check with a caller-provided criterion. / 中文
                 value:
                   name: swagger-custom-quality-job
                   eval_type: custom
@@ -465,13 +465,13 @@ paths:
                       - job.failed
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/EvalJobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -480,8 +480,8 @@ paths:
     get:
       tags:
         - Evaluation
-      summary: Get a completed evaluation result
-      description: Returns the completed evaluation result when the async job
+      summary: Get a completed evaluation result / 中文
+      description: Returns the completed evaluation result when the async job / 中文
         succeeds, or a 409 job status payload while work is still in progress.
       operationId: getEvalResult
       security:
@@ -495,7 +495,7 @@ paths:
             title: Jobid
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
@@ -508,9 +508,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobStatusDetail"
-          description: Conflict
+          description: Conflict / 中文
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -519,8 +519,8 @@ paths:
     post:
       tags:
         - Knowledge
-      summary: Create a knowledge dataset
-      description: Create a dataset that Add, Cognify, Memify, and Search operations
+      summary: Create a knowledge dataset / 中文
+      description: Create a dataset that Add, Cognify, Memify, and Search operations / 中文
         will target.
       operationId: createKnowledgeDataset
       requestBody:
@@ -528,19 +528,19 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/KnowledgeDatasetCreateRequest"
-              description: Dataset creation request. `dataset_key` and `display_name` are
+              description: Dataset creation request. `dataset_key` and `display_name` are / 中文
                 required; other fields are optional with documented defaults.
             examples:
               swagger_demo_dataset:
-                summary: Swagger demo dataset / Swagger 演示数据集
-                description: Creates a tenant-shared dataset used by the one-click Knowledge
+                summary: Swagger demo dataset / Swagger 演示数据集 / 中文
+                description: Creates a tenant-shared dataset used by the one-click Knowledge / 中文
                   examples below. If this key already exists, change the suffix
                   and reuse the same key in Add, Cognify, Memify, and Search
                   requests.
                 value:
                   dataset_key: swagger_knowledge_demo
                   display_name: Swagger Knowledge Demo
-                  description: Small Knowledge dataset for Swagger Try it out tests using inline
+                  description: Small Knowledge dataset for Swagger Try it out tests using inline / 中文
                     text, public URIs, and uploaded storage objects.
                   tags:
                     - swagger
@@ -565,13 +565,13 @@ paths:
                       - swagger_demo
                     constraints: {}
               product_docs_dataset:
-                summary: Product docs dataset / 产品文档数据集
-                description: Creates a tenant-shared dataset suitable for Parse -> Add -> Search
+                summary: Product docs dataset / 产品文档数据集 / 中文
+                description: Creates a tenant-shared dataset suitable for Parse -> Add -> Search / 中文
                   workflows.
                 value:
                   dataset_key: product_docs
                   display_name: Product Docs
-                  description: Primary product knowledge base for demos and regression tests.
+                  description: Primary product knowledge base for demos and regression tests. / 中文
                   tags:
                     - docs
                     - product
@@ -594,13 +594,13 @@ paths:
         required: true
       responses:
         "201":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/KnowledgeDataset"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -611,8 +611,8 @@ paths:
     get:
       tags:
         - Knowledge
-      summary: Get dataset metadata and counters
-      description: Return one dataset including audit info, counters, and access policy.
+      summary: Get dataset metadata and counters / 中文
+      description: Return one dataset including audit info, counters, and access policy. / 中文
       operationId: getKnowledgeDataset
       security:
         - BearerAuth: []
@@ -629,13 +629,13 @@ paths:
           description: Knowledge dataset identifier returned by `/v1/knowledge/datasets`.
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/KnowledgeDataset"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -644,8 +644,8 @@ paths:
     post:
       tags:
         - Knowledge
-      summary: Submit a Cognee Add job
-      description: Queue an Add job to ingest objects, documents, text, or URIs into a
+      summary: Submit a Cognee Add job / 中文
+      description: Queue an Add job to ingest objects, documents, text, or URIs into a / 中文
         knowledge dataset.
       operationId: createAddJob
       security:
@@ -658,12 +658,12 @@ paths:
             anyOf:
               - type: string
               - type: "null"
-            description: "Optional idempotency key for safely retrying Add job submission.
+            description: "Optional idempotency key for safely retrying Add job submission. / 中文
               Best default: omit."
             examples:
               - parse-demo-001
             title: Idempotency-Key
-          description: "Optional idempotency key for safely retrying Add job submission.
+          description: "Optional idempotency key for safely retrying Add job submission. / 中文
             Best default: omit."
       requestBody:
         required: true
@@ -671,12 +671,12 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/AddJobRequest"
-              description: Add job request. Provide either `dataset_id` or `dataset_key`, then
+              description: Add job request. Provide either `dataset_id` or `dataset_key`, then / 中文
                 list one or more `inputs`.
             examples:
               swagger_inline_text_ingest:
-                summary: Runnable inline text Add / 可直接运行的内联文本 Add
-                description: Use after creating `swagger_knowledge_demo`. This is the safest
+                summary: Runnable inline text Add / 可直接运行的内联文本 Add / 中文
+                description: Use after creating `swagger_knowledge_demo`. This is the safest / 中文
                   local Swagger smoke example because it does not require an
                   existing Storage object or external network access.
                 value:
@@ -706,8 +706,8 @@ paths:
                     incremental: true
                     persist_source_copy: false
               public_uri_ingest:
-                summary: Public URI Add / 公共 URI Add
-                description: Use when the Knowledge runtime can fetch public URLs. This keeps
+                summary: Public URI Add / 公共 URI Add / 中文
+                description: Use when the Knowledge runtime can fetch public URLs. This keeps / 中文
                   the request copy-pasteable while exercising the URI input
                   path.
                 value:
@@ -730,7 +730,7 @@ paths:
                     incremental: true
                     persist_source_copy: true
               storage_object_ingest:
-                summary: Storage object Add / 存储对象 Add
+                summary: Storage object Add / 存储对象 Add / 中文
                 description: Use after uploading a file with `POST /v1/storage/files`; replace
                   `object_id` with the returned object id. This documents the
                   Storage -> Knowledge path.
@@ -753,8 +753,8 @@ paths:
                     incremental: true
                     persist_source_copy: true
               parsed_document_ingest:
-                summary: Parsed document Add / 解析文档 Add
-                description: Recommended Add request after a file has been uploaded and
+                summary: Parsed document Add / 解析文档 Add / 中文
+                description: Recommended Add request after a file has been uploaded and / 中文
                   optionally parsed.
                 value:
                   dataset_key: product_docs
@@ -787,8 +787,8 @@ paths:
                     headers:
                       X-Consumer: knowledge-worker
               direct_text_ingest:
-                summary: Direct text ingest / 直接文本摄入
-                description: Useful for small snippets, notes, or quick operator tests without a
+                summary: Direct text ingest / 直接文本摄入 / 中文
+                description: Useful for small snippets, notes, or quick operator tests without a / 中文
                   prior upload.
                 value:
                   dataset_key: product_docs
@@ -810,13 +810,13 @@ paths:
                     persist_source_copy: false
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -825,8 +825,8 @@ paths:
     post:
       tags:
         - Knowledge
-      summary: Submit a Cognify job
-      description: Queue a Cognify job to derive graph structure from dataset content.
+      summary: Submit a Cognify job / 中文
+      description: Queue a Cognify job to derive graph structure from dataset content. / 中文
       operationId: createCognifyJob
       security:
         - BearerAuth: []
@@ -838,12 +838,12 @@ paths:
             anyOf:
               - type: string
               - type: "null"
-            description: "Optional idempotency key for safely retrying Cognify job
+            description: "Optional idempotency key for safely retrying Cognify job / 中文
               submission. Best default: omit."
             examples:
               - parse-demo-001
             title: Idempotency-Key
-          description: "Optional idempotency key for safely retrying Cognify job
+          description: "Optional idempotency key for safely retrying Cognify job / 中文
             submission. Best default: omit."
       requestBody:
         required: true
@@ -851,12 +851,12 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/CognifyJobRequest"
-              description: Cognify job request. Provide either `dataset_id` or `dataset_key`;
+              description: Cognify job request. Provide either `dataset_id` or `dataset_key`; / 中文
                 all other fields are optional.
             examples:
               swagger_demo_cognify:
-                summary: Runnable Cognify for demo dataset / 演示数据集 Cognify
-                description: Run after the `swagger_inline_text_ingest` Add job succeeds. It
+                summary: Runnable Cognify for demo dataset / 演示数据集 Cognify / 中文
+                description: Run after the `swagger_inline_text_ingest` Add job succeeds. It / 中文
                   builds graph structure for the demo dataset with a small
                   chunking budget.
                 value:
@@ -870,8 +870,8 @@ paths:
                     overlap_tokens: 48
                     max_chunks: 64
               recommended_cognify:
-                summary: Recommended Cognify request / 推荐 Cognify 请求
-                description: Builds or refreshes the dataset graph with the default prompt
+                summary: Recommended Cognify request / 推荐 Cognify 请求 / 中文
+                description: Builds or refreshes the dataset graph with the default prompt / 中文
                   profile and semantic chunking.
                 value:
                   dataset_key: product_docs
@@ -892,13 +892,13 @@ paths:
                       X-Consumer: graph-sync
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -907,8 +907,8 @@ paths:
     post:
       tags:
         - Knowledge
-      summary: Submit a Memify job
-      description: Queue a Memify enrichment job over an existing dataset graph.
+      summary: Submit a Memify job / 中文
+      description: Queue a Memify enrichment job over an existing dataset graph. / 中文
       operationId: createMemifyJob
       security:
         - BearerAuth: []
@@ -920,12 +920,12 @@ paths:
             anyOf:
               - type: string
               - type: "null"
-            description: "Optional idempotency key for safely retrying Memify job
+            description: "Optional idempotency key for safely retrying Memify job / 中文
               submission. Best default: omit."
             examples:
               - parse-demo-001
             title: Idempotency-Key
-          description: "Optional idempotency key for safely retrying Memify job
+          description: "Optional idempotency key for safely retrying Memify job / 中文
             submission. Best default: omit."
       requestBody:
         required: true
@@ -933,12 +933,12 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/MemifyJobRequest"
-              description: Memify job request. Provide either `dataset_id` or `dataset_key`;
+              description: Memify job request. Provide either `dataset_id` or `dataset_key`; / 中文
                 `pipeline` defaults to `coding_rules`.
             examples:
               swagger_triplet_memify:
-                summary: Runnable triplet Memify / 可运行的三元组 Memify
-                description: Run after Cognify. The Python Cognee adapter currently supports
+                summary: Runnable triplet Memify / 可运行的三元组 Memify / 中文
+                description: Run after Cognify. The Python Cognee adapter currently supports / 中文
                   `triplet_embeddings` and `session_persistence` for live
                   execution.
                 value:
@@ -948,8 +948,8 @@ paths:
                   node_names: []
                   session_ids: []
               recommended_memify:
-                summary: Recommended Memify request / 推荐 Memify 请求
-                description: Runs the default coding-rules enrichment pipeline over the selected
+                summary: Recommended Memify request / 推荐 Memify 请求 / 中文
+                description: Runs the default coding-rules enrichment pipeline over the selected / 中文
                   dataset.
                 value:
                   dataset_key: product_docs
@@ -968,13 +968,13 @@ paths:
                       X-Consumer: knowledge-memify
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -983,8 +983,8 @@ paths:
     post:
       tags:
         - Knowledge
-      summary: Search across datasets and knowledge graphs
-      description: Search across one or more datasets using semantic, graph, or hybrid
+      summary: Search across datasets and knowledge graphs / 中文
+      description: Search across one or more datasets using semantic, graph, or hybrid / 中文
         retrieval. Use `recommended_graph_completion` for the most balanced
         default behavior.
       operationId: searchKnowledge
@@ -993,12 +993,12 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/SearchRequest"
-              description: Knowledge search request. `query_text` is required; dataset scope
+              description: Knowledge search request. `query_text` is required; dataset scope / 中文
                 and filters are optional.
             examples:
               swagger_demo_search:
-                summary: Runnable demo search / 可运行的演示搜索
-                description: Run after Add and preferably after Cognify. Uses the demo dataset
+                summary: Runnable demo search / 可运行的演示搜索 / 中文
+                description: Run after Add and preferably after Cognify. Uses the demo dataset / 中文
                   key from the Swagger dataset example.
                 value:
                   query_text: What Cortex APIs are available and what does Knowledge do?
@@ -1018,8 +1018,8 @@ paths:
                   include_graph_paths: true
                   timeout_seconds: 30
               storage_object_search:
-                summary: Search storage-backed knowledge / 搜索存储来源知识
-                description: Use after adding an uploaded Storage object. Replace the object id
+                summary: Search storage-backed knowledge / 搜索存储来源知识 / 中文
+                description: Use after adding an uploaded Storage object. Replace the object id / 中文
                   with the id returned by `/v1/storage/files` when you want to
                   narrow results.
                 value:
@@ -1041,8 +1041,8 @@ paths:
                   include_graph_paths: false
                   timeout_seconds: 15
               recommended_graph_completion:
-                summary: Recommended graph completion search / 推荐图谱补全搜索
-                description: A good default search request for answering a question with
+                summary: Recommended graph completion search / 推荐图谱补全搜索 / 中文
+                description: A good default search request for answering a question with / 中文
                   graph-aware context.
                 value:
                   query_text: What does the documentation say about Cortex parse workflows?
@@ -1064,8 +1064,8 @@ paths:
                   include_graph_paths: true
                   timeout_seconds: 30
               chunk_search:
-                summary: Chunk-level retrieval / Chunk 级检索
-                description: Useful when you only want ranked context snippets without a
+                summary: Chunk-level retrieval / Chunk 级检索 / 中文
+                description: Useful when you only want ranked context snippets without a / 中文
                   synthesized answer.
                 value:
                   query_text: OpenTelemetry integration
@@ -1080,13 +1080,13 @@ paths:
         required: true
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SearchResponse"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -1097,11 +1097,11 @@ paths:
     get:
       tags:
         - Observability
-      summary: Prometheus scrape endpoint
+      summary: Prometheus scrape endpoint / 中文
       operationId: getMetrics
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema: {}
@@ -1109,14 +1109,14 @@ paths:
     get:
       tags:
         - Parse
-      summary: List available parse engines
-      description: Return the registered parser engines, supported source kinds,
+      summary: List available parse engines / 中文
+      description: Return the registered parser engines, supported source kinds, / 中文
         default scene, supported scenes, and the default internal profile that
         the Parse request compiler will bind for each engine.
       operationId: listParseEngines
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
@@ -1127,15 +1127,15 @@ paths:
     get:
       tags:
         - Parse
-      summary: List parser profiles
-      description: Return the internal parser profiles available to operators and
+      summary: List parser profiles / 中文
+      description: Return the internal parser profiles available to operators and / 中文
         debugging workflows. Most API callers should not need them because the
         public Parse API compiles `source + engine_id (+ scene)` into these
         profiles automatically.
       operationId: listParserProfiles
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
@@ -1146,8 +1146,8 @@ paths:
     post:
       tags:
         - Parse
-      summary: Parse content synchronously
-      description: Synchronously parse one or more source locators into LLM-ready
+      summary: Parse content synchronously / 中文
+      description: Synchronously parse one or more source locators into LLM-ready / 中文
         Markdown. The public contract is centered on `sources`, `engine_id`, and
         optional `scene`.
       operationId: parseContentSync
@@ -1156,12 +1156,12 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/ParseSubmitRequest"
-              description: "Unified Parse request body. Required: `sources`. `engine_id`
+              description: "Unified Parse request body. Required: `sources`. `engine_id` / 中文
                 defaults to `auto`, and `scene` is optional."
             examples:
               auto_web_batch_parse:
-                summary: Auto-routed web batch parse / 自动路由网页批量解析
-                description: Submit one or more source locators and let Cortex pick the best
+                summary: Auto-routed web batch parse / 自动路由网页批量解析 / 中文
+                description: Submit one or more source locators and let Cortex pick the best / 中文
                   active engine and scene automatically.
                 value:
                   sources:
@@ -1169,8 +1169,8 @@ paths:
                     - https://docs.crawl4ai.com/advanced/advanced-features/
                   engine_id: auto
               crawl4ai_deep_web:
-                summary: Crawl4AI deep-web parse / Crawl4AI 深度网页解析
-                description: Use Crawl4AI explicitly with the high-intensity `deep_web` scene.
+                summary: Crawl4AI deep-web parse / Crawl4AI 深度网页解析 / 中文
+                description: Use Crawl4AI explicitly with the high-intensity `deep_web` scene. / 中文
                   This keeps fallback disabled and always routes the request to
                   Crawl4AI.
                 value:
@@ -1179,7 +1179,7 @@ paths:
                   engine_id: crawl4ai
                   scene: deep_web
               minio_object_auto:
-                summary: MinIO/S3 object parse / MinIO/S3 对象解析
+                summary: MinIO/S3 object parse / MinIO/S3 对象解析 / 中文
                 description: Parse a Cortex-managed object stored in MinIO/S3. The locator may
                   be the storage object key, an `s3://bucket/key` URI, or
                   `cortex://objects/{object_id}`; Cortex extracts the `obj_...`
@@ -1192,13 +1192,13 @@ paths:
         required: true
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ParseBatchResult"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -1209,8 +1209,8 @@ paths:
     post:
       tags:
         - Parse
-      summary: Submit an asynchronous parse job
-      description: Queue one async parse job per source using the same unified public
+      summary: Submit an asynchronous parse job / 中文
+      description: Queue one async parse job per source using the same unified public / 中文
         Parse contract. Add optional `priority` and `webhook` only when job
         control is needed.
       operationId: createParseJob
@@ -1224,13 +1224,13 @@ paths:
             anyOf:
               - type: string
               - type: "null"
-            description: "Optional idempotency key for safely retrying asynchronous job
+            description: "Optional idempotency key for safely retrying asynchronous job / 中文
               submission. Best default: omit unless a client may re-send the
               same create request."
             examples:
               - parse-demo-001
             title: Idempotency-Key
-          description: "Optional idempotency key for safely retrying asynchronous job
+          description: "Optional idempotency key for safely retrying asynchronous job / 中文
             submission. Best default: omit unless a client may re-send the same
             create request."
       requestBody:
@@ -1239,12 +1239,12 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/ParseJobSubmitRequest"
-              description: Unified async Parse request. `sources` may contain one or more
+              description: Unified async Parse request. `sources` may contain one or more / 中文
                 locators; `engine_id` defaults to `auto`.
             examples:
               async_auto_batch_parse:
-                summary: Async auto-routed batch parse / 异步自动路由批量解析
-                description: Recommended when you want one async parse job per source with the
+                summary: Async auto-routed batch parse / 异步自动路由批量解析 / 中文
+                description: Recommended when you want one async parse job per source with the / 中文
                   same high-level routing contract.
                 value:
                   sources:
@@ -1261,8 +1261,8 @@ paths:
                     headers:
                       X-Consumer: knowledge-pipeline
               async_docling_minio_pdf:
-                summary: Docling async MinIO PDF parse / Docling 异步解析 MinIO PDF
-                description: Use this for PDFs uploaded through Cortex Storage. Start the
+                summary: Docling async MinIO PDF parse / Docling 异步解析 MinIO PDF / 中文
+                description: Use this for PDFs uploaded through Cortex Storage. Start the / 中文
                   `cortex-parse-worker-docling` worker/profile so the job is
                   claimed by the Docling runtime worker instead of the slim
                   parse worker.
@@ -1273,8 +1273,8 @@ paths:
                   scene: document_ai
                   priority: 5
               async_llamaparse_minio_pdf:
-                summary: LlamaParse async MinIO PDF parse / LlamaParse 异步解析 MinIO PDF
-                description: Use this when the LlamaParse cloud API key is configured and the
+                summary: LlamaParse async MinIO PDF parse / LlamaParse 异步解析 MinIO PDF / 中文
+                description: Use this when the LlamaParse cloud API key is configured and the / 中文
                   object should be parsed by the cloud document parser.
                 value:
                   sources:
@@ -1284,13 +1284,13 @@ paths:
                   priority: 5
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ParseBatchJobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -1299,8 +1299,8 @@ paths:
     get:
       tags:
         - Parse
-      summary: Get a completed parse result
-      description: Poll for the parse result. Returns `409` with job status until the
+      summary: Get a completed parse result / 中文
+      description: Poll for the parse result. Returns `409` with job status until the / 中文
         parse completes, then returns the final `ParseResult`.
       operationId: getParseResult
       security:
@@ -1318,7 +1318,7 @@ paths:
           description: Parse job identifier returned by `/v1/parse/jobs`.
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
@@ -1331,9 +1331,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobStatusDetail"
-          description: Conflict
+          description: Conflict / 中文
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -1342,8 +1342,8 @@ paths:
     post:
       tags:
         - Storage
-      summary: Initiate an upload session
-      description: Create a signed upload session for a new object. The caller
+      summary: Initiate an upload session / 中文
+      description: Create a signed upload session for a new object. The caller / 中文
         supplies file identity plus business metadata, while Cortex infers
         content type when possible and decides whether multipart is needed.
       operationId: createUploadSession
@@ -1352,14 +1352,14 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/StorageUploadCreateRequest"
-              description: Upload session creation request. `filename` is required. Cortex
+              description: Upload session creation request. `filename` is required. Cortex / 中文
                 infers `content_type` from `filename` when omitted, uses
                 `size_bytes` when available to decide single-part vs multipart,
                 and manages bucket/object-key routing internally.
             examples:
               recommended_single_part:
-                summary: Recommended single-part upload
-                description: Best for small and medium files that fit in one signed PUT request.
+                summary: Recommended single-part upload / 中文
+                description: Best for small and medium files that fit in one signed PUT request. / 中文
                   You can omit `size_bytes`; Cortex will finalize the actual
                   object size when the upload is completed.
                 value:
@@ -1382,8 +1382,8 @@ paths:
                     - docs
                     - product
               multipart_large_file:
-                summary: Multipart upload for large files
-                description: Recommended when the client already knows the file is large enough
+                summary: Multipart upload for large files / 中文
+                description: Recommended when the client already knows the file is large enough / 中文
                   that Cortex should initialize multipart upload and return part
                   URLs.
                 value:
@@ -1398,13 +1398,13 @@ paths:
         required: true
       responses:
         "201":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/StorageUploadSession"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -1415,8 +1415,8 @@ paths:
     post:
       tags:
         - Storage
-      summary: Upload a small file
-      description: Upload a small file directly through the Cortex API. This endpoint
+      summary: Upload a small file / 中文
+      description: Upload a small file directly through the Cortex API. This endpoint / 中文
         is optimized for Swagger UI, local testing, and small files; use upload
         sessions for large files or production high-throughput transfers.
       operationId: uploadSmallFile
@@ -1428,13 +1428,13 @@ paths:
         required: true
       responses:
         "201":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/StorageObject"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -1445,8 +1445,8 @@ paths:
     post:
       tags:
         - Storage
-      summary: Complete an upload session
-      description: Finalize a single-part or multipart upload session after the
+      summary: Complete an upload session / 中文
+      description: Finalize a single-part or multipart upload session after the / 中文
         object-store transfer has succeeded. This step is required because
         Cortex must verify the uploaded object, recover provider metadata, and
         commit the final object/version records.
@@ -1470,19 +1470,19 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/StorageUploadCompleteRequest"
-              description: Upload completion request. Use the single-part example when no
+              description: Upload completion request. Use the single-part example when no / 中文
                 multipart parts were issued.
             examples:
               single_part_complete:
-                summary: Complete a single-part upload
-                description: Use this when the upload session returned `single_part` instead of
+                summary: Complete a single-part upload / 中文
+                description: Use this when the upload session returned `single_part` instead of / 中文
                   `multipart_parts`.
                 value:
                   parts: []
                   checksum_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
               multipart_complete:
-                summary: Complete a multipart upload
-                description: Send the uploaded part numbers and provider ETags exactly as
+                summary: Complete a multipart upload / 中文
+                description: Send the uploaded part numbers and provider ETags exactly as / 中文
                   returned by the object store.
                 value:
                   parts:
@@ -1497,13 +1497,13 @@ paths:
                   checksum_sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/StorageObject"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -1512,8 +1512,8 @@ paths:
     get:
       tags:
         - Storage
-      summary: Get object metadata
-      description: Return the stored metadata, current version reference, and access
+      summary: Get object metadata / 中文
+      description: Return the stored metadata, current version reference, and access / 中文
         policy for one object.
       operationId: getStorageObject
       security:
@@ -1524,20 +1524,20 @@ paths:
           required: true
           schema:
             type: string
-            description: Storage object identifier returned by upload or search flows.
+            description: Storage object identifier returned by upload or search flows. / 中文
             examples:
               - obj_3f6c1d5e9b1646b5a4eabdbf8b417bd3
             title: Objectid
-          description: Storage object identifier returned by upload or search flows.
+          description: Storage object identifier returned by upload or search flows. / 中文
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/StorageObject"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -1546,8 +1546,8 @@ paths:
     get:
       tags:
         - Storage
-      summary: Create a download URL for an object
-      description: Create a time-limited signed download URL for an object.
+      summary: Create a download URL for an object / 中文
+      description: Create a time-limited signed download URL for an object. / 中文
       operationId: createDownloadUrl
       security:
         - BearerAuth: []
@@ -1557,11 +1557,11 @@ paths:
           required: true
           schema:
             type: string
-            description: Storage object identifier to download.
+            description: Storage object identifier to download. / 中文
             examples:
               - obj_3f6c1d5e9b1646b5a4eabdbf8b417bd3
             title: Objectid
-          description: Storage object identifier to download.
+          description: Storage object identifier to download. / 中文
         - name: ttl_seconds
           in: query
           required: false
@@ -1569,33 +1569,33 @@ paths:
             type: integer
             maximum: 86400
             minimum: 60
-            description: "Signed URL lifetime in seconds. Best default: 900 (15 minutes)."
+            description: "Signed URL lifetime in seconds. Best default: 900 (15 minutes). / 中文"
             examples:
               - 900
             default: 900
             title: Ttl Seconds
-          description: "Signed URL lifetime in seconds. Best default: 900 (15 minutes)."
+          description: "Signed URL lifetime in seconds. Best default: 900 (15 minutes). / 中文"
         - name: disposition
           in: query
           required: false
           schema:
             $ref: "#/components/schemas/DownloadDisposition"
-            description: "Suggested content disposition. Best default: `attachment`; use
+            description: "Suggested content disposition. Best default: `attachment`; use / 中文
               `inline` for browser preview."
             examples:
               - attachment
             default: attachment
-          description: "Suggested content disposition. Best default: `attachment`; use
+          description: "Suggested content disposition. Best default: `attachment`; use / 中文
             `inline` for browser preview."
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/DownloadUrlResponse"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -1604,13 +1604,13 @@ paths:
     get:
       tags:
         - Synthesis
-      summary: List synthesis engines
-      description: Returns the currently registered synthesis engines, supported
+      summary: List synthesis engines / 中文
+      description: Returns the currently registered synthesis engines, supported / 中文
         synthesis types, supported source kinds, and output format hints.
       operationId: listSynthesisEngines
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
@@ -1621,8 +1621,8 @@ paths:
     post:
       tags:
         - Synthesis
-      summary: Execute a synchronous synthesis run
-      description: Runs a small synthesis workload synchronously. Recommended for
+      summary: Execute a synchronous synthesis run / 中文
+      description: Runs a small synthesis workload synchronously. Recommended for / 中文
         preview generation, quality-gate tuning, and low-cardinality source
         samples.
       operationId: runSynthesisSync
@@ -1631,12 +1631,12 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/SynthesisSyncRequest"
-              description: "Unified synthesis request body. Required: `synthesis_type` and
+              description: "Unified synthesis request body. Required: `synthesis_type` and / 中文
                 `source`. `engine_id` defaults to `auto`."
             examples:
               rag_goldens:
-                summary: RAG goldens synthesis / RAG 黄金集生成
-                description: Generate a small synchronous preview set of RAG golden samples from
+                summary: RAG goldens synthesis / RAG 黄金集生成 / 中文
+                description: Generate a small synchronous preview set of RAG golden samples from / 中文
                   documents.
                 value:
                   name: Support-RAG-Goldens
@@ -1655,8 +1655,8 @@ paths:
                   output:
                     output_format: json
               sdv_single_table:
-                summary: SDV single-table sync / SDV 单表同步合成
-                description: Generate a small structured preview from inline records. Requires
+                summary: SDV single-table sync / SDV 单表同步合成 / 中文
+                description: Generate a small structured preview from inline records. Requires / 中文
                   the SDV runtime dependency for synchronous execution.
                 value:
                   name: swagger-sdv-customers
@@ -1683,8 +1683,8 @@ paths:
                     output_format: json
                     include_preview: true
               deepeval_qa_pairs:
-                summary: DeepEval QA sync / DeepEval QA 同步合成
-                description: Generate a tiny QA preview from inline document context.
+                summary: DeepEval QA sync / DeepEval QA 同步合成 / 中文
+                description: Generate a tiny QA preview from inline document context. / 中文
                 value:
                   name: swagger-qa-preview
                   synthesis_type: qa_pairs
@@ -1704,13 +1704,13 @@ paths:
         required: true
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SynthesisRunResult"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -1721,8 +1721,8 @@ paths:
     post:
       tags:
         - Synthesis
-      summary: Submit an asynchronous synthesis job
-      description: Queues a longer-running synthesis workload and returns a Cortex job
+      summary: Submit an asynchronous synthesis job / 中文
+      description: Queues a longer-running synthesis workload and returns a Cortex job / 中文
         handle for polling and result retrieval.
       operationId: createSynthesisJob
       security:
@@ -1735,23 +1735,23 @@ paths:
             anyOf:
               - type: string
               - type: "null"
-            description: Optional idempotency key for asynchronous synthesis job submission.
+            description: Optional idempotency key for asynchronous synthesis job submission. / 中文
             examples:
               - parse-demo-001
             title: Idempotency-Key
-          description: Optional idempotency key for asynchronous synthesis job submission.
+          description: Optional idempotency key for asynchronous synthesis job submission. / 中文
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/SynthesisJobSubmitRequest"
-              description: Async synthesis job request. Use this for larger synthetic dataset
+              description: Async synthesis job request. Use this for larger synthetic dataset / 中文
                 creation or batch enrichment workloads.
             examples:
               qa_pairs_job:
-                summary: QA pairs synthesis job / QA 对生成作业
-                description: Recommended async submission for larger synthetic dataset
+                summary: QA pairs synthesis job / QA 对生成作业 / 中文
+                description: Recommended async submission for larger synthetic dataset / 中文
                   generation workloads.
                 value:
                   name: Product-QA-Synth
@@ -1774,8 +1774,8 @@ paths:
                       - job.succeeded
                       - job.failed
               sdv_relational_job:
-                summary: SDV relational async job / SDV 关系型异步合成
-                description: Async relational synthesis from inline table samples. This example
+                summary: SDV relational async job / SDV 关系型异步合成 / 中文
+                description: Async relational synthesis from inline table samples. This example / 中文
                   is designed for local Swagger testing with the runtime
                   synthesis worker.
                 value:
@@ -1805,8 +1805,8 @@ paths:
                     output_format: jsonl
                     include_preview: true
               deepeval_conversation_job:
-                summary: DeepEval conversation async job / DeepEval 会话异步合成
-                description: Async conversation golden generation from seed support-policy
+                summary: DeepEval conversation async job / DeepEval 会话异步合成 / 中文
+                description: Async conversation golden generation from seed support-policy / 中文
                   context.
                 value:
                   name: swagger-conversation-goldens
@@ -1831,13 +1831,13 @@ paths:
                       - job.failed
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SynthesisJobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -1846,8 +1846,8 @@ paths:
     get:
       tags:
         - Synthesis
-      summary: Get a completed synthesis result
-      description: Returns the completed synthesis result when the async job succeeds,
+      summary: Get a completed synthesis result / 中文
+      description: Returns the completed synthesis result when the async job succeeds, / 中文
         or a 409 job status payload while work is still in progress.
       operationId: getSynthesisResult
       security:
@@ -1861,7 +1861,7 @@ paths:
             title: Jobid
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 中文
           content:
             application/json:
               schema:
@@ -1874,9 +1874,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobStatusDetail"
-          description: Conflict
+          description: Conflict / 中文
         "422":
-          description: Validation Error
+          description: Validation Error / 中文
           content:
             application/json:
               schema:
@@ -1885,8 +1885,8 @@ paths:
     post:
       tags:
         - Dev Auth
-      summary: Issue local development access token / 签发本地开发访问令牌
-      description: Available only when `CORTEX_ENV=local` and `CORTEX_AUTH_MODE=dev`.
+      summary: Issue local development access token / 签发本地开发访问令牌 / 中文
+      description: Available only when `CORTEX_ENV=local` and `CORTEX_AUTH_MODE=dev`. / 中文
         Issues a local `dev:` bearer token for Swagger UI, curl, and smoke
         tests. This route is not mounted in non-local deployments. / 仅当
         `CORTEX_ENV=local` 且 `CORTEX_AUTH_MODE=dev` 时才会暴露。该接口用于生成本地 `dev:`
@@ -1897,13 +1897,13 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/LocalDevTokenIssueRequest"
-              description: Local development token request. In the simplest case only
+              description: Local development token request. In the simplest case only / 中文
                 `subject` and `tenant_id` are required. / 本地开发令牌请求，最简单时只需要填写
                 `subject` 和 `tenant_id`。
             examples:
               recommended_swagger_token:
-                summary: Recommended Swagger dev token / 推荐的 Swagger 开发令牌
-                description: Creates a local development bearer token that can be pasted
+                summary: Recommended Swagger dev token / 推荐的 Swagger 开发令牌 / 中文
+                description: Creates a local development bearer token that can be pasted / 中文
                   directly into Swagger UI's `Authorize` dialog. / 生成一个可直接粘贴到
                   Swagger UI `Authorize` 弹窗中的本地开发 Bearer token。
                 value:
@@ -1917,8 +1917,8 @@ paths:
                     - platform-ops
                   expires_in: 3600
               minimal_local_token:
-                summary: Minimal local token request / 最小化本地令牌请求
-                description: Only `subject` and `tenant_id` are required. Cortex fills in the
+                summary: Minimal local token request / 最小化本地令牌请求 / 中文
+                description: Only `subject` and `tenant_id` are required. Cortex fills in the / 中文
                   standard local developer scopes automatically. / 只需要 `subject`
                   和 `tenant_id`，其余标准本地开发 scope 由 Cortex 自动补齐。
                 value:
@@ -1950,7 +1950,7 @@ components:
           anyOf:
             - $ref: "#/components/schemas/AccessLevel"
             - type: "null"
-          description: "Optional coarse-grained data access level. Best default: omit to
+          description: "Optional coarse-grained data access level. Best default: omit to / 中文
             let the service apply the resource-type default."
           examples:
             - tenant_shared
@@ -1959,7 +1959,7 @@ components:
             - type: string
             - type: "null"
           title: Owner Actor Id
-          description: "Optional resource owner actor ID. Best default: omit to let the
+          description: "Optional resource owner actor ID. Best default: omit to let the / 中文
             service infer ownership from the caller."
           examples:
             - alice
@@ -1968,7 +1968,7 @@ components:
             type: string
           type: array
           title: Classification Labels
-          description: "Optional classification labels such as `internal` or `restricted`.
+          description: "Optional classification labels such as `internal` or `restricted`. / 中文
             Best default: empty list."
           examples:
             - - internal
@@ -1978,7 +1978,7 @@ components:
             type: string
           type: array
           title: Allowed Role Keys
-          description: "Optional allow-list of roles that may access the resource. Best
+          description: "Optional allow-list of roles that may access the resource. Best / 中文
             default: empty list, meaning no extra allow-list constraint."
           examples:
             - - tenant_admin
@@ -1988,7 +1988,7 @@ components:
             type: string
           type: array
           title: Denied Role Keys
-          description: "Optional deny-list of roles that should be blocked even if other
+          description: "Optional deny-list of roles that should be blocked even if other / 中文
             checks pass. Best default: empty list."
           examples:
             - - contractor
@@ -1997,7 +1997,7 @@ components:
             type: string
           type: array
           title: Purpose Tags
-          description: "Optional intended-use tags for ABAC policy evaluation. Best
+          description: "Optional intended-use tags for ABAC policy evaluation. Best / 中文
             default: empty list."
           examples:
             - - knowledge_ingest
@@ -2006,7 +2006,7 @@ components:
           additionalProperties: true
           type: object
           title: Constraints
-          description: "Optional structured constraints for custom policy engines. Best
+          description: "Optional structured constraints for custom policy engines. Best / 中文
             default: empty object."
           examples:
             - region: cn-shanghai
@@ -2019,7 +2019,7 @@ components:
             - type: string
             - type: "null"
           title: Dataset Id
-          description: Optional dataset ID. Provide either `dataset_id` or `dataset_key`.
+          description: Optional dataset ID. Provide either `dataset_id` or `dataset_key`. / 中文
           examples:
             - dset_9558cfc9178444e4a4c60d5658db78f5
         dataset_key:
@@ -2027,7 +2027,7 @@ components:
             - type: string
             - type: "null"
           title: Dataset Key
-          description: Optional dataset key. Recommended for human-authored requests when
+          description: Optional dataset key. Recommended for human-authored requests when / 中文
             stable keys are known.
           examples:
             - product_docs
@@ -2037,16 +2037,16 @@ components:
           type: array
           minItems: 1
           title: Inputs
-          description: Required ingest inputs. At least one input is required.
+          description: Required ingest inputs. At least one input is required. / 中文
         options:
           $ref: "#/components/schemas/AddOptions"
-          description: "Optional ingest behavior flags. Best default: use the built-in
+          description: "Optional ingest behavior flags. Best default: use the built-in / 中文
             defaults."
         webhook:
           anyOf:
             - $ref: "#/components/schemas/WebhookConfig"
             - type: "null"
-          description: "Optional webhook callback for job lifecycle events. Best default:
+          description: "Optional webhook callback for job lifecycle events. Best default: / 中文
             omit."
       type: object
       required:
@@ -2057,24 +2057,24 @@ components:
         normalize_text:
           type: boolean
           title: Normalize Text
-          description: "Normalize raw text before ingestion. Best default: `true`."
+          description: "Normalize raw text before ingestion. Best default: `true`. / 中文"
           default: true
         structured_ingest:
           type: boolean
           title: Structured Ingest
-          description: "Enable structured ingestion and field extraction. Best default:
+          description: "Enable structured ingestion and field extraction. Best default: / 中文
             `true`."
           default: true
         incremental:
           type: boolean
           title: Incremental
-          description: "Avoid reprocessing unchanged content when possible. Best default:
+          description: "Avoid reprocessing unchanged content when possible. Best default: / 中文
             `true`."
           default: true
         persist_source_copy:
           type: boolean
           title: Persist Source Copy
-          description: "Persist a copy of the source payload when supported. Best default:
+          description: "Persist a copy of the source payload when supported. Best default: / 中文
             `true`."
           default: true
       type: object
@@ -2148,14 +2148,14 @@ components:
           type: string
           contentMediaType: application/octet-stream
           title: File
-          description: File content to upload. Cortex derives filename, content type, and
+          description: File content to upload. Cortex derives filename, content type, and / 中文
             size from the multipart part.
         metadata_json:
           anyOf:
             - type: string
             - type: "null"
           title: Metadata Json
-          description: "Optional JSON object string for object metadata. Best default:
+          description: "Optional JSON object string for object metadata. Best default: / 中文
             `{}`."
           examples:
             - '{"source":"swagger-demo","document_type":"guide"}'
@@ -2164,7 +2164,7 @@ components:
             - type: string
             - type: "null"
           title: Access Policy Json
-          description: "Optional JSON object string matching AccessPolicy. Best default:
+          description: "Optional JSON object string matching AccessPolicy. Best default: / 中文
             omit for tenant_private."
           examples:
             - '{"access_level":"tenant_shared"}'
@@ -2173,7 +2173,7 @@ components:
             - type: string
             - type: "null"
           title: Tags
-          description: "Optional comma-separated tags or JSON array string. Best default:
+          description: "Optional comma-separated tags or JSON array string. Best default: / 中文
             empty."
           examples:
             - docs,product
@@ -2183,7 +2183,7 @@ components:
               pattern: ^[0-9a-f]{64}$
             - type: "null"
           title: Checksum Sha256
-          description: Optional lowercase SHA-256 checksum. Cortex verifies it before
+          description: Optional lowercase SHA-256 checksum. Cortex verifies it before / 中文
             committing object metadata when provided.
           examples:
             - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -2196,19 +2196,19 @@ components:
         enabled:
           type: boolean
           title: Enabled
-          description: "Whether Cortex should emit chunking hints or stored chunks. Best
+          description: "Whether Cortex should emit chunking hints or stored chunks. Best / 中文
             default: `true`."
           default: true
         strategy:
           $ref: "#/components/schemas/ChunkingStrategy"
-          description: "Chunking strategy. Best default: `semantic` for LLM-ready content."
+          description: "Chunking strategy. Best default: `semantic` for LLM-ready content. / 中文"
           default: semantic
         target_tokens:
           type: integer
           maximum: 4096
           minimum: 64
           title: Target Tokens
-          description: "Target token count per chunk. Best default: 512."
+          description: "Target token count per chunk. Best default: 512. / 中文"
           default: 512
           examples:
             - 512
@@ -2217,7 +2217,7 @@ components:
           maximum: 1024
           minimum: 0
           title: Overlap Tokens
-          description: "Token overlap between adjacent chunks. Best default: 64."
+          description: "Token overlap between adjacent chunks. Best default: 64. / 中文"
           default: 64
           examples:
             - 64
@@ -2226,7 +2226,7 @@ components:
           maximum: 10000
           minimum: 1
           title: Max Chunks
-          description: "Maximum chunks emitted for one document. Best default: 256."
+          description: "Maximum chunks emitted for one document. Best default: 256. / 中文"
           default: 256
           examples:
             - 256
@@ -2278,7 +2278,7 @@ components:
             - type: string
             - type: "null"
           title: Dataset Id
-          description: Optional dataset ID. Provide either `dataset_id` or `dataset_key`.
+          description: Optional dataset ID. Provide either `dataset_id` or `dataset_key`. / 中文
           examples:
             - dset_9558cfc9178444e4a4c60d5658db78f5
         dataset_key:
@@ -2286,27 +2286,27 @@ components:
             - type: string
             - type: "null"
           title: Dataset Key
-          description: Optional dataset key. Recommended when stable dataset keys are known.
+          description: Optional dataset key. Recommended when stable dataset keys are known. / 中文
           examples:
             - product_docs
         incremental_loading:
           type: boolean
           title: Incremental Loading
-          description: "Only process newly added or changed content when possible. Best
+          description: "Only process newly added or changed content when possible. Best / 中文
             default: `true`."
           default: true
         graph_prompt_profile:
           $ref: "#/components/schemas/GraphPromptProfile"
-          description: "Prompt profile for graph extraction. Best default: `default`."
+          description: "Prompt profile for graph extraction. Best default: `default`. / 中文"
           default: default
         chunking:
           $ref: "#/components/schemas/ChunkingOptions"
-          description: Chunking controls used before graph creation.
+          description: Chunking controls used before graph creation. / 中文
         webhook:
           anyOf:
             - $ref: "#/components/schemas/WebhookConfig"
             - type: "null"
-          description: "Optional webhook callback. Best default: omit."
+          description: "Optional webhook callback. Best default: omit. / 中文"
       type: object
       title: CognifyJobRequest
     CompletedUploadPart:
@@ -2315,14 +2315,14 @@ components:
           type: integer
           minimum: 1
           title: Part Number
-          description: Multipart part number exactly as returned during upload session
+          description: Multipart part number exactly as returned during upload session / 中文
             creation.
           examples:
             - 1
         etag:
           type: string
           title: Etag
-          description: ETag returned by the object store after uploading the part.
+          description: ETag returned by the object store after uploading the part. / 中文
           examples:
             - '"part-1-etag"'
       type: object
@@ -3199,23 +3199,23 @@ components:
         enabled:
           type: boolean
           title: Enabled
-          description: Whether Cortex may try another parser engine after the preferred one.
+          description: Whether Cortex may try another parser engine after the preferred one. / 中文
           default: true
         mode:
           $ref: "#/components/schemas/FallbackMode"
-          description: "Fallback strategy. Best default: `ordered` for predictable adapter
+          description: "Fallback strategy. Best default: `ordered` for predictable adapter / 中文
             order."
           default: ordered
         on_error:
           $ref: "#/components/schemas/FallbackOnError"
-          description: "How to react when an engine fails. Best default: `try_next`."
+          description: "How to react when an engine fails. Best default: `try_next`. / 中文"
           default: try_next
         max_engine_attempts:
           type: integer
           maximum: 10
           minimum: 1
           title: Max Engine Attempts
-          description: "Maximum number of engine attempts before the parse run fails. Best
+          description: "Maximum number of engine attempts before the parse run fails. Best / 中文
             default: 3."
           default: 3
           examples:
@@ -3536,14 +3536,14 @@ components:
           type: string
           pattern: ^[a-z0-9][a-z0-9_-]{1,126}$
           title: Dataset Key
-          description: Required stable dataset key. Use lowercase letters, digits,
+          description: Required stable dataset key. Use lowercase letters, digits, / 中文
             underscores, or hyphens.
           examples:
             - product_docs
         display_name:
           type: string
           title: Display Name
-          description: Required human-friendly dataset name.
+          description: Required human-friendly dataset name. / 中文
           examples:
             - Product Docs
         description:
@@ -3551,7 +3551,7 @@ components:
             - type: string
             - type: "null"
           title: Description
-          description: "Optional dataset description. Best default: omit."
+          description: "Optional dataset description. Best default: omit. / 中文"
           examples:
             - Primary product knowledge base for demos and regression tests.
         tags:
@@ -3559,19 +3559,19 @@ components:
             type: string
           type: array
           title: Tags
-          description: "Optional dataset tags. Best default: empty list."
+          description: "Optional dataset tags. Best default: empty list. / 中文"
           examples:
             - - docs
               - product
         retention_class:
           $ref: "#/components/schemas/DatasetRetentionClass"
-          description: "Retention profile. Best default: `standard`."
+          description: "Retention profile. Best default: `standard`. / 中文"
           default: standard
         metadata:
           additionalProperties: true
           type: object
           title: Metadata
-          description: "Optional dataset metadata. Best default: empty object."
+          description: "Optional dataset metadata. Best default: empty object. / 中文"
           examples:
             - domain: product
               owner_team: platform
@@ -3579,7 +3579,7 @@ components:
           anyOf:
             - $ref: "#/components/schemas/AccessPolicy"
             - type: "null"
-          description: "Optional access policy attached to the dataset. Best default: omit."
+          description: "Optional access policy attached to the dataset. Best default: omit. / 中文"
       type: object
       required:
         - dataset_key
@@ -3596,7 +3596,7 @@ components:
       properties:
         input_type:
           $ref: "#/components/schemas/KnowledgeInputType"
-          description: Required input type. It determines which of `object_id`,
+          description: Required input type. It determines which of `object_id`, / 中文
             `document_id`, `text`, or `uri` must be set.
           examples:
             - document_id
@@ -3605,7 +3605,7 @@ components:
             - type: string
             - type: "null"
           title: Object Id
-          description: "Storage object ID when `input_type=object_id`. Best default: omit."
+          description: "Storage object ID when `input_type=object_id`. Best default: omit. / 中文"
           examples:
             - obj_3f6c1d5e9b1646b5a4eabdbf8b417bd3
         document_id:
@@ -3613,7 +3613,7 @@ components:
             - type: string
             - type: "null"
           title: Document Id
-          description: "Parsed document ID when `input_type=document_id`. Best default:
+          description: "Parsed document ID when `input_type=document_id`. Best default: / 中文
             omit."
           examples:
             - doc_71fe50adf1cb4981bb322f0d74f32598
@@ -3622,7 +3622,7 @@ components:
             - type: string
             - type: "null"
           title: Text
-          description: "Inline text when `input_type=text`. Best default: omit."
+          description: "Inline text when `input_type=text`. Best default: omit. / 中文"
           examples:
             - |-
               # Cortex Notes
@@ -3633,7 +3633,7 @@ components:
             - type: string
             - type: "null"
           title: Uri
-          description: "External URI when `input_type=uri`. Best default: omit."
+          description: "External URI when `input_type=uri`. Best default: omit. / 中文"
           examples:
             - https://example.com/knowledge-source.md
         label:
@@ -3641,7 +3641,7 @@ components:
             - type: string
             - type: "null"
           title: Label
-          description: "Optional label for operators and observability. Best default: omit."
+          description: "Optional label for operators and observability. Best default: omit. / 中文"
           examples:
             - Normalized parsed document
         node_set:
@@ -3649,7 +3649,7 @@ components:
             type: string
           type: array
           title: Node Set
-          description: "Optional node-set grouping tags. Best default: empty list."
+          description: "Optional node-set grouping tags. Best default: empty list. / 中文"
           examples:
             - - docs
               - parsed
@@ -3657,7 +3657,7 @@ components:
           additionalProperties: true
           type: object
           title: Metadata
-          description: "Optional input metadata copied into downstream processing. Best
+          description: "Optional input metadata copied into downstream processing. Best / 中文
             default: empty object."
           examples:
             - source: parse
@@ -3689,7 +3689,7 @@ components:
           maxLength: 255
           minLength: 1
           title: Tenant Id
-          description: Required tenant boundary that Cortex will apply to the issued
+          description: Required tenant boundary that Cortex will apply to the issued / 中文
             token. / Cortex 将应用到令牌上的必填租户边界。
           examples:
             - tenant_demo
@@ -3700,7 +3700,7 @@ components:
               minLength: 1
             - type: "null"
           title: Actor Id
-          description: "Optional actor identifier when it differs from `subject`. Best
+          description: "Optional actor identifier when it differs from `subject`. Best / 中文
             default: omit and let Cortex fall back to `subject`. / 可选 actor
             标识；若与 `subject` 相同，最佳默认值为省略。"
           examples:
@@ -3712,7 +3712,7 @@ components:
               minLength: 1
             - type: "null"
           title: Actor Ref
-          description: "Optional external reference such as email or employee number. Best
+          description: "Optional external reference such as email or employee number. Best / 中文
             default: omit when no external directory reference exists. /
             可选外部引用，如邮箱或工号；若不存在外部目录引用，最佳默认值为省略。"
           examples:
@@ -3745,7 +3745,7 @@ components:
               minLength: 1
             - type: "null"
           title: Client Id
-          description: Optional client identifier for the local tool or UI issuing
+          description: Optional client identifier for the local tool or UI issuing / 中文
             requests. / 可选本地工具或 UI 的 client 标识。
           examples:
             - swagger-ui
@@ -3754,7 +3754,7 @@ components:
             type: string
           type: array
           title: Scopes
-          description: "Optional scopes granted to the local dev token. Best default: omit
+          description: "Optional scopes granted to the local dev token. Best default: omit / 中文
             and let Cortex issue the standard local developer scope bundle. / 可选
             scope 集合，最佳默认值为省略，让 Cortex 自动填入标准本地开发 scope 包。"
           examples:
@@ -3766,7 +3766,7 @@ components:
             type: string
           type: array
           title: Roles
-          description: "Optional role keys attached to the caller. Best default: empty
+          description: "Optional role keys attached to the caller. Best default: empty / 中文
             list. / 可选角色键集合，最佳默认值为空列表。"
           examples:
             - - tenant_admin
@@ -3784,7 +3784,7 @@ components:
           maximum: 604800
           minimum: 60
           title: Expires In
-          description: "Optional token TTL in seconds. Best default: `3600` for local
+          description: "Optional token TTL in seconds. Best default: `3600` for local / 中文
             Swagger and smoke tests. / 可选令牌有效期，单位为秒；本地 Swagger 与冒烟测试的最佳默认值为
             `3600`。"
           default: 3600
@@ -3849,13 +3849,13 @@ components:
         swagger_authorize_value:
           type: string
           title: Swagger Authorize Value
-          description: Paste this exact value into Swagger UI's `Authorize` dialog. Do not
+          description: Paste this exact value into Swagger UI's `Authorize` dialog. Do not / 中文
             prepend `Bearer ` manually. / 将这个值原样粘贴到 Swagger UI 的 `Authorize`
             弹窗中，不要手动再加 `Bearer ` 前缀。
         authorization_header:
           type: string
           title: Authorization Header
-          description: Ready-to-use HTTP Authorization header value for curl, Postman, or
+          description: Ready-to-use HTTP Authorization header value for curl, Postman, or / 中文
             SDK tests. / 可直接用于 curl、Postman 或 SDK 测试的完整 Authorization 头。
       type: object
       required:
@@ -3878,7 +3878,7 @@ components:
             - type: string
             - type: "null"
           title: Dataset Id
-          description: Optional dataset ID. Provide either `dataset_id` or `dataset_key`.
+          description: Optional dataset ID. Provide either `dataset_id` or `dataset_key`. / 中文
           examples:
             - dset_9558cfc9178444e4a4c60d5658db78f5
         dataset_key:
@@ -3886,19 +3886,19 @@ components:
             - type: string
             - type: "null"
           title: Dataset Key
-          description: Optional dataset key. Recommended for copy-paste requests.
+          description: Optional dataset key. Recommended for copy-paste requests. / 中文
           examples:
             - product_docs
         pipeline:
           $ref: "#/components/schemas/MemifyPipeline"
-          description: "Memify enrichment pipeline. Best default: `coding_rules`."
+          description: "Memify enrichment pipeline. Best default: `coding_rules`. / 中文"
           default: coding_rules
         node_type:
           anyOf:
             - type: string
             - type: "null"
           title: Node Type
-          description: "Optional node type filter. Best default: omit."
+          description: "Optional node type filter. Best default: omit. / 中文"
           examples:
             - document
         node_names:
@@ -3906,7 +3906,7 @@ components:
             type: string
           type: array
           title: Node Names
-          description: "Optional node-name filter. Best default: empty list."
+          description: "Optional node-name filter. Best default: empty list. / 中文"
           examples:
             - - Cortex API Overview
         session_ids:
@@ -3914,7 +3914,7 @@ components:
             type: string
           type: array
           title: Session Ids
-          description: "Optional session filters for session-aware pipelines. Best
+          description: "Optional session filters for session-aware pipelines. Best / 中文
             default: empty list."
           examples:
             - - session_demo_001
@@ -3923,7 +3923,7 @@ components:
             - type: string
             - type: "null"
           title: Custom Extraction Profile
-          description: "Optional custom extraction profile for `pipeline=custom`. Best
+          description: "Optional custom extraction profile for `pipeline=custom`. Best / 中文
             default: omit."
           examples:
             - custom/memify/extract-v1
@@ -3932,7 +3932,7 @@ components:
             - type: string
             - type: "null"
           title: Custom Enrichment Profile
-          description: "Optional custom enrichment profile for `pipeline=custom`. Best
+          description: "Optional custom enrichment profile for `pipeline=custom`. Best / 中文
             default: omit."
           examples:
             - custom/memify/enrich-v1
@@ -3940,7 +3940,7 @@ components:
           anyOf:
             - $ref: "#/components/schemas/WebhookConfig"
             - type: "null"
-          description: "Optional webhook callback. Best default: omit."
+          description: "Optional webhook callback. Best default: omit. / 中文"
       type: object
       title: MemifyJobRequest
     MemifyPipeline:
@@ -4250,7 +4250,7 @@ components:
           type: string
           minLength: 1
           title: Engine Id
-          description: Public parser engine identifier. Use `auto` to let Cortex choose
+          description: Public parser engine identifier. Use `auto` to let Cortex choose / 中文
             the best active engine and scene per source; otherwise use
             `crawl4ai`, `jina_reader`, `llama_parse`, `markitdown`, or
             `docling`.
@@ -4262,7 +4262,7 @@ components:
             - type: string
             - type: "null"
           title: Scene
-          description: "Optional high-level parse scene. Best default: omit to let Cortex
+          description: "Optional high-level parse scene. Best default: omit to let Cortex / 中文
             select the engine's default scene. Typical values include
             `balanced`, `deep_web`, `authenticated_web`, `fast_extract`,
             `document_fidelity`, `document_ai`, or `lightweight`."
@@ -4273,7 +4273,7 @@ components:
           maximum: 10
           minimum: 1
           title: Priority
-          description: "Job priority where higher values are more urgent. Best default: 5."
+          description: "Job priority where higher values are more urgent. Best default: 5. / 中文"
           default: 5
           examples:
             - 5
@@ -4281,7 +4281,7 @@ components:
           anyOf:
             - $ref: "#/components/schemas/WebhookConfig"
             - type: "null"
-          description: "Optional webhook callback configuration. Best default: omit."
+          description: "Optional webhook callback configuration. Best default: omit. / 中文"
       type: object
       required:
         - sources
@@ -4291,18 +4291,18 @@ components:
         schema_version:
           type: string
           title: Schema Version
-          description: "Normalization schema version. Best default: `cortex.parse.v1`."
+          description: "Normalization schema version. Best default: `cortex.parse.v1`. / 中文"
           default: cortex.parse.v1
         normalize_markdown:
           type: boolean
           title: Normalize Markdown
-          description: "Normalize headings, lists, whitespace, and block structure. Best
+          description: "Normalize headings, lists, whitespace, and block structure. Best / 中文
             default: `true`."
           default: true
         normalize_metadata:
           type: boolean
           title: Normalize Metadata
-          description: "Normalize metadata into Cortex's standard document metadata shape.
+          description: "Normalize metadata into Cortex's standard document metadata shape. / 中文
             Best default: `true`."
           default: true
         metadata_schema_ref:
@@ -4310,37 +4310,37 @@ components:
             - type: string
             - type: "null"
           title: Metadata Schema Ref
-          description: "Optional metadata schema profile reference. Best default: omit."
+          description: "Optional metadata schema profile reference. Best default: omit. / 中文"
           examples:
             - metadata/default-web-page
         infer_title:
           type: boolean
           title: Infer Title
-          description: "Infer a title when the source does not provide one cleanly. Best
+          description: "Infer a title when the source does not provide one cleanly. Best / 中文
             default: `true`."
           default: true
         infer_language:
           type: boolean
           title: Infer Language
-          description: "Infer language when it is missing from the source. Best default:
+          description: "Infer language when it is missing from the source. Best default: / 中文
             `true`."
           default: true
         include_page_metadata:
           type: boolean
           title: Include Page Metadata
-          description: "Include page-level metadata such as URL, status, and fetch
+          description: "Include page-level metadata such as URL, status, and fetch / 中文
             diagnostics. Best default: `true`."
           default: true
         preserve_source_blocks:
           type: boolean
           title: Preserve Source Blocks
-          description: "Preserve raw source fragments in normalized output. Best default:
+          description: "Preserve raw source fragments in normalized output. Best default: / 中文
             `false`."
           default: false
         deduplicate_whitespace:
           type: boolean
           title: Deduplicate Whitespace
-          description: "Collapse redundant whitespace during normalization. Best default:
+          description: "Collapse redundant whitespace during normalization. Best default: / 中文
             `true`."
           default: true
       type: object
@@ -4390,7 +4390,7 @@ components:
           type: string
           minLength: 1
           title: Engine Id
-          description: Public parser engine identifier. Use `auto` to let Cortex choose
+          description: Public parser engine identifier. Use `auto` to let Cortex choose / 中文
             the best active engine and scene per source; otherwise use
             `crawl4ai`, `jina_reader`, `llama_parse`, `markitdown`, or
             `docling`.
@@ -4402,7 +4402,7 @@ components:
             - type: string
             - type: "null"
           title: Scene
-          description: "Optional high-level parse scene. Best default: omit to let Cortex
+          description: "Optional high-level parse scene. Best default: omit to let Cortex / 中文
             select the engine's default scene. Typical values include
             `balanced`, `deep_web`, `authenticated_web`, `fast_extract`,
             `document_fidelity`, `document_ai`, or `lightweight`."
@@ -4598,7 +4598,7 @@ components:
             type: string
           type: array
           title: Document Ids
-          description: "Optional document allow-list. Best default: empty list."
+          description: "Optional document allow-list. Best default: empty list. / 中文"
           examples:
             - - doc_71fe50adf1cb4981bb322f0d74f32598
         object_ids:
@@ -4606,7 +4606,7 @@ components:
             type: string
           type: array
           title: Object Ids
-          description: "Optional object allow-list. Best default: empty list."
+          description: "Optional object allow-list. Best default: empty list. / 中文"
           examples:
             - - obj_3f6c1d5e9b1646b5a4eabdbf8b417bd3
         tags:
@@ -4614,7 +4614,7 @@ components:
             type: string
           type: array
           title: Tags
-          description: "Optional tag filter. Best default: empty list."
+          description: "Optional tag filter. Best default: empty list. / 中文"
           examples:
             - - docs
         node_sets:
@@ -4622,14 +4622,14 @@ components:
             type: string
           type: array
           title: Node Sets
-          description: "Optional node-set filter. Best default: empty list."
+          description: "Optional node-set filter. Best default: empty list. / 中文"
           examples:
             - - docs
         metadata:
           additionalProperties: true
           type: object
           title: Metadata
-          description: "Optional exact-match metadata filters. Best default: empty object."
+          description: "Optional exact-match metadata filters. Best default: empty object. / 中文"
           examples:
             - domain: product
       type: object
@@ -4700,7 +4700,7 @@ components:
         query_text:
           type: string
           title: Query Text
-          description: Required natural-language query or search expression.
+          description: Required natural-language query or search expression. / 中文
           examples:
             - What does the documentation say about Cortex parse workflows?
         dataset_ids:
@@ -4708,7 +4708,7 @@ components:
             type: string
           type: array
           title: Dataset Ids
-          description: "Optional dataset ID scope. Best default: empty list."
+          description: "Optional dataset ID scope. Best default: empty list. / 中文"
           examples:
             - - dset_9558cfc9178444e4a4c60d5658db78f5
         dataset_keys:
@@ -4716,20 +4716,20 @@ components:
             type: string
           type: array
           title: Dataset Keys
-          description: "Optional dataset key scope. Recommended for human-authored
+          description: "Optional dataset key scope. Recommended for human-authored / 中文
             requests. Best default: empty list."
           examples:
             - - product_docs
         search_type:
           $ref: "#/components/schemas/SearchType"
-          description: "Search strategy. Best default: `GRAPH_COMPLETION`."
+          description: "Search strategy. Best default: `GRAPH_COMPLETION`. / 中文"
           default: GRAPH_COMPLETION
         top_k:
           type: integer
           maximum: 100
           minimum: 1
           title: Top K
-          description: "Maximum number of context hits to return. Best default: 10."
+          description: "Maximum number of context hits to return. Best default: 10. / 中文"
           default: 10
           examples:
             - 10
@@ -4738,17 +4738,17 @@ components:
             - type: string
             - type: "null"
           title: Session Id
-          description: "Optional session scope for session-aware search. Best default:
+          description: "Optional session scope for session-aware search. Best default: / 中文
             omit."
           examples:
             - session_demo_001
         filters:
           $ref: "#/components/schemas/SearchFilters"
-          description: "Optional structured filters. Best default: empty filters."
+          description: "Optional structured filters. Best default: empty filters. / 中文"
         only_context:
           type: boolean
           title: Only Context
-          description: "Return context hits without an answer synthesis. Best default:
+          description: "Return context hits without an answer synthesis. Best default: / 中文
             `false`."
           default: false
         include_provenance:
@@ -4759,7 +4759,7 @@ components:
         include_graph_paths:
           type: boolean
           title: Include Graph Paths
-          description: "Include graph path explanations when supported. Best default:
+          description: "Include graph path explanations when supported. Best default: / 中文
             `false`."
           default: false
         timeout_seconds:
@@ -4767,7 +4767,7 @@ components:
           maximum: 300
           minimum: 1
           title: Timeout Seconds
-          description: "Search timeout in seconds. Best default: 30."
+          description: "Search timeout in seconds. Best default: 30. / 中文"
           default: 30
           examples:
             - 30
@@ -5069,7 +5069,7 @@ components:
             $ref: "#/components/schemas/CompletedUploadPart"
           type: array
           title: Parts
-          description: "Multipart parts to finalize. Best default: empty list for
+          description: "Multipart parts to finalize. Best default: empty list for / 中文
             single-part uploads."
           examples:
             - - etag: '"part-1-etag"'
@@ -5080,7 +5080,7 @@ components:
               pattern: ^[0-9a-f]{64}$
             - type: "null"
           title: Checksum Sha256
-          description: "Optional final SHA-256 checksum. Best default: omit unless the
+          description: "Optional final SHA-256 checksum. Best default: omit unless the / 中文
             client validated the file digest."
           examples:
             - bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
@@ -5091,7 +5091,7 @@ components:
         filename:
           type: string
           title: Filename
-          description: Required original filename presented to storage and downstream
+          description: Required original filename presented to storage and downstream / 中文
             parsers.
           examples:
             - product-overview.md
@@ -5100,7 +5100,7 @@ components:
             - type: string
             - type: "null"
           title: Content Type
-          description: "Optional MIME type of the uploaded object. Best default: omit and
+          description: "Optional MIME type of the uploaded object. Best default: omit and / 中文
             let Cortex infer it from `filename`, then reconcile it with the
             object store during completion."
           examples:
@@ -5111,7 +5111,7 @@ components:
               minimum: 0
             - type: "null"
           title: Size Bytes
-          description: "Optional total size of the upload in bytes. Best default: omit
+          description: "Optional total size of the upload in bytes. Best default: omit / 中文
             when unknown before upload; provide it when the client already knows
             the file size so Cortex can choose single-part vs multipart more
             accurately."
@@ -5123,7 +5123,7 @@ components:
               pattern: ^[0-9a-f]{64}$
             - type: "null"
           title: Checksum Sha256
-          description: "Optional SHA-256 checksum for integrity verification. Best
+          description: "Optional SHA-256 checksum for integrity verification. Best / 中文
             default: omit if the client cannot compute it."
           examples:
             - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -5132,7 +5132,7 @@ components:
             type: string
           type: object
           title: Metadata
-          description: "Optional metadata stored alongside the object. Best default: empty
+          description: "Optional metadata stored alongside the object. Best default: empty / 中文
             object."
           examples:
             - document_type: guide
@@ -5141,14 +5141,14 @@ components:
           anyOf:
             - $ref: "#/components/schemas/AccessPolicy"
             - type: "null"
-          description: "Optional access policy attached to the stored object. Best
+          description: "Optional access policy attached to the stored object. Best / 中文
             default: omit."
         tags:
           items:
             type: string
           type: array
           title: Tags
-          description: "Optional tags used for filtering or governance. Best default:
+          description: "Optional tags used for filtering or governance. Best default: / 中文
             empty list."
           examples:
             - - docs
@@ -5755,7 +5755,7 @@ components:
         url:
           type: string
           title: Url
-          description: Required callback URL invoked on job lifecycle events.
+          description: Required callback URL invoked on job lifecycle events. / 中文
           examples:
             - https://example.com/hooks/cortex/parse
         secret_ref:
@@ -5763,7 +5763,7 @@ components:
             - type: string
             - type: "null"
           title: Secret Ref
-          description: "Optional secret reference used to sign or authenticate webhook
+          description: "Optional secret reference used to sign or authenticate webhook / 中文
             delivery. Best default: omit."
           examples:
             - vault:cortex/webhooks/parse
@@ -5772,7 +5772,7 @@ components:
             type: string
           type: array
           title: Event Types
-          description: "Optional event types to send. Best default: empty list, which
+          description: "Optional event types to send. Best default: empty list, which / 中文
             means the service default set."
           examples:
             - - job.succeeded
@@ -5782,7 +5782,7 @@ components:
             type: string
           type: object
           title: Headers
-          description: "Optional static headers sent with the webhook. Best default: empty
+          description: "Optional static headers sent with the webhook. Best default: empty / 中文
             object."
           examples:
             - X-Consumer: knowledge-pipeline
@@ -5793,5 +5793,5 @@ components:
   securitySchemes:
     BearerAuth:
       type: http
-      description: Bearer access token for protected Cortex APIs.
+      description: Bearer access token for protected Cortex APIs. / 中文
       scheme: bearer

@@ -57,7 +57,11 @@ def test_build_cognee_runtime_returns_disabled_when_configuration_or_module_disa
 
     monkeypatch.setattr("cortex_knowledge.runtime._cognee_available", lambda: False)
     monkeypatch.setattr("cortex_knowledge.runtime._cognee_version", lambda: "0.0-test")
-    unavailable = build_cognee_runtime(CogneeSettings(CORTEX_COGNEE_ENABLED=True))
+    unavailable = build_cognee_runtime(CogneeSettings(
+        CORTEX_COGNEE_ENABLED=True,
+        CORTEX_COGNEE_LLM_MODEL="gpt-4o",
+        CORTEX_COGNEE_LLM_API_KEY="test-api-key",
+    ))
 
     assert disabled.descriptor.status == "disabled"
     assert disabled.descriptor.reason == "Cognee runtime is disabled by configuration."

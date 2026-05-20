@@ -10,6 +10,18 @@ except Exception:  # pragma: no cover - fallback for older/newer pydantic
     PydanticDeprecatedSince20 = DeprecationWarning
 
 
+import os
+import pytest
+
+@pytest.fixture(autouse=True, scope="session")
+def configure_auth() -> None:
+    os.environ["CORTEX_AUTH_JWT_SHARED_SECRET"] = "test-shared-secret"
+    os.environ["CORTEX_COGNEE_LLM_MODEL"] = "gpt-4o"
+    os.environ["CORTEX_COGNEE_LLM_API_KEY"] = "test-api-key"
+    os.environ["OPENROUTER_MODEL_ID"] = "gpt-4o"
+    os.environ["OPENROUTER_API_KEY"] = "test-api-key"
+    os.environ["OPENROUTER_EMBEDDING_MODEL_ID"] = "text-embedding-3-small"
+
 def pytest_configure() -> None:
     """Hide known upstream Cognee deprecations until the dependency updates."""
     warnings.filterwarnings(

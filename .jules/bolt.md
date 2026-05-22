@@ -1,0 +1,3 @@
+## 2025-02-23 - Replaced O(N) loading with database aggregation query
+**Learning:** Found a common anti-pattern where an entire sequence of job events was loaded into memory via `list_for_job` (e.g. `existing_events[-1].sequence_no + 1`) just to determine the maximum sequence number. Loading potentially thousands of records for a single integer is highly inefficient and acts like an N+1 query bottleneck.
+**Action:** Always prefer direct SQL aggregation queries (like `func.max`) over loading full datasets into Python memory to compute basic aggregate metrics. Added `get_max_sequence_no` to the repository layer to perform the calculation database-side.

@@ -1,0 +1,3 @@
+## 2024-05-24 - Efficient Next Sequence Number Calculation for Job Events
+**Learning:** Found an N+1 query-like inefficiency where job events were loaded into memory via `list_for_job` (e.g., `existing_events = await uow.job_events.list_for_job(job.job_id, limit=1000)`) just to determine the maximum sequence number for the next event insertion. This could fetch up to 1000 records, deserialize them, and create objects unnecessarily.
+**Action:** Implemented `get_max_sequence_no` in `JobEventRepository` to perform this calculation directly in the database using aggregation (`select(func.coalesce(func.max(JobEventModel.sequence_no), 0))`), replacing the in-memory array access with an $O(1)$ database query across several service files.

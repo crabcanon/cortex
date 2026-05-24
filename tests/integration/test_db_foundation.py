@@ -399,8 +399,10 @@ async def test_unit_of_work_and_repositories_round_trip() -> None:
             loaded_role_permissions = await uow.role_permissions.list_for_role_ids(["role_001"])
             loaded_policies = await uow.authorization_policies.list_for_tenant("tenant_001")
             loaded_job_events = await uow.job_events.list_for_job("job_001")
+            max_sequence_no = await uow.job_events.get_max_sequence_no("job_001")
             loaded_decisions = await uow.authorization_decisions.list_for_actor("actor_001")
 
+            assert max_sequence_no == 1
             assert loaded_tenant is not None
             assert loaded_tenant.tenant_key == "alpha"
             assert loaded_actor is not None

@@ -1,0 +1,3 @@
+## 2026-05-26 - Optimize Database Record Sequence Queries
+**Learning:** Found an anti-pattern across five application modules where `await uow.job_events.list_for_job(job.job_id, limit=1000)` was used solely to retrieve the maximum sequence number (via `existing_events[-1].sequence_no`). This N+1-like issue needlessly instantiated hundreds of ORM objects per append operation.
+**Action:** Always implement explicit aggregate database queries for derived values (like max/count/sum). I added `get_max_sequence_no` to `JobEventRepository` using `select(func.coalesce(func.max(Model.sequence_no), 0))` which operates in (1)$ database execution and avoids ORM memory overhead, then refactored all consumers.

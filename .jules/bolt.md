@@ -1,0 +1,3 @@
+## 2025-05-18 - Replacing limit=1000 list_for_job pattern
+**Learning:** Found an (n)$ anti-pattern using array indexing on repository list methods `list_for_job(limit=1000)[-1]` to find the maximum sequence number. Loading potentially thousands of records just to read one field's value creates an N+1 query-like latency multiplier due to unnecessary memory allocation and serialization.
+**Action:** Replaced the anti-pattern with direct SQLAlchemy `func.max()` aggregation queries inside the repository. To find scalar values like max/min or counts, avoid loading lists into memory and instead delegate calculation to the database engine for (1)$ efficiency.

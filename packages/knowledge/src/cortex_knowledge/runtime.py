@@ -643,7 +643,7 @@ def _cognee_stable_data_id(
     source_parts = [
         str(dataset),
         input_type,
-        _strip_optional_string((raw_input or {}).get("label")) or "",
+        _strip_optional_string(raw_input.get("label")) or "",
         _strip_optional_string((metadata or {}).get("source_url")) or "",
         _strip_optional_string((metadata or {}).get("source_name")) or "",
         _strip_optional_string((metadata or {}).get("engine_id")) or "",

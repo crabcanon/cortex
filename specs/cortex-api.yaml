@@ -31,7 +31,8 @@ tags:
   description: Dataset lifecycle plus Cognee-backed Add, Cognify, Memify, and Search
     operations. / 数据集生命周期与基于 Cognee 的 Add、Cognify、Memify、Search 操作。
 - name: Evaluation
-  description: Evaluation / Evaluation
+  description: AI evaluation engines, metric catalogs, synchronous checks, and asynchronous
+    evaluation jobs. / AI 评测引擎、指标目录、同步校验与异步评测作业。
 - name: Synthesis
   description: Synthetic data engines plus synchronous and asynchronous generation
     workflows. / 数据合成引擎以及同步、异步生成工作流。
@@ -65,7 +66,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
         '503':
-          description: Service Unavailable / Service Unavailable
+          description: Service Unavailable / 服务不可用
           content:
             application/json:
               schema:
@@ -76,10 +77,9 @@ paths:
     get:
       tags:
       - Jobs
-      summary: Get job status / Get job status
+      summary: Get job status / 获取作业状态
       description: Return the current state, timestamps, and telemetry context for
-        one long-running job. / Return the current state, timestamps, and telemetry
-        context for one long-running job.
+        one long-running job. / 返回一个长时间运行的作业的当前状态、时间戳和遥测上下文。
       operationId: getJob
       security:
       - BearerAuth: []
@@ -113,10 +113,8 @@ paths:
     get:
       tags:
       - Jobs
-      summary: List job events / List job events
-      description: Return the ordered event stream for one job, newest first according
-        to the service implementation. / Return the ordered event stream for one job,
-        newest first according to the service implementation.
+      summary: List job events / 列出作业事件 / 列出作业事件
+      description: Return the ordered event stream for one job, newest first according to the service implementation. / 返回一个作业的有序事件流，根据服务实现最新者在前。 / 返回一个作业的有序事件流，根据服务实现最新者在前。
       operationId: listJobEvents
       security:
       - BearerAuth: []
@@ -164,10 +162,8 @@ paths:
     post:
       tags:
       - Jobs
-      summary: Cancel a queued or running job / Cancel a queued or running job
-      description: Request cancellation of a queued or running job and return the
-        updated status snapshot. / Request cancellation of a queued or running job
-        and return the updated status snapshot.
+      summary: Cancel a queued or running job / 取消一个已排队或正在运行的作业 / 取消一个已排队或正在运行的作业
+      description: Request cancellation of a queued or running job and return the updated status snapshot. / 请求取消一个已排队或正在运行的作业并返回更新后的状态快照。 / 请求取消一个已排队或正在运行的作业并返回更新后的状态快照。
       operationId: cancelJob
       security:
       - BearerAuth: []
@@ -200,10 +196,7 @@ paths:
       tags:
       - Evaluation
       summary: List evaluation engines / 列出评估引擎
-      description: Returns the currently registered evaluation engines, supported
-        evaluation types, execution modes, and default profile hints. / Returns the
-        currently registered evaluation engines, supported evaluation types, execution
-        modes, and default profile hints.
+      description: Returns the currently registered evaluation engines, supported evaluation types, execution modes, and default profile hints. / 返回当前注册的评估引擎、支持的评估类型、执行模式以及默认配置文件提示。 / 返回当前注册的评估引擎、支持的评估类型、执行模式以及默认配置文件提示。
       operationId: listEvalEngines
       responses:
         '200':
@@ -218,12 +211,10 @@ paths:
     get:
       tags:
       - Evaluation
-      summary: List normalized evaluation metrics / List normalized evaluation metrics
+      summary: List normalized evaluation metrics / 列出规范化的评估指标 / 列出规范化的评估指标
       description: Returns the normalized Cortex metric catalog that maps business-facing
         metric keys to engine-native implementations across DeepEval, EvalScope, and
-        future adapters. / Returns the normalized Cortex metric catalog that maps
-        business-facing metric keys to engine-native implementations across DeepEval,
-        EvalScope, and future adapters.
+        future adapters. / 返回规范化的 Cortex 指标目录，它将面向业务的指标键映射到跨 DeepEval、EvalScope 以及未来提供商的引擎原生实现。
       operationId: listEvalMetrics
       security:
       - BearerAuth: []
@@ -261,8 +252,7 @@ paths:
     post:
       tags:
       - Evaluation
-      summary: Execute a synchronous evaluation run / Execute a synchronous evaluation
-        run
+      summary: Execute a synchronous evaluation run / 同步执行评估运行
       description: Runs a small evaluation workload synchronously. Recommended for
         smoke checks, profile tuning, and low-cardinality datasets; larger workloads
         should use `/v1/eval/jobs`. / Runs a small evaluation workload synchronously.
@@ -496,9 +486,8 @@ paths:
       - Evaluation
       summary: Get a completed evaluation result / 获取评估结果
       description: Returns the completed evaluation result when the async job succeeds,
-        or a 409 job status payload while work is still in progress. / Returns the
-        completed evaluation result when the async job succeeds, or a 409 job status
-        payload while work is still in progress.
+        or a 409 job status payload while work is still in progress. / 返回异步作业成功时完成的评估结果，或在工作仍在进行时返回
+        409 作业状态。
       operationId: getEvalResult
       security:
       - BearerAuth: []
@@ -629,9 +618,9 @@ paths:
     get:
       tags:
       - Knowledge
-      summary: Get dataset metadata and counters / Get dataset metadata and counters
-      description: Return one dataset including audit info, counters, and access policy.
-        / Return one dataset including audit info, counters, and access policy.
+      summary: Get dataset metadata and counters / 获取数据集元数据和计数
+      description: Return one dataset including audit info, counters, and access policy. / 返回一个数据集，包含审计信息、计数和访问策略。
+        / 返回一个数据集，包含审计信息、计数和访问策略。
       operationId: getKnowledgeDataset
       security:
       - BearerAuth: []
@@ -1134,12 +1123,10 @@ paths:
     get:
       tags:
       - Parse
-      summary: List available parse engines / List available parse engines
+      summary: List available parse engines / 列出可用的解析引擎 / 列出可用的解析引擎
       description: Return the registered parser engines, supported source kinds, default
         scene, supported scenes, and the default internal profile that the Parse request
-        compiler will bind for each engine. / Return the registered parser engines,
-        supported source kinds, default scene, supported scenes, and the default internal
-        profile that the Parse request compiler will bind for each engine.
+        compiler will bind for each engine. / 返回已注册的解析器引擎、支持的来源类型、默认场景、支持的场景，以及解析请求编译器将为每个引擎绑定的默认内部配置。
       operationId: listParseEngines
       responses:
         '200':
@@ -1178,9 +1165,8 @@ paths:
       summary: Parse content synchronously / 同步解析内容
       description: Synchronously parse one or more source locators into LLM-ready
         Markdown. The public contract is centered on `sources`, `engine_id`, and optional
-        `scene`. / Synchronously parse one or more source locators into LLM-ready
-        Markdown. The public contract is centered on `sources`, `engine_id`, and optional
-        `scene`.
+        `scene`. / 同步解析一个或多个来源为适用于 LLM 的 Markdown 格式。公共契约主要围绕 `sources`、`engine_id`
+        以及可选的 `scene`。
       operationId: parseContentSync
       requestBody:
         content:
@@ -1243,9 +1229,7 @@ paths:
       summary: Submit an asynchronous parse job / 提交异步解析作业
       description: Queue one async parse job per source using the same unified public
         Parse contract. Add optional `priority` and `webhook` only when job control
-        is needed. / Queue one async parse job per source using the same unified public
-        Parse contract. Add optional `priority` and `webhook` only when job control
-        is needed.
+        is needed. / 使用统一的公开解析契约对每个来源进行队列中的异步解析任务。仅在需要作业控制时，才需添加可选的 `priority` 和 `webhook`。
       operationId: createParseJob
       security:
       - BearerAuth: []
@@ -1334,9 +1318,8 @@ paths:
       - Parse
       summary: Get a completed parse result / 获取解析结果
       description: Poll for the parse result. Returns `409` with job status until
-        the parse completes, then returns the final `ParseResult`. / Poll for the
-        parse result. Returns `409` with job status until the parse completes, then
-        returns the final `ParseResult`.
+        the parse completes, then returns the final `ParseResult`. / 轮询解析结果。在解析完成前返回包含作业状态的
+        `409`，然后返回最终的 `ParseResult`。
       operationId: getParseResult
       security:
       - BearerAuth: []
@@ -1380,10 +1363,8 @@ paths:
       summary: Initiate an upload session / 初始上传会话
       description: Create a signed upload session for a new object. The caller supplies
         file identity plus business metadata, while Cortex infers content type when
-        possible and decides whether multipart is needed. / Create a signed upload
-        session for a new object. The caller supplies file identity plus business
-        metadata, while Cortex infers content type when possible and decides whether
-        multipart is needed.
+        possible and decides whether multipart is needed. / 创建对新对象上传的一个含签字的会话。调用者给出包括身份与业务的详细元数据，此外可能的话，Cortex
+        推断相应的内容种类，进而分析确定到底需要还是不需要多部分的切分操作。
       operationId: createUploadSession
       requestBody:
         content:
@@ -1456,10 +1437,8 @@ paths:
       summary: Upload a small file / 上传小文件
       description: Upload a small file directly through the Cortex API. This endpoint
         is optimized for Swagger UI, local testing, and small files; use upload sessions
-        for large files or production high-throughput transfers. / Upload a small
-        file directly through the Cortex API. This endpoint is optimized for Swagger
-        UI, local testing, and small files; use upload sessions for large files or
-        production high-throughput transfers.
+        for large files or production high-throughput transfers. / 利用原生的 Cortex API
+        接口去立刻发起传比较小文件的动作。这里的配置经过针对如从 Swagger 的界面测试、局部电脑环境操作与发送量不大等情景特化处理过；如果是体积庞大文件或是实战的生产时高速大数据传递还请您使用分多次发过去的方式处理。
       operationId: uploadSmallFile
       requestBody:
         content:
@@ -1490,10 +1469,7 @@ paths:
       description: Finalize a single-part or multipart upload session after the object-store
         transfer has succeeded. This step is required because Cortex must verify the
         uploaded object, recover provider metadata, and commit the final object/version
-        records. / Finalize a single-part or multipart upload session after the object-store
-        transfer has succeeded. This step is required because Cortex must verify the
-        uploaded object, recover provider metadata, and commit the final object/version
-        records.
+        records. / 结束单一或多部分的上传会话，一旦完成向对象存储服务器的数据传输。这是必需的一步，因为 Cortex 必须验证所上传的对象，恢复供应商的元数据，并最终提交文件/版本的更改。
       operationId: completeUploadSession
       security:
       - BearerAuth: []
@@ -1518,14 +1494,14 @@ paths:
                 when no multipart parts were issued.
             examples:
               single_part_complete:
-                summary: Complete a single-part upload / 完成单部分上传
+                summary: Complete a single-part upload
                 description: Use this when the upload session returned `single_part`
                   instead of `multipart_parts`.
                 value:
                   parts: []
                   checksum_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
               multipart_complete:
-                summary: Complete a multipart upload / 完成多部分上传
+                summary: Complete a multipart upload
                 description: Send the uploaded part numbers and provider ETags exactly
                   as returned by the object store.
                 value:
@@ -1557,9 +1533,7 @@ paths:
       tags:
       - Storage
       summary: Get object metadata / 获取对象元数据
-      description: Return the stored metadata, current version reference, and access
-        policy for one object. / Return the stored metadata, current version reference,
-        and access policy for one object.
+      description: Return the stored metadata, current version reference, and access policy for one object. / 返回存储的元数据、当前版本引用以及一个对象的访问策略。 / 返回存储的元数据、当前版本引用以及一个对象的访问策略。
       operationId: getStorageObject
       security:
       - BearerAuth: []
@@ -1592,8 +1566,8 @@ paths:
       tags:
       - Storage
       summary: Create a download URL for an object / 创建对象下载链接
-      description: Create a time-limited signed download URL for an object. / Create
-        a time-limited signed download URL for an object.
+      description: Create a time-limited signed download URL for an object. / 创建具有限时的对象带签名的下载 URL。 / 创建具有限时的对象带签名的下载
+        URL。
       operationId: createDownloadUrl
       security:
       - BearerAuth: []
@@ -1652,9 +1626,7 @@ paths:
       - Synthesis
       summary: List synthesis engines / 列出合成引擎
       description: Returns the currently registered synthesis engines, supported synthesis
-        types, supported source kinds, and output format hints. / Returns the currently
-        registered synthesis engines, supported synthesis types, supported source
-        kinds, and output format hints.
+        types, supported source kinds, and output format hints. / 提出当时有成功加入那些具有建构用途模块的相关资料，包括它们所可以去运行的方法及支持那些最初用来喂材料的形式还有给那些想要处理格式的一些暗示或方向。
       operationId: listSynthesisEngines
       responses:
         '200':
@@ -1672,8 +1644,7 @@ paths:
       summary: Execute a synchronous synthesis run / 同步执行合成运行
       description: Runs a small synthesis workload synchronously. Recommended for
         preview generation, quality-gate tuning, and low-cardinality source samples.
-        / Runs a small synthesis workload synchronously. Recommended for preview generation,
-        quality-gate tuning, and low-cardinality source samples.
+        / 使用不阻断其它同时去处理某个少量需求的作业方案。非常推荐把它放在象是用来提供快速参考检查或是去做确认标准把关或者那类所须运算源数目不大的场合。
       operationId: runSynthesisSync
       requestBody:
         content:
@@ -1771,8 +1742,7 @@ paths:
       - Synthesis
       summary: Submit an asynchronous synthesis job / 提交异步合成作业
       description: Queues a longer-running synthesis workload and returns a Cortex
-        job handle for polling and result retrieval. / Queues a longer-running synthesis
-        workload and returns a Cortex job handle for polling and result retrieval.
+        job handle for polling and result retrieval. / 能让那种可能要消耗较长光阴的工作放入队伍排程并且给出用来于后续追问其状况及获取最后的完成结论的编号。
       operationId: createSynthesisJob
       security:
       - BearerAuth: []
@@ -1897,10 +1867,8 @@ paths:
       tags:
       - Synthesis
       summary: Get a completed synthesis result / 获取合成结果
-      description: Returns the completed synthesis result when the async job succeeds,
-        or a 409 job status payload while work is still in progress. / Returns the
-        completed synthesis result when the async job succeeds, or a 409 job status
-        payload while work is still in progress.
+      description: Returns the completed synthesis result when the async job succeeds, or a 409 job status payload while work is still in progress. / 返回异步作业成功时完成的合成结果，或在工作仍在进行时返回 409 作业状态。 / 返回异步作业成功时完成的合成结果，或在工作仍在进行时返回
+        409 作业状态。
       operationId: getSynthesisResult
       security:
       - BearerAuth: []

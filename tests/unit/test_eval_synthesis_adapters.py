@@ -248,9 +248,7 @@ def _install_fake_openai(monkeypatch: pytest.MonkeyPatch) -> type:
             self._owner.requests.append(kwargs)
             return types.SimpleNamespace(
                 choices=[
-                    types.SimpleNamespace(
-                        message=types.SimpleNamespace(content='{"score": 1}')
-                    )
+                    types.SimpleNamespace(message=types.SimpleNamespace(content='{"score": 1}'))
                 ]
             )
 
@@ -263,9 +261,7 @@ def _install_fake_openai(monkeypatch: pytest.MonkeyPatch) -> type:
             self._owner.loops.append(asyncio.get_running_loop())
             return types.SimpleNamespace(
                 choices=[
-                    types.SimpleNamespace(
-                        message=types.SimpleNamespace(content='{"score": 1}')
-                    )
+                    types.SimpleNamespace(message=types.SimpleNamespace(content='{"score": 1}'))
                 ]
             )
 

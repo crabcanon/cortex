@@ -140,9 +140,7 @@ PARSE_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
                 "be parsed by the cloud document parser."
             ),
             "value": {
-                "sources": [
-                    "cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf"
-                ],
+                "sources": ["cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf"],
                 "engine_id": "llama_parse",
                 "scene": "document_fidelity",
                 "priority": 5,
@@ -378,9 +376,7 @@ ADD_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
                         "metadata": {
                             "source": "storage",
                             "bucket": "cortex-local",
-                            "object_key": (
-                                "tenant_demo/obj_a3da967e3ca446cab3631bb7/README.md"
-                            ),
+                            "object_key": ("tenant_demo/obj_a3da967e3ca446cab3631bb7/README.md"),
                         },
                     }
                 ],
@@ -861,9 +857,7 @@ SYNTHESIS_SYNC_REQUEST_EXAMPLES: dict[str, Example] = cast(
                 "config": {
                     "sample_count": 5,
                     "anonymize_pii": True,
-                    "quality_gates": [
-                        {"metric_key": "quality.row_count_match", "threshold": 1.0}
-                    ],
+                    "quality_gates": [{"metric_key": "quality.row_count_match", "threshold": 1.0}],
                 },
                 "output": {"output_format": "json", "include_preview": True},
             },

@@ -204,8 +204,7 @@ PRESETS: tuple[ParseScenePreset, ...] = (
         scene_id="deep_web",
         profile_ref="crawl4ai_deep_web",
         description=(
-            "High-intensity Crawl4AI preset with artifacts, full-page scan, "
-            "and diagnostics."
+            "High-intensity Crawl4AI preset with artifacts, full-page scan, and diagnostics."
         ),
         source_kinds=(ParseInputKind.URL, ParseInputKind.URI, ParseInputKind.OBJECT),
         timeout_seconds=90,
@@ -345,8 +344,7 @@ class ParseRequestCompiler:
         self._preset_values = presets or PRESETS
         self._default_scene_by_engine = default_scene_by_engine or DEFAULT_SCENE_BY_ENGINE
         self._presets = {
-            (preset.engine_key, preset.scene_id): preset
-            for preset in self._preset_values
+            (preset.engine_key, preset.scene_id): preset for preset in self._preset_values
         }
 
     def describe_engines(self, descriptors: ParseEngineList) -> ParseEngineList:

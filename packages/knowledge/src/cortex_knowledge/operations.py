@@ -531,11 +531,7 @@ class KnowledgeSearchService:
             dumped = value.model_dump(mode="json")
             return dumped if isinstance(dumped, dict) else {}
         if hasattr(value, "__dict__"):
-            return {
-                key: val
-                for key, val in vars(value).items()
-                if not key.startswith("_")
-            }
+            return {key: val for key, val in vars(value).items() if not key.startswith("_")}
         return {}
 
 

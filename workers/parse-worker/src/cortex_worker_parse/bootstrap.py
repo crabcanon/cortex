@@ -126,9 +126,7 @@ class ParseWorker:
         except TimeoutError:
             error = CortexError(
                 code="parse_worker_timeout",
-                detail=(
-                    f"Parse job exceeded timeout budget of {request.timeout_seconds} seconds."
-                ),
+                detail=(f"Parse job exceeded timeout budget of {request.timeout_seconds} seconds."),
                 status_code=504,
             )
             return await self._record_failure(job.job_id, error)

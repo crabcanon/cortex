@@ -1,0 +1,3 @@
+## 2025-02-13 - [Fix sequence tracking N+1 memory loading]
+**Learning:** [The codebase previously instantiated massive sequences of ORM models into memory by using `.list_for_job(job_id, limit=1000)` merely to find the max sequence number and calculate `next_sequence = max + 1`. This leads to rapid memory spikes, poor latency, and unnecessary network overhead between the application layer and database for jobs that emit many events.]
+**Action:** [Use direct database SQL aggregation: `select(func.coalesce(func.max(Model.field), 0))` instead of loading records into memory array. The application should provide repository methods like `get_max_sequence_no` for this explicit purpose.]

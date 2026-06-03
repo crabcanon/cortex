@@ -175,6 +175,7 @@ def _build_parse_compiler(
     profile_ref: str = "test_profile",
     retry_attempts: int = 3,
     timeout_seconds: int = 45,
+    job_timeout_seconds: int | None = None,
 ) -> ParseRequestCompiler:
     presets = tuple(
         ParseScenePreset(
@@ -188,6 +189,7 @@ def _build_parse_compiler(
                 ParseInputKind.OBJECT,
             ),
             timeout_seconds=timeout_seconds,
+            job_timeout_seconds=job_timeout_seconds,
             crawl={"retry_policy": {"max_attempts": retry_attempts}},
         )
         for engine_key in engine_keys
@@ -717,6 +719,63 @@ def test_parse_worker_timeout_fails_without_retry(monkeypatch: pytest.MonkeyPatc
     assert failed_status.json()["status"] == "failed"
     assert failed_status.json()["error"]["code"] == "parse_worker_timeout"
     assert events_response.json()[-1]["event_type"] == "parse.job.failed"
+
+
+def test_parse_worker_uses_async_job_timeout_budget(monkeypatch: pytest.MonkeyPatch) -> None:
+    case_dir = _case_dir("api-parse-async-timeout")
+    db_path = case_dir / "cortex.db"
+    profiles_dir = case_dir / "profiles"
+    profiles_dir.mkdir(parents=True, exist_ok=True)
+    (profiles_dir / "test_profile.yaml").write_text(
+        "\n".join(
+            [
+                "profile_ref: test_profile",
+                "display_name: Test Profile",
+                "preferred_engine_key: slow_engine",
+                "allowed_engines: [slow_engine]",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    db_migrate_main(["upgrade", "head", "--db-url", _sync_sqlite_url(db_path)])
+    headers = {
+        "Authorization": _dev_bearer_token(
+            tenant_id="tenant_parse_async_timeout",
+            actor_id="alice",
+            scopes=["parse:read", "parse:write", "jobs:read"],
+        )
+    }
+
+    with _build_client(monkeypatch, db_path, profiles_dir) as client:
+        app = cast(FastAPI, client.app)
+        app.state.parse_request_compiler = _build_parse_compiler(
+            "slow_engine",
+            retry_attempts=1,
+            timeout_seconds=1,
+            job_timeout_seconds=3,
+        )
+        accepted_response = client.post(
+            "/v1/parse/jobs",
+            headers=headers,
+            json={
+                "sources": ["https://example.com/slow-but-valid"],
+                "engine_id": "slow_engine",
+            },
+        )
+        job_id = accepted_response.json()["jobs"][0]["job_id"]
+        worker_status = asyncio.run(
+            _run_worker_once_with_engine(
+                db_path,
+                profiles_dir,
+                _SlowParseEngine(),
+                worker_id="worker-async-timeout",
+            )
+        )
+        completed_result = client.get(f"/v1/parse/jobs/{job_id}/result", headers=headers)
+
+    assert worker_status == "succeeded"
+    assert completed_result.status_code == 200
+    assert completed_result.json()["diagnostics"]["selected_engine_key"] == "slow_engine"
 
 
 def test_parse_worker_recovers_stale_lease(monkeypatch: pytest.MonkeyPatch) -> None:

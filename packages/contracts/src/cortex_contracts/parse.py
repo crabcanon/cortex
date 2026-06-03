@@ -640,8 +640,11 @@ class ParseSyncRequest(BaseModel):
     timeout_seconds: int = Field(
         default=45,
         ge=1,
-        le=300,
-        description="End-to-end parse timeout in seconds. Best default: 45.",
+        le=3600,
+        description=(
+            "End-to-end parse timeout in seconds. Best default: 45 for synchronous "
+            "requests; asynchronous document jobs may use a larger worker budget."
+        ),
         examples=[45],
     )
 

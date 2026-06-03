@@ -45,6 +45,7 @@ class ParseScenePreset:
     description: str
     source_kinds: tuple[ParseInputKind, ...]
     timeout_seconds: int = 45
+    job_timeout_seconds: int | None = None
     crawl: dict[str, Any] = field(default_factory=dict)
     normalization: dict[str, Any] = field(default_factory=dict)
     output: dict[str, Any] = field(default_factory=dict)
@@ -209,6 +210,7 @@ PRESETS: tuple[ParseScenePreset, ...] = (
         ),
         source_kinds=(ParseInputKind.URL, ParseInputKind.URI, ParseInputKind.OBJECT),
         timeout_seconds=90,
+        job_timeout_seconds=300,
         crawl={
             **_default_crawl_options(),
             "browser_profile": {
@@ -240,6 +242,7 @@ PRESETS: tuple[ParseScenePreset, ...] = (
         description="Interactive Crawl4AI preset optimized for authenticated pages.",
         source_kinds=(ParseInputKind.URL, ParseInputKind.URI, ParseInputKind.OBJECT),
         timeout_seconds=90,
+        job_timeout_seconds=300,
         crawl={
             **_default_crawl_options(),
             "browser_profile": {
@@ -293,6 +296,7 @@ PRESETS: tuple[ParseScenePreset, ...] = (
         description="High-fidelity cloud document parsing for complex files.",
         source_kinds=(ParseInputKind.URL, ParseInputKind.URI, ParseInputKind.OBJECT),
         timeout_seconds=90,
+        job_timeout_seconds=900,
         normalization=_default_normalization_options(),
         output=_document_output_options(),
         persistence=_default_persistence_options(),
@@ -304,6 +308,7 @@ PRESETS: tuple[ParseScenePreset, ...] = (
         description="Lightweight local conversion for text-like documents.",
         source_kinds=(ParseInputKind.URL, ParseInputKind.URI, ParseInputKind.OBJECT),
         timeout_seconds=30,
+        job_timeout_seconds=300,
         normalization=_default_normalization_options(),
         output=_document_output_options(),
         persistence=_default_persistence_options(),
@@ -315,6 +320,7 @@ PRESETS: tuple[ParseScenePreset, ...] = (
         description="Structured local document conversion with OCR-friendly defaults.",
         source_kinds=(ParseInputKind.URL, ParseInputKind.URI, ParseInputKind.OBJECT),
         timeout_seconds=90,
+        job_timeout_seconds=900,
         normalization=_default_normalization_options(),
         output=_document_output_options(),
         persistence=_default_persistence_options(),
@@ -423,8 +429,18 @@ class ParseRequestCompiler:
             source_input,
             resolved_source=resolved_source,
         )
+        preset = self._preset_for(
+            engine_key=sync_request.parser.preferred_engine_key or request.engine_id,
+            scene_id=request.scene,
+            source=sync_request.source,
+        )
+        timeout_seconds = max(
+            sync_request.timeout_seconds,
+            preset.job_timeout_seconds or sync_request.timeout_seconds,
+        )
         return ParseJobRequest(
-            **sync_request.model_dump(mode="json"),
+            **sync_request.model_dump(mode="json", exclude={"timeout_seconds"}),
+            timeout_seconds=timeout_seconds,
             priority=request.priority,
             webhook=request.webhook,
         )

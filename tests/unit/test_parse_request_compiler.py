@@ -10,6 +10,7 @@ from cortex_contracts import (
     ParseEngineList,
     ParseEngineStatus,
     ParseInputKind,
+    ParseJobSubmitRequest,
     ParseSource,
     ParseSubmitRequest,
 )
@@ -121,6 +122,25 @@ def test_compiler_preserves_resolved_object_sources_and_annotates_engine_catalog
     assert described.engines[0].default_scene_id == "document_ai"
     assert described.engines[0].supported_scene_ids == ["document_ai"]
     assert described.engines[0].default_profile_ref == "docling_document_ai"
+
+
+def test_compiler_uses_longer_document_timeout_for_async_jobs() -> None:
+    compiler = ParseRequestCompiler({"docling"})
+    sync_request = ParseSubmitRequest(
+        sources=["https://example.com/manual.pdf"],
+        engine_id="docling",
+    )
+    job_request = ParseJobSubmitRequest(
+        sources=["https://example.com/manual.pdf"],
+        engine_id="docling",
+    )
+    source_input = compiler.source_input_from_locator(sync_request.sources[0])
+
+    compiled_sync = compiler.compile_sync(sync_request, source_input)
+    compiled_job = compiler.compile_job(job_request, source_input)
+
+    assert compiled_sync.timeout_seconds == 90
+    assert compiled_job.timeout_seconds == 900
 
 
 def test_compiler_auto_selects_available_web_engine_and_fallbacks() -> None:

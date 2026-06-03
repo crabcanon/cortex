@@ -19,6 +19,9 @@ from cortex_storage import StorageService
 
 from .storage import build_resource_context, get_object_record
 
+SYNC_OBJECT_DOWNLOAD_TTL_SECONDS = 900
+ASYNC_OBJECT_DOWNLOAD_TTL_SECONDS = 3600
+
 
 async def compile_parse_sync_requests(
     *,
@@ -40,6 +43,7 @@ async def compile_parse_sync_requests(
             storage_service=storage_service,
             uow=uow,
             request_id=request_id,
+            download_ttl_seconds=SYNC_OBJECT_DOWNLOAD_TTL_SECONDS,
         )
         compiled.append(
             compiler.compile_sync(
@@ -71,6 +75,7 @@ async def compile_parse_job_requests(
             storage_service=storage_service,
             uow=uow,
             request_id=request_id,
+            download_ttl_seconds=ASYNC_OBJECT_DOWNLOAD_TTL_SECONDS,
         )
         compiled.append(
             compiler.compile_job(
@@ -90,6 +95,7 @@ async def _resolve_source(
     storage_service: StorageService,
     uow: CortexUnitOfWork,
     request_id: str | None,
+    download_ttl_seconds: int,
 ) -> ParseSource | None:
     if not source_input.object_id:
         return None
@@ -105,7 +111,7 @@ async def _resolve_source(
     signed = await storage_service.create_download_url(
         uow=uow,
         object_id=record.object_id,
-        ttl_seconds=900,
+        ttl_seconds=download_ttl_seconds,
         disposition=DownloadDisposition.INLINE,
     )
     locator = signed.url

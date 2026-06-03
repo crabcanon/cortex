@@ -858,3 +858,77 @@ Goal: fix TensorZero Cortex graph HTML artifacts that were generated successfull
 | --- | --- | --- | --- | --- | --- | --- |
 | CTX-20260509-211 | 2026-05-09 17:45:00 +08:00 | P0 | examples-knowledge | Change TensorZero Cortex graph visualization to resolve the run `dataset_key`, apply the same Cortex runtime config inside the worker container, and render Cognee's dataset-scoped graph via multi-user aggregation | CTX-20260509-210 | done |
 | CTX-20260509-212 | 2026-05-09 17:45:00 +08:00 | P1 | docs-validation | Document why local Kuzu files appear under Cognee `system/databases/{user}/{dataset}.pkl`, add the explicit `--dataset-key` regeneration flow, and run focused validation | CTX-20260509-211 | done |
+
+### Batch 2026-05-12 19:10:00 +08:00 | Phase BM Build And Production Release Capability
+
+Goal: add a repeatable build and release path for Cortex API, workers, heavy runtime images, docs, and Docker Compose production deployments.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260512-213 | 2026-05-12 19:10:00 +08:00 | P0 | ci-release | Add GitHub Actions workflows for Docker multi-target image publication and docs build verification | CTX-20260509-212 | done |
+| CTX-20260512-214 | 2026-05-12 19:10:00 +08:00 | P0 | deployment-scripts | Add cross-platform scripts to build/push Cortex images and deploy `compose.prod.yaml` with migration plus health checks | CTX-20260512-213 | done |
+| CTX-20260512-215 | 2026-05-12 19:10:00 +08:00 | P1 | release-docs | Document GHCR, server Compose, Railway, Vercel docs, rollback, and release checklists in a production runbook | CTX-20260512-214 | done |
+| CTX-20260512-216 | 2026-05-12 19:10:00 +08:00 | P1 | config-validation | Complete production env image variables and validate workflow/compose YAML plus shell syntax where available | CTX-20260512-215 | done |
+| CTX-20260512-217 | 2026-05-12 19:35:00 +08:00 | P1 | deployment-scripts | Promote Bash as the standard deployment path by adding a unified `release.sh` entrypoint and updating release docs to Bash-first commands | CTX-20260512-214 | done |
+### Batch 2026-05-27 15:30:00 +08:00 | Phase BN Evaluation Perf OpenAI-Compatible Benchmark Contract
+
+Goal: make Evaluation Perf usable for caller-owned OpenAI-compatible APIs, normalize the EvalScope stress-test metric set, and persist reports for both sync and async runs.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260527-218 | 2026-05-27 15:30:00 +08:00 | P0 | contracts-api | Add per-run OpenAI-compatible benchmark credential fields to `EvalTarget` and update Swagger examples for `/v1/eval/sync` and `/v1/eval/jobs` | CTX-20260512-217 | done |
+| CTX-20260527-219 | 2026-05-27 15:30:00 +08:00 | P0 | evaluation-perf | Expand the default perf metric catalog to EvalScope General, Latency, Tokens, compatibility aliases, and percentile metrics | CTX-20260527-218 | done |
+| CTX-20260527-220 | 2026-05-27 15:30:00 +08:00 | P0 | evaluation-runtime | Forward `target.api_key` to EvalScope perf payloads and normalize nested EvalScope stress-test result tables into Cortex `EvalMetricResult[]` | CTX-20260527-219 | done |
+| CTX-20260527-221 | 2026-05-27 15:30:00 +08:00 | P0 | persistence | Persist synchronous Evaluation runs as `jobs` / `eval_runs` / `eval_run_metrics`, store `evaluation_report` in S3, and return `artifacts[].uri` | CTX-20260527-220 | done |
+| CTX-20260527-222 | 2026-05-27 15:30:00 +08:00 | P1 | docs-validation | Update specs, README, docs OpenAPI examples, and add focused unit/integration regression tests | CTX-20260527-221 | done |
+| CTX-20260527-223 | 2026-05-27 15:55:00 +08:00 | P0 | evaluation-runtime | Add the missing EvalScope self-hosted service server dependency (`uvicorn`) to evaluation runtime extras so async Perf jobs can start the embedded EvalScope service in worker images | CTX-20260527-220 | done |
+| CTX-20260527-224 | 2026-05-27 16:15:00 +08:00 | P0 | evaluation-runtime | Add the missing EvalScope self-hosted FastAPI and SSE dependencies to evaluation runtime extras after async Perf jobs reported missing service modules | CTX-20260527-223 | done |
+| CTX-20260527-225 | 2026-05-27 16:35:00 +08:00 | P0 | evaluation-runtime | Update the EvalScope HTTP adapter to call the current blocking invoke endpoints (`/api/v1/perf/invoke`, `/api/v1/eval/invoke`) instead of removed legacy endpoints | CTX-20260527-224 | done |
+| CTX-20260527-226 | 2026-05-27 16:50:00 +08:00 | P0 | evaluation-runtime | Propagate Cortex `job_id` as `EvalScope-Task-Id` for sync and async Evaluation runs so EvalScope self-hosted invoke requests satisfy task correlation requirements | CTX-20260527-225 | done |
+| CTX-20260527-227 | 2026-05-27 17:25:00 +08:00 | P0 | docker-runtime | Diagnose stale Evaluation runtime containers caused by rebuilding a different Compose project name than the one currently serving jobs, and document verification commands | CTX-20260527-226 | done |
+| CTX-20260528-228 | 2026-05-28 09:15:00 +08:00 | P0 | evaluation-runtime | Keep EvalScope task correlation fields as HTTP header-only control data and filter them from the JSON body sent to `PerfArguments` | CTX-20260527-226 | done |
+| CTX-20260528-229 | 2026-05-28 09:45:00 +08:00 | P0 | evaluation-artifacts | Upload EvalScope native output files from `/app/outputs/{job_id}/perf` to S3-compatible Storage with preserved relative paths, then remove the local output directory after successful persistence | CTX-20260528-228 | done |
+| CTX-20260528-230 | 2026-05-28 09:45:00 +08:00 | P1 | evaluation-response | Stop emitting placeholder Perf metrics when EvalScope returns only file-backed reports, so users rely on S3 report artifacts instead of noisy `Metric was not present` rows | CTX-20260528-229 | done |
+
+### Batch 2026-05-28 20:42:16 +08:00 | Phase BO Evaluation Agentic Submission Guardrails
+
+Goal: turn pre-worker Evaluation agentic submission failures into clear API errors and keep automatic engine routing capability-aware.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260528-231 | 2026-05-28 20:42:16 +08:00 | P0 | evaluation-api | Validate dataset-backed Evaluation inputs before creating `jobs` / `eval_runs`, returning a structured 404 instead of a database foreign-key 500 when `input.dataset_id` is missing or inaccessible | CTX-20260528-230 | done |
+| CTX-20260528-232 | 2026-05-28 20:42:16 +08:00 | P1 | evaluation-routing | Make Evaluation engine selection filter by `supported_eval_types`, so `engine_id=auto` and explicit engines do not route `agentic` workloads to incompatible adapters | CTX-20260528-231 | done |
+| CTX-20260528-233 | 2026-05-28 20:42:16 +08:00 | P1 | tests-validation | Add regression coverage for missing dataset submission and unsupported engine/eval-type routing, then rerun focused Evaluation tests and lint | CTX-20260528-232 | done |
+| CTX-20260528-234 | 2026-05-28 23:00:53 +08:00 | P0 | evaluation-perf | Detect EvalScope short-prompt built-in datasets such as `openqa` when `min_prompt_length` is too strict, and fail with actionable Cortex validation instead of EvalScope `Dataset is empty` subprocess errors | CTX-20260528-230 | done |
+| CTX-20260528-235 | 2026-05-28 23:00:53 +08:00 | P0 | security | Extend Evaluation job error redaction to JSON-style `api_key` fields and OpenRouter `sk-or-v1-*` keys so provider secrets are not persisted in job errors | CTX-20260528-234 | done |
+| CTX-20260528-236 | 2026-05-28 23:24:40 +08:00 | P1 | swagger-docs | Update Evaluation Perf Swagger examples to use the long-prompt `longalpaca` dataset with OpenRouter `deepseek/deepseek-v4-flash` and explicit token/prompt-length options | CTX-20260528-234 | done |
+
+### Batch 2026-05-28 23:43:00 +08:00 | Phase BP Synthesis DeepEval OpenAI-Compatible Stability
+
+Goal: fix DeepEval Synthesizer RAG / Agent golden generation failures caused by native-model cost aggregation receiving `None` when using OpenAI-compatible providers.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260528-237 | 2026-05-28 23:43:00 +08:00 | P0 | synthesis-runtime | Route DeepEval Synthesizer through a Cortex OpenAI-compatible custom model wrapper when provider base URL and API key are configured, avoiding DeepEval native cost `+= None` failures | CTX-20260528-236 | done |
+| CTX-20260528-238 | 2026-05-28 23:43:00 +08:00 | P1 | synthesis-runtime | Make `sample_count` an explicit generation budget for DeepEval contexts, derive safe per-context limits, and trim over-generated previews to the requested sample count | CTX-20260528-237 | done |
+| CTX-20260528-239 | 2026-05-28 23:43:00 +08:00 | P1 | tests-validation | Add unit regressions for the OpenAI-compatible Synthesizer wrapper, multi-document sample limiting, and focused synthesis API worker flow | CTX-20260528-238 | done |
+
+### Batch 2026-05-29 14:20:00 +08:00 | Phase BQ Synthesis Conversation Golden Guardrails
+
+Goal: fix DeepEval conversation golden generation that over-produced scenarios when `max_contexts_per_case` was large and then failed with schema parsing errors.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260529-240 | 2026-05-29 14:20:00 +08:00 | P0 | synthesis-runtime | Stop mapping `max_contexts_per_case` to DeepEval `max_goldens_per_context`; keep `sample_count` as the only output-count budget for single-turn and conversation goldens | CTX-20260528-238 | done |
+| CTX-20260529-241 | 2026-05-29 14:20:00 +08:00 | P0 | synthesis-runtime | Harden the OpenAI-compatible DeepEval Synthesizer wrapper with JSON response format and schema fallback parsing so DeepEval receives Pydantic objects instead of raw strings | CTX-20260529-240 | done |
+| CTX-20260529-242 | 2026-05-29 14:20:00 +08:00 | P1 | tests-validation | Add conversation golden regressions for `sample_count=3`, `max_contexts_per_case=100`, and schema fallback coercion, then run focused unit/integration validation | CTX-20260529-241 | done |
+
+### Batch 2026-05-29 17:25:00 +08:00 | Phase BR Synthesis-To-Evaluation Object Hydration
+
+Goal: allow Evaluation jobs to consume Synthesis output objects directly as object-backed test-case inputs.
+
+| Task ID | Added At | Priority | Area | Task | Depends On | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| CTX-20260529-243 | 2026-05-29 17:25:00 +08:00 | P0 | evaluation-worker | Extend Evaluation Worker hydration to recognize Cortex Synthesis output objects and extract `source_summary.preview_rows` into `EvalTestCase[]` | CTX-20260529-242 | done |
+| CTX-20260529-244 | 2026-05-29 17:25:00 +08:00 | P0 | evaluation-mapping | Add synthesis golden field aliases such as `scenario`, `expected_outcome`, and nested conversation fields to the eval test-case mapper | CTX-20260529-243 | done |
+| CTX-20260529-245 | 2026-05-29 17:25:00 +08:00 | P1 | tests-validation | Add regression coverage for synthesis-output-object-backed Evaluation jobs and run focused worker/API validation | CTX-20260529-244 | done |

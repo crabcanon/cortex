@@ -58,7 +58,7 @@ SPEC_PATH = Path("specs/cortex-api.yaml")
 SCHEMA_MODELS: dict[str, type] = {
     "HealthResponse": HealthResponse,
     "JobAccepted": JobAccepted,
-    "JobStatus": JobStatusDetail,
+    "JobStatusDetail": JobStatusDetail,
     "LocalDevTokenIssueRequest": LocalDevTokenIssueRequest,
     "LocalDevTokenIssueResponse": LocalDevTokenIssueResponse,
     "EvalEngineList": EvalEngineList,

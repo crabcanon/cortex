@@ -1664,6 +1664,25 @@ Knowledge / Cognee 模型槽位边界：
 - `Jaeger` 作为 trace 查询面，`Prometheus` 作为 metric 存储与规则引擎，`Grafana` 负责统一可视化与发布观测。
 - 蓝绿 / 金丝雀环境共享同一套 Dashboard 模板，但通过 `deployment.environment.name` 与 `cortex.deployment.ring` 分组展示。
 
+### 14.5 构建与上线流水线
+
+Cortex 的生产发布按“多 target 镜像 + 独立服务扩缩 + 显式迁移 + 健康检查”设计：
+
+- `.github/workflows/ci.yaml`：Python workspace 质量门禁与可选 Docker runtime-stack 集成测试。
+- `.github/workflows/docker-publish.yaml`：按 Dockerfile target 发布 `cortex-api`、轻量 workers、`parse-worker-docling`、`evaluation-worker-runtime`、`synthesis-worker-runtime` 到 GHCR。
+- `.github/workflows/docs-build.yaml`：验证官方文档站点的类型检查和生产构建。
+- `scripts/deploy/build-images.ps1|sh`：本地或自托管 runner 构建/推送镜像，支持 `--heavy` / `-Heavy` 纳入重型 runtime。
+- `scripts/deploy/deploy-compose.ps1|sh`：生产 Docker 主机上执行 Compose 配置校验、镜像拉取、数据库迁移、服务启动和 `/v1/health/live` 等待。
+- `deploy/README.md`：作为正式上线 Runbook，覆盖 GHCR、Compose、Railway、Vercel Docs、回滚与发布检查清单。
+
+部署原则：
+
+1. API 镜像保持在线入口能力，不把 Docling、DeepEval、SDV 等重依赖默认塞入 API。
+2. 重型能力使用独立 worker pool，通过 engine key、job type、Compose profile 或云平台 Service 拆分。
+3. 生产发布固定 git SHA tag，不建议长期依赖 `latest`。
+4. 数据库 migration 在 `up` 之前显式执行；回滚镜像时默认不回滚 schema，除非有明确 migration 修复方案。
+5. 生产配置通过 `.env.prod` 与 `configs/cortex.runtime.prod.yaml` 协同完成，密钥不进入镜像。
+
 ## 15. 结论
 
 Cortex 的关键升级不是“又支持了几个 parser”，而是把 Parse 抽象成一个真正的平台能力：
@@ -2144,3 +2163,15 @@ Swagger 实测暴露出一个重要边界：API 进程可以把 `docling` 显示
 - API catalog 的 active/degraded 表示“控制面可见与可路由”，不等同于 API 进程一定能同步执行重 SDK。
 - 需要 Docling 的生产环境必须部署独立 `parse-worker-docling` 或等价 worker pool，并配置 engine affinity。
 - 同一队列可以容纳不同 engine job，但 worker 领取必须按能力过滤，避免轻量 worker 消耗重型任务的重试预算。
+## 2026-05-27 Evaluation Perf Contract Update
+
+Evaluation Perf is now treated as a first-class OpenAI-compatible benchmark workflow:
+
+- `/v1/eval/sync` and `/v1/eval/jobs` accept `target.api_key`, `target.api_key_header`, and `target.api_key_prefix` for per-run benchmark credentials. The default header contract is `Authorization: Bearer <api_key>`.
+- `target.protocol=openai_compatible` is normalized to EvalScope `api=openai`, and `target.endpoint_url` is forwarded as EvalScope `url`.
+- Runtime examples omit explicit `metrics` for perf. When `eval_type=perf`, Cortex expands the request to the standard EvalScope stress-test metric set automatically.
+- Standard perf metrics include General (`test_duration_seconds`, `concurrency`, `request_rate`, `total_requests`, `success_requests`, `failed_requests`, `request_throughput`), Latency (`avg_latency_seconds`, `ttft_ms`, `tpot_ms`, `itl_ms`), Tokens (`avg_input_tokens`, `avg_output_tokens`, `output_throughput_tokens_per_second`, `total_throughput_tokens_per_second`), compatibility aliases (`qps`, `p50/p90/p99_latency`, `ttft`, `output_tokens_per_second`), and percentile rows for P1/P5/P10/P25/P50/P66/P75/P80/P90/P95/P98/P99 across latency, TTFT, ITL, TPOT, input/output tokens, and throughput.
+- EvalScope result normalization accepts nested tables, list rows, direct `metrics` maps, and `Total / Success / Failed` strings. When the service returns file-backed reports without inline metric values, Cortex leaves `EvalRunResult.metrics` empty instead of emitting placeholder rows.
+- Synchronous and asynchronous evaluation runs both create `jobs`, `eval_runs`, and `eval_run_metrics` records. Both paths persist a canonical `evaluation_report` JSON object to S3-compatible Storage when `output.persist_report_object=true`.
+- API responses include `artifacts[].label=evaluation_report`, `artifacts[].object_id`, and `artifacts[].uri=s3://bucket/key`. EvalScope native files under `/app/outputs/{job_id}/perf` are uploaded as `evalscope_artifact` objects under `evaluation/{job_id}/evalscope/perf/{relative_path}` and then removed from the worker filesystem. `eval_runs.report_object_id` stores the relational pointer to the canonical report object.
+- Inline `target.api_key` is redacted from `eval_runs.target_ref`, sync job audit payloads, result summaries, and error messages. Async jobs still need the raw key inside `jobs.request_json` until the worker executes; production deployments should prefer `target.auth_ref` once a secret-manager adapter is introduced.

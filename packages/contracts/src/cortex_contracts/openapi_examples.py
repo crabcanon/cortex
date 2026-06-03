@@ -701,24 +701,31 @@ EVAL_SYNC_REQUEST_EXAMPLES: dict[str, Example] = cast(
         "evalscope_perf_sync": {
             "summary": "EvalScope perf sync / EvalScope 性能同步评测",
             "description": (
-                "Small performance smoke request routed to EvalScope. In local Docker, the "
-                "target can point at the Cortex readiness endpoint."
+                "Long-prompt OpenAI-compatible performance request routed to EvalScope. "
+                "Replace `api_key` with a real OpenRouter or compatible provider key."
             ),
             "value": {
-                "name": "swagger-perf-smoke",
+                "name": "swagger-perf-job",
                 "eval_type": "perf",
                 "engine_id": "evalscope",
-                "input": {"type": "builtin_dataset", "builtin_dataset_key": "openqa"},
+                "input": {"type": "builtin_dataset", "builtin_dataset_key": "longalpaca"},
                 "target": {
                     "type": "api",
-                    "endpoint_url": "http://127.0.0.1:8080/v1/health/ready",
-                    "timeout_seconds": 30,
+                    "protocol": "openai_compatible",
+                    "endpoint_url": "https://openrouter.ai/api/v1/chat/completions",
+                    "api_key": "sk-xxx",
+                    "model_ref": "deepseek/deepseek-v4-flash",
+                    "timeout_seconds": 60,
                 },
-                "metrics": [
-                    {"metric_key": "perf.qps", "threshold": 1.0},
-                    {"metric_key": "perf.p90_latency", "threshold": 2.0},
-                ],
-                "engine_options": {"parallel": [1], "number": [5], "stream": False},
+                "engine_options": {
+                    "parallel": [1, 2],
+                    "number": [2, 2],
+                    "stream": False,
+                    "max_tokens": 2048,
+                    "min_tokens": 1024,
+                    "max_prompt_length": 2048,
+                    "min_prompt_length": 1024,
+                },
             },
         },
     },
@@ -757,19 +764,24 @@ EVAL_JOB_REQUEST_EXAMPLES: dict[str, Example] = cast(
                 "name": "swagger-perf-job",
                 "eval_type": "perf",
                 "engine_id": "evalscope",
-                "input": {"type": "builtin_dataset", "builtin_dataset_key": "openqa"},
+                "input": {"type": "builtin_dataset", "builtin_dataset_key": "longalpaca"},
                 "target": {
                     "type": "api",
                     "protocol": "openai_compatible",
-                    "endpoint_url": "http://127.0.0.1:8080/v1/health/ready",
+                    "endpoint_url": "https://openrouter.ai/api/v1/chat/completions",
+                    "api_key": "sk-xxx",
+                    "model_ref": "deepseek/deepseek-v4-flash",
                     "timeout_seconds": 60,
                 },
-                "metrics": [
-                    {"metric_key": "perf.qps", "threshold": 1.0},
-                    {"metric_key": "perf.p99_latency", "threshold": 5.0},
-                    {"metric_key": "perf.output_tokens_per_second", "threshold": 1.0},
-                ],
-                "engine_options": {"parallel": [1, 2], "number": [10], "stream": False},
+                "engine_options": {
+                    "parallel": [1, 2],
+                    "number": [2, 2],
+                    "stream": False,
+                    "max_tokens": 2048,
+                    "min_tokens": 1024,
+                    "max_prompt_length": 2048,
+                    "min_prompt_length": 1024,
+                },
             },
         },
         "deepeval_custom_job": {

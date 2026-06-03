@@ -2462,3 +2462,335 @@
   - Direct Docker inspection from this shell is still blocked by local Docker Desktop permission errors, so live container graph export should be rerun from the user's terminal after restarting or using the currently running worker.
 - Prevention:
   - Treat Cognee graph visualization as dataset-context-sensitive. Any future graph export path must carry dataset/user context instead of assuming the global graph engine contains the latest Knowledge run.
+
+### 2026-05-12 19:10:00 +08:00 update
+
+- Stage: `CTX-20260512-213` ~ `CTX-20260512-216`
+- Event: Cortex had local Docker and production Compose assets, but the build and release path was not yet a complete, repeatable pipeline.
+- Cause:
+  - Dockerfile targets existed for API, light workers, and heavy runtime workers, but image publication was not encoded in CI.
+  - Production startup required operators to manually remember migration, profiles, pull order, and health checks.
+  - `.env.prod.example` did not list every worker image override, making rollback/tag pinning awkward.
+- Action:
+  - Added a `Docker Images` GitHub Actions workflow that builds and publishes API, Parse, Docling, Knowledge, Evaluation, Evaluation runtime, Synthesis, and Synthesis runtime images to GHCR.
+  - Added a `Docs Build` workflow for the official docs site.
+  - Added cross-platform `scripts/deploy/build-images.*` and `scripts/deploy/deploy-compose.*` helpers.
+  - Added `deploy/README.md` as the production runbook covering GHCR, Docker Compose, Railway, Vercel docs, health checks, rollback, and blue/green guidance.
+  - Completed production image variables in `.env.prod.example` and linked the deployment runbook from `README.md`.
+- Validation:
+  - `docker compose -f compose.local.yaml config --quiet` passed, with the existing Docker config access warning.
+  - `docker compose --env-file .env.prod.example -f compose.prod.yaml config --quiet` passed, with the existing Docker config access warning.
+  - New GitHub Actions YAML files were parsed successfully with PyYAML.
+  - PowerShell deploy scripts were parsed successfully with `System.Management.Automation.PSParser`.
+  - Full `scripts/ci/validate_yaml.py` is currently blocked by the existing `specs/cortex-api.yaml.info.summary` bilingual-format validation failure, unrelated to the new release assets.
+- Prevention:
+  - Keep release orchestration in versioned scripts and workflows rather than relying on ad hoc terminal command history.
+
+### 2026-05-12 19:35:00 +08:00 update
+
+- Stage: `CTX-20260512-217`
+- Event: Production deployment commands were still documented with PowerShell examples as the visible path, but future server deployment should be standard Bash.
+- Cause:
+  - The repository already had separate Bash scripts for image build and Compose deploy, but no single release entrypoint that operators could memorize.
+  - The runbook still mixed Bash and PowerShell in a way that made the production path less obvious.
+- Action:
+  - Added `scripts/deploy/release.sh` as the standard Bash release entrypoint with `build`, `publish`, `deploy`, and `build-publish-deploy` commands.
+  - Hardened Bash scripts so they can run from any repository subdirectory and fail fast when required commands are missing.
+  - Updated deployment documentation and README examples to be Bash-first while keeping PowerShell as a Windows development fallback.
+- Validation:
+  - `docker compose --env-file .env.prod.example -f compose.prod.yaml config --quiet` passed, with the existing Docker config access warning.
+  - New GitHub Actions YAML files were parsed successfully with PyYAML.
+  - PowerShell deployment scripts still parse successfully after preserving them as Windows fallback.
+  - `git diff --check` passed.
+  - Bash `bash -n` could not be run in this PowerShell session because `bash` resolves to the Windows WSL stub and no Linux distribution is installed; scripts were kept in strict Bash style and documented as `bash ...` invocations.
+- Prevention:
+  - Keep production instructions on one Bash entrypoint and only mention platform-specific helpers as optional alternatives.
+### 2026-05-27 15:30:00 +08:00 update
+
+- Stage: `CTX-20260527-218` ~ `CTX-20260527-222`
+- Event: Evaluation Perf could not benchmark caller-owned OpenAI-compatible APIs because `EvalTarget` had no per-run API key field, perf metrics only covered a small subset, and `/v1/eval/sync` did not persist report artifacts or relational run records.
+- Cause:
+  - EvalScope perf payload generation only forwarded `endpoint_url` and `model_ref`.
+  - Default perf metrics were limited to QPS and selected latency aliases instead of the full EvalScope stress-test General / Latency / Tokens / Percentile table.
+  - Artifact persistence lived only in the evaluation worker package, so sync runs returned in-memory results without `eval_runs.report_object_id`.
+- Action:
+  - Added `target.api_key`, `target.api_key_header`, and `target.api_key_prefix`; EvalScope perf now receives `api=openai`, `url`, `api_key`, model, and auth header values.
+  - Expanded the perf metric catalog and default request expansion to include EvalScope stress-test summary and percentile metrics.
+  - Added EvalScope result normalization for nested tables, list rows, direct metric maps, and `Total / Success / Failed` output.
+  - Moved evaluation report persistence into `cortex_evaluation.artifacts`, reused it from both API sync route and async worker, and added `artifacts[].uri`.
+  - Added sync Evaluation run persistence through `jobs`, `eval_runs`, `eval_run_metrics`, and `eval_runs.report_object_id`.
+  - Redacted inline secrets from `eval_runs.target_ref`, sync audit payloads, and error strings.
+- Validation:
+  - `uv sync --all-packages --all-groups --frozen` completed after elevated access to the uv-managed Python directory.
+  - `uv run --all-packages --no-sync python -m pytest tests\unit\test_eval_synthesis_adapters.py -q` passed.
+  - `uv run --all-packages --no-sync python -m pytest tests\integration\test_api_eval_synthesis.py::test_evaluation_api_lists_catalog_and_runs_sync_eval tests\integration\test_api_eval_synthesis.py::test_evaluation_job_submit_worker_and_result -q` passed.
+  - Focused OpenAPI checks for runtime path matching, documented schema signatures, and runtime request-body examples passed.
+  - Full `tests\contract\test_openapi_contract.py` is still blocked by existing static OpenAPI documentation mismatches around documented Knowledge example keys and missing `components.parameters`.
+  - Full `scripts\ci\validate_yaml.py` is still blocked by existing bilingual separator validation for tag descriptions beyond the updated `info.summary`.
+- Prevention:
+  - Keep perf metrics generated from a central catalog instead of hand-written examples.
+  - Treat sync and async Evaluation as the same persistence domain; only execution timing differs.
+  - Prefer `auth_ref` / secret-manager integration for long-lived production keys; inline `api_key` is intended for local tests and one-off benchmark jobs.
+
+### 2026-05-27 15:55:00 +08:00 update
+
+- Stage: `CTX-20260527-223`
+- Event: Async Evaluation Perf jobs failed in `cortex-evaluation-worker-runtime` with `evalscope_service_start_failed: No module named 'uvicorn'`.
+- Cause:
+  - The worker runtime image installs `cortex-worker-evaluation[runtime]`, which includes `cortex-evaluation[runtime]`.
+  - `cortex-evaluation[runtime]` enabled `evalscope[service]`, but the EvalScope self-hosted service path imports `uvicorn`, and the evaluation runtime extras did not declare that server dependency explicitly.
+- Action:
+  - Added `uvicorn>=0.35,<0.36` to both `cortex-evaluation[evalscope]` and `cortex-evaluation[runtime]`.
+  - Refreshed `uv.lock`.
+  - Added a regression test that asserts the EvalScope runtime extras declare the server dependency.
+- Validation:
+  - `uv lock --check` passed.
+  - `uv run --all-packages --no-sync python -m pytest tests\unit\test_eval_synthesis_adapters.py -q` passed.
+  - `uv run --all-packages --no-sync python -m pytest tests\integration\test_api_eval_synthesis.py::test_evaluation_job_submit_worker_and_result -q` passed.
+  - `uv run --all-packages --no-sync ruff check packages\evaluation\src\cortex_evaluation\adapters tests\unit\test_eval_synthesis_adapters.py` passed.
+- Prevention:
+  - Runtime extras must explicitly declare service process dependencies instead of relying on third-party extras to transitively provide ASGI/WSGI servers.
+
+### 2026-05-27 16:15:00 +08:00 update
+
+- Stage: `CTX-20260527-224`
+- Event: After adding `uvicorn`, async Evaluation Perf jobs failed again with missing EvalScope self-hosted service modules, first `fastapi` and then `sse_starlette` during direct import verification.
+- Cause:
+  - EvalScope 1.6.1's `service` extra declares `flask`, but the self-hosted service code path also imports FastAPI, Uvicorn, and SSE-Starlette modules.
+  - Cortex had only added `uvicorn` in the previous fix, so the worker runtime image still lacked the FastAPI/SSE dependencies needed by EvalScope's embedded service.
+- Action:
+  - Added `fastapi>=0.115,<1` and `sse-starlette>=2.1,<3` to both `cortex-evaluation[evalscope]` and `cortex-evaluation[runtime]`.
+  - Refreshed `uv.lock`.
+  - Expanded the regression test for runtime extras so `fastapi`, `sse-starlette`, and `uvicorn` are required alongside `evalscope[service]`.
+- Validation:
+  - `uv lock --check` passed.
+  - `uv run --with "evalscope[service]>=1.6,<2" --with "fastapi>=0.115,<1" --with "uvicorn>=0.35,<0.36" --with "sse-starlette>=2.1,<3" python -c "import evalscope.service; print('evalscope.service import ok')"` passed.
+  - `uv run --all-packages --no-sync python -m pytest tests\unit\test_eval_synthesis_adapters.py -q` passed.
+  - `uv run --all-packages --no-sync python -m pytest tests\integration\test_api_eval_synthesis.py::test_evaluation_job_submit_worker_and_result -q` passed.
+  - `uv run --all-packages --no-sync ruff check packages\evaluation\src\cortex_evaluation\adapters tests\unit\test_eval_synthesis_adapters.py` passed.
+- Prevention:
+  - Treat EvalScope self-hosted mode as an embedded ASGI service and keep its required ASGI stack explicitly pinned in Cortex runtime extras.
+
+### 2026-05-27 16:35:00 +08:00 update
+
+- Stage: `CTX-20260527-225`
+- Event: After the EvalScope self-hosted service started successfully, async Evaluation Perf jobs failed with `evalscope_request_failed` 404 and the service returned its available endpoint list.
+- Cause:
+  - Cortex still called the legacy EvalScope endpoints `POST /api/v1/perf` and `POST /api/v1/eval`.
+  - EvalScope 1.6.1 exposes blocking invocation at `POST /api/v1/perf/invoke` and `POST /api/v1/eval/invoke`.
+- Action:
+  - Updated the EvalScope HTTP adapter to route Perf to `/api/v1/perf/invoke` and non-Perf evaluations to `/api/v1/eval/invoke`.
+  - Added unit coverage that verifies both endpoints are used.
+- Validation:
+  - `uv run --all-packages --no-sync python -m pytest tests\unit\test_eval_synthesis_adapters.py -q` passed.
+  - `uv run --all-packages --no-sync python -m pytest tests\integration\test_api_eval_synthesis.py::test_evaluation_job_submit_worker_and_result -q` passed.
+  - `uv run --all-packages --no-sync ruff check packages\evaluation\src\cortex_evaluation\adapters tests\unit\test_eval_synthesis_adapters.py` passed.
+- Prevention:
+  - Keep EvalScope service route coverage close to the adapter so future upstream route changes fail in unit tests before Docker/runtime testing.
+
+### 2026-05-27 16:50:00 +08:00 update
+
+- Stage: `CTX-20260527-226`
+- Event: After switching to EvalScope invoke endpoints, async Evaluation Perf jobs failed with `evalscope_request_failed` 400 and `EvalScope-Task-Id header is required`.
+- Cause:
+  - EvalScope 1.6.1 requires `EvalScope-Task-Id` on blocking invoke requests for task correlation.
+  - Cortex generated a `job_id` but did not forward it to the EvalScope HTTP adapter, so self-hosted service mode rejected the request before executing the benchmark.
+- Action:
+  - Added `EvalScope-Task-Id` header generation to the EvalScope adapter.
+  - Attached the Cortex `job_id` as `engine_options.evalscope_task_id` when creating sync and async evaluation jobs.
+  - Added a worker-side fallback so previously queued evaluation payloads without the field still run with the current `job_id`.
+  - Expanded tests to verify EvalScope invoke headers and sync/async job id propagation.
+- Validation:
+  - `uv run --all-packages --no-sync python -m pytest tests\unit\test_eval_synthesis_adapters.py -q` passed.
+  - `uv run --all-packages --no-sync python -m pytest tests\integration\test_api_eval_synthesis.py::test_evaluation_api_lists_catalog_and_runs_sync_eval tests\integration\test_api_eval_synthesis.py::test_evaluation_job_submit_worker_and_result -q` passed.
+  - `uv run --all-packages --no-sync ruff check packages\evaluation\src\cortex_evaluation\adapters packages\evaluation\src\cortex_evaluation\jobs.py packages\evaluation\src\cortex_evaluation\__init__.py workers\evaluation-worker\src\cortex_worker_evaluation\bootstrap.py tests\unit\test_eval_synthesis_adapters.py tests\integration\test_api_eval_synthesis.py` passed.
+- Prevention:
+  - Keep third-party service correlation IDs derived from Cortex job IDs where possible, so reports, logs, and worker retries point to the same durable task handle.
+
+### 2026-05-27 17:25:00 +08:00 update
+
+- Stage: `CTX-20260527-227`
+- Event: After restarting the local stack, a newly submitted async Evaluation Perf job still failed with `EvalScope-Task-Id header is required`.
+- Cause:
+  - The actually running Compose project was named `cortex`, with container `cortex-cortex-evaluation-worker-runtime-1`.
+  - The previous restart guidance used the older `cortex-local` project name, so it could rebuild/recreate a different Compose project without replacing the worker that was consuming queued evaluation jobs.
+  - Direct container inspection showed the API container contained `ensure_evalscope_task_id`, but the running Evaluation runtime worker did not contain `EvalScope-Task-Id` or `ensure_evalscope_task_id`.
+- Action:
+  - Verified the running container names with `docker ps`.
+  - Verified the API and Evaluation runtime worker package code inside the containers with `/app/.venv/bin/python` and `inspect.getsource`.
+  - Updated operational guidance to rebuild and recreate the active `cortex` project worker, or to omit `-p` from the repository root so Docker Compose uses the current project name consistently.
+- Validation:
+  - `docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"` showed the active worker as `cortex-cortex-evaluation-worker-runtime-1`.
+  - `docker exec cortex-cortex-evaluation-worker-runtime-1 /app/.venv/bin/python -c "... 'EvalScope-Task-Id' in inspect.getsource(...)"` returned `False`.
+  - `docker exec cortex-cortex-api-1 /app/.venv/bin/python -c "... hasattr(j, 'ensure_evalscope_task_id') ..."` returned `True`.
+- Prevention:
+  - When diagnosing Docker runtime behavior, first identify the active Compose project name from running container names before giving rebuild or recreate commands.
+  - After rebuilding worker images, verify code presence inside the actual running container before submitting another async job.
+
+### 2026-05-28 09:15:00 +08:00 update
+
+- Stage: `CTX-20260528-228`
+- Event: After rebuilding the Evaluation runtime worker with `EvalScope-Task-Id` support, EvalScope Perf failed with a 500 and `TypeError: Arguments.__init__() got an unexpected keyword argument 'evalscope_task_id'`.
+- Cause:
+  - Cortex attached `engine_options.evalscope_task_id` so the adapter could build the required `EvalScope-Task-Id` HTTP header.
+  - `_build_evalscope_payload` copied `engine_options` directly into the EvalScope request body, so the header-only control field was also sent to `PerfArguments.from_dict`.
+  - EvalScope's Perf argument model rejects unknown JSON body keys.
+- Action:
+  - Added explicit header-only EvalScope option keys: `evalscope_task_id`, `task_id`, `cortex_job_id`, and `job_id`.
+  - Filtered those fields out of the JSON payload while still using them for the `EvalScope-Task-Id` header.
+  - Kept regular EvalScope engine options, such as `model_args`, in the payload.
+  - Expanded unit tests to verify both header propagation and body filtering.
+- Validation:
+  - `uv run --all-packages --no-sync python -m pytest tests\unit\test_eval_synthesis_adapters.py -q` passed.
+  - `uv run --all-packages --no-sync python -m pytest tests\integration\test_api_eval_synthesis.py::test_evaluation_api_lists_catalog_and_runs_sync_eval tests\integration\test_api_eval_synthesis.py::test_evaluation_job_submit_worker_and_result -q` passed.
+  - `uv run --all-packages --no-sync ruff check packages\evaluation\src\cortex_evaluation\adapters\evalscope_engine.py tests\unit\test_eval_synthesis_adapters.py` passed.
+  - An initial ruff command accidentally included Markdown specs and failed because ruff parsed `.md` files as Python; the corrected code-only ruff command passed.
+- Prevention:
+  - Keep adapter control metadata separate from third-party engine business arguments; any future correlation/trace fields should be header-only or translated through an explicit allow/deny list.
+
+### 2026-05-28 09:45:00 +08:00 update
+
+- Stage: `CTX-20260528-229` ~ `CTX-20260528-230`
+- Event: EvalScope Perf jobs succeeded, but the runtime worker left native artifacts under `/app/outputs/{job_id}/perf`, and the API result still contained many placeholder metrics saying `Metric was not present in the EvalScope response`.
+- Cause:
+  - EvalScope service mode writes detailed reports to files instead of returning all metrics in the HTTP response.
+  - Cortex only persisted the canonical `evaluation_report` JSON and did not harvest the native EvalScope output directory.
+  - The EvalScope normalizer expanded the default Perf metric catalog into informational placeholder rows even when no inline metric values were returned.
+- Action:
+  - Added internal Storage artifact uploads that can keep a caller-provided object-key prefix and relative path.
+  - Evaluation report persistence now scans the EvalScope output directory, uploads every file to S3-compatible Storage under `evaluation/{job_id}/evalscope/perf/{relative_path}`, adds `evalscope_artifact` references, and deletes the local directory after successful uploads.
+  - Perf normalization now emits only metrics actually present in the EvalScope HTTP response; when metrics are file-backed only, the returned `metrics` list is empty and users download the S3 artifacts.
+- Validation:
+  - `uv run --all-packages --no-sync python -m pytest tests\unit\test_eval_synthesis_adapters.py -q` passed.
+  - `uv run --all-packages --no-sync python -m pytest tests\integration\test_api_eval_synthesis.py::test_evaluation_api_lists_catalog_and_runs_sync_eval tests\integration\test_api_eval_synthesis.py::test_evaluation_job_submit_worker_and_result -q` passed.
+  - `uv run --all-packages --no-sync ruff check packages\evaluation\src\cortex_evaluation\artifacts.py packages\evaluation\src\cortex_evaluation\adapters\utils\evalscope_cleaner.py packages\storage\src\cortex_storage\service.py tests\unit\test_eval_synthesis_adapters.py` passed.
+- Prevention:
+  - Treat third-party runtime output directories as transient scratch space. Workers must either persist them as Storage artifacts or clean them up before the job completes.
+  - Avoid placeholder metrics for engines whose authoritative reports are file-backed.
+
+### 2026-05-28 20:42:16 +08:00 update
+
+- Stage: `CTX-20260528-231` ~ `CTX-20260528-233`
+- Event: Submitting an async agentic Evaluation job with `input.dataset_id=ds_agent_suite` returned a generic 500, and the Evaluation runtime worker showed no logs.
+- Cause:
+  - The failure happened in the API control plane before queue delivery.
+  - `eval_runs.dataset_id` has a foreign key to `datasets.dataset_id`; the requested dataset did not exist for the tenant, so SQLAlchemy raised a database foreign-key violation during `uow.eval_runs.add`.
+  - The job service relied on database constraints instead of performing explicit input-reference validation before inserting job metadata.
+- Action:
+  - Added pre-insert validation for dataset-backed Evaluation requests in sync and async job creation.
+  - Missing or cross-tenant `input.dataset_id` now returns a structured `404 not_found` with a `body.input.dataset_id` field error and guidance to create the dataset or use inline/object-backed input.
+  - Updated Evaluation engine selection to consider each engine's `supported_eval_types`; `engine_id=auto` now ignores incompatible engines, and explicit incompatible engine requests return `422 eval_engine_unsupported_type`.
+  - Added regression tests for the missing dataset API response and the agentic/engine compatibility guard.
+- Validation:
+  - `uv run --all-packages --no-sync python -m pytest tests\integration\test_api_eval_synthesis.py::test_evaluation_job_submit_returns_not_found_for_missing_dataset tests\integration\test_api_eval_synthesis.py::test_evaluation_job_submit_worker_and_result -q` passed.
+  - `uv run --all-packages --no-sync python -m pytest tests\unit\test_eval_synthesis_adapters.py::test_evaluation_service_routes_only_to_engines_supporting_eval_type tests\unit\test_eval_synthesis_adapters.py::test_evalscope_engine_calls_blocking_invoke_endpoints -q` passed.
+  - `uv run --all-packages --no-sync ruff check packages\evaluation\src\cortex_evaluation\jobs.py packages\evaluation\src\cortex_evaluation\service.py tests\integration\test_api_eval_synthesis.py tests\unit\test_eval_synthesis_adapters.py` passed.
+- Prevention:
+  - Validate durable foreign-key references at the API boundary before creating job/run records, so client input errors remain diagnosable and never depend on raw database exceptions.
+  - Keep automatic routing capability-aware whenever new engines or evaluation types are introduced.
+
+### 2026-05-28 23:00:53 +08:00 update
+
+- Stage: `CTX-20260528-234` ~ `CTX-20260528-235`
+- Event: Async EvalScope Perf against OpenRouter failed with `Dataset is empty!`; the persisted job error also contained the raw OpenRouter `sk-or-v1-*` key in the EvalScope stderr payload.
+- Cause:
+  - The request used EvalScope built-in dataset `openqa` with `min_prompt_length=1024`.
+  - EvalScope documents `openqa` as a short-prompt dataset, usually below 100 tokens, and `min_prompt_length` discards prompts shorter than the threshold; all samples were filtered before the benchmark started.
+  - Cortex's job error redaction matched `api_key:` style text but missed JSON-style `"api_key": "sk-or-v1-..."` fields and bearer values embedded in JSON strings.
+- Action:
+  - Added an EvalScope perf payload guard for short-prompt built-in datasets; `openqa` with an over-strict `min_prompt_length` now raises `evalscope_dataset_filter_too_strict` with instructions to remove the filter, use a prompt/dataset_path, or choose a long-prompt dataset such as `longalpaca`.
+  - Extended Evaluation job error redaction to JSON-style secret keys, `access_token`, bearer values, and OpenRouter `sk-or-v1-*` tokens.
+  - Added unit regressions for the `openqa` prompt-length guard and OpenRouter key redaction.
+- Validation:
+  - `uv run --all-packages --no-sync python -m pytest tests\unit\test_eval_synthesis_adapters.py::test_evalscope_openqa_rejects_overstrict_min_prompt_length tests\unit\test_eval_synthesis_adapters.py::test_evaluation_error_redaction_handles_openrouter_json_api_keys tests\unit\test_eval_synthesis_adapters.py::test_evalscope_perf_payload_forwards_openai_compatible_target_api_key -q` passed.
+  - `uv run --all-packages --no-sync python -m pytest tests\integration\test_api_eval_synthesis.py::test_evaluation_job_submit_worker_and_result tests\integration\test_api_eval_synthesis.py::test_evaluation_job_submit_returns_not_found_for_missing_dataset -q` passed.
+  - `uv run --all-packages --no-sync ruff check packages\evaluation\src\cortex_evaluation\adapters\evalscope_engine.py packages\evaluation\src\cortex_evaluation\jobs.py tests\unit\test_eval_synthesis_adapters.py` passed.
+  - An initial ruff command incorrectly included Markdown task/log files and failed because ruff parsed `.md` as Python; the corrected code-only ruff command passed.
+- Prevention:
+  - When exposing third-party benchmark knobs directly, keep lightweight compatibility checks for combinations that are known to become opaque subprocess errors.
+  - Treat all third-party error text as untrusted and redact both header-style and JSON-style secret patterns before persistence.
+
+### 2026-05-28 23:24:40 +08:00 update
+
+- Stage: `CTX-20260528-236`
+- Event: Swagger Evaluation Perf examples still used `openqa` / OpenAI-style smoke settings after the perf guidance moved to long-prompt pressure tests.
+- Cause:
+  - The OpenAPI examples were authored before the `openqa + min_prompt_length` guard was added.
+  - Docs API tabs and checked-in OpenAPI snapshots duplicate the runtime example payload and needed to stay aligned.
+- Action:
+  - Updated runtime OpenAPI examples, checked-in `specs/cortex-api.yaml`, docs public OpenAPI, docs API tabs, and README perf sample to use `builtin_dataset_key=longalpaca`, `https://openrouter.ai/api/v1/chat/completions`, `api_key=sk-xxx`, `model_ref=deepseek/deepseek-v4-flash`, `parallel=[1,2]`, `number=[2,2]`, and 1024/2048 token/prompt-length bounds.
+- Validation:
+  - `uv run --all-packages --no-sync ruff check packages\contracts\src\cortex_contracts\openapi_examples.py` passed.
+  - `uv run --all-packages --no-sync python -c "... assert evalscope_perf_job ..."` passed and confirmed the checked-in OpenAPI Perf examples use `longalpaca`, OpenRouter, `deepseek/deepseek-v4-flash`, `number=[2,2]`, and `min_prompt_length=1024`.
+  - `uv run --all-packages --no-sync python scripts\ci\validate_yaml.py specs\cortex-api.yaml` still fails on the pre-existing `tags[0].description` bilingual-format rule, unrelated to the Perf example update.
+  - `uv run --all-packages --no-sync python -m pytest tests\contract\test_openapi_contract.py -q` still fails on pre-existing documented Knowledge example names and missing `components.parameters`, unrelated to the Perf example update.
+- Prevention:
+  - Keep Swagger Try-it-out examples on dataset/parameter combinations that are known to survive Cortex's own validation guards and EvalScope's dataset filtering.
+
+### 2026-05-28 23:43:00 +08:00 update
+
+- Stage: `CTX-20260528-237` ~ `CTX-20260528-239`
+- Event: Async DeepEval Synthesis jobs for `rag_goldens` failed with `unsupported operand type(s) for +=: 'int' and 'NoneType'` after the worker started generating goldens.
+- Cause:
+  - The runtime container uses DeepEval `3.9.7`; `Synthesizer.generate_goldens_from_contexts` starts by resetting `synthesis_cost` to `0` when the model is treated as a DeepEval native model.
+  - With OpenAI-compatible providers, DeepEval's native model path can return a `None` cost even when generation succeeds, then the SDK tries to execute `self.synthesis_cost += cost`.
+  - Cortex was passing the configured model string directly to DeepEval Synthesizer, so compatible providers could accidentally enter that native-model cost path.
+- Action:
+  - Added a Cortex OpenAI-compatible DeepEval Synthesizer model wrapper that uses per-call OpenAI / AsyncOpenAI clients and returns schema-coerced JSON, making DeepEval treat the provider as a custom model and bypass native cost aggregation.
+  - Kept native DeepEval model usage available behind the explicit `use_native_deepeval_model=true` engine option.
+  - Made `sample_count` a stable generation budget by deriving per-context golden limits from document / inline-record counts and trimming previews back to the requested count.
+  - Added a targeted `deepeval_synth_cost_tracking_failed` error for any remaining native cost `None` failures with clear remediation guidance.
+- Validation:
+  - `uv run --all-packages --no-sync python -m pytest tests\\unit\\test_eval_synthesis_adapters.py::test_deepeval_synthesis_engine_generates_context_preview tests\\unit\\test_eval_synthesis_adapters.py::test_deepeval_synthesis_engine_defaults_goldens_per_context tests\\unit\\test_eval_synthesis_adapters.py::test_deepeval_synthesis_uses_openai_compatible_model_wrapper tests\\unit\\test_eval_synthesis_adapters.py::test_deepeval_synthesis_limits_multi_document_output_to_sample_count tests\\unit\\test_eval_synthesis_adapters.py::test_deepeval_synthesis_cost_none_errors_are_actionable -q` passed.
+  - `uv run --all-packages --no-sync python -m pytest tests\\unit\\test_eval_synthesis_adapters.py -q` passed.
+  - `uv run --all-packages --no-sync python -m pytest tests\\integration\\test_api_eval_synthesis.py::test_synthesis_api_lists_catalog_and_runs_sync_job tests\\integration\\test_api_eval_synthesis.py::test_synthesis_job_submit_worker_and_result -q` passed.
+  - `uv run --all-packages --no-sync ruff check packages\\synthesis\\src\\cortex_synthesis\\adapters.py tests\\unit\\test_eval_synthesis_adapters.py` passed.
+  - `uv run --all-packages --no-sync pyright packages\\synthesis\\src\\cortex_synthesis\\adapters.py tests\\unit\\test_eval_synthesis_adapters.py` passed.
+- Prevention:
+  - Prefer Cortex-owned OpenAI-compatible wrappers for third-party AI SDKs when provider base URL and API key are configured, rather than relying on SDK-native model heuristics.
+  - Keep sample-count semantics in Cortex-owned code so SDK over-generation or per-context defaults cannot surprise API callers.
+
+### 2026-05-29 14:20:00 +08:00 update
+
+- Stage: `CTX-20260529-240` ~ `CTX-20260529-242`
+- Event: DeepEval `conversation_goldens` with `sample_count=3` and `max_contexts_per_case=100` generated progress bars up to `Evolving scenario #99`, then failed with `'str' object has no attribute 'data'`.
+- Cause:
+  - Cortex incorrectly mapped public `config.max_contexts_per_case` to DeepEval's `max_goldens_per_context`, so a context-limit hint became an output-count multiplier.
+  - The OpenAI-compatible Synthesizer wrapper returned raw text when schema parsing failed; DeepEval expects Pydantic models such as `ConversationalScenarioList` and then dereferences `res.data`.
+  - The result was both over-generation and an opaque third-party `AttributeError`.
+- Action:
+  - Changed DeepEval Synthesis output budgeting so `sample_count` is the hard output budget and per-context generation count is derived from `ceil(sample_count / source_context_count)`.
+  - Added OpenAI-compatible JSON response format for schema-backed Synthesizer calls, with `json_mode=false` available through engine options for providers that do not support it.
+  - Added schema fallback coercion for DeepEval list schemas such as `data[].scenario` and `data[].input`, so plain-text model output is converted into the expected Pydantic objects when possible.
+  - Added a structured `deepeval_synth_schema_parse_failed` error when model output cannot be coerced safely.
+- Validation:
+  - `uv run --all-packages --no-sync python -m pytest tests\\unit\\test_eval_synthesis_adapters.py::test_deepeval_conversation_synthesis_keeps_sample_count_a_hard_budget tests\\unit\\test_eval_synthesis_adapters.py::test_deepeval_schema_fallback_coerces_plain_text_conversation_scenarios tests\\unit\\test_eval_synthesis_adapters.py::test_deepeval_schema_parse_failure_is_actionable tests\\unit\\test_eval_synthesis_adapters.py::test_deepeval_synthesis_limits_multi_document_output_to_sample_count -q` passed.
+  - `uv run --all-packages --no-sync python -m pytest tests\\unit\\test_eval_synthesis_adapters.py -q` passed.
+  - `uv run --all-packages --no-sync python -m pytest tests\\integration\\test_api_eval_synthesis.py::test_synthesis_api_lists_catalog_and_runs_sync_job tests\\integration\\test_api_eval_synthesis.py::test_synthesis_job_submit_worker_and_result -q` passed.
+  - `uv run --all-packages --no-sync ruff check packages\\synthesis\\src\\cortex_synthesis\\adapters.py tests\\unit\\test_eval_synthesis_adapters.py` passed.
+  - `uv run --all-packages --no-sync pyright packages\\synthesis\\src\\cortex_synthesis\\adapters.py tests\\unit\\test_eval_synthesis_adapters.py` passed.
+- Prevention:
+  - Do not map public Cortex knobs to third-party knobs by similar names unless their semantics match exactly.
+  - AI SDK adapters should never return raw strings to third-party code when a schema object is requested; parse, coerce, or raise a Cortex-owned structured error.
+
+### 2026-05-29 17:25:00 +08:00 update
+
+- Stage: `CTX-20260529-243` ~ `CTX-20260529-245`
+- Event: Submitting an agentic Evaluation job with `input.type=obj` and `input.object_id` pointing at a Synthesis output object failed with `deepeval_input_not_supported`.
+- Cause:
+  - Evaluation Worker already had dataset/object hydration, but JSON object extraction only recognized top-level `test_cases`, `records`, `items`, `rows`, and `data`.
+  - Cortex Synthesis output objects persist the full `SynthesisRunResult`; generated cases live under `source_summary.preview_rows`, so the worker read the object but produced zero `EvalTestCase` records.
+  - The eval field mapper also did not recognize synthesis golden aliases such as `scenario`, `expected_outcome`, or `conversation`.
+- Action:
+  - Extended Evaluation Worker hydration to recursively detect `preview_rows` under `source_summary`, `synthesis_result`, `result`, `payload`, and `output`.
+  - Added synthesis golden aliases for user input, actual output, expected output, retrieval contexts, and conversation turns.
+  - Updated the DeepEval adapter error text to clarify that object/dataset-backed runs must be hydrated by the API/worker before engine execution.
+  - Added an integration regression where a stored Synthesis output object is submitted to `/v1/eval/jobs` with `input.type=obj`, then the Evaluation Worker hydrates it into two inline test cases and completes successfully.
+  - Fixed an older sync eval test fixture by seeding the dataset it references, aligning the test with the current dataset-reference validation behavior.
+- Validation:
+  - `uv run --all-packages --no-sync python -m pytest tests\\integration\\test_api_eval_synthesis.py::test_evaluation_job_submit_hydrates_synthesis_output_object tests\\integration\\test_api_eval_synthesis.py::test_evaluation_job_submit_worker_and_result -q` passed.
+  - `uv run --all-packages --no-sync python -m pytest tests\\integration\\test_api_eval_synthesis.py -q` passed.
+  - `uv run --all-packages --no-sync ruff check workers\\evaluation-worker\\src\\cortex_worker_evaluation\\hydration.py packages\\evaluation\\src\\cortex_evaluation\\adapters\\deepeval_engine.py tests\\integration\\test_api_eval_synthesis.py` passed.
+  - `uv run --all-packages --no-sync pyright workers\\evaluation-worker\\src\\cortex_worker_evaluation\\hydration.py packages\\evaluation\\src\\cortex_evaluation\\adapters\\deepeval_engine.py tests\\integration\\test_api_eval_synthesis.py` passed.
+- Prevention:
+  - Cross-domain artifact formats should be first-class hydration inputs. When one Cortex API produces an object intended for another API, workers should recognize the canonical result envelope, not only raw flat arrays.

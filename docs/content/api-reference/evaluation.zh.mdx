@@ -5,6 +5,8 @@ description: 评测引擎、指标目录、同步检查、异步 job 和报告�
 
 Evaluation 为质量、RAG、Agent、多轮、自定义和性能工作负载返回 scorecard 与指标级结果。下面的 API 示例以 AI 生成的 Python、JavaScript 和 Java 客户端代码展示。
 
+Perf 压测可以在 `target` 中传入 OpenAI-compatible `endpoint_url`、`api_key`、`model_ref`。选择 `eval_type=perf` 后无需手工声明 metrics，Cortex 会自动输出 EvalScope 标准 General、Latency、Tokens 与 percentile 指标，并将 `evaluation_report` 写入 S3-compatible Storage。
+
 | 方法 | 路径 | Scope | 作用 |
 | --- | --- | --- | --- |
 | `GET` | `/v1/eval/engines` | `eval:read` | 列出可用评测引擎。 |

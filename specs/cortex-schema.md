@@ -735,3 +735,10 @@ Evaluation dataset item metadata 推荐包含：
 - `messages` / `conversation_turns`
 
 Synthesis dataset item metadata 推荐包含业务记录字段；当 `item_type=document` 时，Worker 会优先读取 document markdown 或 document chunks 作为非结构化上下文。
+## 2026-05-27 Evaluation Perf Persistence Update
+
+- `eval_runs.report_object_id` is now populated for both `/v1/eval/sync` and `/v1/eval/jobs` when `output.persist_report_object=true`.
+- The canonical report artifact is stored as a Storage object tagged with `evaluation` and `report`. API responses expose the same object as `artifacts[].object_id` plus `artifacts[].uri=s3://bucket/key`.
+- `eval_run_metrics` stores normalized perf metrics generated from EvalScope stress-test output, including General, Latency, Tokens, compatibility aliases, and percentile rows.
+- `eval_runs.target_ref` stores a redacted copy of the target configuration. Sensitive fields such as `api_key`, `authorization`, `access_token`, and `secret` are persisted as `<redacted>`.
+- Async evaluation jobs currently keep the raw request payload in `jobs.request_json` so workers can call the benchmark target. This is an intentional control-plane tradeoff until `target.auth_ref` is backed by a secret-manager adapter.

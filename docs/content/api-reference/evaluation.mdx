@@ -5,6 +5,8 @@ description: Endpoints for evaluation engines, metric catalogs, synchronous chec
 
 Evaluation returns scorecards and metric-level results for quality, RAG, agentic, multi-turn, custom, and performance workloads. API examples are rendered as AI-generated Python, JavaScript, and Java client snippets.
 
+Performance benchmarks can pass an OpenAI-compatible `endpoint_url`, `api_key`, and `model_ref` in `target`. Once `eval_type=perf` is selected, Cortex expands the default EvalScope General, Latency, Tokens, and percentile metrics automatically and stores the canonical `evaluation_report` in S3-compatible Storage.
+
 | Method | Path | Scope | Purpose |
 | --- | --- | --- | --- |
 | `GET` | `/v1/eval/engines` | `eval:read` | List available evaluation engines. |

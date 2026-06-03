@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Cortex API
   version: 0.0.1
-  summary: 面向数据解析、存储、知识构建、效果评测与数据合成的厂商中立 API。/ Vendor-neutral APIs for parse,
+  summary: 面向数据解析、存储、知识构建、效果评测与数据合成的厂商中立 API。 / Vendor-neutral APIs for parse,
     storage, knowledge, evaluation, and synthesis.
   description: Cortex 通过统一契约暴露五类核心
     API：Parse、Storage、Knowledge、Evaluation、Synthesis。各域共享厂商中立的数据模型、统一的 Job
@@ -315,30 +315,35 @@ paths:
                       threshold: 0.75
               evalscope_perf_sync:
                 summary: EvalScope perf sync / EvalScope 性能同步评测
-                description: Small performance smoke request routed to EvalScope. In local
-                  Docker, the target can point at the Cortex readiness endpoint.
+                description: Long-prompt OpenAI-compatible performance request routed to
+                  EvalScope. Replace `api_key` with a real OpenRouter or compatible provider
+                  key.
                 value:
-                  name: swagger-perf-smoke
+                  name: swagger-perf-job
                   eval_type: perf
                   engine_id: evalscope
                   input:
                     type: builtin_dataset
-                    builtin_dataset_key: openqa
+                    builtin_dataset_key: longalpaca
                   target:
                     type: api
-                    endpoint_url: http://127.0.0.1:8080/v1/health/ready
-                    timeout_seconds: 30
-                  metrics:
-                    - metric_key: perf.qps
-                      threshold: 1
-                    - metric_key: perf.p90_latency
-                      threshold: 2
+                    protocol: openai_compatible
+                    endpoint_url: https://openrouter.ai/api/v1/chat/completions
+                    api_key: sk-xxx
+                    model_ref: deepseek/deepseek-v4-flash
+                    timeout_seconds: 60
                   engine_options:
                     parallel:
                       - 1
+                      - 2
                     number:
-                      - 5
+                      - 2
+                      - 2
                     stream: false
+                    max_tokens: 2048
+                    min_tokens: 1024
+                    max_prompt_length: 2048
+                    min_prompt_length: 1024
         required: true
       responses:
         "200":
@@ -418,26 +423,26 @@ paths:
                   engine_id: evalscope
                   input:
                     type: builtin_dataset
-                    builtin_dataset_key: openqa
+                    builtin_dataset_key: longalpaca
                   target:
                     type: api
                     protocol: openai_compatible
-                    endpoint_url: http://127.0.0.1:8080/v1/health/ready
+                    endpoint_url: https://openrouter.ai/api/v1/chat/completions
+                    api_key: sk-xxx
+                    model_ref: deepseek/deepseek-v4-flash
                     timeout_seconds: 60
-                  metrics:
-                    - metric_key: perf.qps
-                      threshold: 1
-                    - metric_key: perf.p99_latency
-                      threshold: 5
-                    - metric_key: perf.output_tokens_per_second
-                      threshold: 1
                   engine_options:
                     parallel:
                       - 1
                       - 2
                     number:
-                      - 10
+                      - 2
+                      - 2
                     stream: false
+                    max_tokens: 2048
+                    min_tokens: 1024
+                    max_prompt_length: 2048
+                    min_prompt_length: 1024
               deepeval_custom_job:
                 summary: DeepEval custom async job / DeepEval 异步自定义评测
                 description: Custom GEval-style quality check with a caller-provided criterion.
@@ -3109,6 +3114,31 @@ components:
             - type: string
             - type: "null"
           title: Auth Ref
+        api_key:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Api Key
+          description: Optional per-run API key for OpenAI-compatible performance
+            targets. The key is forwarded to the evaluation engine and redacted
+            from persisted target metadata and reports.
+          writeOnly: true
+        api_key_header:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Api Key Header
+          description: "Header name used when forwarding `api_key` to an HTTP target.
+            Best default: `Authorization`."
+          default: Authorization
+        api_key_prefix:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Api Key Prefix
+          description: "Optional prefix used for `api_key_header`. Best default for
+            OpenAI-compatible targets: `Bearer`."
+          default: Bearer
         headers:
           additionalProperties:
             type: string
@@ -5213,6 +5243,11 @@ components:
         label:
           type: string
           title: Label
+        uri:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Uri
         content_type:
           anyOf:
             - type: string

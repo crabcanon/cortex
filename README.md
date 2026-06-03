@@ -39,6 +39,7 @@ Cortex 是一套面向 AI 原生应用的数据与知识 API 平台，统一提�
 - `GET /v1/eval/jobs/{jobId}/result`：读取评测结果。
 - 支持 `perf`、`rag`、`agentic`、`multi_turn`、`custom`。
 - 支持 EvalScope 与 DeepEval 引擎适配。异步 Worker 会将 `dataset_id`、`object_id`、`object_ids` 自动水合为 `EvalTestCase[]`。
+- Perf 压测支持直接传 OpenAI-compatible `endpoint_url`、`api_key`、`model_ref`；用户只需声明 `eval_type=perf`，Cortex 会自动展开标准 General / Latency / Tokens / Percentile 指标。
 - 完成后生成 `evaluation_report` Storage object，并回写 `eval_runs.report_object_id`。
 
 ### Synthesis API
@@ -337,6 +338,42 @@ Swagger UI 中的 Knowledge 请求体已经内置了一组可直接复用的 exa
 
 ### 5. Evaluation Job 示例
 
+Perf 压测无需手工列出指标，默认输出 EvalScope 官方压测指标全集：
+
+```json
+{
+  "name": "swagger-perf-job",
+  "eval_type": "perf",
+  "engine_id": "evalscope",
+  "input": {
+    "type": "builtin_dataset",
+    "builtin_dataset_key": "longalpaca"
+  },
+  "target": {
+    "type": "api",
+    "protocol": "openai_compatible",
+    "endpoint_url": "https://openrouter.ai/api/v1/chat/completions",
+    "api_key": "sk-xxx",
+    "model_ref": "deepseek/deepseek-v4-flash",
+    "timeout_seconds": 60
+  },
+  "engine_options": {
+    "parallel": [1, 2],
+    "number": [2, 2],
+    "stream": false,
+    "max_tokens": 2048,
+    "min_tokens": 1024,
+    "max_prompt_length": 2048,
+    "min_prompt_length": 1024
+  },
+  "output": {
+    "persist_report_object": true
+  }
+}
+```
+
+RAG / custom / agentic 等业务评测仍可显式声明指标和阈值：
+
 ```json
 {
   "name": "docs-rag-eval",
@@ -374,7 +411,7 @@ Worker 完成后：
 GET /v1/eval/jobs/{jobId}/result
 ```
 
-结果中会包含 `artifacts[].label=evaluation_report`。
+结果中会包含 `artifacts[].label=evaluation_report`、`artifacts[].object_id` 和 `artifacts[].uri=s3://bucket/key`。EvalScope Perf 的原生报告文件会以 `evalscope_artifact` 形式同步上传至 S3，保留 `perf` 目录内的相对路径；上传成功后，worker 会清理容器内 `/app/outputs/{job_id}/perf` 临时目录。
 
 ### 6. Synthesis Job 示例
 
@@ -435,10 +472,16 @@ powershell -ExecutionPolicy Bypass -File scripts\dev\uv.ps1 run python -m pytest
 
 本地 Compose 是 batteries-included，包含 Postgres、Redis、MinIO、OTel Collector、Jaeger、Prometheus、Grafana、API 和核心 Workers。
 
-生产推荐使用 `compose.prod.yaml` 作为模板：
+生产推荐使用标准 Bash 发布脚本 + GHCR 预构建镜像 + `compose.prod.yaml` 作为模板。完整构建、发布、部署、回滚流程见 [`deploy/README.md`](deploy/README.md)。
 
 ```bash
-docker compose -f compose.prod.yaml up -d cortex-api cortex-parse-worker cortex-knowledge-worker cortex-evaluation-worker cortex-synthesis-worker
+bash scripts/deploy/release.sh deploy --env-file .env.prod --heavy
+```
+
+也可以通过 GitHub Actions 的 `Docker Images` workflow 发布所有镜像，或在本地执行：
+
+```bash
+bash scripts/deploy/release.sh build --tag local-heavy --heavy
 ```
 
 生产环境建议：
@@ -450,6 +493,7 @@ docker compose -f compose.prod.yaml up -d cortex-api cortex-parse-worker cortex-
 - API、Parse Worker、Knowledge Worker、Evaluation Worker、Synthesis Worker 独立扩缩容。
 - Docling/OCR/Torch 走 `parse-worker-docling` profile，避免拖大默认 API 镜像。
 - DeepEval / EvalScope self-hosted SDK / SDV 等评测与合成重依赖走 `evaluation-worker-runtime`、`synthesis-worker-runtime` 镜像或对应 Compose profile；默认 Evaluation / Synthesis Worker 保持轻量，适合 EvalScope external HTTP service、队列调度和 scaffold/禁用状态验证。
+- Railway 上线建议使用 GHCR 预构建镜像，每个 API / Worker target 建一个独立 Service；不要让 Railway 自动猜测 Dockerfile target。
 
 需要在本地构建包含 DeepEval / SDV 的重型 worker 时：
 
@@ -486,4 +530,4 @@ python scripts/runtime/prepare_crawl4ai_runtime.py --json
 
 - REST API、OpenAPI、数据库模型、Workers、运行时配置和本地 Compose 已覆盖 Parse、Storage、Knowledge、Evaluation、Synthesis 五大域。
 - Evaluation / Synthesis 已具备 pluggable adapter、async job、input hydration、artifact persistence、OTel telemetry 和测试覆盖。
-- 后续重点是接入更多真实评测/合成场景、完善 Grafana Dashboard、补充生产 CI/CD 发布流水线。
+- 后续重点是接入更多真实评测/合成场景、完善 Grafana Dashboard，并沉淀更多云平台部署模板。

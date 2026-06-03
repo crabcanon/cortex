@@ -490,3 +490,11 @@ Cortex 的产品形态不是单一服务，而是一个稳定的 AI 数据基础
 - 指标目录能以统一 metric_key 表达至少 50+ ready-to-use metrics 的映射关系，并清晰标注每个 metric 对应的适用评测类型与引擎绑定。
 - 评测与合成结果都能落到统一 Job 模型，结果中可直接拿到 	race_id、摘要结果、产物引用与失败原因。
 - 评测失败样本、合成结果集和报告对象能再次进入 Dataset / Knowledge 流程形成闭环。
+## 2026-05-27 Evaluation Perf Product Update
+
+- Perf evaluation must support benchmarking caller-owned OpenAI-compatible endpoints by accepting a per-run API URL, API key, model id, and HTTP auth header configuration through the existing Evaluation request body.
+- Business users should not be required to enumerate low-level perf metrics. Selecting `eval_type=perf` should produce the standard Cortex perf scorecard automatically.
+- The standard scorecard covers EvalScope stress-test General, Latency, Tokens, and percentile metrics, including request success/failure counts, throughput, TTFT, TPOT, ITL, input/output tokens, and P1/P5/P10/P25/P50/P66/P75/P80/P90/P95/P98/P99 distributions.
+- Every sync and async evaluation run must produce a durable report object in S3-compatible Storage by default and return a report artifact reference in the API response.
+- Relational metadata must keep the run status, score summary, per-metric rows, and `eval_runs.report_object_id` for auditability, while large report payloads remain in object storage.
+- Inline API keys are allowed for local testing and one-off benchmarks but must be redacted from persisted target metadata and response payloads. Production guidance remains to move long-lived credentials behind a secret reference.

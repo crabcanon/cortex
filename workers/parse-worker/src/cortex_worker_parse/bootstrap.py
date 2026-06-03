@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import os
 from dataclasses import dataclass
+from time import monotonic
 
 from cortex_common import (
     CortexError,
@@ -48,14 +49,25 @@ class ParseWorkerRunResult:
 @dataclass(slots=True)
 class ParseWorkerConfig:
     worker_id: str
-    lease_seconds: int = 60
-    heartbeat_interval_seconds: int = 15
+    lease_seconds: int = 300
+    heartbeat_interval_seconds: int = 30
+    execution_timeout_seconds: int | None = None
     supported_engine_keys: set[str] | None = None
 
     @classmethod
     def create(cls, worker_id: str | None = None) -> ParseWorkerConfig:
+        lease_seconds = _int_env("CORTEX_PARSE_WORKER_LEASE_SECONDS", 300)
+        heartbeat_interval_seconds = _int_env(
+            "CORTEX_PARSE_WORKER_HEARTBEAT_INTERVAL_SECONDS",
+            min(30, max(5, lease_seconds // 3)),
+        )
         return cls(
             worker_id=worker_id or new_prefixed_id("pworker"),
+            lease_seconds=lease_seconds,
+            heartbeat_interval_seconds=min(heartbeat_interval_seconds, lease_seconds),
+            execution_timeout_seconds=_optional_int_env(
+                "CORTEX_PARSE_WORKER_EXECUTION_TIMEOUT_SECONDS"
+            ),
             supported_engine_keys=_parse_engine_key_set(
                 os.getenv("CORTEX_PARSE_WORKER_ENGINE_KEYS")
             ),
@@ -90,6 +102,7 @@ class ParseWorker:
                 return ParseWorkerRunResult(status="idle", message="No queued parse jobs.")
             request = ParseJobRequest.model_validate(job.request_payload)
             caller = self._caller(job)
+            timeout_seconds = self._execution_timeout_seconds(job, request)
 
         stop_heartbeat = asyncio.Event()
         heartbeat_task = asyncio.create_task(
@@ -104,15 +117,28 @@ class ParseWorker:
                         job_id=job.job_id,
                         message="Claimed parse job disappeared before execution.",
                     )
-                result = await asyncio.wait_for(
-                    self._parse_service.execute_existing_job(
-                        uow=uow,
-                        caller=caller,
-                        job=current_job,
-                        request=request,
-                    ),
-                    timeout=request.timeout_seconds,
-                )
+                started_at = monotonic()
+                try:
+                    result = await asyncio.wait_for(
+                        self._parse_service.execute_existing_job(
+                            uow=uow,
+                            caller=caller,
+                            job=current_job,
+                            request=request,
+                        ),
+                        timeout=timeout_seconds,
+                    )
+                except TimeoutError as exc:
+                    if _elapsed_reached_timeout(started_at, timeout_seconds):
+                        raise CortexError(
+                            code="parse_worker_timeout",
+                            detail=(
+                                "Parse job exceeded timeout budget of "
+                                f"{timeout_seconds} seconds."
+                            ),
+                            status_code=504,
+                        ) from exc
+                    raise
                 await self._job_service.record_succeeded(
                     uow=uow,
                     job=current_job,
@@ -123,15 +149,6 @@ class ParseWorker:
                     job_id=job.job_id,
                     document_id=result.document.document_id,
                 )
-        except TimeoutError:
-            error = CortexError(
-                code="parse_worker_timeout",
-                detail=(
-                    f"Parse job exceeded timeout budget of {request.timeout_seconds} seconds."
-                ),
-                status_code=504,
-            )
-            return await self._record_failure(job.job_id, error)
         except Exception as exc:
             return await self._record_failure(job.job_id, exc)
         finally:
@@ -172,6 +189,20 @@ class ParseWorker:
             await task
         except Exception:
             return
+
+    def _execution_timeout_seconds(
+        self,
+        job: JobRecord,
+        request: ParseJobRequest,
+    ) -> int:
+        if self._config.execution_timeout_seconds is not None:
+            return self._config.execution_timeout_seconds
+        queue_state = job.deployment_context.get("parse_worker")
+        if isinstance(queue_state, dict):
+            timeout_seconds = queue_state.get("execution_timeout_seconds")
+            if isinstance(timeout_seconds, int | float):
+                return max(1, int(timeout_seconds))
+        return max(1, request.timeout_seconds)
 
     @staticmethod
     def _caller(job: JobRecord) -> WorkerCaller:
@@ -216,3 +247,27 @@ def _parse_engine_key_set(value: str | None) -> set[str] | None:
         return None
     keys = {item.strip().lower() for item in value.split(",") if item.strip()}
     return keys or None
+
+
+def _int_env(name: str, default: int) -> int:
+    raw_value = os.getenv(name)
+    if raw_value is None or raw_value.strip() == "":
+        return max(1, default)
+    try:
+        return max(1, int(raw_value))
+    except ValueError:
+        return max(1, default)
+
+
+def _optional_int_env(name: str) -> int | None:
+    raw_value = os.getenv(name)
+    if raw_value is None or raw_value.strip() == "":
+        return None
+    try:
+        return max(1, int(raw_value))
+    except ValueError:
+        return None
+
+
+def _elapsed_reached_timeout(started_at: float, timeout_seconds: int) -> bool:
+    return monotonic() - started_at >= max(0.0, float(timeout_seconds) - 1.0)

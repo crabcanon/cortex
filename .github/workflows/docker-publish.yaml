@@ -1,0 +1,110 @@
+name: Docker Images
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      push_images:
+        description: "Push images to GHCR"
+        required: false
+        default: true
+        type: boolean
+      include_heavy:
+        description: "Build heavy runtime images: docling, evaluation runtime, synthesis runtime"
+        required: false
+        default: true
+        type: boolean
+      runtime_config_path:
+        description: "Runtime config baked into image build checks"
+        required: false
+        default: configs/cortex.runtime.prod.yaml
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAMESPACE: ${{ github.repository_owner }}
+  DEFAULT_RUNTIME_CONFIG_PATH: configs/cortex.runtime.prod.yaml
+
+jobs:
+  build-and-publish:
+    name: ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: api
+            image: cortex-api
+            heavy: false
+          - target: parse-worker
+            image: cortex-parse-worker
+            heavy: false
+          - target: knowledge-worker
+            image: cortex-knowledge-worker
+            heavy: false
+          - target: evaluation-worker
+            image: cortex-evaluation-worker
+            heavy: false
+          - target: synthesis-worker
+            image: cortex-synthesis-worker
+            heavy: false
+          - target: parse-worker-docling
+            image: cortex-parse-worker-docling
+            heavy: true
+          - target: evaluation-worker-runtime
+            image: cortex-evaluation-worker-runtime
+            heavy: true
+          - target: synthesis-worker-runtime
+            image: cortex-synthesis-worker-runtime
+            heavy: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        if: ${{ matrix.heavy == false || github.event_name != 'workflow_dispatch' || inputs.include_heavy == true }}
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: ${{ (matrix.heavy == false || github.event_name != 'workflow_dispatch' || inputs.include_heavy == true) && github.event_name != 'pull_request' && (github.event_name != 'workflow_dispatch' || inputs.push_images == true) }}
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata
+        if: ${{ matrix.heavy == false || github.event_name != 'workflow_dispatch' || inputs.include_heavy == true }}
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.image }}
+          tags: |
+            type=sha,format=short,prefix=
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and optionally push image
+        if: ${{ matrix.heavy == false || github.event_name != 'workflow_dispatch' || inputs.include_heavy == true }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: ${{ matrix.target }}
+          push: ${{ github.event_name != 'pull_request' && (github.event_name != 'workflow_dispatch' || inputs.push_images == true) }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            CORTEX_RUNTIME_CONFIG_PATH=${{ github.event_name == 'workflow_dispatch' && inputs.runtime_config_path || env.DEFAULT_RUNTIME_CONFIG_PATH }}
+            CORTEX_PREPARE_CRAWL4AI_RUNTIME=1
+          cache-from: type=gha,scope=${{ matrix.target }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.target }}

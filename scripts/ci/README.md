@@ -42,3 +42,23 @@ GitHub Actions.
 `scripts/dev/check-runtime-stack.ps1` currently runs both the infrastructure-backed
 `tests/integration/test_runtime_stack.py` slice and the live observability probe in
 `tests/integration/test_runtime_observability_stack.py`.
+
+Additional release workflows:
+
+- `.github/workflows/docker-publish.yaml`
+  Builds Dockerfile targets for API, Parse Worker, Knowledge Worker, Evaluation Worker,
+  Synthesis Worker, and the heavy Docling / runtime workers. It publishes images to GHCR
+  on `main`, semver tags, or manual dispatch.
+- `.github/workflows/docs-build.yaml`
+  Runs the docs typecheck and production build for the `docs/` Next/Fumadocs site.
+
+Portable deployment helpers live in `scripts/deploy/`:
+
+- `release.sh`
+  Standard Bash release entrypoint for production and CI/CD. It exposes `build`,
+  `publish`, `deploy`, and `build-publish-deploy` commands.
+- `build-images.ps1` / `build-images.sh`
+  Build and optionally push all Cortex runtime images.
+- `deploy-compose.ps1` / `deploy-compose.sh`
+  Validate `compose.prod.yaml`, pull images, run database migrations, start services, and
+  wait for `/v1/health/live`.

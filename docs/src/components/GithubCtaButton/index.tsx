@@ -47,15 +47,15 @@ const GithubCtaButton: React.FC<GithubCtaButtonProps> = ({
       data-tone={tone}
       aria-label={
         count !== null
-          ? `项目Codehub — ${count.toLocaleString()} stars`
-          : "项目Codehub"
+          ? `Github Repo — ${count.toLocaleString()} stars`
+          : "Github Repo"
       }
       data-callout
       data-button
     >
       <span className={styles.content}>
-        {/* <GithubMark /> */}
-        <span>项目Codehub</span>
+        <GithubMark />
+        <span>Github Repo</span>
       </span>
       <span className={styles.count}>
         <Star className={styles.star} />

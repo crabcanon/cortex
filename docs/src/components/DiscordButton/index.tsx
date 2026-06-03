@@ -35,7 +35,7 @@ type DiscordButtonProps = {
 };
 
 const DiscordButton: React.FC<DiscordButtonProps> = ({
-  label = "加入Welink群组",
+  label = "Join our Discord community",
   layout = "full",
 }) => {
   return (

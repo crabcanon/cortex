@@ -93,6 +93,29 @@ class EvalTarget(BaseModel):
     protocol: str | None = None
     endpoint_url: str | None = None
     auth_ref: str | None = None
+    api_key: str | None = Field(
+        default=None,
+        description=(
+            "Optional per-run API key for OpenAI-compatible performance targets. "
+            "The key is forwarded to the evaluation engine and redacted from persisted "
+            "target metadata and reports."
+        ),
+        json_schema_extra={"writeOnly": True},
+    )
+    api_key_header: str | None = Field(
+        default="Authorization",
+        description=(
+            "Header name used when forwarding `api_key` to an HTTP target. Best default: "
+            "`Authorization`."
+        ),
+    )
+    api_key_prefix: str | None = Field(
+        default="Bearer",
+        description=(
+            "Optional prefix used for `api_key_header`. Best default for OpenAI-compatible "
+            "targets: `Bearer`."
+        ),
+    )
     headers: dict[str, str] = Field(default_factory=dict)
     timeout_seconds: int | None = Field(default=None, ge=1)
     model_ref: str | None = None
@@ -163,6 +186,7 @@ class EvalSampleCounters(BaseModel):
 class StoredArtifactRef(BaseModel):
     object_id: str
     label: str
+    uri: str | None = None
     content_type: str | None = None
     format: str | None = None
     description: str | None = None

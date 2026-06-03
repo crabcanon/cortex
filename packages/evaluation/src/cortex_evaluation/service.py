@@ -157,12 +157,15 @@ class EvaluationService:
                     detail=f"Evaluation engine `{request.engine_id}` is not currently available.",
                     status_code=503,
                 )
+            self._ensure_engine_supports_eval_type(engine, request.eval_type)
             return engine
         preference = (
             ["evalscope"] if request.eval_type is EvalType.PERF else ["deepeval", "evalscope"]
         )
         available = {
-            engine.descriptor.engine_id: engine for engine in self._registry.list_available()
+            engine.descriptor.engine_id: engine
+            for engine in self._registry.list_available()
+            if self._engine_supports_eval_type(engine, request.eval_type)
         }
         for engine_id in preference:
             engine = available.get(engine_id)
@@ -172,8 +175,38 @@ class EvaluationService:
             return next(iter(available.values()))
         raise CortexError(
             code="eval_engine_not_available",
-            detail="No evaluation engines are currently available.",
+            detail=(
+                "No evaluation engine is currently available for "
+                f"`{request.eval_type.value}` evaluation."
+            ),
             status_code=503,
+        )
+
+    @staticmethod
+    def _engine_supports_eval_type(
+        engine: EvaluationEngineProtocol,
+        eval_type: EvalType,
+    ) -> bool:
+        return eval_type in engine.descriptor.supported_eval_types
+
+    @classmethod
+    def _ensure_engine_supports_eval_type(
+        cls,
+        engine: EvaluationEngineProtocol,
+        eval_type: EvalType,
+    ) -> None:
+        if cls._engine_supports_eval_type(engine, eval_type):
+            return
+        supported = ", ".join(
+            sorted(value.value for value in engine.descriptor.supported_eval_types)
+        )
+        raise CortexError(
+            code="eval_engine_unsupported_type",
+            detail=(
+                f"Evaluation engine `{engine.descriptor.engine_id}` does not support "
+                f"`{eval_type.value}` evaluation. Supported types: {supported or 'none'}."
+            ),
+            status_code=422,
         )
 
 

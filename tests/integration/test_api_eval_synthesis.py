@@ -4,6 +4,7 @@ import asyncio
 import base64
 import json
 import time
+import types
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
@@ -230,6 +231,7 @@ class _FakeDeepEvalEngine(EvaluationEngineProtocol):
             source_summary={
                 "input_type": request.input.type,
                 "test_case_count": len(request.input.test_cases),
+                "evalscope_task_id": request.engine_options.get("evalscope_task_id"),
             },
             target_summary={"target_type": request.target.type if request.target else None},
             summary=EvalScoreCard(
@@ -294,7 +296,20 @@ class _FakeDeepEvalSynthEngine(SynthesisEngineProtocol):
             engine_id="deepeval",
             profile_key=request.profile_key,
             status="succeeded",
-            source_summary={"source_type": request.source.type},
+            source_summary={
+                "source_type": request.source.type,
+                "preview_rows": [
+                    {
+                        "input": f"agent-task-{index}",
+                        "expected_outcome": "Agent asks for the object_id before parsing.",
+                        "context": [
+                            "Support agents should ask for the object_id before parsing a "
+                            "private file."
+                        ],
+                    }
+                    for index in range(1, sample_count + 1)
+                ],
+            },
             summary=SynthesisSummary(
                 requested_sample_count=sample_count,
                 output_sample_count=sample_count,
@@ -338,6 +353,8 @@ def _build_synthesis_service() -> SynthesisService:
 def _build_client(
     monkeypatch: pytest.MonkeyPatch,
     db_path: Path,
+    *,
+    object_store: _FakeObjectStoreClient | None = None,
 ) -> Iterator[TestClient]:
     monkeypatch.setenv("CORTEX_DB_DSN", _async_sqlite_url(db_path))
     monkeypatch.setenv("CORTEX_AUTH_MODE", "dev")
@@ -351,13 +368,21 @@ def _build_client(
         runtime_app = cast(FastAPI, client.app)
         runtime_app.state.evaluation_service = _build_evaluation_service()
         runtime_app.state.evaluation_job_service = EvaluationJobControlService()
+        runtime_app.state.storage_service = StorageService(
+            load_settings().s3,
+            object_store=object_store or _FakeObjectStoreClient(),
+        )
         runtime_app.state.synthesis_service = _build_synthesis_service()
         runtime_app.state.synthesis_job_service = SynthesisJobControlService()
         yield client
     load_settings.cache_clear()
 
 
-async def _run_evaluation_worker_once(db_path: Path) -> str:
+async def _run_evaluation_worker_once(
+    db_path: Path,
+    *,
+    object_store: _FakeObjectStoreClient | None = None,
+) -> str:
     engine = create_database_engine(_async_sqlite_url(db_path))
     session_factory = create_session_factory(engine)
     try:
@@ -366,7 +391,7 @@ async def _run_evaluation_worker_once(db_path: Path) -> str:
             evaluation_service=_build_evaluation_service(),
             storage_service=StorageService(
                 load_settings().s3,
-                object_store=_FakeObjectStoreClient(),
+                object_store=object_store or _FakeObjectStoreClient(),
             ),
             config=EvaluationWorkerConfig(worker_id="eval-worker", lease_seconds=30),
         )
@@ -433,6 +458,38 @@ async def _seed_eval_dataset(db_path: Path, *, tenant_id: str, dataset_id: str) 
         await engine.dispose()
 
 
+async def _seed_storage_object(
+    db_path: Path,
+    *,
+    object_store: _FakeObjectStoreClient,
+    tenant_id: str,
+    payload: dict[str, Any],
+) -> str:
+    engine = create_database_engine(_async_sqlite_url(db_path))
+    session_factory = create_session_factory(engine)
+    try:
+        async with CortexUnitOfWork(session_factory) as uow:
+            stored = await StorageService(
+                load_settings().s3,
+                object_store=object_store,
+            ).upload_small_file(
+                uow=uow,
+                caller=types.SimpleNamespace(
+                    tenant_id=tenant_id,
+                    subject="alice",
+                    actor_id="alice",
+                ),
+                filename="synthesis-output.json",
+                content=json.dumps(payload).encode("utf-8"),
+                content_type="application/json",
+                metadata={"cortex.artifact.kind": "synthesis_output"},
+                tags=["synthesis", "output"],
+            )
+            return stored.object_id
+    finally:
+        await engine.dispose()
+
+
 def test_evaluation_api_lists_catalog_and_runs_sync_eval(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -445,6 +502,13 @@ def test_evaluation_api_lists_catalog_and_runs_sync_eval(
             scopes=["eval:read", "eval:write"],
         )
     }
+    asyncio.run(
+        _seed_eval_dataset(
+            db_path,
+            tenant_id="tenant_eval",
+            dataset_id="ds_docs_eval",
+        )
+    )
 
     with _build_client(monkeypatch, db_path) as client:
         engines_response = client.get("/v1/eval/engines", headers=headers)
@@ -488,6 +552,13 @@ def test_evaluation_api_lists_catalog_and_runs_sync_eval(
     assert sync_response.json()["engine_id"] == "deepeval"
     assert sync_response.json()["status"] == "succeeded"
     assert sync_response.json()["summary"]["overall_passed"] is True
+    assert sync_response.json()["job_id"].startswith("job_")
+    assert sync_response.json()["source_summary"]["evalscope_task_id"] == sync_response.json()[
+        "job_id"
+    ]
+    assert sync_response.json()["eval_run_id"].startswith("erun_")
+    assert sync_response.json()["artifacts"][0]["label"] == "evaluation_report"
+    assert sync_response.json()["artifacts"][0]["uri"].startswith("s3://")
 
 
 def test_evaluation_job_submit_worker_and_result(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -555,6 +626,7 @@ def test_evaluation_job_submit_worker_and_result(monkeypatch: pytest.MonkeyPatch
     assert completed_result.json()["source_summary"] == {
         "input_type": "inline_test_cases",
         "test_case_count": 1,
+        "evalscope_task_id": job_id,
     }
     assert completed_result.json()["artifacts"][0]["label"] == "evaluation_report"
     assert completed_result.json()["artifacts"][0]["object_id"].startswith("obj_")
@@ -563,6 +635,129 @@ def test_evaluation_job_submit_worker_and_result(monkeypatch: pytest.MonkeyPatch
         "evaluation.job.started",
         "evaluation.job.succeeded",
     ]
+
+
+def test_evaluation_job_submit_hydrates_synthesis_output_object(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db_path = _case_db_path("api-evaluation-synthesis-object")
+    db_migrate_main(["upgrade", "head", "--db-url", _sync_sqlite_url(db_path)])
+    object_store = _FakeObjectStoreClient()
+    tenant_id = "tenant_eval_synth_object"
+    monkeypatch.setenv("CORTEX_DB_DSN", _async_sqlite_url(db_path))
+    monkeypatch.setenv("CORTEX_AUTH_MODE", "dev")
+    monkeypatch.setenv("CORTEX_ENV", "local")
+    monkeypatch.setenv("CORTEX_OTEL_ENABLED", "false")
+    load_settings.cache_clear()
+    object_id = asyncio.run(
+        _seed_storage_object(
+            db_path,
+            object_store=object_store,
+            tenant_id=tenant_id,
+            payload={
+                "synthesis_type": "agent_trajectories",
+                "engine_id": "deepeval",
+                "status": "succeeded",
+                "source_summary": {
+                    "source_type": "documents",
+                    "preview_rows": [
+                        {
+                            "scenario": (
+                                "A support agent needs to parse a private customer file."
+                            ),
+                            "expected_outcome": (
+                                "The agent asks for the object_id before calling parse."
+                            ),
+                            "context": [
+                                "Support agents should ask for the object_id before parsing a "
+                                "private file."
+                            ],
+                        },
+                        {
+                            "input": "Parse the private file for the customer.",
+                            "expected_output": "Ask for the object_id first.",
+                            "retrieval_contexts": [
+                                "Private file parsing requires an object_id."
+                            ],
+                        },
+                    ],
+                },
+            },
+        )
+    )
+    headers = {
+        "Authorization": _dev_bearer_token(
+            tenant_id=tenant_id,
+            actor_id="alice",
+            scopes=["eval:read", "eval:write", "jobs:read"],
+        )
+    }
+
+    with _build_client(monkeypatch, db_path, object_store=object_store) as client:
+        accepted_response = client.post(
+            "/v1/eval/jobs",
+            headers=headers,
+            json={
+                "name": "Support-Agent-Regressions",
+                "eval_type": "agentic",
+                "engine_id": "auto",
+                "input": {"type": "obj", "object_id": object_id},
+                "metrics": [
+                    {"metric_key": "agent.task_completion", "threshold": 0.8},
+                    {"metric_key": "agent.tool_correctness", "threshold": 0.8},
+                ],
+            },
+        )
+        job_id = accepted_response.json()["job_id"]
+        worker_status = asyncio.run(
+            _run_evaluation_worker_once(db_path, object_store=object_store)
+        )
+        completed_result = client.get(f"/v1/eval/jobs/{job_id}/result", headers=headers)
+
+    assert accepted_response.status_code == 202
+    assert worker_status == "succeeded"
+    assert completed_result.status_code == 200
+    assert completed_result.json()["source_summary"] == {
+        "input_type": "inline_test_cases",
+        "test_case_count": 2,
+        "evalscope_task_id": job_id,
+    }
+
+
+def test_evaluation_job_submit_returns_not_found_for_missing_dataset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db_path = _case_db_path("api-evaluation-missing-dataset")
+    db_migrate_main(["upgrade", "head", "--db-url", _sync_sqlite_url(db_path)])
+    headers = {
+        "Authorization": _dev_bearer_token(
+            tenant_id="tenant_eval_missing_dataset",
+            actor_id="alice",
+            scopes=["eval:read", "eval:write", "jobs:read"],
+        ),
+    }
+
+    with _build_client(monkeypatch, db_path) as client:
+        response = client.post(
+            "/v1/eval/jobs",
+            headers=headers,
+            json={
+                "name": "agent-eval",
+                "eval_type": "agentic",
+                "engine_id": "auto",
+                "input": {"type": "dataset", "dataset_id": "ds_agent_suite"},
+                "metrics": [
+                    {"metric_key": "agent.task_completion", "threshold": 0.8},
+                    {"metric_key": "agent.tool_correctness", "threshold": 0.8},
+                ],
+            },
+        )
+
+    assert response.status_code == 404
+    payload = response.json()
+    assert payload["error_code"] == "not_found"
+    assert "ds_agent_suite" in payload["detail"]
+    assert payload["field_errors"][0]["field"] == "body.input.dataset_id"
 
 
 def test_synthesis_api_lists_catalog_and_runs_sync_job(

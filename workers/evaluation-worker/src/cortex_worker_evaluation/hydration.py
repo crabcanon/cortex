@@ -16,6 +16,43 @@ from cortex_contracts import (
 from cortex_db import CortexUnitOfWork
 from cortex_storage import StorageService
 
+_EVAL_CASE_FIELD_ALIASES = {
+    "actual",
+    "actual_output",
+    "agent_output",
+    "answer",
+    "completion",
+    "context",
+    "contexts",
+    "conversation",
+    "conversation_turns",
+    "expected",
+    "expected_answer",
+    "expected_outcome",
+    "expected_output",
+    "expected_response",
+    "golden",
+    "ground_truth",
+    "input",
+    "instruction",
+    "messages",
+    "output",
+    "prediction",
+    "prompt",
+    "query",
+    "question",
+    "reference",
+    "reference_output",
+    "response",
+    "retrieval_context",
+    "retrieval_contexts",
+    "scenario",
+    "target_output",
+    "task",
+    "turns",
+    "user_input",
+}
+
 
 async def hydrate_evaluation_request(
     *,
@@ -121,10 +158,16 @@ def _records_from_json_payload(payload: Any) -> list[dict[str, Any]]:
 
 
 def _nested_records(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    for key in ("test_cases", "records", "items", "rows", "data"):
+    for key in ("test_cases", "records", "items", "rows", "data", "preview_rows"):
         value = payload.get(key)
         if isinstance(value, list):
             return [record for record in value if isinstance(record, dict)]
+    for key in ("source_summary", "synthesis_result", "result", "payload", "output"):
+        value = payload.get(key)
+        if isinstance(value, dict):
+            nested = _nested_records(value)
+            if nested:
+                return nested
     return []
 
 
@@ -149,21 +192,33 @@ def _test_case_from_record(
         "question",
         "prompt",
         "query",
+        "scenario",
+        "task",
+        "instruction",
     )
     actual_output = _string_field(
         record,
         effective_mapping.actual_output,
         "actual_output",
+        "actual",
+        "agent_output",
         "answer",
         "output",
         "response",
         "prediction",
+        "completion",
     )
     expected_output = _string_field(
         record,
         effective_mapping.expected_output,
         "expected_output",
+        "expected_outcome",
+        "expected_answer",
+        "expected_response",
+        "reference_output",
+        "target_output",
         "expected",
+        "golden",
         "ground_truth",
         "reference",
     )
@@ -181,6 +236,7 @@ def _test_case_from_record(
             effective_mapping.conversation_turns,
             "conversation_turns",
             "turns",
+            "conversation",
             "messages",
         )
     )
@@ -198,7 +254,7 @@ def _test_case_from_record(
         metadata={
             key: value
             for key, value in record.items()
-            if key.startswith("_") or key not in {"user_input", "actual_output", "expected_output"}
+            if key.startswith("_") or key not in _EVAL_CASE_FIELD_ALIASES
         },
     )
 

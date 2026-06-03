@@ -20,7 +20,13 @@ from cortex_contracts.openapi_examples import (
 )
 from cortex_db import CortexUnitOfWork
 from cortex_domain import AccessLevel
-from cortex_evaluation import EvaluationJobControlService, EvaluationService
+from cortex_evaluation import (
+    EvaluationJobControlService,
+    EvaluationService,
+    EvaluationStorageCaller,
+    persist_evaluation_report,
+)
+from cortex_storage import StorageService
 from fastapi import APIRouter, Body, Depends, Header, Query, Request, Response, status
 
 from ..dependencies.auth import get_current_caller
@@ -28,6 +34,7 @@ from ..dependencies.runtime import (
     get_auth_service,
     get_evaluation_job_service,
     get_evaluation_service,
+    get_storage_service,
     get_uow,
 )
 from ..services.jobs import get_job_status
@@ -151,6 +158,10 @@ async def run_eval_sync(
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     evaluation_service: Annotated[EvaluationService, Depends(get_evaluation_service)],
+    evaluation_job_service: Annotated[
+        EvaluationJobControlService, Depends(get_evaluation_job_service)
+    ],
+    storage_service: Annotated[StorageService, Depends(get_storage_service)],
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
 ) -> EvalRunResult:
     await auth_service.authorize(
@@ -159,7 +170,39 @@ async def run_eval_sync(
         permission_key="eval:write",
         request_id=getattr(request.state, "request_id", None),
     )
-    return await evaluation_service.run(payload)
+    resolved = evaluation_service.resolve_request(payload)
+    job = await evaluation_job_service.create_sync_run(
+        uow=uow,
+        caller=caller,
+        request=resolved.request,
+        request_id=getattr(request.state, "request_id", None),
+    )
+    await uow.commit()
+    try:
+        result = await evaluation_service.run(resolved.request)
+        result.job_id = job.job_id
+        run = await evaluation_job_service.get_run_by_job(uow=uow, job_id=job.job_id)
+        result.eval_run_id = run.eval_run_id
+        result = await persist_evaluation_report(
+            uow=uow,
+            storage_service=storage_service,
+            caller=EvaluationStorageCaller(
+                tenant_id=caller.tenant_id,
+                subject=caller.subject,
+                actor_id=caller.actor_id,
+            ),
+            request=resolved.request,
+            result=result,
+        )
+        await evaluation_job_service.record_succeeded(uow=uow, job=job, result=result)
+        await uow.commit()
+        return result
+    except Exception as exc:
+        latest = await uow.jobs.get(job.job_id)
+        if latest is not None:
+            await evaluation_job_service.record_failed(uow=uow, job=latest, error=exc)
+            await uow.commit()
+        raise
 
 
 @router.post(

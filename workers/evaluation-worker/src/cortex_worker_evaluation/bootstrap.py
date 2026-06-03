@@ -26,6 +26,7 @@ from cortex_evaluation import (
     EvaluationJobControlService,
     EvaluationService,
     build_evaluation_service,
+    ensure_evalscope_task_id,
 )
 from cortex_storage import StorageService
 from sqlalchemy.ext.asyncio import AsyncEngine
@@ -112,6 +113,7 @@ class EvaluationWorker:
                     storage_service=self._storage_service,
                     request=request,
                 )
+                request = ensure_evalscope_task_id(request, current_job.job_id)
                 started_at = monotonic()
                 try:
                     result = await asyncio.wait_for(

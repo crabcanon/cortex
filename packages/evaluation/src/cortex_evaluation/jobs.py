@@ -4,14 +4,21 @@ from __future__ import annotations
 
 import re
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, TypeVar
 
-from cortex_common import NotFoundError, new_prefixed_id, normalize_idempotency_key, utc_now
+from cortex_common import (
+    NotFoundError,
+    ValidationError,
+    new_prefixed_id,
+    normalize_idempotency_key,
+    utc_now,
+)
 from cortex_contracts import (
     EvalJobAccepted,
     EvalJobSubmitRequest,
     EvalMetricResult,
     EvalRunResult,
+    EvalSyncRequest,
     TelemetryContext,
 )
 from cortex_contracts import (
@@ -41,15 +48,19 @@ QUEUE_CONTEXT_KEY = "evaluation_worker"
 DEFAULT_EXECUTION_TIMEOUT_SECONDS = 1800
 _SECRET_LIKE_PATTERN = re.compile(
     r"(?i)"
-    r"(api[_ -]?key(?:\s+provided)?[:=]?\s*)"
+    r"("
+    r"\"?(?:api[_ -]?key|authorization|bearer|access[_ -]?token)\"?"
+    r"(?:\s+provided)?\s*[:=]?\s*"
+    r")"
     r"(['\"]?)"
     r"("
-    r"sk-[A-Za-z0-9_-]{8,}"
+    r"sk-(?:or-v1-)?[A-Za-z0-9_-]{8,}"
     r"|AIza[A-Za-z0-9_\-*]{8,}"
     r"|[A-Za-z0-9_-]{4,}\*{4,}[A-Za-z0-9_-]{2,}"
     r")"
     r"(['\"]?)"
 )
+_EvalRequestT = TypeVar("_EvalRequestT", bound=EvalSyncRequest)
 
 
 class EvaluationJobControlService:
@@ -72,12 +83,15 @@ class EvaluationJobControlService:
             if existing is not None:
                 return self._accepted(existing, request)
 
+        await self._validate_request_references(uow=uow, caller=caller, request=request)
         trace_context = get_trace_context()
         queue_state = self._initial_queue_state()
         now = utc_now()
+        job_id = new_prefixed_id("job")
+        request = ensure_evalscope_task_id(request, job_id)
         job = await uow.jobs.add(
             JobRecord(
-                job_id=new_prefixed_id("job"),
+                job_id=job_id,
                 tenant_id=caller.tenant_id,
                 job_type=JobType.EVAL,
                 status=JobStatus.QUEUED,
@@ -111,7 +125,9 @@ class EvaluationJobControlService:
                 engine_id=request.engine_id,
                 profile_key=request.profile_key,
                 input_ref=request.input.model_dump(mode="json"),
-                target_ref=request.target.model_dump(mode="json") if request.target else {},
+                target_ref=_redact_sensitive_value(
+                    request.target.model_dump(mode="json") if request.target else {}
+                ),
                 metrics_config=[metric.model_dump(mode="json") for metric in request.metrics],
                 summary_results={},
                 sample_summary={},
@@ -133,6 +149,86 @@ class EvaluationJobControlService:
             },
         )
         return self._accepted(job, request)
+
+    async def create_sync_run(
+        self,
+        *,
+        uow: CortexUnitOfWork,
+        caller: Any,
+        request: EvalSyncRequest,
+        request_id: str | None = None,
+    ) -> JobRecord:
+        await self._validate_request_references(uow=uow, caller=caller, request=request)
+        trace_context = get_trace_context()
+        queue_state = self._initial_queue_state()
+        now = utc_now()
+        job_id = new_prefixed_id("job")
+        request = ensure_evalscope_task_id(request, job_id)
+        queue_state["attempt"] = 1
+        queue_state["max_attempts"] = 1
+        queue_state["status"] = "running"
+        queue_state["heartbeat_at"] = self._iso(now)
+        job = await uow.jobs.add(
+            JobRecord(
+                job_id=job_id,
+                tenant_id=caller.tenant_id,
+                job_type=JobType.EVAL,
+                status=JobStatus.RUNNING,
+                operation_name=f"evaluation.{request.eval_type.value}.sync",
+                submitted_at=now,
+                started_at=now,
+                heartbeat_at=now,
+                request_id=request_id,
+                trace_id=trace_context.get("trace_id"),
+                span_id=trace_context.get("span_id"),
+                target_type=request.target.type if request.target else "evaluation_target",
+                target_id=request.target.endpoint_url
+                if request.target
+                else request.input.dataset_id,
+                request_payload=_redact_sensitive_value(request.model_dump(mode="json")),
+                telemetry_context={
+                    "trace_id": trace_context.get("trace_id"),
+                    "span_id": trace_context.get("span_id"),
+                    "request_id": request_id,
+                },
+                deployment_context={QUEUE_CONTEXT_KEY: queue_state},
+                submitted_by=caller.actor_id or caller.subject,
+            )
+        )
+        await uow.eval_runs.add(
+            EvalRunRecord(
+                eval_run_id=new_prefixed_id("erun"),
+                job_id=job.job_id,
+                tenant_id=caller.tenant_id,
+                dataset_id=request.input.dataset_id,
+                eval_type=DomainEvalType(request.eval_type.value),
+                engine_id=request.engine_id,
+                profile_key=request.profile_key,
+                input_ref=request.input.model_dump(mode="json"),
+                target_ref=_redact_sensitive_value(
+                    request.target.model_dump(mode="json") if request.target else {}
+                ),
+                metrics_config=[metric.model_dump(mode="json") for metric in request.metrics],
+                summary_results={},
+                sample_summary={},
+                trace_id=job.trace_id,
+                span_id=job.span_id,
+                created_by=caller.actor_id or caller.subject,
+            )
+        )
+        await self._append_event(
+            uow,
+            job=job,
+            level="info",
+            event_type="evaluation.sync.started",
+            message="Synchronous evaluation run started.",
+            details={
+                "eval_type": request.eval_type.value,
+                "engine_id": request.engine_id,
+                **queue_state,
+            },
+        )
+        return job
 
     async def get_run_by_job(self, *, uow: CortexUnitOfWork, job_id: str) -> EvalRunRecord:
         run = await uow.eval_runs.get_by_job(job_id)
@@ -270,13 +366,15 @@ class EvaluationJobControlService:
         result: EvalRunResult,
     ) -> None:
         state = self._queue_state(job)
+        completed_at = utc_now()
         state["status"] = "succeeded"
-        state["completed_at"] = self._iso(utc_now())
+        state["completed_at"] = self._iso(completed_at)
         state["lease_owner"] = None
         state["lease_expires_at"] = None
         await uow.jobs.update_status(
             job.job_id,
             status=JobStatus.SUCCEEDED,
+            finished_at=completed_at,
             deployment_context=self._with_queue_state(job, state),
             result_payload={"eval_result": result.model_dump(mode="json")},
         )
@@ -378,6 +476,49 @@ class EvaluationJobControlService:
         )
 
     @staticmethod
+    async def _validate_request_references(
+        *,
+        uow: CortexUnitOfWork,
+        caller: Any,
+        request: EvalSyncRequest,
+    ) -> None:
+        input_type = request.input.type.strip().lower()
+        dataset_id = request.input.dataset_id
+        if input_type == "dataset" and not dataset_id:
+            raise ValidationError(
+                "Evaluation input type `dataset` requires `input.dataset_id`.",
+                extra={
+                    "field_errors": [
+                        {
+                            "field": "body.input.dataset_id",
+                            "message": "Field required when input.type is `dataset`.",
+                        }
+                    ]
+                },
+            )
+        if not dataset_id:
+            return
+        dataset = await uow.datasets.get(dataset_id)
+        if dataset is None or dataset.tenant_id != caller.tenant_id:
+            raise NotFoundError(
+                (
+                    f"Evaluation dataset `{dataset_id}` was not found or is not "
+                    "accessible for this tenant."
+                ),
+                extra={
+                    "field_errors": [
+                        {
+                            "field": "body.input.dataset_id",
+                            "message": (
+                                "Create the dataset first, use an accessible dataset id, "
+                                "or provide inline `input.test_cases` / object-backed input."
+                            ),
+                        }
+                    ]
+                },
+            )
+
+    @staticmethod
     def _initial_queue_state() -> dict[str, Any]:
         return {
             "attempt": 0,
@@ -455,8 +596,53 @@ def _metric_record(
     )
 
 
+def ensure_evalscope_task_id(
+    request: _EvalRequestT,
+    job_id: str,
+) -> _EvalRequestT:
+    """Attach the Cortex job id as EvalScope service task id if absent."""
+
+    if _has_evalscope_task_id(request.engine_options):
+        return request
+    options = dict(request.engine_options)
+    options["evalscope_task_id"] = job_id
+    request.engine_options = options
+    return request
+
+
+def _has_evalscope_task_id(engine_options: dict[str, Any]) -> bool:
+    for key in ("evalscope_task_id", "task_id", "cortex_job_id", "job_id"):
+        value = engine_options.get(key)
+        if isinstance(value, str) and value.strip():
+            return True
+    return False
+
+
 def _redact_error_message(message: str) -> str:
     return _SECRET_LIKE_PATTERN.sub(r"\1\2<redacted>\4", message)
+
+
+def _redact_sensitive_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        redacted: dict[str, Any] = {}
+        for key, item in value.items():
+            if _is_sensitive_key(str(key)):
+                redacted[key] = "<redacted>" if item else item
+            else:
+                redacted[key] = _redact_sensitive_value(item)
+        return redacted
+    if isinstance(value, list):
+        return [_redact_sensitive_value(item) for item in value]
+    if isinstance(value, str):
+        return _redact_error_message(value)
+    return value
+
+
+def _is_sensitive_key(key: str) -> bool:
+    normalized = key.lower().replace("-", "_")
+    return normalized in {"api_key", "authorization", "access_token", "bearer_token"} or (
+        "secret" in normalized or "api_key" in normalized
+    )
 
 
 def _artifact_object_id(result: EvalRunResult, *, preferred_label: str) -> str | None:

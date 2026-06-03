@@ -1,0 +1,211 @@
+.viewer {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  margin-block: 1.5rem;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-prose-bg);
+  box-shadow: 0 1px 0
+    color-mix(in oklch, var(--color-fd-foreground) 6%, transparent);
+  overflow: hidden;
+}
+
+.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  margin: 0 !important;
+  transform: none;
+  background: var(--color-fd-background);
+  border: none;
+  box-shadow: 0 16px 60px color-mix(in oklch, black 28%, transparent);
+}
+
+.viewer:fullscreen {
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  border: none;
+  background: var(--color-fd-background);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 42px;
+  border-bottom: 1px solid var(--color-fd-border);
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--color-fd-card) 82%, transparent),
+      color-mix(in oklch, var(--color-fd-card) 54%, transparent)
+    );
+}
+
+.exportError {
+  margin-right: auto;
+  padding-left: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-fd-muted-foreground);
+}
+
+.toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px;
+}
+
+.control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 31px;
+  height: 31px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-fd-muted-foreground);
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-fd-border);
+    background: var(--color-fd-muted);
+    color: var(--color-fd-foreground);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-fd-ring);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  svg {
+    width: 15px;
+    height: 15px;
+    stroke-width: 1.8;
+  }
+}
+
+.zoomValue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 46px;
+  height: 31px;
+  padding: 0 6px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-fd-muted-foreground);
+  border-inline: 1px solid var(--color-fd-border);
+}
+
+.viewport {
+  min-height: 240px;
+  height: min(56vh, 560px);
+  max-height: min(64vh, 680px);
+  position: relative;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  cursor: grab;
+  touch-action: none;
+  background:
+    linear-gradient(
+      to right,
+      color-mix(in oklch, var(--color-fd-border) 24%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--color-fd-border) 24%, transparent) 1px,
+      transparent 1px
+    ),
+    var(--color-prose-bg);
+  background-size: 24px 24px;
+
+  &[data-dragging="true"] {
+    cursor: grabbing;
+    user-select: none;
+  }
+}
+
+.fullscreen .viewport {
+  flex: 1;
+  height: auto;
+  max-height: none;
+  min-height: 0;
+}
+
+.diagram {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  transform-origin: 0 0;
+  will-change: transform;
+
+  :global(svg) {
+    overflow: visible;
+    user-select: none;
+  }
+}
+
+.error {
+  width: 100%;
+  max-width: 100%;
+  margin-block: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--color-fd-border);
+  color: var(--color-fd-foreground);
+  background: var(--color-fd-muted);
+  white-space: pre-wrap;
+}
+
+:global(#nd-page) > .viewer,
+:global(.docs-page-surface) > .viewer {
+  max-width: min(100%, 960px);
+}
+
+@media (max-width: 767.98px) {
+  .viewer {
+    margin-block: 1rem;
+    max-width: 100%;
+  }
+
+  .fullscreen {
+    inset: 0;
+  }
+
+  .header {
+    min-height: 40px;
+  }
+
+  .toolbar {
+    width: 100%;
+    overflow-x: auto;
+    justify-content: flex-end;
+  }
+
+  .viewport {
+    min-height: 220px;
+    height: min(60vh, 460px);
+    max-height: 65vh;
+  }
+}

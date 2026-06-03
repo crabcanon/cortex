@@ -5,27 +5,72 @@ description: 了解 Cortex 的控制面、数据面、引擎适配器、Schema�
 
 Cortex 将控制面决策和数据面产物分离。元数据、作业状态、授权决策和审计记录保存在 SQL 中；大体量内容和生成产物保存在对象存储中；向量和图数据交给适配器背后的专用存储。
 
-## 系统形态
+## 优化后的系统架构
 
 ```mermaid
-flowchart LR
-  Client["Client / Agent"] --> API["FastAPI Control Plane"]
-  API --> AuthN["OAuth2 / OIDC Resource Server"]
-  API --> AuthZ["Authorization Gateway"]
-  API --> Parse["Parse Controller"]
-  API --> Storage["Storage Controller"]
-  API --> Knowledge["Knowledge Controller"]
-  API --> Jobs["Job Controller"]
-  Parse --> Router["Parser Router"]
-  Router --> Registry["Engine + Profile Registry"]
-  Router --> Queue["Async Queue"]
-  Queue --> Workers["Parse / Knowledge / Evaluation / Synthesis Workers"]
-  Workers --> SQL["Relational DB"]
-  Workers --> S3["S3-Compatible Object Storage"]
-  Knowledge --> Cognee["Cognee Orchestrator"]
-  Cognee --> Graph["Graph Store Adapter"]
-  Cognee --> Vector["Vector Store Adapter"]
+flowchart TB
+  Client["Client / Agent / SDK"] --> API["FastAPI API Gateway"]
+
+  subgraph Control["控制面"]
+    API --> Auth["AuthN / AuthZ"]
+    API --> Jobs["Job Controller"]
+    API --> StorageCtl["Storage Controller"]
+    API --> ParseCtl["Parse Controller"]
+    API --> KnowledgeCtl["Knowledge Controller"]
+    API --> EvalCtl["Evaluation Controller"]
+    API --> SynthCtl["Synthesis Controller"]
+  end
+
+  subgraph Runtime["异步运行时"]
+    Jobs --> Queue["Job lease + heartbeat queue"]
+    Queue --> ParseWorker["Parse Worker"]
+    Queue --> KnowledgeWorker["Knowledge Worker"]
+    Queue --> EvalWorker["Evaluation Worker"]
+    Queue --> SynthWorker["Synthesis Worker"]
+  end
+
+  subgraph Data["数据面"]
+    SQL["关系型数据库：metadata、runs、jobs、auth audit"]
+    ObjectStore["S3-compatible 对象存储：files、artifacts、reports"]
+    VectorStore["Vector store adapter"]
+    GraphStore["Graph store adapter"]
+  end
+
+  subgraph Engines["引擎适配层"]
+    ParseWorker --> ParseEngines["Crawl4AI / Jina Reader / LlamaParse / MarkItDown / Docling"]
+    KnowledgeWorker --> Cognee["Cognee memory orchestration"]
+    EvalWorker --> EvalEngines["DeepEval / EvalScope"]
+    SynthWorker --> SynthEngines["SDV / DeepEval Synthesizer"]
+  end
+
+  StorageCtl --> ObjectStore
+  ParseCtl --> Jobs
+  KnowledgeCtl --> Jobs
+  EvalCtl --> Jobs
+  SynthCtl --> Jobs
+  ParseWorker --> SQL
+  ParseWorker --> ObjectStore
+  KnowledgeWorker --> SQL
+  KnowledgeWorker --> ObjectStore
+  KnowledgeWorker --> VectorStore
+  KnowledgeWorker --> GraphStore
+  EvalWorker --> SQL
+  EvalWorker --> ObjectStore
+  SynthWorker --> SQL
+  SynthWorker --> ObjectStore
 ```
+
+Cortex 让 API 进程保持轻量，把重型运行时依赖放进 Worker。API 负责编译请求、签发存储访问、记录作业意图，并暴露轮询与结果接口；Worker 负责长耗时执行、lease 刷新、引擎特定产物和最终持久化。这样 Parse、Knowledge、Evaluation、Synthesis 与 Storage 可以独立扩缩容，同时共享同一套 Job、Auth 和 Observability 模型。
+
+## 模块技术栈与官方地址
+
+| 模块 | 运行职责 | 重点依赖 | 官方地址 |
+| --- | --- | --- | --- |
+| Parse | 来源解析、解析器路由、引擎 fallback、标准化、document/chunk 持久化和异步解析执行。 | `httpx`、`PyYAML`、Crawl4AI、Jina Reader API、LlamaParse、MarkItDown、Docling、基于 Playwright 的浏览器运行时。 | [Crawl4AI](https://docs.crawl4ai.com/)、[Jina Reader](https://jina.ai/en-US/reader/)、[LlamaParse](https://docs.cloud.llamaindex.ai/llamaparse)、[MarkItDown](https://github.com/microsoft/markitdown)、[Docling](https://docling-project.github.io/docling/)、[HTTPX](https://www.python-httpx.org/)、[Playwright](https://playwright.dev/python/) |
+| Knowledge | 数据集摄入、解析文档水合、图/向量记忆构建和搜索编排。 | Cognee runtime、Kuzu graph backend、LanceDB vector backend、SQLite-backed Cognee metadata、OpenAI-compatible LLM 与 embedding 槽位。 | [Cognee](https://docs.cognee.ai/)、[Kuzu](https://docs.kuzudb.com/)、[LanceDB](https://docs.lancedb.com/)、[SQLite](https://www.sqlite.org/docs.html) |
+| Evaluation | 指标目录、评测作业水合、模型/裁判执行、性能压测和报告持久化。 | DeepEval、EvalScope、`httpx`、`pydantic`、用于 EvalScope self-hosted service mode 的 FastAPI/Uvicorn/SSE runtime。 | [DeepEval](https://deepeval.com/docs/introduction)、[EvalScope](https://evalscope.readthedocs.io/en/latest/get_started/introduction.html)、[Pydantic](https://docs.pydantic.dev/)、[FastAPI](https://fastapi.tiangolo.com/)、[Uvicorn](https://www.uvicorn.org/) |
+| Synthesis | 结构化、关系型、RAG golden、QA、conversation 与 agent trajectory 数据生成。 | SDV 用于结构化合成数据，DeepEval Synthesizer 用于 LLM-backed goldens，OpenAI-compatible provider 槽位。 | [SDV](https://docs.sdv.dev/)、[DeepEval](https://deepeval.com/docs/introduction) |
+| Storage | 上传会话、小文件直传、分片上传完成、签名下载、artifact 写入和元数据投影。 | boto3、botocore、Amazon S3 API 语义、MinIO/S3-compatible 对象存储、SQL metadata records。 | [Boto3 S3](https://docs.aws.amazon.com/boto3/latest/reference/services/s3.html)、[Amazon S3 API](https://docs.aws.amazon.com/AmazonS3/latest/API/Type_API_Reference.html)、[MinIO](https://min.io/docs/minio/linux/index.html) |
 
 ## 控制面
 
@@ -96,4 +141,3 @@ Cortex 支持本地开发 token issuer，也支持生产环境的 OAuth2/OIDC、
 - 大型产物落对象存储，再回写运行记录中的对象引用。
 - Job 结果轮询在未完成时返回非成功状态，完成后返回最终结果。
 - 供应商配置按完整槽位解析：base URL、API key、model ID 和 embedding 元数据必须一起移动。
-

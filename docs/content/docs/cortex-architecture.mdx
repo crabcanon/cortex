@@ -5,27 +5,72 @@ description: Understand Cortex control-plane, data-plane, engine adapters, schem
 
 Cortex separates control-plane decisions from data-plane artifacts. Metadata, job state, authorization decisions, and audit records live in SQL. Large content and generated artifacts live in object storage. Vector and graph data are delegated to adapter-backed stores.
 
-## System shape
+## Optimized system architecture
 
 ```mermaid
-flowchart LR
-  Client["Client / Agent"] --> API["FastAPI Control Plane"]
-  API --> AuthN["OAuth2 / OIDC Resource Server"]
-  API --> AuthZ["Authorization Gateway"]
-  API --> Parse["Parse Controller"]
-  API --> Storage["Storage Controller"]
-  API --> Knowledge["Knowledge Controller"]
-  API --> Jobs["Job Controller"]
-  Parse --> Router["Parser Router"]
-  Router --> Registry["Engine + Profile Registry"]
-  Router --> Queue["Async Queue"]
-  Queue --> Workers["Parse / Knowledge / Evaluation / Synthesis Workers"]
-  Workers --> SQL["Relational DB"]
-  Workers --> S3["S3-Compatible Object Storage"]
-  Knowledge --> Cognee["Cognee Orchestrator"]
-  Cognee --> Graph["Graph Store Adapter"]
-  Cognee --> Vector["Vector Store Adapter"]
+flowchart TB
+  Client["Client / Agent / SDK"] --> API["FastAPI API Gateway"]
+
+  subgraph Control["Control plane"]
+    API --> Auth["AuthN / AuthZ"]
+    API --> Jobs["Job Controller"]
+    API --> StorageCtl["Storage Controller"]
+    API --> ParseCtl["Parse Controller"]
+    API --> KnowledgeCtl["Knowledge Controller"]
+    API --> EvalCtl["Evaluation Controller"]
+    API --> SynthCtl["Synthesis Controller"]
+  end
+
+  subgraph Runtime["Async runtime"]
+    Jobs --> Queue["Job lease + heartbeat queue"]
+    Queue --> ParseWorker["Parse Worker"]
+    Queue --> KnowledgeWorker["Knowledge Worker"]
+    Queue --> EvalWorker["Evaluation Worker"]
+    Queue --> SynthWorker["Synthesis Worker"]
+  end
+
+  subgraph Data["Data plane"]
+    SQL["Relational DB: metadata, runs, jobs, auth audit"]
+    ObjectStore["S3-compatible object storage: files, artifacts, reports"]
+    VectorStore["Vector store adapter"]
+    GraphStore["Graph store adapter"]
+  end
+
+  subgraph Engines["Engine adapters"]
+    ParseWorker --> ParseEngines["Crawl4AI / Jina Reader / LlamaParse / MarkItDown / Docling"]
+    KnowledgeWorker --> Cognee["Cognee memory orchestration"]
+    EvalWorker --> EvalEngines["DeepEval / EvalScope"]
+    SynthWorker --> SynthEngines["SDV / DeepEval Synthesizer"]
+  end
+
+  StorageCtl --> ObjectStore
+  ParseCtl --> Jobs
+  KnowledgeCtl --> Jobs
+  EvalCtl --> Jobs
+  SynthCtl --> Jobs
+  ParseWorker --> SQL
+  ParseWorker --> ObjectStore
+  KnowledgeWorker --> SQL
+  KnowledgeWorker --> ObjectStore
+  KnowledgeWorker --> VectorStore
+  KnowledgeWorker --> GraphStore
+  EvalWorker --> SQL
+  EvalWorker --> ObjectStore
+  SynthWorker --> SQL
+  SynthWorker --> ObjectStore
 ```
+
+Cortex keeps the API process thin and moves heavyweight runtime dependencies into workers. The API compiles requests, signs storage access, records job intent, and exposes polling/result endpoints. Workers own long-running execution, lease refresh, engine-specific artifacts, and final persistence. This lets Parse, Knowledge, Evaluation, Synthesis, and Storage scale separately while sharing one job, auth, and observability model.
+
+## Module technology stack
+
+| Module | Runtime responsibility | Key dependencies | Official links |
+| --- | --- | --- | --- |
+| Parse | Source resolution, parser routing, engine fallback, normalization, document/chunk persistence, and async parse execution. | `httpx`, `PyYAML`, Crawl4AI, Jina Reader API, LlamaParse, MarkItDown, Docling, Playwright-backed browser runtime. | [Crawl4AI](https://docs.crawl4ai.com/), [Jina Reader](https://jina.ai/en-US/reader/), [LlamaParse](https://docs.cloud.llamaindex.ai/llamaparse), [MarkItDown](https://github.com/microsoft/markitdown), [Docling](https://docling-project.github.io/docling/), [HTTPX](https://www.python-httpx.org/), [Playwright](https://playwright.dev/python/) |
+| Knowledge | Dataset ingestion, parsed-document hydration, graph/vector memory construction, and search orchestration. | Cognee runtime, Kuzu graph backend, LanceDB vector backend, SQLite-backed Cognee metadata, OpenAI-compatible LLM and embedding slots. | [Cognee](https://docs.cognee.ai/), [Kuzu](https://docs.kuzudb.com/), [LanceDB](https://docs.lancedb.com/), [SQLite](https://www.sqlite.org/docs.html) |
+| Evaluation | Metric catalog, evaluation job hydration, model/judge execution, performance testing, and report persistence. | DeepEval, EvalScope, `httpx`, `pydantic`, FastAPI/Uvicorn/SSE runtime for self-hosted EvalScope service mode. | [DeepEval](https://deepeval.com/docs/introduction), [EvalScope](https://evalscope.readthedocs.io/en/latest/get_started/introduction.html), [Pydantic](https://docs.pydantic.dev/), [FastAPI](https://fastapi.tiangolo.com/), [Uvicorn](https://www.uvicorn.org/) |
+| Synthesis | Structured, relational, RAG golden, QA, conversation, and agent-trajectory data generation. | SDV for structured synthetic data, DeepEval Synthesizer for LLM-backed goldens, OpenAI-compatible provider slots. | [SDV](https://docs.sdv.dev/), [DeepEval](https://deepeval.com/docs/introduction) |
+| Storage | Upload sessions, direct small-file uploads, multipart upload completion, signed downloads, artifact writes, and metadata projection. | boto3, botocore, Amazon S3 API semantics, MinIO/S3-compatible object stores, SQL metadata records. | [Boto3 S3](https://docs.aws.amazon.com/boto3/latest/reference/services/s3.html), [Amazon S3 API](https://docs.aws.amazon.com/AmazonS3/latest/API/Type_API_Reference.html), [MinIO](https://min.io/docs/minio/linux/index.html) |
 
 ## Control plane
 
@@ -96,4 +141,3 @@ All API and worker paths align to OpenTelemetry. The local stack includes OTLP c
 - Large artifacts are persisted to object storage and linked back to run rows.
 - Pending job result polling returns a non-success state until the final result is available.
 - Provider settings are resolved as complete slots: base URL, API key, model ID, and embedding metadata move together.
-

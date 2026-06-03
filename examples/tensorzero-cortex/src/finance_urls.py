@@ -14,18 +14,6 @@ FINANCE_URLS: list[dict[str, object]] = [
         "expected_keywords": ["financial stability", "vulnerabilities", "leverage"],
     },
     {
-        "name": "Federal Reserve Beige Book",
-        "url": "https://www.federalreserve.gov/monetarypolicy/beigebook/default.htm",
-        "format_hint": "html",
-        "expected_keywords": ["economic activity", "district", "prices"],
-    },
-    {
-        "name": "IMF World Economic Outlook",
-        "url": "https://www.imf.org/en/Publications/WEO",
-        "format_hint": "html",
-        "expected_keywords": ["world economic outlook", "growth", "inflation"],
-    },
-    {
         "name": "IMF data API GDP growth",
         "url": "https://www.imf.org/external/datamapper/api/v1/NGDP_RPCH/USA",
         "format_hint": "json",
@@ -33,15 +21,9 @@ FINANCE_URLS: list[dict[str, object]] = [
     },
     {
         "name": "World Bank Global Economic Prospects",
-        "url": "https://www.worldbank.org/en/publication/global-economic-prospects",
-        "format_hint": "html",
+        "url": "https://openknowledge.worldbank.org/server/api/core/bitstreams/a9e24256-baf8-45bb-9075-75e437e1d6f7/content",
+        "format_hint": "pdf",
         "expected_keywords": ["global economic prospects", "growth", "developing economies"],
-    },
-    {
-        "name": "BIS Annual Economic Report HTML",
-        "url": "https://www.bis.org/publ/arpdf/ar2024e.htm",
-        "format_hint": "html",
-        "expected_keywords": ["annual economic report", "inflation", "financial system"],
     },
     {
         "name": "BIS Annual Economic Report PDF",

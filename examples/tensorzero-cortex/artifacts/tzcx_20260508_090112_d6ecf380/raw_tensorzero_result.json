@@ -1,0 +1,394 @@
+[
+  {
+    "context_id": "parse_engine:auto",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "auto",
+    "variant_name": "openai",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: openai: Error 429 Too Many Requests from openai client: {\\n    \\\"error\\\": {\\n        \\\"message\\\": \\\"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\\\",\\n        \\\"type\\\": \\\"insufficient_quota\\\",\\n        \\\"param\\\": null,\\n        \\\"code\\\": \\\"insufficient_quota\\\"\\n    }\\n}\\n [request_id: req_288aca0c57c34abc916611a9bd6684cb]\"}",
+    "metadata": {
+      "requested_variant": "openai",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:auto",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "auto",
+    "variant_name": "gemini",
+    "inference_id": "019e06d7-9126-7a70-9e7e-bb125dbc6806",
+    "episode_id": "019e06d7-9126-7a70-9e7e-bb2412e31281",
+    "answer_text": "所提供的来源（Federal Reserve FOMC calendar）仅包含美联储网站的导航菜单和链接目录，未提供任何关于宏观经济、通货膨胀、货币政策及金融稳定风险的具体内容或数据，因此无法进行对比。",
+    "output": {
+      "answer": "所提供的来源（Federal Reserve FOMC calendar）仅包含美联储网站的导航菜单和链接目录，未提供任何关于宏观经济、通货膨胀、货币政策及金融稳定风险的具体内容或数据，因此无法进行对比。",
+      "citations": [
+        "obj_d1670eebe1e24b99aef596c4"
+      ],
+      "confidence": 1,
+      "missing_evidence": [
+        "宏观经济风险的具体信息",
+        "通货膨胀风险的具体信息",
+        "货币政策风险的具体信息",
+        "金融稳定风险的具体信息"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2205,
+      "output_tokens": 155,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.8148,
+      "rag_context_quality": 0.65,
+      "llm_answer_quality": 0.6333,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "gemini",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:auto",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "auto",
+    "variant_name": "kimi",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: kimi_openai_compatible: Error from openai client: Error sending request: error sending request for url (https://api.moonshot.cn/v1/chat/completions)\"}",
+    "metadata": {
+      "requested_variant": "kimi",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:crawl4ai",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "crawl4ai",
+    "variant_name": "openai",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: openai: Error 429 Too Many Requests from openai client: {\\n    \\\"error\\\": {\\n        \\\"message\\\": \\\"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\\\",\\n        \\\"type\\\": \\\"insufficient_quota\\\",\\n        \\\"param\\\": null,\\n        \\\"code\\\": \\\"insufficient_quota\\\"\\n    }\\n}\\n [request_id: req_6e51092c4d68419eaac3bd2c8248bc76]\"}",
+    "metadata": {
+      "requested_variant": "openai",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:crawl4ai",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "crawl4ai",
+    "variant_name": "gemini",
+    "inference_id": "019e06d9-9319-7180-9a4b-49c62df287ae",
+    "episode_id": "019e06d9-9319-7180-9a4b-49da27e78fe7",
+    "answer_text": "所提供的上下文中仅包含美联储网站的导航菜单和链接，没有任何关于宏观经济、通货膨胀、货币政策及金融稳定风险的具体内容或对比信息。",
+    "output": {
+      "answer": "所提供的上下文中仅包含美联储网站的导航菜单和链接，没有任何关于宏观经济、通货膨胀、货币政策及金融稳定风险的具体内容或对比信息。",
+      "citations": [
+        "Federal Reserve FOMC calendar"
+      ],
+      "confidence": 0,
+      "missing_evidence": [
+        "宏观经济风险的具体信息",
+        "通货膨胀风险的具体信息",
+        "货币政策风险的具体信息",
+        "金融稳定风险的具体信息"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2211,
+      "output_tokens": 124,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.8148,
+      "rag_context_quality": 0.65,
+      "llm_answer_quality": 0.4333,
+      "rag_end_to_end_pass": false
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "gemini",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:crawl4ai",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "crawl4ai",
+    "variant_name": "kimi",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: kimi_openai_compatible: Error from openai client: Error sending request: error sending request for url (https://api.moonshot.cn/v1/chat/completions)\"}",
+    "metadata": {
+      "requested_variant": "kimi",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:jina_reader",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "jina_reader",
+    "variant_name": "openai",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: openai: Error 429 Too Many Requests from openai client: {\\n    \\\"error\\\": {\\n        \\\"message\\\": \\\"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\\\",\\n        \\\"type\\\": \\\"insufficient_quota\\\",\\n        \\\"param\\\": null,\\n        \\\"code\\\": \\\"insufficient_quota\\\"\\n    }\\n}\\n [request_id: req_0a5e4da625dc40eabb42ab9af5d78b20]\"}",
+    "metadata": {
+      "requested_variant": "openai",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:jina_reader",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "jina_reader",
+    "variant_name": "gemini",
+    "inference_id": "019e06da-e2c5-7cd2-958d-bd6d6f0c52c1",
+    "episode_id": "019e06da-e2c5-7cd2-958d-bd7f4aa452e8",
+    "answer_text": "提供的来源（Federal Reserve FOMC calendar）仅包含联邦公开市场委员会（FOMC）的会议日程及相关文件的占位链接，未包含任何关于宏观经济、通货膨胀、货币政策或金融稳定风险的具体内容或数据，因此无法进行对比。",
+    "output": {
+      "answer": "提供的来源（Federal Reserve FOMC calendar）仅包含联邦公开市场委员会（FOMC）的会议日程及相关文件的占位链接，未包含任何关于宏观经济、通货膨胀、货币政策或金融稳定风险的具体内容或数据，因此无法进行对比。",
+      "citations": [
+        "obj_1c16099d60f1441b8ae6b9ae"
+      ],
+      "confidence": 1,
+      "missing_evidence": [
+        "宏观经济风险",
+        "通货膨胀风险",
+        "货币政策风险",
+        "金融稳定风险"
+      ]
+    },
+    "usage": {
+      "input_tokens": 1592,
+      "output_tokens": 154,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.8148,
+      "rag_context_quality": 0.4778,
+      "llm_answer_quality": 0.6333,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "gemini",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:jina_reader",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "jina_reader",
+    "variant_name": "kimi",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: kimi_openai_compatible: Error from openai client: Error sending request: error sending request for url (https://api.moonshot.cn/v1/chat/completions)\"}",
+    "metadata": {
+      "requested_variant": "kimi",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:llama_parse",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "llama_parse",
+    "variant_name": "openai",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: openai: Error 429 Too Many Requests from openai client: {\\n    \\\"error\\\": {\\n        \\\"message\\\": \\\"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\\\",\\n        \\\"type\\\": \\\"insufficient_quota\\\",\\n        \\\"param\\\": null,\\n        \\\"code\\\": \\\"insufficient_quota\\\"\\n    }\\n}\\n [request_id: req_3999f44eeddb43c09ca60771ea181758]\"}",
+    "metadata": {
+      "requested_variant": "openai",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:llama_parse",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "llama_parse",
+    "variant_name": "gemini",
+    "inference_id": "019e06dc-1544-7df0-a8f6-147b944f6278",
+    "episode_id": "019e06dc-1544-7df0-a8f6-1484e9b9f5e0",
+    "answer_text": "所提供的来源（Federal Reserve FOMC calendar）仅包含联邦公开市场委员会（FOMC）的会议日程表，未提供任何关于宏观经济、通货膨胀、货币政策及金融稳定风险的具体信息，因此无法回答该问题或进行对比。",
+    "output": {
+      "answer": "所提供的来源（Federal Reserve FOMC calendar）仅包含联邦公开市场委员会（FOMC）的会议日程表，未提供任何关于宏观经济、通货膨胀、货币政策及金融稳定风险的具体信息，因此无法回答该问题或进行对比。",
+      "citations": [
+        "Federal Reserve FOMC calendar",
+        "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+      ],
+      "confidence": 0,
+      "missing_evidence": [
+        "宏观经济风险的描述",
+        "通货膨胀风险的描述",
+        "货币政策风险的描述",
+        "金融稳定风险的描述"
+      ]
+    },
+    "usage": {
+      "input_tokens": 1808,
+      "output_tokens": 125,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.8148,
+      "rag_context_quality": 0.65,
+      "llm_answer_quality": 0.4333,
+      "rag_end_to_end_pass": false
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "gemini",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:llama_parse",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "llama_parse",
+    "variant_name": "kimi",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: kimi_openai_compatible: Error from openai client: Error sending request: error sending request for url (https://api.moonshot.cn/v1/chat/completions)\"}",
+    "metadata": {
+      "requested_variant": "kimi",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:markitdown",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "markitdown",
+    "variant_name": "openai",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: openai: Error 429 Too Many Requests from openai client: {\\n    \\\"error\\\": {\\n        \\\"message\\\": \\\"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\\\",\\n        \\\"type\\\": \\\"insufficient_quota\\\",\\n        \\\"param\\\": null,\\n        \\\"code\\\": \\\"insufficient_quota\\\"\\n    }\\n}\\n [request_id: req_4c4c2c7c9f9a470794eb4e251e63d40d]\"}",
+    "metadata": {
+      "requested_variant": "openai",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:markitdown",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "markitdown",
+    "variant_name": "gemini",
+    "inference_id": "019e06dd-2822-70f2-9613-37326cb24720",
+    "episode_id": "019e06dd-2822-70f2-9613-3741393f4035",
+    "answer_text": "提供的上下文中没有包含关于宏观经济、通货膨胀、货币政策及金融稳定风险的任何信息。该文本仅为美联储（Federal Reserve）FOMC日历网页的网站导航菜单、社交媒体链接和标准样板文本，因此无法进行对比。",
+    "output": {
+      "answer": "提供的上下文中没有包含关于宏观经济、通货膨胀、货币政策及金融稳定风险的任何信息。该文本仅为美联储（Federal Reserve）FOMC日历网页的网站导航菜单、社交媒体链接和标准样板文本，因此无法进行对比。",
+      "citations": [
+        "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "obj_5832b8127be943e9b034b3d8"
+      ],
+      "confidence": 0,
+      "missing_evidence": [
+        "关于宏观经济风险的信息",
+        "关于通货膨胀风险的信息",
+        "关于货币政策风险的信息",
+        "关于金融稳定风险的信息"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2211,
+      "output_tokens": 190,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.8148,
+      "rag_context_quality": 0.65,
+      "llm_answer_quality": 0.4333,
+      "rag_end_to_end_pass": false
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "gemini",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:markitdown",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "markitdown",
+    "variant_name": "kimi",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: kimi_openai_compatible: Error from openai client: Error sending request: error sending request for url (https://api.moonshot.cn/v1/chat/completions)\"}",
+    "metadata": {
+      "requested_variant": "kimi",
+      "strategy": "exhaustive"
+    }
+  }
+]

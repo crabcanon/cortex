@@ -1,0 +1,199 @@
+{
+  "parse": {
+    "requested_sources": [
+      "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+    ],
+    "engine_id": "jina_reader",
+    "scene": null,
+    "results": [
+      {
+        "job_id": "job_10bdd65359cc468ba2e849f7",
+        "document": {
+          "document_id": "doc_13c4026c06ca41a7a81b01fb",
+          "source_type": "url",
+          "source_format": "text/html",
+          "markdown": "Title: The Fed - Meeting calendars and information\n\nURL Source: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\n\nMarkdown Content:\n```markdown\n# The Fed - Meeting calendars and information\n\n## Main Content\n\n### Meeting calendars, statements, and minutes (2021-2027)\n\nThe FOMC holds eight regularly scheduled meetings during the year and other meetings as needed. Links to policy statements and minutes are in the calendars below. The minutes of regularly scheduled meetings are released three weeks after the date of the policy decision. Committee membership changes at the first regularly scheduled meeting of the year.\n\n**FOIA**\nThe FOMC makes an [annual report](/foia/fomc/annualreports.htm) pursuant to the Freedom of Information Act. The FOMC FOIA [Service Center](/foia/fomc/servicecenter.htm) provides information about the status of FOIA requests and the FOIA process.\n\n[2026](#42828) | [2025](#42827) | [2024](#39116) | [2023](#36495) | [2022](#32979) | [2021](#27443)\nFuture Year: [2027](#45694)\n\n#### 2026 FOMC Meetings\n\n##### January\n- **Date:** 27-28\n- **Statement:**\n  - [PDF](/monetarypolicy/files/monetary20260128a1.pdf) | [HTML](/newsevents/pressreleases/monetary20260128a.htm)\n  - [Implementation Note](/newsevents/pressreleases/monetary20260128a1.htm)\n- **Press Conference:** [/monetarypolicy/fomcpressconf20260128.htm]\n- **Projection Materials:**\n  - [PDF](/monetarypolicy/files/fomcprojtabl20260128.pdf) | [HTML](/monetarypolicy/fomcprojtabl20260128.htm)\n  - [PDF](/monetarypolicy/files/fomcminutes20260128.pdf) | [HTML](/monetarypolicy/fomcminutes20260128.htm)\n- *Meeting associated with a Summary of Economic Projections.*\n\n##### March\n- **Date:** 17-18*\n- **Statement:**\n  - [PDF](/monetarypolicy/files/monetary20260318a1.pdf) | [HTML](/newsevents/pressreleases/monetary20260318a.htm)\n  - [Implementation Note](/newsevents/pressreleases/monetary20260318a.htm)\n- **Press Conference:** [/monetarypolicy/fomcpresconf20260318.htm]\n- **Projection Materials:**\n  - [PDF](/monetarypolicy/files/fomcprojtabl_ _ _ _ _ _ _ _ _ _ __.pdf_) | [HTML](/ monetarypolicy/_ _ _ _ _.txt_/fomcprojtabl_ _ _ _ _ _.htm_)\n  - **Minutes:** [/monetarypolicy/files/fomcminutes_._ pdf_]_ _|_[HTML] (/ monetarypolicy/_ _ _ _ _.txt_/fomcminutes_._htm/)\n- *Meeting associated with a Summary of Economic Projections.*\n\n##### April\n- **Date:** 30-31\n- **Statement:**\n  - [PDF](/monetarypolicy/files/monetary_ .pdf)_|_[HTML] (/ newsevents / pressreleases / monetary_ .htm)\n  - [Implementation Note](/newsevents / pressreleases / monetary_ .htm)\n- **Press Conference:** [/monetarypolicy/fomcpresconf_ .htm]\n- **Minutes:** [/ montereypoliticaleventiilemmeetinereport.txt/]_(_.pdf/) _|_[HTML] (/ montereypoliticaleventiilemmeetinereport.txt/]_\n- *Meeting associated with a Summary of Economic Projections.*\n\n##### June\n- **Date:** 16-17*\n- **Statement:**\n  - [PDF](/monetarypolicy/files/monicorelease.html)_|_[HTML] (/ newsevents / pressreleases / monetary_ .htm)\n  - [Implementation Note][Implementation Note]\n- **Press Conference:** [/monicorelease.html]/[/monicorelease.html]\n```",
+          "audit": {
+            "created_at": "2026-05-08T09:01:52.314098Z",
+            "updated_at": "2026-05-08T09:01:52.314098Z",
+            "created_by": "tensorzero-cortex-demo",
+            "updated_by": null
+          },
+          "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+          "source_object_id": null,
+          "source_uri": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+          "canonical_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+          "title": "The Fed - Meeting calendars and information",
+          "language_code": "und",
+          "detected_mime_type": "text/plain; charset=utf-8",
+          "category_tags": [],
+          "labels": [],
+          "access_policy": null,
+          "markdown_sha256": "f38cbcb41579884cdf54a0f32f24eb76f2e4c79bf593d45e364b6e4e26eaacfd",
+          "normalized_metadata": {
+            "title": "The Fed - Meeting calendars and information",
+            "author": null,
+            "publish_date": null,
+            "language": "und",
+            "description": null,
+            "summary": null,
+            "keywords": [],
+            "category_tags": []
+          },
+          "metadata": {
+            "title": "The Fed - Meeting calendars and information",
+            "reader_url": "https://r.jina.ai/https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+            "source_host": "www.federalreserve.gov",
+            "raw_metadata": {
+              "response_headers": {
+                "date": "Fri, 08 May 2026 09:01:59 GMT",
+                "content-type": "text/plain; charset=utf-8",
+                "transfer-encoding": "chunked",
+                "connection": "keep-alive",
+                "vary": "Accept-Encoding",
+                "x-usage-tokens": "12000",
+                "content-encoding": "br",
+                "server": "cloudflare",
+                "traceparent": "00-45b5d837553695563b48e269a4e83330-b0863298503eaba5-00",
+                "x-cloud-trace-context": "45b5d837553695563b48e269a4e83330/12719909827317246885",
+                "via": "1.1 google",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "DYNAMIC",
+                "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+                "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=doBcjAgW9flv4hc6uibYjLwcHfTIP3dkTHUTed7tAimE7sgnQTUiAk28es%2BLn492LBHkCa2ONPRP3NjV7LCiqLSKzvVakaUXY1MtAj5VLGPmbdR%2FRqpA2%2FqE5HJxzKIh5Giu7%2B5%2FLg%3D%3D\"}]}",
+                "cf-ray": "9f874838fc0f36e7-LAX"
+              }
+            },
+            "engine_payload_summary": {
+              "base_url": "https://r.jina.ai",
+              "used_readerlm_v2": true
+            }
+          },
+          "parser": {
+            "engine_key": "jina_reader",
+            "display_name": "Jina Reader",
+            "engine_family": "web_remote",
+            "engine_version": "jina-reader-http",
+            "profile_ref": "jina_reader_balanced",
+            "template_ref": null,
+            "fallback_used": false
+          },
+          "provenance": {
+            "input_kind": "url",
+            "fetched_at": "2026-05-08T09:01:52.313878Z",
+            "final_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+            "http_status": 200,
+            "content_length_bytes": 3088,
+            "parser_version": "jina-reader-http",
+            "content_hash_sha256": "f38cbcb41579884cdf54a0f32f24eb76f2e4c79bf593d45e364b6e4e26eaacfd"
+          }
+        },
+        "artifacts": {
+          "markdown_object": null,
+          "raw_html_object": null,
+          "screenshot_object": null,
+          "pdf_object": null,
+          "ssl_certificate": null
+        },
+        "diagnostics": {
+          "selected_engine_key": "jina_reader",
+          "fallback_used": false,
+          "engine_attempts": [
+            {
+              "attempt_no": 1,
+              "engine_key": "jina_reader",
+              "status": "succeeded",
+              "started_at": "2026-05-08T09:01:42.478066Z",
+              "completed_at": "2026-05-08T09:01:52.313921Z",
+              "error_code": null,
+              "warning": null,
+              "diagnostics": {
+                "engine_options": {
+                  "use_readerlm_v2": true
+                }
+              }
+            }
+          ],
+          "warnings": [],
+          "link_counts": {},
+          "media_counts": {},
+          "anti_bot_strategy": null,
+          "used_proxy": null,
+          "timings_ms": {
+            "fetch": null,
+            "render": null,
+            "normalize": 0,
+            "total": 0
+          },
+          "telemetry": {
+            "trace_id": "b65c62352e4e2bcae80d6ba1f6845e0f",
+            "span_id": "672fc45b6d2b447a",
+            "request_id": null,
+            "deployment_ring": null,
+            "experiment_variant": null
+          }
+        },
+        "telemetry": {
+          "trace_id": "b65c62352e4e2bcae80d6ba1f6845e0f",
+          "span_id": "672fc45b6d2b447a",
+          "request_id": null,
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      }
+    ]
+  },
+  "storage": {
+    "object_id": "obj_1c16099d60f1441b8ae6b9ae",
+    "filename": "Federal-Reserve-FOMC-calendar-jina_reader.md",
+    "content_type": "text/markdown",
+    "size_bytes": 3393,
+    "status": "available",
+    "audit": {
+      "created_at": "2026-05-08T09:01:52.352370",
+      "updated_at": "2026-05-08T09:01:52.352374",
+      "created_by": "tensorzero-cortex-demo",
+      "updated_by": null
+    },
+    "current_version_id": "objver_9f13b75503a04ef9b9e62a32",
+    "bucket": "cortex-local",
+    "object_key": "tenant_demo/obj_1c16099d60f1441b8ae6b9ae/Federal-Reserve-FOMC-calendar-jina_reader.md",
+    "checksum_sha256": "59d456441d7a6e9df245da1444b7ae5df31da85b5b1fa071c569fff5b274ac9d",
+    "etag": "\"24d7a1771182e204eeee4a061181bcd6\"",
+    "storage_class": null,
+    "metadata": {
+      "engine_id": "jina_reader",
+      "job_id": "job_10bdd65359cc468ba2e849f7",
+      "parse_mode": "sync",
+      "parse_score": "0.5183",
+      "run": "tensorzero-cortex",
+      "source_name": "Federal Reserve FOMC calendar",
+      "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+    },
+    "tags": [
+      "tensorzero",
+      "finance",
+      "parsed-markdown",
+      "jina_reader"
+    ],
+    "version": {
+      "object_version_id": "objver_9f13b75503a04ef9b9e62a32",
+      "version_no": 1,
+      "size_bytes": 3393,
+      "provider_version_ref": null,
+      "checksum_sha256": "59d456441d7a6e9df245da1444b7ae5df31da85b5b1fa071c569fff5b274ac9d",
+      "etag": "\"24d7a1771182e204eeee4a061181bcd6\"",
+      "is_latest": true,
+      "created_at": "2026-05-08T09:01:52.355674"
+    },
+    "access_policy": {
+      "access_level": "tenant_shared",
+      "owner_actor_id": null,
+      "classification_labels": [],
+      "allowed_role_keys": [],
+      "denied_role_keys": [],
+      "purpose_tags": [],
+      "constraints": {}
+    }
+  }
+}

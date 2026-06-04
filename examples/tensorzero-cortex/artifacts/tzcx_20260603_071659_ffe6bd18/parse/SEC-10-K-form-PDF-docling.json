@@ -1,0 +1,109 @@
+{
+  "parse": {
+    "requested_sources": [
+      "https://www.sec.gov/files/form10-k.pdf"
+    ],
+    "engine_id": "docling",
+    "scene": null,
+    "jobs": [
+      {
+        "job_id": "job_74ec3526abd940a48c16c557",
+        "job_type": "parse",
+        "status": "queued",
+        "submitted_at": "2026-06-03T07:45:04.905945",
+        "poll_url": "/v1/jobs/job_74ec3526abd940a48c16c557",
+        "result_url": "/v1/parse/jobs/job_74ec3526abd940a48c16c557/result",
+        "cancel_url": "/v1/jobs/job_74ec3526abd940a48c16c557/cancel",
+        "telemetry": {
+          "trace_id": "d18a1bd0666e5a2598722f2e5bd185da",
+          "span_id": "1fb0bed40257ead1",
+          "request_id": "request_faf1dac49b0541c1a2caaa44",
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      }
+    ],
+    "job_statuses": [
+      {
+        "job_id": "job_74ec3526abd940a48c16c557",
+        "job_type": "parse",
+        "status": "succeeded",
+        "operation_name": "parse.document.async",
+        "submitted_at": "2026-06-03T07:45:04.905945",
+        "progress_percent": null,
+        "queue_name": null,
+        "target_type": "parse_source",
+        "target_id": "https://www.sec.gov/files/form10-k.pdf",
+        "correlation_id": "request_faf1dac49b0541c1a2caaa44",
+        "started_at": "2026-06-03T07:45:05.185902",
+        "completed_at": "2026-06-03T07:45:48.859939",
+        "error": null,
+        "metrics": {
+          "queue_latency_ms": 279,
+          "run_latency_ms": 43674
+        },
+        "telemetry": {
+          "trace_id": "d18a1bd0666e5a2598722f2e5bd185da",
+          "span_id": "1fb0bed40257ead1",
+          "request_id": "request_faf1dac49b0541c1a2caaa44",
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      }
+    ],
+    "results": []
+  },
+  "storage": {
+    "object_id": "obj_aef74ccc1cdf485c84899826",
+    "filename": "SEC-10-K-form-PDF-docling.md",
+    "content_type": "text/markdown",
+    "size_bytes": 198,
+    "status": "available",
+    "audit": {
+      "created_at": "2026-06-03T07:45:50.440691",
+      "updated_at": "2026-06-03T07:45:50.440698",
+      "created_by": "tensorzero-cortex-demo",
+      "updated_by": null
+    },
+    "current_version_id": "objver_f7e608c29b254ece844bfe0b",
+    "bucket": "cortex-local",
+    "object_key": "tenant_demo/obj_aef74ccc1cdf485c84899826/SEC-10-K-form-PDF-docling.md",
+    "checksum_sha256": "39e7525f4be38a77a8b98b39d0f0e661d092a7a68936148a8ce525c919763c64",
+    "etag": "\"549aa654b4d3b5bcb07428b3ba6a32f8\"",
+    "storage_class": null,
+    "metadata": {
+      "engine_id": "docling",
+      "job_id": "job_74ec3526abd940a48c16c557",
+      "parse_mode": "async",
+      "parse_score": "0.0",
+      "run": "tensorzero-cortex",
+      "source_name": "SEC 10-K form PDF",
+      "source_url": "https://www.sec.gov/files/form10-k.pdf"
+    },
+    "tags": [
+      "tensorzero",
+      "finance",
+      "parsed-markdown",
+      "docling"
+    ],
+    "version": {
+      "object_version_id": "objver_f7e608c29b254ece844bfe0b",
+      "version_no": 1,
+      "size_bytes": 198,
+      "provider_version_ref": null,
+      "checksum_sha256": "39e7525f4be38a77a8b98b39d0f0e661d092a7a68936148a8ce525c919763c64",
+      "etag": "\"549aa654b4d3b5bcb07428b3ba6a32f8\"",
+      "is_latest": true,
+      "created_at": "2026-06-03T07:45:50.445897"
+    },
+    "access_policy": {
+      "access_level": "tenant_shared",
+      "owner_actor_id": null,
+      "classification_labels": [],
+      "allowed_role_keys": [],
+      "denied_role_keys": [],
+      "purpose_tags": [],
+      "constraints": {}
+    }
+  }
+}

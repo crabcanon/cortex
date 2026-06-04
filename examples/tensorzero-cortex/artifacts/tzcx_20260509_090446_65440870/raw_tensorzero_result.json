@@ -1,0 +1,207 @@
+[
+  {
+    "context_id": "parse_engine:auto",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "auto",
+    "variant_name": "openrouter",
+    "inference_id": "019e0bfd-0f81-7692-894d-e6ca2a5596e1",
+    "episode_id": "019e0bfd-0f81-7692-894d-e6daaa426351",
+    "answer_text": "The provided source (Federal Reserve FOMC calendar) only lists the schedule of FOMC meetings and does not contain substantive discussion of macro‑economic conditions, inflation trends, monetary‑policy actions, or financial‑stability risks, so a comparison cannot be made from this material.",
+    "output": {
+      "answer": "The provided source (Federal Reserve FOMC calendar) only lists the schedule of FOMC meetings and does not contain substantive discussion of macro‑economic conditions, inflation trends, monetary‑policy actions, or financial‑stability risks, so a comparison cannot be made from this material.",
+      "citations": [
+        "obj_578d25feeb054427a9333a68"
+      ],
+      "confidence": 0.2,
+      "missing_evidence": [
+        "macro‑economic analysis",
+        "inflation outlook",
+        "monetary‑policy description",
+        "financial‑stability risk assessment"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2130,
+      "output_tokens": 314,
+      "provider_cache_read_input_tokens": 0,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.7444,
+      "rag_context_quality": 1.0,
+      "llm_answer_quality": 0.6567,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:crawl4ai",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "crawl4ai",
+    "variant_name": "openrouter",
+    "inference_id": "019e0bfd-1e75-7da3-a72e-4bed94a35a98",
+    "episode_id": "019e0bfd-1e75-7da3-a72e-4bfae58f5170",
+    "answer_text": "The provided Federal Reserve FOMC calendar source mainly lists navigation links to various Fed pages (e.g., About the Fed, Monetary Policy, Supervision & Regulation) but does not contain substantive text on the current macro‑economic outlook, inflation dynamics, specific monetary‑policy actions, or assessments of financial‑stability risks. Consequently, there is insufficient evidence to compare those topics across the listed sources.",
+    "output": {
+      "answer": "The provided Federal Reserve FOMC calendar source mainly lists navigation links to various Fed pages (e.g., About the Fed, Monetary Policy, Supervision & Regulation) but does not contain substantive text on the current macro‑economic outlook, inflation dynamics, specific monetary‑policy actions, or assessments of financial‑stability risks. Consequently, there is insufficient evidence to compare those topics across the listed sources.",
+      "citations": [
+        "obj_8b3489427e974fd585665b48"
+      ],
+      "confidence": 0.3,
+      "missing_evidence": [
+        "macro‑economic outlook details",
+        "inflation trends and forecasts",
+        "monetary‑policy decisions and rationale",
+        "financial‑stability risk assessments"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2136,
+      "output_tokens": 409,
+      "provider_cache_read_input_tokens": 384,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.7444,
+      "rag_context_quality": 1.0,
+      "llm_answer_quality": 0.86,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:jina_reader",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "jina_reader",
+    "variant_name": "openrouter",
+    "inference_id": "019e0bfd-2a70-7780-b31e-3a5a95e8deaa",
+    "episode_id": "019e0bfd-2a70-7780-b31e-3a6282e329b1",
+    "answer_text": "The provided source (Federal Reserve FOMC calendar) only lists meeting dates, statements, and minutes links; it does not contain substantive discussion of macroeconomic conditions, inflation trends, monetary policy actions, or financial‑stability risks, so a comparison cannot be derived from this material.",
+    "output": {
+      "answer": "The provided source (Federal Reserve FOMC calendar) only lists meeting dates, statements, and minutes links; it does not contain substantive discussion of macroeconomic conditions, inflation trends, monetary policy actions, or financial‑stability risks, so a comparison cannot be derived from this material.",
+      "citations": [
+        "obj_80a8ae6ade3e457e9fb54a27"
+      ],
+      "confidence": 0.1,
+      "missing_evidence": [
+        "macro‑economic outlook",
+        "inflation analysis",
+        "monetary policy stance",
+        "financial stability risks"
+      ]
+    },
+    "usage": {
+      "input_tokens": 1261,
+      "output_tokens": 289,
+      "provider_cache_read_input_tokens": 384,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.7444,
+      "rag_context_quality": 0.6224,
+      "llm_answer_quality": 0.82,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:llama_parse",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "llama_parse",
+    "variant_name": "openrouter",
+    "inference_id": "019e0bfd-3636-7160-8306-bbd046139d8b",
+    "episode_id": "019e0bfd-3636-7160-8306-bbee68500b12",
+    "answer_text": "The provided source – the FederalReserve FOMC calendar – only lists meeting dates, links to statements, minutes and implementation notes. It does not contain substantive discussion of macro‑economic outlook, inflation trends, monetary‑policy actions or financial‑stability risks, so a direct comparison of those topics across sources cannot be made from the available information.",
+    "output": {
+      "answer": "The provided source – the FederalReserve FOMC calendar – only lists meeting dates, links to statements, minutes and implementation notes. It does not contain substantive discussion of macro‑economic outlook, inflation trends, monetary‑policy actions or financial‑stability risks, so a direct comparison of those topics across sources cannot be made from the available information.",
+      "citations": [
+        "Federal Reserve FOMC calendar"
+      ],
+      "confidence": 0.2,
+      "missing_evidence": [
+        "macro‑economic analysis",
+        "inflation commentary",
+        "monetary‑policy decisions",
+        "financial‑stability risk assessment"
+      ]
+    },
+    "usage": {
+      "input_tokens": 1877,
+      "output_tokens": 338,
+      "provider_cache_read_input_tokens": 384,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.7444,
+      "rag_context_quality": 1.0,
+      "llm_answer_quality": 0.6567,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:markitdown",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "markitdown",
+    "variant_name": "openrouter",
+    "inference_id": "019e0bfd-4263-7122-a8cd-73e7f4e1fc7d",
+    "episode_id": "019e0bfd-4263-7122-a8cd-73f2a934fb09",
+    "answer_text": "提供的来源仅是联邦储备委员会 FOMC 日历页面，页面主要列出网站导航和链接，没有包含关于宏观经济、通货膨胀、货币政策或金融稳定风险的具体信息。因此，无法在该来源中比较这些主题。",
+    "output": {
+      "answer": "提供的来源仅是联邦储备委员会 FOMC 日历页面，页面主要列出网站导航和链接，没有包含关于宏观经济、通货膨胀、货币政策或金融稳定风险的具体信息。因此，无法在该来源中比较这些主题。",
+      "citations": [
+        "obj_d95d41c252c240fa87b5d2ff"
+      ],
+      "confidence": 0.1,
+      "missing_evidence": [
+        "宏观经济概览",
+        "通货膨胀数据或趋势分析",
+        "货币政策决策或声明",
+        "金融稳定风险评估"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2217,
+      "output_tokens": 337,
+      "provider_cache_read_input_tokens": 384,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.7444,
+      "rag_context_quality": 1.0,
+      "llm_answer_quality": 0.4533,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  }
+]

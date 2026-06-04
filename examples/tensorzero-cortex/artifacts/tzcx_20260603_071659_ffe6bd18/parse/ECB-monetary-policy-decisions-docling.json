@@ -1,0 +1,109 @@
+{
+  "parse": {
+    "requested_sources": [
+      "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html"
+    ],
+    "engine_id": "docling",
+    "scene": null,
+    "jobs": [
+      {
+        "job_id": "job_24dc1d384c1e4771b04e338d",
+        "job_type": "parse",
+        "status": "queued",
+        "submitted_at": "2026-06-03T07:47:08.234771",
+        "poll_url": "/v1/jobs/job_24dc1d384c1e4771b04e338d",
+        "result_url": "/v1/parse/jobs/job_24dc1d384c1e4771b04e338d/result",
+        "cancel_url": "/v1/jobs/job_24dc1d384c1e4771b04e338d/cancel",
+        "telemetry": {
+          "trace_id": "b39bc17539feecb5c3892ed87d12618a",
+          "span_id": "acb3259b0ad6299d",
+          "request_id": "request_133f5e3533e34fec8cc62efa",
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      }
+    ],
+    "job_statuses": [
+      {
+        "job_id": "job_24dc1d384c1e4771b04e338d",
+        "job_type": "parse",
+        "status": "succeeded",
+        "operation_name": "parse.document.async",
+        "submitted_at": "2026-06-03T07:47:08.234771",
+        "progress_percent": null,
+        "queue_name": null,
+        "target_type": "parse_source",
+        "target_id": "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html",
+        "correlation_id": "request_133f5e3533e34fec8cc62efa",
+        "started_at": "2026-06-03T07:47:08.532371",
+        "completed_at": "2026-06-03T07:47:11.328585",
+        "error": null,
+        "metrics": {
+          "queue_latency_ms": 297,
+          "run_latency_ms": 2796
+        },
+        "telemetry": {
+          "trace_id": "b39bc17539feecb5c3892ed87d12618a",
+          "span_id": "acb3259b0ad6299d",
+          "request_id": "request_133f5e3533e34fec8cc62efa",
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      }
+    ],
+    "results": []
+  },
+  "storage": {
+    "object_id": "obj_66c0188205f14615ba4f76e5",
+    "filename": "ECB-monetary-policy-decisions-docling.md",
+    "content_type": "text/markdown",
+    "size_bytes": 266,
+    "status": "available",
+    "audit": {
+      "created_at": "2026-06-03T07:47:14.336605",
+      "updated_at": "2026-06-03T07:47:14.336609",
+      "created_by": "tensorzero-cortex-demo",
+      "updated_by": null
+    },
+    "current_version_id": "objver_f7e510d0b0f640fd9e3f57c7",
+    "bucket": "cortex-local",
+    "object_key": "tenant_demo/obj_66c0188205f14615ba4f76e5/ECB-monetary-policy-decisions-docling.md",
+    "checksum_sha256": "cba0aae6ebb7acccd8fbd669187e5796a890d6b11c4ec52d3f81e20fb8c2fe19",
+    "etag": "\"0db4a3e99218ba1e0d7ab0d8af8e07ed\"",
+    "storage_class": null,
+    "metadata": {
+      "engine_id": "docling",
+      "job_id": "job_24dc1d384c1e4771b04e338d",
+      "parse_mode": "async",
+      "parse_score": "0.0",
+      "run": "tensorzero-cortex",
+      "source_name": "ECB monetary policy decisions",
+      "source_url": "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html"
+    },
+    "tags": [
+      "tensorzero",
+      "finance",
+      "parsed-markdown",
+      "docling"
+    ],
+    "version": {
+      "object_version_id": "objver_f7e510d0b0f640fd9e3f57c7",
+      "version_no": 1,
+      "size_bytes": 266,
+      "provider_version_ref": null,
+      "checksum_sha256": "cba0aae6ebb7acccd8fbd669187e5796a890d6b11c4ec52d3f81e20fb8c2fe19",
+      "etag": "\"0db4a3e99218ba1e0d7ab0d8af8e07ed\"",
+      "is_latest": true,
+      "created_at": "2026-06-03T07:47:14.339895"
+    },
+    "access_policy": {
+      "access_level": "tenant_shared",
+      "owner_actor_id": null,
+      "classification_labels": [],
+      "allowed_role_keys": [],
+      "denied_role_keys": [],
+      "purpose_tags": [],
+      "constraints": {}
+    }
+  }
+}

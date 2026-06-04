@@ -1,0 +1,207 @@
+[
+  {
+    "context_id": "parse_engine:auto",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "auto",
+    "variant_name": "openrouter",
+    "inference_id": "019e8c75-b556-7ae1-8eda-462e5c229e1c",
+    "episode_id": "019e8c75-b557-7e41-a20b-45f39d878e17",
+    "answer_text": "The provided Federal Reserve FOMC calendar page (obj_9abcce23ba2946c29d0fc03a) only lists meeting dates and links to other Fed resources; it does not contain any discussion of macro‑economic, inflation, monetary‑policy, or financial‑stability risks, so a comparison cannot be made from this source alone. Additional documents such as the Monetary Policy Report, Beige Book, or the Supervision and Regulation Report would be needed to assess those risk dimensions.",
+    "output": {
+      "answer": "The provided Federal Reserve FOMC calendar page (obj_9abcce23ba2946c29d0fc03a) only lists meeting dates and links to other Fed resources; it does not contain any discussion of macro‑economic, inflation, monetary‑policy, or financial‑stability risks, so a comparison cannot be made from this source alone. Additional documents such as the Monetary Policy Report, Beige Book, or the Supervision and Regulation Report would be needed to assess those risk dimensions.",
+      "citations": [
+        "obj_9abcce23ba2946c29d0fc03a"
+      ],
+      "confidence": 0.2,
+      "missing_evidence": [
+        "Macroeconomic risk assessment",
+        "Inflation risk analysis",
+        "Monetary policy risk discussion",
+        "Financial stability risk overview"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2574,
+      "output_tokens": 345,
+      "provider_cache_read_input_tokens": 0,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.6197,
+      "rag_context_quality": 0.4885,
+      "llm_answer_quality": 0.4169,
+      "rag_end_to_end_pass": false
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:crawl4ai",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "crawl4ai",
+    "variant_name": "openrouter",
+    "inference_id": "019e8c75-c684-7b91-8529-05366cc77110",
+    "episode_id": "019e8c75-c684-7b91-8529-054a54fde341",
+    "answer_text": "The Federal Reserve FOMC calendar page mainly lists meeting dates and links to other Fed resources; it does not contain explicit commentary on macroeconomic, inflation, monetary‑policy, or financial‑stability risks, so a direct comparison of those risks across the listed sources cannot be made from the available content.",
+    "output": {
+      "answer": "The Federal Reserve FOMC calendar page mainly lists meeting dates and links to other Fed resources; it does not contain explicit commentary on macroeconomic, inflation, monetary‑policy, or financial‑stability risks, so a direct comparison of those risks across the listed sources cannot be made from the available content.",
+      "citations": [
+        "Federal Reserve FOMC calendar"
+      ],
+      "confidence": 0.2,
+      "missing_evidence": [
+        "macroeconomic risk analysis",
+        "inflation risk discussion",
+        "monetary policy risk assessment",
+        "financial stability risk overview"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2581,
+      "output_tokens": 308,
+      "provider_cache_read_input_tokens": 384,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.6197,
+      "rag_context_quality": 0.4885,
+      "llm_answer_quality": 0.3958,
+      "rag_end_to_end_pass": false
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:jina_reader",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "jina_reader",
+    "variant_name": "openrouter",
+    "inference_id": "019e8c75-da14-7d01-ba22-21844d8d80cd",
+    "episode_id": "019e8c75-da14-7d01-ba22-219c02618796",
+    "answer_text": "The provided sources do not contain substantive information on the macroeconomic, inflation, monetary‑policy, or financial‑stability risks needed for a comparative analysis. The Federal Reserve FOMC calendar lists meeting dates and document links, the IMF API excerpt shows unrelated country metadata, the OECD link displays only a bot‑verification page, and the Treasury press‑release list contains headlines without risk commentary. Consequently, a meaningful comparison cannot be drawn from the available context.",
+    "output": {
+      "answer": "The provided sources do not contain substantive information on the macroeconomic, inflation, monetary‑policy, or financial‑stability risks needed for a comparative analysis. The Federal Reserve FOMC calendar lists meeting dates and document links, the IMF API excerpt shows unrelated country metadata, the OECD link displays only a bot‑verification page, and the Treasury press‑release list contains headlines without risk commentary. Consequently, a meaningful comparison cannot be drawn from the available context.",
+      "citations": [
+        "Federal Reserve FOMC calendar",
+        "IMF data API GDP growth",
+        "OECD Economic Outlook",
+        "US Treasury press releases"
+      ],
+      "confidence": 0.2,
+      "missing_evidence": [
+        "Explicit macroeconomic risk assessments",
+        "Inflation outlooks",
+        "Monetary‑policy stance summaries",
+        "Financial‑stability analysis"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2769,
+      "output_tokens": 473,
+      "provider_cache_read_input_tokens": 0,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.6197,
+      "rag_context_quality": 0.5962,
+      "llm_answer_quality": 0.4592,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:llama_parse",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "llama_parse",
+    "variant_name": "openrouter",
+    "inference_id": "019e8c75-e98a-74a3-a566-d8fd97c5773e",
+    "episode_id": "019e8c75-e98a-74a3-a566-d90a8c421030",
+    "answer_text": "The provided FOMC calendar lists meeting dates and links to statements, minutes, and projection materials, but it does not contain any substantive discussion of macroeconomic, inflation, monetary‑policy, or financial‑stability risks. Consequently, there is no material in this source to compare those risk categories across different documents. To perform the requested comparison we would need the actual statements, minutes, or projection reports where the Committee outlines its risk assessments.",
+    "output": {
+      "answer": "The provided FOMC calendar lists meeting dates and links to statements, minutes, and projection materials, but it does not contain any substantive discussion of macroeconomic, inflation, monetary‑policy, or financial‑stability risks. Consequently, there is no material in this source to compare those risk categories across different documents. To perform the requested comparison we would need the actual statements, minutes, or projection reports where the Committee outlines its risk assessments.",
+      "citations": [
+        "Federal Reserve FOMC calendar"
+      ],
+      "confidence": 0.3,
+      "missing_evidence": [
+        "FOMC statements",
+        "FOMC minutes",
+        "Projection Materials",
+        "Implementation Notes"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2290,
+      "output_tokens": 356,
+      "provider_cache_read_input_tokens": 0,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.6197,
+      "rag_context_quality": 0.4077,
+      "llm_answer_quality": 0.3735,
+      "rag_end_to_end_pass": false
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:markitdown",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "markitdown",
+    "variant_name": "openrouter",
+    "inference_id": "019e8c75-f566-7d30-8a34-97e1a4e0a765",
+    "episode_id": "019e8c75-f566-7d30-8a34-97f2d3d03db3",
+    "answer_text": "The supplied Federal Reserve FOMC calendar page does not contain substantive discussion of macroeconomic, inflation, monetary‑policy, or financial‑stability risks, so a comparison cannot be drawn from the available material.",
+    "output": {
+      "answer": "The supplied Federal Reserve FOMC calendar page does not contain substantive discussion of macroeconomic, inflation, monetary‑policy, or financial‑stability risks, so a comparison cannot be drawn from the available material.",
+      "citations": [],
+      "confidence": 0.2,
+      "missing_evidence": [
+        "FOMC statements or minutes that discuss macroeconomic outlook",
+        "Beige Book or Monetary Policy Report outlining inflation and financial‑stability risks",
+        "Fed speeches or testimonies that assess monetary‑policy challenges"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2660,
+      "output_tokens": 292,
+      "provider_cache_read_input_tokens": 384,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.6197,
+      "rag_context_quality": 0.4615,
+      "llm_answer_quality": 0.4169,
+      "rag_end_to_end_pass": false
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  }
+]

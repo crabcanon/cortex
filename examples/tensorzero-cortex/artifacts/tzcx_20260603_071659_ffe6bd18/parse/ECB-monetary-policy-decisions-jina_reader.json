@@ -1,0 +1,201 @@
+{
+  "parse": {
+    "requested_sources": [
+      "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html"
+    ],
+    "engine_id": "jina_reader",
+    "scene": null,
+    "results": [
+      {
+        "job_id": "job_5f4231cc39af414983a76abc",
+        "document": {
+          "document_id": "doc_fce296aa115c4cee8f2dd699",
+          "source_type": "url",
+          "source_format": "text/html",
+          "markdown": "Title: Monetary policy statements\n\nURL Source: https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html\n\nMarkdown Content:\n```markdown\n# Monetary policy statements\n\nThe Governing Council takes its monetary policy decision every six weeks. Immediately after the meeting, the President and the Vice President of the ECB explain the decision at the press conference and answer questions from journalists. The press conference can be watched live at 14:45 CET and on demand shortly after.\n\n[Monetary policy decisions](/press/govcdec/mopo/html/index.en.html)\n[Monetary policy accounts](/press/accounts/html/index.en.html)\n[MOST recent press conference](/press/press_conference/html/index.en.html)\n\n## Latest Statements\n\n### 30 April 2026\n- **Christine Lagarde, Luis de Guindos:** [Monetary policy statement (with Q&A)](/press/press_conference/monetary-policy-statement/2026/html/ecb.is260430~f99cb123a8.en.html)\n  - Christine Lagarde, President of the ECB, Luis de Guindos, Vice-President of the ECB, Frankfurt am Main, 30 April 2026\n  - [English](/press/press_conference/monetary-policy-statement/shared/pdf/ecb.ds260430~1c397fa90c.en.pdf?642bc8f35891790a8ca9da434d78f0e4)\n  - OTHER LANGUAGES +\n    - [Български BG](/press/press_conference/monetary-policy-statement/2026/html/ecb.is260430~f99cb123a8.bg.html)\n    - [Čeština CS](/press/press_conference/monetary-policy-statement/2026/html/ecb.is260430~f99cb123a8.cs.html)\n    - [Dansk DA](/press/press_conference/monetary-policy-statement/2026/html/ecb.is260430~f99cb123a8.da.html)\n    - [Deutsch DE](/press/pressure/conference/Monetary-Policy-Statement/shared/pdf/ecb.ds260430~f99cb123a8.de.html)\n    - [Eλληνικά EL](/press/Monetary-Policy/Statement/shared/pdf/ecb.ds260430~f99cb123a8.el.html)\n    - [Español ES](/press/Monetary-Policy/Statement/shared/pdf/ecb.ds260430~f99cb123a8.es.html)\n    - [Eesti keel ET](/press/Monetary-Policy/Statement/shared/pdf/ecb.ds260430~f99cb123a8.et.html)\n    - [Suomi FI](/press/Monetary-Policy/Statement/shared/pdf/ecb.ds260430~f99cb123a8.fi.html)\n    - [Français FR](/press/Monetary-Policy/Statement/shared/pdf/ecb.ds260430~f99cb123a8.fr.html)\n    - [Gaeilge GA](/press/Monetary-Policy/Statement/shared/pdf/ecb.ds260430~f99cb123a8.ga.html)\n    - [Hrvatski HR](/press/Monetary-Policy/Statement/shared/pdf/ecb.ds260430~f99cb123a8.hr.html)\n    - [Magyar HU](/press/Monetary-Policy/Statement/shared/pdf/ecb.ds260430~f99cb123a8.hu.html)\n    - [Italiano IT](/press/Monetary-Policy/Statement/shared/pdf/ecb.ds260430~f99cb1siquo%7C%7Ce%7C%7C&amp;utm_source=google&amp;utm_medium=cpc&amp;utm_campaign=GOV_COP_Web_en&amp;gclid=CjwKCAjwzZyOBhBEEiwAGQYnJkRmXWpLrFtYqgqPvMhZlOzQsIiNkTmGxuJiXo5xWpLrFtYqg",
+          "audit": {
+            "created_at": "2026-06-03T07:47:08.182556Z",
+            "updated_at": "2026-06-03T07:47:08.182556Z",
+            "created_by": "tensorzero-cortex-demo",
+            "updated_by": null
+          },
+          "source_url": "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html",
+          "source_object_id": null,
+          "source_uri": "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html",
+          "canonical_url": "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html",
+          "title": "Monetary policy statements",
+          "language_code": "und",
+          "detected_mime_type": "text/plain; charset=utf-8",
+          "category_tags": [],
+          "labels": [],
+          "access_policy": null,
+          "markdown_sha256": "08ce38e5a820be7bb406b10399c1c2343e9fc9abcee2109099c36f2b4ba4055a",
+          "normalized_metadata": {
+            "title": "Monetary policy statements",
+            "author": null,
+            "publish_date": null,
+            "language": "und",
+            "description": null,
+            "summary": null,
+            "keywords": [],
+            "category_tags": []
+          },
+          "metadata": {
+            "title": "Monetary policy statements",
+            "reader_url": "https://r.jina.ai/https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html",
+            "source_host": "www.ecb.europa.eu",
+            "raw_metadata": {
+              "response_headers": {
+                "date": "Wed, 03 Jun 2026 07:47:08 GMT",
+                "content-type": "text/plain; charset=utf-8",
+                "content-length": "884",
+                "connection": "keep-alive",
+                "vary": "*",
+                "x-usage-tokens": "12000",
+                "content-encoding": "br",
+                "x-decompressed-content-length": "2730",
+                "cache-control": "no-transform",
+                "server": "cloudflare",
+                "x-cloud-trace-context": "9f243cdbd1c8c42f695290af7e432ff7/17873594882236921868",
+                "traceparent": "00-9f243cdbd1c8c42f695290af7e432ff7-f80bc3d8d6f8b80c-00",
+                "via": "1.1 google",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "DYNAMIC",
+                "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+                "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=66p9YRk%2F0cphsSCNl1JEQsDnsh4itGCMcgV1%2B1Zz%2Fv%2BuocGWp9hOr%2BgIIrxqlGjLKYoQ%2F%2BnGjbzkH3wWtOgcthBdjA3pknQfPgwT0pAxC1jIyNogz1Tv0n1MPLcVRbW8EbEon0vPog%3D%3D\"}]}",
+                "cf-ray": "a05d1618a9f15a75-LAX"
+              }
+            },
+            "engine_payload_summary": {
+              "base_url": "https://r.jina.ai",
+              "used_readerlm_v2": true
+            }
+          },
+          "parser": {
+            "engine_key": "jina_reader",
+            "display_name": "Jina Reader",
+            "engine_family": "web_remote",
+            "engine_version": "jina-reader-http",
+            "profile_ref": "jina_reader_balanced",
+            "template_ref": null,
+            "fallback_used": false
+          },
+          "provenance": {
+            "input_kind": "url",
+            "fetched_at": "2026-06-03T07:47:08.182353Z",
+            "final_url": "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html",
+            "http_status": 200,
+            "content_length_bytes": 2730,
+            "parser_version": "jina-reader-http",
+            "content_hash_sha256": "08ce38e5a820be7bb406b10399c1c2343e9fc9abcee2109099c36f2b4ba4055a"
+          }
+        },
+        "artifacts": {
+          "markdown_object": null,
+          "raw_html_object": null,
+          "screenshot_object": null,
+          "pdf_object": null,
+          "ssl_certificate": null
+        },
+        "diagnostics": {
+          "selected_engine_key": "jina_reader",
+          "fallback_used": false,
+          "engine_attempts": [
+            {
+              "attempt_no": 1,
+              "engine_key": "jina_reader",
+              "status": "succeeded",
+              "started_at": "2026-06-03T07:46:49.556208Z",
+              "completed_at": "2026-06-03T07:47:08.182391Z",
+              "error_code": null,
+              "warning": null,
+              "diagnostics": {
+                "engine_options": {
+                  "use_readerlm_v2": true
+                }
+              }
+            }
+          ],
+          "warnings": [],
+          "link_counts": {},
+          "media_counts": {},
+          "anti_bot_strategy": null,
+          "used_proxy": null,
+          "timings_ms": {
+            "fetch": null,
+            "render": null,
+            "normalize": 0,
+            "total": 0
+          },
+          "telemetry": {
+            "trace_id": "50f12d237e8baee4af9eb477499e55c7",
+            "span_id": "98c4a87badac9b2f",
+            "request_id": null,
+            "deployment_ring": null,
+            "experiment_variant": null
+          }
+        },
+        "telemetry": {
+          "trace_id": "50f12d237e8baee4af9eb477499e55c7",
+          "span_id": "98c4a87badac9b2f",
+          "request_id": null,
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      }
+    ]
+  },
+  "storage": {
+    "object_id": "obj_493cc5846cc346c3aba52aba",
+    "filename": "ECB-monetary-policy-decisions-jina_reader.md",
+    "content_type": "text/markdown",
+    "size_bytes": 3049,
+    "status": "available",
+    "audit": {
+      "created_at": "2026-06-03T07:47:08.219602",
+      "updated_at": "2026-06-03T07:47:08.219606",
+      "created_by": "tensorzero-cortex-demo",
+      "updated_by": null
+    },
+    "current_version_id": "objver_bca4a376f0d34199bceb3e31",
+    "bucket": "cortex-local",
+    "object_key": "tenant_demo/obj_493cc5846cc346c3aba52aba/ECB-monetary-policy-decisions-jina_reader.md",
+    "checksum_sha256": "34467062aff27d416e2feb48202abf36cebe28fb2fbbbd549cc708679d2e951e",
+    "etag": "\"f50100cd9cd59b132c225648c743e541\"",
+    "storage_class": null,
+    "metadata": {
+      "engine_id": "jina_reader",
+      "job_id": "job_5f4231cc39af414983a76abc",
+      "parse_mode": "sync",
+      "parse_score": "0.4352",
+      "run": "tensorzero-cortex",
+      "source_name": "ECB monetary policy decisions",
+      "source_url": "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html"
+    },
+    "tags": [
+      "tensorzero",
+      "finance",
+      "parsed-markdown",
+      "jina_reader"
+    ],
+    "version": {
+      "object_version_id": "objver_bca4a376f0d34199bceb3e31",
+      "version_no": 1,
+      "size_bytes": 3049,
+      "provider_version_ref": null,
+      "checksum_sha256": "34467062aff27d416e2feb48202abf36cebe28fb2fbbbd549cc708679d2e951e",
+      "etag": "\"f50100cd9cd59b132c225648c743e541\"",
+      "is_latest": true,
+      "created_at": "2026-06-03T07:47:08.222450"
+    },
+    "access_policy": {
+      "access_level": "tenant_shared",
+      "owner_actor_id": null,
+      "classification_labels": [],
+      "allowed_role_keys": [],
+      "denied_role_keys": [],
+      "purpose_tags": [],
+      "constraints": {}
+    }
+  }
+}

@@ -1,0 +1,1005 @@
+{
+  "run_id": "tzcx_20260429_095703_9ffc497f",
+  "dataset_key": "tensorzero_cortex_tzcx_20260429_095703_9ffc497f",
+  "tensorzero_gateway_url": "http://127.0.0.1:3002",
+  "tensorzero_ui_url": "http://127.0.0.1:4000",
+  "parse_artifacts": [
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "url_name": "Federal Reserve FOMC calendar",
+      "engine_id": "auto",
+      "parse_mode": "sync",
+      "job_id": "job_d004d7d5c1e04abdbf262693",
+      "document_id": "doc_79e27056331a44d58e064492",
+      "object_id": "obj_a3a9352337424e8d974bb92b",
+      "markdown_chars": 77648,
+      "context_excerpt": "* [](https://www.federalreserve.gov/aboutthefed.htm)[About the Fed](https://www.federalreserve.gov/aboutthefed.htm)\n    *       * [Structure of the Federal Reserve System](https://www.federalreserve.gov/aboutthefed/fedexplained/who-we-are.htm)\n      * [The Fed Explained](https://www.federalreserve.gov/aboutthefed/the-fed-explained.htm)\n      * [Board Members](https://www.federalreserve.gov/aboutthefed/bios/board/default.htm)\n      * [Advisory Councils](https://www.federalreserve.gov/aboutthefed/advisorydefault.htm)\n      * [Federal Reserve Banks](https://www.federalreserve.gov/aboutthefed/federal-reserve-system.htm)\n      * [Federal Reserve Bank and Branch Directors](https://www.federalreserve.gov/aboutthefed/directors/about.htm)\n      * [Federal Reserve Act](https://www.federalreserve.gov/aboutthefed/fract.htm)\n      * [Currency](https://www.federalreserve.gov/aboutthefed/currency.htm)\n      * [Board Meetings](https://www.federalreserve.gov/aboutthefed/boardmeetings/meetingdates.htm)\n      * [Board Votes](https://www.federalreserve.gov/aboutthefed/boardvotes.htm)\n      * [Careers](https://www.federalreserve.gov/careers.htm)\n      * [Do Business with the Board](https://www.federalreserve.gov/aboutthefed/procurement/tips.htm)\n      * [Holidays Observed - K.8](https://www.federalreserve.gov/aboutthefed/k8.htm)\n      * [Ethics & Values](https://www.federalreserve.gov/aboutthefed/ethics-values.htm)\n      * [Contact](https://www.federalreserve.gov/aboutthefed/contact-us-topics.htm)\n      * [Requesting Information (FOIA)](https://www.federalreserve.gov/foia/about_foia.htm)\n      * [FAQs](https://www.federalreserve.gov/faqs.htm)\n      * [Economic Education](https://www.federalreserve.gov/aboutthefed/educational-tools/default.htm)\n      * [Fed Financial Statements](https://www.federalreserve.gov/aboutthefed/fed-financial-statements.htm)\n      * [Financial Innovation](https://www.federalreserve.gov/aboutthefed/financial-innovation.htm)\n  * [](https://www.federalreserve.gov/newsevents.htm)[News & Events](https://www.federalreserve.gov/newsevents.htm)\n    * [Press Releases](https://www.federalreserve.gov/newsevents/pressreleases.htm)\n    * [Speeches & Testimony](https://www.federalreserve.gov/newsevents/speeches-testimony.htm)\n    * [Calendar](https://www.federalreserve.gov/newsevents/calendar.htm)\n    * [Videos](https://www.federalreserve.gov/videos.htm)\n    * [Photo Gallery](https://www.federalreserve.gov/photogallery.htm)\n    * [Conferences](https://www.federalreserve.gov/conferences.htm)\n  * [](https://www.federalreserve.gov/monetarypolicy.htm)[Monetary Policy](https://www.federalreserve.gov/monetarypolicy.htm)\n    *       * **Federal Open Market Committee**\n      * [About the FOMC](https://www.federalreserve.gov/monetarypolicy/fomc.htm)\n      * [Meeting calendars and information](https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm)\n      * [Transcripts and other historical materials](https://www.federalreserve.gov/monetarypolicy/fomc_historical.htm)\n      * [FAQs](https://www.federalreserve.gov/monetarypolicy/fomc_projectionsfaqs.htm)\n      * **Monetary Policy Principles and Practice**\n      * [Notes](https://www.federalreserve.gov/monetarypolicy/monetary-policy-principles-and-practice.htm)\n      * **Policy Implementation**\n      * [Policy Normalization](https://www.federalreserve.gov/monetarypolicy/policy-normalization.htm)\n      * [Policy Tools](https://www.federalreserve.gov/monetarypolicy/policytools.htm)\n      * **Reports**\n      * [Monetary Policy Report](https://www.federalreserve.gov/monetarypolicy/publications/mpr_default.htm)\n      * [Beige Book](https://www.federalreserve.gov/monetarypolicy/publications/beige-book-default.htm)\n      * [Federal Reserve Balance Sheet Developments](https://www.federalreserve.gov/monetarypolicy/publications/balance-sheet-developments-report.htm)\n      * **Review of Monetary Policy Strategy, Tools, and Communications**\n      * [Overview](https://www.federalreserve.gov/monetarypolicy/review-of-monetary-policy-strategy-tools-and-communications-2025.htm)\n  * [](https://www.federalreserve.gov/supervisionreg.htm)[Supervision & Regulation](https://www.federalreserve.gov/supervisionreg.htm)\n    *       * **Supervision**\n      * [ Community Banks](https://www.federalreserve.gov/supervisionreg/community-banks.htm)\n      * [ Regional Banks and Foreign Banks with U.S. Assets < $100 Billion](https://www.federalreserve.gov/supervisionreg/regional-and-small-foreign-banks.htm)\n      * [ Large Banks and Large Foreign Banks](https://www.federalreserve.gov/supervisionreg/large-banks-and-large-foreign-banks.htm)\n      * [ Global Systemically Important Banks](https://www.federalreserve.gov/supervisionreg/global-systemically-important-banks.htm)\n      * [Financial Market Utilities](https://www.federalreserve.gov/supervisionreg/financial-market-utility-supervision.htm)\n      * [Consumer Compliance](https://www.federalreserve.gov/supervisionreg/consumer-compliance.htm)\n      * [ Resources for Supervised Institutions](https://www.federalreserve.gov/supervisionreg/resources-for-supervised-institutions.htm)\n      * **Reports**\n      * [Federal Reserve Supervision and Regulation Report](https://www.federalreserve.gov/publications/supervision-and-regulation-report.htm)\n      * **Reporting Forms**\n      * [Recent Reporting Form Updates](https://www.federalreserve.gov/apps/reportingforms/recentupdates)\n      * [Information Collections Under Review](https://www.federalreserve.gov/apps/reportingforms/home/review)\n      * [Financial Statements](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"1\"\\])\n      * [Securities Exchange Act of 1934](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"7\"\\])\n      * [Applications/Structure Change](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"2\"\\])\n      * [FFIEC](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"3\"\\])\n      * [Municipal a",
+      "parse_score": 1.0,
+      "error": null,
+      "metadata": {
+        "format_hint": "html",
+        "parser": {
+          "engine_key": "crawl4ai",
+          "display_name": "Crawl4AI",
+          "engine_family": "web_interactive",
+          "engine_version": "0.8.6",
+          "profile_ref": "crawl4ai_balanced",
+          "template_ref": null,
+          "fallback_used": false
+        },
+        "source_format": "text/html",
+        "title": "The Fed - Meeting calendars and information",
+        "markdown_sha256": "edac669f105bc22762dc17963d146fbda23e9c6232bd2021bbb6f54856dc44fe"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "url_name": "Federal Reserve FOMC calendar",
+      "engine_id": "crawl4ai",
+      "parse_mode": "sync",
+      "job_id": "job_2a1a9680178d4507ad463daa",
+      "document_id": "doc_f76ed827195942b486f034ce",
+      "object_id": "obj_3305bc295ceb4a279775238b",
+      "markdown_chars": 77648,
+      "context_excerpt": "* [](https://www.federalreserve.gov/aboutthefed.htm)[About the Fed](https://www.federalreserve.gov/aboutthefed.htm)\n    *       * [Structure of the Federal Reserve System](https://www.federalreserve.gov/aboutthefed/fedexplained/who-we-are.htm)\n      * [The Fed Explained](https://www.federalreserve.gov/aboutthefed/the-fed-explained.htm)\n      * [Board Members](https://www.federalreserve.gov/aboutthefed/bios/board/default.htm)\n      * [Advisory Councils](https://www.federalreserve.gov/aboutthefed/advisorydefault.htm)\n      * [Federal Reserve Banks](https://www.federalreserve.gov/aboutthefed/federal-reserve-system.htm)\n      * [Federal Reserve Bank and Branch Directors](https://www.federalreserve.gov/aboutthefed/directors/about.htm)\n      * [Federal Reserve Act](https://www.federalreserve.gov/aboutthefed/fract.htm)\n      * [Currency](https://www.federalreserve.gov/aboutthefed/currency.htm)\n      * [Board Meetings](https://www.federalreserve.gov/aboutthefed/boardmeetings/meetingdates.htm)\n      * [Board Votes](https://www.federalreserve.gov/aboutthefed/boardvotes.htm)\n      * [Careers](https://www.federalreserve.gov/careers.htm)\n      * [Do Business with the Board](https://www.federalreserve.gov/aboutthefed/procurement/tips.htm)\n      * [Holidays Observed - K.8](https://www.federalreserve.gov/aboutthefed/k8.htm)\n      * [Ethics & Values](https://www.federalreserve.gov/aboutthefed/ethics-values.htm)\n      * [Contact](https://www.federalreserve.gov/aboutthefed/contact-us-topics.htm)\n      * [Requesting Information (FOIA)](https://www.federalreserve.gov/foia/about_foia.htm)\n      * [FAQs](https://www.federalreserve.gov/faqs.htm)\n      * [Economic Education](https://www.federalreserve.gov/aboutthefed/educational-tools/default.htm)\n      * [Fed Financial Statements](https://www.federalreserve.gov/aboutthefed/fed-financial-statements.htm)\n      * [Financial Innovation](https://www.federalreserve.gov/aboutthefed/financial-innovation.htm)\n  * [](https://www.federalreserve.gov/newsevents.htm)[News & Events](https://www.federalreserve.gov/newsevents.htm)\n    * [Press Releases](https://www.federalreserve.gov/newsevents/pressreleases.htm)\n    * [Speeches & Testimony](https://www.federalreserve.gov/newsevents/speeches-testimony.htm)\n    * [Calendar](https://www.federalreserve.gov/newsevents/calendar.htm)\n    * [Videos](https://www.federalreserve.gov/videos.htm)\n    * [Photo Gallery](https://www.federalreserve.gov/photogallery.htm)\n    * [Conferences](https://www.federalreserve.gov/conferences.htm)\n  * [](https://www.federalreserve.gov/monetarypolicy.htm)[Monetary Policy](https://www.federalreserve.gov/monetarypolicy.htm)\n    *       * **Federal Open Market Committee**\n      * [About the FOMC](https://www.federalreserve.gov/monetarypolicy/fomc.htm)\n      * [Meeting calendars and information](https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm)\n      * [Transcripts and other historical materials](https://www.federalreserve.gov/monetarypolicy/fomc_historical.htm)\n      * [FAQs](https://www.federalreserve.gov/monetarypolicy/fomc_projectionsfaqs.htm)\n      * **Monetary Policy Principles and Practice**\n      * [Notes](https://www.federalreserve.gov/monetarypolicy/monetary-policy-principles-and-practice.htm)\n      * **Policy Implementation**\n      * [Policy Normalization](https://www.federalreserve.gov/monetarypolicy/policy-normalization.htm)\n      * [Policy Tools](https://www.federalreserve.gov/monetarypolicy/policytools.htm)\n      * **Reports**\n      * [Monetary Policy Report](https://www.federalreserve.gov/monetarypolicy/publications/mpr_default.htm)\n      * [Beige Book](https://www.federalreserve.gov/monetarypolicy/publications/beige-book-default.htm)\n      * [Federal Reserve Balance Sheet Developments](https://www.federalreserve.gov/monetarypolicy/publications/balance-sheet-developments-report.htm)\n      * **Review of Monetary Policy Strategy, Tools, and Communications**\n      * [Overview](https://www.federalreserve.gov/monetarypolicy/review-of-monetary-policy-strategy-tools-and-communications-2025.htm)\n  * [](https://www.federalreserve.gov/supervisionreg.htm)[Supervision & Regulation](https://www.federalreserve.gov/supervisionreg.htm)\n    *       * **Supervision**\n      * [ Community Banks](https://www.federalreserve.gov/supervisionreg/community-banks.htm)\n      * [ Regional Banks and Foreign Banks with U.S. Assets < $100 Billion](https://www.federalreserve.gov/supervisionreg/regional-and-small-foreign-banks.htm)\n      * [ Large Banks and Large Foreign Banks](https://www.federalreserve.gov/supervisionreg/large-banks-and-large-foreign-banks.htm)\n      * [ Global Systemically Important Banks](https://www.federalreserve.gov/supervisionreg/global-systemically-important-banks.htm)\n      * [Financial Market Utilities](https://www.federalreserve.gov/supervisionreg/financial-market-utility-supervision.htm)\n      * [Consumer Compliance](https://www.federalreserve.gov/supervisionreg/consumer-compliance.htm)\n      * [ Resources for Supervised Institutions](https://www.federalreserve.gov/supervisionreg/resources-for-supervised-institutions.htm)\n      * **Reports**\n      * [Federal Reserve Supervision and Regulation Report](https://www.federalreserve.gov/publications/supervision-and-regulation-report.htm)\n      * **Reporting Forms**\n      * [Recent Reporting Form Updates](https://www.federalreserve.gov/apps/reportingforms/recentupdates)\n      * [Information Collections Under Review](https://www.federalreserve.gov/apps/reportingforms/home/review)\n      * [Financial Statements](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"1\"\\])\n      * [Securities Exchange Act of 1934](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"7\"\\])\n      * [Applications/Structure Change](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"2\"\\])\n      * [FFIEC](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"3\"\\])\n      * [Municipal a",
+      "parse_score": 1.0,
+      "error": null,
+      "metadata": {
+        "format_hint": "html",
+        "parser": {
+          "engine_key": "crawl4ai",
+          "display_name": "Crawl4AI",
+          "engine_family": "web_interactive",
+          "engine_version": "0.8.6",
+          "profile_ref": "crawl4ai_balanced",
+          "template_ref": null,
+          "fallback_used": false
+        },
+        "source_format": "text/html",
+        "title": "The Fed - Meeting calendars and information",
+        "markdown_sha256": "edac669f105bc22762dc17963d146fbda23e9c6232bd2021bbb6f54856dc44fe"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "url_name": "Federal Reserve FOMC calendar",
+      "engine_id": "markitdown",
+      "parse_mode": "sync",
+      "job_id": "job_f5a5e89fa02b4ceda88e84d6",
+      "document_id": "doc_bdfb9d0e152148beaf238b08",
+      "object_id": "obj_e036636d057045ef906d473f",
+      "markdown_chars": 42750,
+      "context_excerpt": "[Skip to main content](#content)\n\n![US Flag](/images/icon-us-flag.svg)\n\nAn official website of the United States Government\n\nHere's how you know![Expand More](/images/expand_more.svg)\n\n![.gov icon](https://designsystem.digital.gov/assets/img/icon-dot-gov.svg)\n\n**Official websites use .gov**\nA **.gov** website belongs to an official government organization in the United States.\n\n![HTTPS icon](https://designsystem.digital.gov/assets/img/icon-https.svg)\n\n**Secure .gov websites use HTTPS**\nA **lock** (LockLocked padlock icon) or **https://** means you've safely connected to the .gov website. Share sensitive information only on official, secure websites.\n\n[Back to Home](/default.htm)\n[Board of Governors of the Federal Reserve System](/default.htm \"Link to Home Page\")\n\n* Stay Connected\n  + [Federal Reserve Facebook Page](https://www.facebook.com/federalreserve)\n  + [Federal Reserve Instagram Page](https://www.instagram.com/federalreserveboard/)\n  + [Federal Reserve YouTube Page](https://www.youtube.com/federalreserve)\n  + [Federal Reserve Flickr Page](https://www.flickr.com/photos/federalreserve/)\n  + [Federal Reserve LinkedIn Page](https://www.linkedin.com/company/federal-reserve-board)\n  + [Federal Reserve Threads Page](https://www.threads.net/%40federalreserveboard)\n  + [Federal Reserve X Page](https://x.com/federalreserve)\n  + [Federal Reserve Bluesky Page](https://bsky.app/profile/federalreserve.gov)\n  + [Subscribe to RSS](/feeds/feeds.htm)\n  + [Subscribe to Email](/subscribe.htm)\n* [Recent Postings](/recentpostings.htm)\n* [Calendar](/newsevents/calendar.htm)\n* [Publications](/publications.htm)\n* [Site Map](/sitemap.htm)\n* [A-Z index](/azindex.htm)\n* [Careers](/careers.htm)\n* [FAQs](/faqs.htm)\n* [Videos](/videos.htm)\n* [Contact](/aboutthefed/contact-us-topics.htm)\n\nSearch\n\nSubmit Search Button\n\n[Advanced](//www.fedsearch.org/board_public/)\n\nToggle Dropdown Menu\n\n[# Board of Governors of the Federal Reserve System\n\n*The Federal Reserve, the central bank of the United States, provides\nthe nation with a safe, flexible, and stable monetary and financial\nsystem.*](/default.htm \"Link to Home Page\")\n\nMain Menu Toggle Button\nSections\n\nSearch Toggle Button\n\nSearch\n\nSearch Submit Button\nSubmit\n\n* [About\n  the Fed](/aboutthefed.htm)\n  + - [Structure of the Federal Reserve System](/aboutthefed/fedexplained/who-we-are.htm)\n    - [The Fed Explained](/aboutthefed/the-fed-explained.htm)\n    - [Board Members](/aboutthefed/bios/board/default.htm)\n    - [Advisory Councils](/aboutthefed/advisorydefault.htm)\n    - [Federal Reserve Banks](/aboutthefed/federal-reserve-system.htm)\n    - [Federal Reserve Bank and Branch Directors](/aboutthefed/directors/about.htm)\n    - [Federal Reserve Act](/aboutthefed/fract.htm)\n    - [Currency](/aboutthefed/currency.htm)\n    - [Board Meetings](/aboutthefed/boardmeetings/meetingdates.htm)\n    - [Board Votes](/aboutthefed/boardvotes.htm)\n    - [Careers](/careers.htm)\n    - [Do Business with the Board](/aboutthefed/procurement/tips.htm)\n    - [Holidays Observed - K.8](/aboutthefed/k8.htm)\n    - [Ethics & Values](/aboutthefed/ethics-values.htm)\n    - [Contact](/aboutthefed/contact-us-topics.htm)\n    - [Requesting Information (FOIA)](/foia/about_foia.htm)\n    - [FAQs](/faqs.htm)\n    - [Economic Education](/aboutthefed/educational-tools/default.htm)\n    - [Fed Financial Statements](/aboutthefed/fed-financial-statements.htm)\n    - [Financial Innovation](/aboutthefed/financial-innovation.htm)\n* [News\n  & Events](/newsevents.htm)\n  + [Press Releases](/newsevents/pressreleases.htm)\n  + [Speeches & Testimony](/newsevents/speeches-testimony.htm)\n  + [Calendar](/newsevents/calendar.htm)\n  + [Videos](/videos.htm)\n  + [Photo Gallery](/photogallery.htm)\n  + [Conferences](/conferences.htm)\n* [Monetary\n  Policy](/monetarypolicy.htm)\n  + - **Federal Open Market Committee**\n    - [About the FOMC](/monetarypolicy/fomc.htm)\n    - [Meeting calendars and information](/monetarypolicy/fomccalendars.htm)\n    - [Transcripts and other historical materials](/monetarypolicy/fomc_historical.htm)\n    - [FAQs](/monetarypolicy/fomc_projectionsfaqs.htm)\n    - **Monetary Policy Principles and Practice**\n    - [Notes](/monetarypolicy/monetary-policy-principles-and-practice.htm)\n    - **Policy Implementation**\n    - [Policy Normalization](/monetarypolicy/policy-normalization.htm)\n    - [Policy Tools](/monetarypolicy/policytools.htm)\n    - **Reports**\n    - [Monetary Policy Report](/monetarypolicy/publications/mpr_default.htm)\n    - [Beige Book](/monetarypolicy/publications/beige-book-default.htm)\n    - [Federal Reserve Balance Sheet Developments](/monetarypolicy/publications/balance-sheet-developments-report.htm)\n    - **Review of Monetary Policy Strategy, Tools, and Communications**\n    - [Overview](/monetarypolicy/review-of-monetary-policy-strategy-tools-and-communications-2025.htm)\n* [Supervision\n  & Regulation](/supervisionreg.htm)\n  + - **Supervision**\n    - [Community Banks](/supervisionreg/community-banks.htm)\n    - [Regional Banks and Foreign Banks with U.S. Assets < $100 Billion](/supervisionreg/regional-and-small-foreign-banks.htm)\n    - [Large Banks and Large Foreign Banks](/supervisionreg/large-banks-and-large-foreign-banks.htm)\n    - [Global Systemically Important Banks](/supervisionreg/global-systemically-important-banks.htm)\n    - [Financial Market\n      Utilities](/supervisionreg/financial-market-utility-supervision.htm)\n    - [Consumer\n      Compliance](/supervisionreg/consumer-compliance.htm)\n    - [Resources for Supervised Institutions](/supervisionreg/resources-for-supervised-institutions.htm)\n    - **Reports**\n    - [Federal Reserve\n      Supervision and Regulation Report](/publications/supervision-and-regulation-report.htm)\n    - **Reporting Forms**\n    - [Recent Reporting Form Updates](/apps/reportingforms/recentupdates)\n    - [Information Collections\n      Under Review](/apps/reportingforms/home/review)\n    - [Financial\n      Statements](/apps/ReportingForms/?reportTypesIdsJson=[\"1\"])\n    -",
+      "parse_score": 1.0,
+      "error": null,
+      "metadata": {
+        "format_hint": "html",
+        "parser": {
+          "engine_key": "markitdown",
+          "display_name": "Microsoft MarkItDown",
+          "engine_family": "document_local",
+          "engine_version": "0.1.5",
+          "profile_ref": "markitdown_lightweight",
+          "template_ref": null,
+          "fallback_used": false
+        },
+        "source_format": "text/html",
+        "title": "fomccalendars.htm",
+        "markdown_sha256": "4cabad13045623531f10198583268a83229ddf325c235a3cdb94eb3759ad2502"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "url_name": "Federal Reserve FOMC calendar",
+      "engine_id": "llama_parse",
+      "parse_mode": "sync",
+      "job_id": "job_2d80294201794ac7a1e85259",
+      "document_id": "doc_99f35d0879f04767a51313ce",
+      "object_id": "obj_135aec033ec14d6ab8249dfe",
+      "markdown_chars": 11493,
+      "context_excerpt": "An official website of the United States Government Here's how you know\n\n# Federal Open Market Committee\n\nMeeting calendars, statements, and minutes\n\nFOMC Search (2021-2027)\n\nThe FOMC holds eight regularly scheduled meetings during the year and other meetings as needed. Links to policy statements and minutes are in the calendars below. The minutes of regularly scheduled meetings are released three weeks after the date of the policy decision. Committee membership changes at the first regularly scheduled meeting of the year.\n\nFOIA\n\nThe FOMC makes an annual report pursuant to the Freedom of Information Act. The FOMC FOIA Service Center provides information about the status of FOIA requests and the FOIA process.\n\n# 2026 FOMC Meetings\n\n| Month   | Date    | Statement          | Press Conference          | Minutes            |\n| ------- | ------- | ------------------ | ------------------------- | ------------------ |\n| January | 27-28   | PDF HTML |                           |                    |\n| March   | 17-18\\* | PDF HTML | Projection Materials | PDF HTML |\n| April   | 28-29   |                    |                           |                    |\n| June    | 16-17\\* |                    |                           |                    |\n\n# 2025 FOMC Meetings\n\n| Month   | Date    | Statement  | Press Conference     | Minutes    | | |\n| ------- | ------- | ---------- | -------------------- | ---------- |---|---|\n| January | 28-29   | PDF | HTML |                      |            | |\n| March   | 18-19\\* | PDF | HTML | Projection Materials | PDF | HTML |\n| May     | 6-7     | PDF | HTML |                      |            | |\n| June    | 17-18\\* |            |                      |            | | |\n\n* Meeting associated with a Summary of Economic Projections.\n\n# Statement on Longer-Run Goals and Monetary Policy Strategy\n\n# 2024 FOMC Meetings\n\n| Month              | Date       | Statement  | Press Conference | Minutes    | Projection Materials | Implementation Note          | Release Date                 |                     |                          | | |\n| ------------------ | ---------- | ---------- | ---------------- | ---------- | -------------------- | ---------------------------- | ---------------------------- | ------------------- | ------------------------ |---|---|\n|                    |            | July       | 29-30            | Statement: | PDF | HTML           | Minutes:                     | PDF | HTML                   | Implementation Note | (Released July 09, 2025) |\n| 22 (notation vote) | Statement: | PDF | HTML | Minutes:         | PDF | HTML | Implementation Note  | (Released August 20, 2025)   |                              |                     |                          |\n| September          | 16-17\\*    | Statement: | PDF | HTML       | Minutes:   | PDF | HTML           | Implementation Note          | (Released October 08, 2025)  |                     |                          |\n| 28-29              | Statement: | PDF | HTML | Minutes:         | PDF | HTML | Implementation Note  | (Released November 19, 2025) |                              |                     |                          |\n| December           | 9-10\\*     | Statement: | PDF | HTML       | Minutes:   | PDF | HTML           | Implementation Note          | (Released December 30, 2025) |                     |                          |\n\n* Meeting associated with a Summary of Economic Projections.\n\n# Statement on Longer-Run Goals and Monetary Policy Strategy\n\nImplementation Note\n\n| Month     | Statement | Press Conference | Minutes    | Projection Materials | Implementation Note | Release Date                 | | |\n| --------- | --------- | ---------------- | ---------- | -------------------- | ------------------- | ---------------------------- |---|---|\n| March     | 19-20\\*   | PDF | HTML       | PDF | HTML |                      |                     | (Released February 21, 2024) |\n| Apr/May   | 30-1      | PDF | HTML       | PDF | HTML |                      |                     | (Released April 10, 2024)    |\n| June      | 11-12\\*   | PDF | HTML       | PDF | HTML |                      |                     | (Released July 03, 2024)     |\n| July      | 30-31     | PDF | HTML       | PDF | HTML |                      |                     | (Released August 21, 2024)   |\n| September | 17-18\\*   | PDF | HTML       | PDF | HTML |                      |                     | (Released October 09, 2024)  |\n| November  | 6-7       | PDF | HTML       | PDF | HTML |                      |                     | (Released November 26, 2024) |\n\nDecember      17-18*\n\nStatement:              Press Conference                    Minutes:\n\nPDF | HTML              Projection Materials                PDF | HTML\n\nImplementation Note     PDF | HTML                          (Released January 08, 2025)\n\n* Meeting associated with a Summary of Economic Projections.\n\n# 2023 FOMC Meetings\n\n# Jan/Feb       31-1\n\nStatement:              Press Conference              Minutes:\n\nPDF | HTML                                            PDF | HTML\n\nImplementation Note     Statement on Longer-Run       (Released February 22, 2023)\n\nGoals and Monetary Policy     Strategy\n\n# March         21-22*\n\nStatement:              Press Conference              Minutes:\n\nPDF | HTML              Projection Materials          PDF | HTML\n\nImplementation Note     PDF | HTML                    (Released April 12, 2023)\n\n# May           2-3\n\nStatement:              Press Conference              Minutes:\n\nPDF | HTML                                            PDF | HTML\n\nImplementation Note                                   (Released May 24, 2023)\n\n# June          13-14*\n\nStatement:              Press Conference              Minutes:\n\nPDF | HTML              Projection Materials          PDF | HTML\n\nImplementation Note     PDF | HTML                    (Released July 05, 2023)\n\n# July          25-26\n\nStatement:              Press Conference   ",
+      "parse_score": 1.0,
+      "error": null,
+      "metadata": {
+        "format_hint": "html",
+        "parser": {
+          "engine_key": "llama_parse",
+          "display_name": "LlamaParse",
+          "engine_family": "document_remote",
+          "engine_version": "0.6.94",
+          "profile_ref": "llama_parse_document_fidelity",
+          "template_ref": null,
+          "fallback_used": false
+        },
+        "source_format": "text/html",
+        "title": "fomccalendars.htm",
+        "markdown_sha256": "a73676cf0ef7453a0c87e3c9e912be21fd3cfd0390269c69860d50a4a2296345"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "url_name": "Federal Reserve FOMC calendar",
+      "engine_id": "docling",
+      "parse_mode": "async",
+      "job_id": "job_a577f1470954431f85fe1458",
+      "document_id": null,
+      "object_id": "obj_c65a2f75e4c14d7db8d72f95",
+      "markdown_chars": 0,
+      "context_excerpt": null,
+      "parse_score": 0.0,
+      "error": null,
+      "metadata": {
+        "format_hint": "html",
+        "parser": null,
+        "source_format": null,
+        "title": null,
+        "markdown_sha256": null
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/publications/files/financial-stability-report-20241122.pdf",
+      "url_name": "Federal Reserve Financial Stability Report PDF",
+      "engine_id": "auto",
+      "parse_mode": "sync",
+      "job_id": "job_daf2ff8de8a64891a67bd0f9",
+      "document_id": "doc_4fdc5893ce284b8d994fd550",
+      "object_id": "obj_6bd3b7d0cfd24299ab3d7d23",
+      "markdown_chars": 176286,
+      "context_excerpt": "# Financial Stability Report\n\n# 03.102\n\n15400\n\n3102\n\n154.1714\n\nNovember 2024\n\nBOARD OF GOVERNORS OF THE FEDERAL RESERVE SYSTEM\n\n# The Federal Reserve System\n\nThe Federal Reserve System is the central bank of the United States. It performs five key functions to promote the effective operation of the U.S. economy and, more generally, the public interest.\n\n# The Federal Reserve\n\n- conducts the nation’s monetary policy to promote maximum employment and stable prices in the U.S. economy;\n- promotes the stability of the financial system and seeks to minimize and contain systemic risks through active monitoring and engagement in the U.S. and abroad;\n- promotes the safety and soundness of individual financial institutions and monitors their impact on the financial system as a whole;\n- fosters payment and settlement system safety and efficiency through services to the banking industry and U.S. government that facilitate U.S.-dollar transactions and payments; and\n- promotes consumer protection and community development through consumer-focused supervision and examination, research and analysis of emerging consumer issues and trends, community economic development activities, and administration of consumer laws and regulations.\n\nTo learn more about us, visit www.federalreserve.gov/aboutthefed.htm.\n\n# Contents\n\nPurpose and Framework\n\nOverview\n\n1 Asset Valuations\n\n2 Borrowing by Businesses and Households\n\n3 Leverage in the Financial Sector\n\n4 Funding Risks\n\n5 Near-Term Risks to the Financial System\n\nox 5.1. Survey of Salient Risks to Financial Stability\n\nAppendix: Figure Notes\n\nRevisions\n\nNote: This report generally reflects information that was available as of November 4, 2024.\n\nNO_CONTENT_HERE\n\n# Purpose and Framework\n\nThis report presents the Federal Reserve Board’s current assessment of the stability of the U.S. financial system. By publishing this report, the Board intends to promote public understanding by increasing transparency around, and creating accountability for, the Federal Reserve’s views on this topic. Financial stability supports the objectives assigned to the Federal Reserve, including full employment and stable prices, a safe and sound banking system, and an efficient payments system.\n\nThe financial system is considered stable when banks, other lenders, and financial markets are able to provide households, communities, and businesses with the financing they need to invest, grow, and participate in a functioning economy—and can do so even when hit by adverse events, or “shocks.”\n\nConsistent with this view of financial stability, the Federal Reserve Board’s monitoring framework distinguishes between shocks to, and vulnerabilities of, the financial system. Shocks are inherently difficult to predict, while vulnerabilities, which are the aspects of the financial system that would exacerbate stress, can be monitored as they build up or recede over time. As a result, the framework focuses primarily on assessing vulnerabilities, with an emphasis on four broad categories and how those categories might interact to amplify stress in the financial system.\n\n1. Valuation pressures arise when asset prices are high relative to economic fundamentals or historical norms. These developments are often driven by an increased willingness of investors to take on risk. As such, elevated valuation pressures may increase the possibility of outsized drops in asset prices (see Section 1, Asset Valuations).\n\nFor a review of the research literature in this area, see Tobias Adrian, Daniel Covitz, and Nellie Liang (2015), “Financial Stability Monitoring,” Annual Review of Financial Economics, vol. 7 (December), pp. 357–95.\n\nFinancial Stability Report\n\n2. Excessive borrowing by businesses and households exposes the borrowers to distress if their incomes decline or the assets they own fall in value. In these cases, businesses and households with high debt burdens may need to cut back spending, affecting economic activity and causing losses for investors (see Section 2, Borrowing by Businesses and Households).\n\n3. Excessive leverage within the financial sector increases the risk that financial institutions will not have the ability to absorb losses without disruptions to their normal business operations when hit by adverse shocks. In those situations, institutions will be forced to cut back lending, sell their assets, or even shut down. Such responses can impair credit access for households and businesses, further weakening economic activity (see Section 3, Leverage in the Financial Sector).\n\n4. Funding risks expose the financial system to the possibility that investors will rapidly withdraw their funds from a particular institution or sector, creating strains across markets or institutions. Many financial institutions raise funds from the public with a commitment to return their investors’ money on short notice, but those institutions then invest much of those funds in assets that are hard to sell quickly or have a long maturity. This liquidity and maturity transformation can create an incentive for investors to withdraw funds quickly in adverse situations. Facing such withdrawals, financial institutions may need to sell assets quickly at “fire sale” prices, thereby incurring losses and potentially becoming insolvent, as well as causing additional price declines that can create stress across markets and at other institutions (see Section 4, Funding Risks).\n\nThe Federal Reserve’s monitoring framework also tracks domestic and international developments to identify near-term risks—that is, plausible adverse developments or shocks that could stress the U.S. financial system. The analysis of these risks focuses on assessing how such potential shocks may spread through the U.S. financial system, given our current assessment of vulnerabilities.\n\nWhile this framework provides a systematic way to assess financial stability, some potential risks may be novel or difficult to quantify and therefore are not captured by the curr",
+      "parse_score": 1.0,
+      "error": null,
+      "metadata": {
+        "format_hint": "pdf",
+        "parser": {
+          "engine_key": "llama_parse",
+          "display_name": "LlamaParse",
+          "engine_family": "document_remote",
+          "engine_version": "0.6.94",
+          "profile_ref": "llama_parse_document_fidelity",
+          "template_ref": null,
+          "fallback_used": false
+        },
+        "source_format": "application/pdf",
+        "title": "financial-stability-report-20241122.pdf",
+        "markdown_sha256": "9bd89a940dbec06bb2a41c829d666bc8add76373cc48c378072500a95619e2ff"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/publications/files/financial-stability-report-20241122.pdf",
+      "url_name": "Federal Reserve Financial Stability Report PDF",
+      "engine_id": "crawl4ai",
+      "parse_mode": "sync",
+      "job_id": null,
+      "document_id": null,
+      "object_id": null,
+      "markdown_chars": 0,
+      "context_excerpt": null,
+      "parse_score": 0,
+      "error": "POST /v1/parse/sync failed with 422: No active parse engine can handle the requested source.",
+      "metadata": {
+        "format_hint": "pdf"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/publications/files/financial-stability-report-20241122.pdf",
+      "url_name": "Federal Reserve Financial Stability Report PDF",
+      "engine_id": "markitdown",
+      "parse_mode": "sync",
+      "job_id": null,
+      "document_id": null,
+      "object_id": null,
+      "markdown_chars": 0,
+      "context_excerpt": null,
+      "parse_score": 0,
+      "error": "POST /v1/parse/sync failed with 502: No parse engine produced a successful result. Attempts: markitdown:engine_execution_failed (File conversion failed after 1 attempts:  - PdfConverter threw MissingDependencyException with message: PdfConverter recognized the input as a potential .pdf file, but the dependencies needed to read .pdf files have not been installed. T...)",
+      "metadata": {
+        "format_hint": "pdf"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/publications/files/financial-stability-report-20241122.pdf",
+      "url_name": "Federal Reserve Financial Stability Report PDF",
+      "engine_id": "llama_parse",
+      "parse_mode": "sync",
+      "job_id": "job_393f8b3446af45e4b7f40cda",
+      "document_id": "doc_a7b8089b89554916a1365a79",
+      "object_id": "obj_f244bab41fa94c2e9dfe2bad",
+      "markdown_chars": 176286,
+      "context_excerpt": "# Financial Stability Report\n\n# 03.102\n\n15400\n\n3102\n\n154.1714\n\nNovember 2024\n\nBOARD OF GOVERNORS OF THE FEDERAL RESERVE SYSTEM\n\n# The Federal Reserve System\n\nThe Federal Reserve System is the central bank of the United States. It performs five key functions to promote the effective operation of the U.S. economy and, more generally, the public interest.\n\n# The Federal Reserve\n\n- conducts the nation’s monetary policy to promote maximum employment and stable prices in the U.S. economy;\n- promotes the stability of the financial system and seeks to minimize and contain systemic risks through active monitoring and engagement in the U.S. and abroad;\n- promotes the safety and soundness of individual financial institutions and monitors their impact on the financial system as a whole;\n- fosters payment and settlement system safety and efficiency through services to the banking industry and U.S. government that facilitate U.S.-dollar transactions and payments; and\n- promotes consumer protection and community development through consumer-focused supervision and examination, research and analysis of emerging consumer issues and trends, community economic development activities, and administration of consumer laws and regulations.\n\nTo learn more about us, visit www.federalreserve.gov/aboutthefed.htm.\n\n# Contents\n\nPurpose and Framework\n\nOverview\n\n1 Asset Valuations\n\n2 Borrowing by Businesses and Households\n\n3 Leverage in the Financial Sector\n\n4 Funding Risks\n\n5 Near-Term Risks to the Financial System\n\nox 5.1. Survey of Salient Risks to Financial Stability\n\nAppendix: Figure Notes\n\nRevisions\n\nNote: This report generally reflects information that was available as of November 4, 2024.\n\nNO_CONTENT_HERE\n\n# Purpose and Framework\n\nThis report presents the Federal Reserve Board’s current assessment of the stability of the U.S. financial system. By publishing this report, the Board intends to promote public understanding by increasing transparency around, and creating accountability for, the Federal Reserve’s views on this topic. Financial stability supports the objectives assigned to the Federal Reserve, including full employment and stable prices, a safe and sound banking system, and an efficient payments system.\n\nThe financial system is considered stable when banks, other lenders, and financial markets are able to provide households, communities, and businesses with the financing they need to invest, grow, and participate in a functioning economy—and can do so even when hit by adverse events, or “shocks.”\n\nConsistent with this view of financial stability, the Federal Reserve Board’s monitoring framework distinguishes between shocks to, and vulnerabilities of, the financial system. Shocks are inherently difficult to predict, while vulnerabilities, which are the aspects of the financial system that would exacerbate stress, can be monitored as they build up or recede over time. As a result, the framework focuses primarily on assessing vulnerabilities, with an emphasis on four broad categories and how those categories might interact to amplify stress in the financial system.\n\n1. Valuation pressures arise when asset prices are high relative to economic fundamentals or historical norms. These developments are often driven by an increased willingness of investors to take on risk. As such, elevated valuation pressures may increase the possibility of outsized drops in asset prices (see Section 1, Asset Valuations).\n\nFor a review of the research literature in this area, see Tobias Adrian, Daniel Covitz, and Nellie Liang (2015), “Financial Stability Monitoring,” Annual Review of Financial Economics, vol. 7 (December), pp. 357–95.\n\nFinancial Stability Report\n\n2. Excessive borrowing by businesses and households exposes the borrowers to distress if their incomes decline or the assets they own fall in value. In these cases, businesses and households with high debt burdens may need to cut back spending, affecting economic activity and causing losses for investors (see Section 2, Borrowing by Businesses and Households).\n\n3. Excessive leverage within the financial sector increases the risk that financial institutions will not have the ability to absorb losses without disruptions to their normal business operations when hit by adverse shocks. In those situations, institutions will be forced to cut back lending, sell their assets, or even shut down. Such responses can impair credit access for households and businesses, further weakening economic activity (see Section 3, Leverage in the Financial Sector).\n\n4. Funding risks expose the financial system to the possibility that investors will rapidly withdraw their funds from a particular institution or sector, creating strains across markets or institutions. Many financial institutions raise funds from the public with a commitment to return their investors’ money on short notice, but those institutions then invest much of those funds in assets that are hard to sell quickly or have a long maturity. This liquidity and maturity transformation can create an incentive for investors to withdraw funds quickly in adverse situations. Facing such withdrawals, financial institutions may need to sell assets quickly at “fire sale” prices, thereby incurring losses and potentially becoming insolvent, as well as causing additional price declines that can create stress across markets and at other institutions (see Section 4, Funding Risks).\n\nThe Federal Reserve’s monitoring framework also tracks domestic and international developments to identify near-term risks—that is, plausible adverse developments or shocks that could stress the U.S. financial system. The analysis of these risks focuses on assessing how such potential shocks may spread through the U.S. financial system, given our current assessment of vulnerabilities.\n\nWhile this framework provides a systematic way to assess financial stability, some potential risks may be novel or difficult to quantify and therefore are not captured by the curr",
+      "parse_score": 1.0,
+      "error": null,
+      "metadata": {
+        "format_hint": "pdf",
+        "parser": {
+          "engine_key": "llama_parse",
+          "display_name": "LlamaParse",
+          "engine_family": "document_remote",
+          "engine_version": "0.6.94",
+          "profile_ref": "llama_parse_document_fidelity",
+          "template_ref": null,
+          "fallback_used": false
+        },
+        "source_format": "application/pdf",
+        "title": "financial-stability-report-20241122.pdf",
+        "markdown_sha256": "9bd89a940dbec06bb2a41c829d666bc8add76373cc48c378072500a95619e2ff"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/publications/files/financial-stability-report-20241122.pdf",
+      "url_name": "Federal Reserve Financial Stability Report PDF",
+      "engine_id": "docling",
+      "parse_mode": "async",
+      "job_id": null,
+      "document_id": null,
+      "object_id": null,
+      "markdown_chars": 0,
+      "context_excerpt": null,
+      "parse_score": 0,
+      "error": "Job job_8df45aada9ee40039ca239d3 ended as failed: {'job_id': 'job_8df45aada9ee40039ca239d3', 'job_type': 'parse', 'status': 'failed', 'operation_name': 'parse.document.async', 'submitted_at': '2026-04-29T09:58:35.833704', 'progress_percent': None, 'queue_name': None, 'target_type': 'parse_source', 'target_id': 'https://www.federalreserve.gov/publications/files/financial-stability-report-20241122.pdf', 'correlation_id': 'request_8929128dda5842d2b93ada3b', 'started_at': '2026-04-29T09:58:35.950542', 'completed_at': '2026-04-29T10:03:08.194956', 'error': {'code': 'parse_worker_timeout', 'message': 'parse_worker_timeout: Parse job exceeded timeout budget of 90 seconds.'}, 'metrics': {'queue_latency_ms': 116, 'run_latency_ms': 272244}, 'telemetry': {'trace_id': '8524b9a455d9fdfd8976ff6e5ebc1a43', 'span_id': '017279cef5ee1a18', 'request_id': 'request_8929128dda5842d2b93ada3b', 'deployment_ring': None, 'experiment_variant': None}}",
+      "metadata": {
+        "format_hint": "pdf"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/beigebook/default.htm",
+      "url_name": "Federal Reserve Beige Book",
+      "engine_id": "auto",
+      "parse_mode": "sync",
+      "job_id": null,
+      "document_id": null,
+      "object_id": null,
+      "markdown_chars": 0,
+      "context_excerpt": null,
+      "parse_score": 0,
+      "error": "POST /v1/parse/sync failed with 502: No parse engine produced a successful result. Attempts: crawl4ai:crawl4ai_failed (crawl4ai_failed: Unexpected error in _crawl_web at line 778 in _crawl_web (.venv/lib/python3.12/site-packages/crawl4ai/async_crawler_strategy.py): Error: Failed on navigating ACS-GOTO: Page.goto: net::ERR_CONNECTION_CLOSED at https://www...)",
+      "metadata": {
+        "format_hint": "html"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/beigebook/default.htm",
+      "url_name": "Federal Reserve Beige Book",
+      "engine_id": "crawl4ai",
+      "parse_mode": "sync",
+      "job_id": "job_0194affb8f7f429d8016ec7c",
+      "document_id": "doc_a86896fccded495ab29e6520",
+      "object_id": "obj_189bad5331c54607928473f8",
+      "markdown_chars": 41874,
+      "context_excerpt": "* [](https://www.federalreserve.gov/aboutthefed.htm)[About the Fed](https://www.federalreserve.gov/aboutthefed.htm)\n    *       * [Structure of the Federal Reserve System](https://www.federalreserve.gov/aboutthefed/structure-federal-reserve-system.htm)\n      * [The Fed Explained](https://www.federalreserve.gov/aboutthefed/the-fed-explained.htm)\n      * [Board Members](https://www.federalreserve.gov/aboutthefed/bios/board/default.htm)\n      * [Advisory Councils](https://www.federalreserve.gov/aboutthefed/advisorydefault.htm)\n      * [Federal Reserve Banks](https://www.federalreserve.gov/aboutthefed/federal-reserve-system.htm)\n      * [Federal Reserve Act](https://www.federalreserve.gov/aboutthefed/fract.htm)\n      * [Currency](https://www.federalreserve.gov/aboutthefed/currency.htm)\n      * [Board Meetings](https://www.federalreserve.gov/aboutthefed/boardmeetings/meetingdates.htm)\n      * [Board Votes](https://www.federalreserve.gov/aboutthefed/boardvotes.htm)\n      * [Diversity & Inclusion](https://www.federalreserve.gov/aboutthefed/diversityinclusion.htm)\n      * [Careers](https://www.federalreserve.gov/careers.htm)\n      * [Do Business with the Board](https://www.federalreserve.gov/aboutthefed/procurement/about.htm)\n      * [Holidays Observed - K.8](https://www.federalreserve.gov/aboutthefed/k8.htm)\n      * [Ethics & Values](https://www.federalreserve.gov/aboutthefed/ethics-values.htm)\n      * [Contact ](https://www.federalreserve.gov/aboutthefed/contact-us-topics.htm)\n      * [Requesting Information (FOIA)](https://www.federalreserve.gov/foia/about_foia.htm)\n      * [FAQs](https://www.federalreserve.gov/faqs.htm)\n      * [Economic Education](https://www.federalreserve.gov/aboutthefed/educational-tools/default.htm)\n      * [Fed Financial Statements](https://www.federalreserve.gov/aboutthefed/fed-financial-statements.htm)\n      * [Innovation](https://www.federalreserve.gov/aboutthefed/innovation.htm)\n  * [](https://www.federalreserve.gov/newsevents.htm)[News & Events](https://www.federalreserve.gov/newsevents.htm)\n    * [Press Releases](https://www.federalreserve.gov/newsevents/pressreleases.htm)\n    * [Speeches](https://www.federalreserve.gov/newsevents/speeches.htm)\n    * [Testimony](https://www.federalreserve.gov/newsevents/testimony.htm)\n    * [Calendar](https://www.federalreserve.gov/newsevents/calendar.htm)\n    * [Videos ](https://www.federalreserve.gov/videos.htm)\n    * [Photo Gallery ](https://www.federalreserve.gov/photogallery.htm)\n    * [Conferences](https://www.federalreserve.gov/conferences.htm)\n  * [](https://www.federalreserve.gov/monetarypolicy.htm)[Monetary Policy](https://www.federalreserve.gov/monetarypolicy.htm)\n    *       * **Federal Open Market Committee**\n      * [About the FOMC](https://www.federalreserve.gov/monetarypolicy/fomc.htm)\n      * [Meeting calendars and information](https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm)\n      * [Transcripts and other historical materials](https://www.federalreserve.gov/monetarypolicy/fomc_historical.htm)\n      * [FAQs](https://www.federalreserve.gov/monetarypolicy/fomc_projectionsfaqs.htm)\n      * **Monetary Policy Principles and Practice**\n      * [Notes](https://www.federalreserve.gov/monetarypolicy/monetary-policy-principles-and-practice.htm)\n      * **Policy Implementation**\n      * [Policy Normalization](https://www.federalreserve.gov/monetarypolicy/policy-normalization.htm)\n      * [Policy Tools](https://www.federalreserve.gov/monetarypolicy/policytools.htm)\n      * **Reports**\n      * [Monetary Policy Report](https://www.federalreserve.gov/monetarypolicy/mpr_default.htm)\n      * [Beige Book](https://www.federalreserve.gov/monetarypolicy/beige-book-default.htm)\n      * [Federal Reserve Balance Sheet Developments](https://www.federalreserve.gov/monetarypolicy/balance-sheet-developments-report.htm)\n      * **Review of Monetary Policy Strategy, Tools, and Communications**\n      * [Overview](https://www.federalreserve.gov/monetarypolicy/review-of-monetary-policy-strategy-tools-and-communications.htm)\n  * [](https://www.federalreserve.gov/supervisionreg.htm)[Supervision & Regulation](https://www.federalreserve.gov/supervisionreg.htm)\n    *       * **Institution Supervision**\n      * [Community & Regional Financial Institutions](https://www.federalreserve.gov/supervisionreg/community-and-regional-financial-institutions.htm)\n      * [Large Financial Institutions](https://www.federalreserve.gov/supervisionreg/large-financial-institutions.htm)\n      * [Foreign Banking Organizations](https://www.federalreserve.gov/supervisionreg/foreign-banking-organizations.htm)\n      * [Financial Market Utilities](https://www.federalreserve.gov/supervisionreg/financial-market-utility-supervision.htm)\n      * [Consumer Compliance](https://www.federalreserve.gov/supervisionreg/consumer-compliance.htm)\n      * **Reports**\n      * [Federal Reserve Supervision and Regulation Report](https://www.federalreserve.gov/publications/supervision-and-regulation-report.htm)\n      * **Reporting Forms**\n      * [All Reporting Forms](https://www.federalreserve.gov/apps/reportforms/default.aspx)\n      * [Recent Updates](https://www.federalreserve.gov/supervisionreg/reporting-forms-whats-new.htm)\n      * [Information collections under review](https://www.federalreserve.gov/apps/reportforms/review.aspx)\n      * [Financial Statements](https://www.federalreserve.gov/apps/reportforms/categoryindex.aspx?xTdTa+FaSlI=)\n      * [Applications/structure change](https://www.federalreserve.gov/apps/reportforms/categoryindex.aspx?+PhkJwiBjbA=)\n      * [Federal Financial Institutions Examination Council (FFIEC)](https://www.federalreserve.gov/apps/reportforms/categoryindex.aspx?1/RIXO/UduI=)\n      * [Municipal & Government Securities](https://www.federalreserve.gov/apps/reportforms/categoryindex.aspx?L877VwEj9Ss=)\n      * **Supervision & Regulation Letters**\n      * [By Year](https://www.federalreserve.gov/supervisionreg/srletters/srletters.htm)\n      * [By To",
+      "parse_score": 0.55,
+      "error": null,
+      "metadata": {
+        "format_hint": "html",
+        "parser": {
+          "engine_key": "crawl4ai",
+          "display_name": "Crawl4AI",
+          "engine_family": "web_interactive",
+          "engine_version": "0.8.6",
+          "profile_ref": "crawl4ai_balanced",
+          "template_ref": null,
+          "fallback_used": false
+        },
+        "source_format": "text/html",
+        "title": "Federal Reserve Board - Page not Found",
+        "markdown_sha256": "d75783f72317c7fae3b85b73cb6fbceb7e97d49d666e8b9005f058097e4baab2"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/beigebook/default.htm",
+      "url_name": "Federal Reserve Beige Book",
+      "engine_id": "markitdown",
+      "parse_mode": "sync",
+      "job_id": null,
+      "document_id": null,
+      "object_id": null,
+      "markdown_chars": 0,
+      "context_excerpt": null,
+      "parse_score": 0,
+      "error": "POST /v1/parse/sync failed with 502: No parse engine produced a successful result. Attempts: markitdown:engine_execution_failed (404 Client Error: Not Found for url: https://www.federalreserve.gov/monetarypolicy/beigebook/default.htm)",
+      "metadata": {
+        "format_hint": "html"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/beigebook/default.htm",
+      "url_name": "Federal Reserve Beige Book",
+      "engine_id": "llama_parse",
+      "parse_mode": "sync",
+      "job_id": null,
+      "document_id": null,
+      "object_id": null,
+      "markdown_chars": 0,
+      "context_excerpt": null,
+      "parse_score": 0,
+      "error": "POST /v1/parse/sync failed with 502: No parse engine produced a successful result. Attempts: llama_parse:config_error (config_error: LlamaParse completed without returning documents.)",
+      "metadata": {
+        "format_hint": "html"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/beigebook/default.htm",
+      "url_name": "Federal Reserve Beige Book",
+      "engine_id": "docling",
+      "parse_mode": "async",
+      "job_id": null,
+      "document_id": null,
+      "object_id": null,
+      "markdown_chars": 0,
+      "context_excerpt": null,
+      "parse_score": 0,
+      "error": "Job job_e8c9c944e5ee4d4bb68e0f98 ended as failed: {'job_id': 'job_e8c9c944e5ee4d4bb68e0f98', 'job_type': 'parse', 'status': 'failed', 'operation_name': 'parse.document.async', 'submitted_at': '2026-04-29T10:03:44.164079', 'progress_percent': None, 'queue_name': None, 'target_type': 'parse_source', 'target_id': 'https://www.federalreserve.gov/monetarypolicy/beigebook/default.htm', 'correlation_id': 'request_5c7621c93cce418f9ceaf373', 'started_at': '2026-04-29T10:03:44.362371', 'completed_at': '2026-04-29T10:03:49.407029', 'error': {'code': 'parse_failed', 'message': 'parse_failed: No parse engine produced a successful result. Attempts: docling:engine_execution_failed (404 Client Error: Not Found for url: https://www.federalreserve.gov/monetarypolicy/beigebook/default.htm)'}, 'metrics': {'queue_latency_ms': 198, 'run_latency_ms': 5044}, 'telemetry': {'trace_id': '7bb1ab83c76f2ec3742a41987a072f3a', 'span_id': '2c46e23d2c42101c', 'request_id': 'request_5c7621c93cce418f9ceaf373', 'deployment_ring': None, 'experiment_variant': None}}",
+      "metadata": {
+        "format_hint": "html"
+      }
+    }
+  ],
+  "context_groups": [
+    {
+      "context_id": "parse_engine:auto",
+      "source": "parse_artifact",
+      "parse_engine_id": "auto",
+      "object_ids": [
+        "obj_a3a9352337424e8d974bb92b",
+        "obj_6bd3b7d0cfd24299ab3d7d23"
+      ],
+      "document_ids": [
+        "doc_79e27056331a44d58e064492",
+        "doc_4fdc5893ce284b8d994fd550"
+      ],
+      "context_chars": 12000,
+      "context_score": 0.9222,
+      "text_preview": "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: auto\nObject ID: obj_a3a9352337424e8d974bb92b\n\n* [](https://www.federalreserve.gov/aboutthefed.htm)[About the Fed](https://www.federalreserve.gov/aboutthefed.htm)\n    *       * [Structure of the Federal Reserve System](https://www.federalreserve.gov/aboutthefed/fedexplained/who-we-are.htm)\n      * [The Fed Explained](https://www.federalreserve.gov/aboutthefed/the-fed-explained.htm)\n      * [Board Members](https://www.federalreserve.gov/aboutthefed/bios/board/default.htm)\n      * [Advisory Councils](https://www.federalreserve.gov/aboutthefed/advisorydefault.htm)\n      * [Federal Reserve Banks](https://www.federalreserve.gov/aboutthefed/federal-reserve-system.htm)\n      * [Federal Reserve Bank and Branch Directors](https://www.federalreserve.gov/aboutthefed/directors/about.htm)\n      * [Federal Reserve Act](https://www.federalreserve.gov/aboutthefed/fract.htm)\n      * [",
+      "metadata": {
+        "artifact_count": 2,
+        "grouping": "by_parse_engine"
+      }
+    },
+    {
+      "context_id": "parse_engine:crawl4ai",
+      "source": "parse_artifact",
+      "parse_engine_id": "crawl4ai",
+      "object_ids": [
+        "obj_3305bc295ceb4a279775238b",
+        "obj_189bad5331c54607928473f8"
+      ],
+      "document_ids": [
+        "doc_f76ed827195942b486f034ce",
+        "doc_a86896fccded495ab29e6520"
+      ],
+      "context_chars": 12000,
+      "context_score": 0.5333,
+      "text_preview": "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: crawl4ai\nObject ID: obj_3305bc295ceb4a279775238b\n\n* [](https://www.federalreserve.gov/aboutthefed.htm)[About the Fed](https://www.federalreserve.gov/aboutthefed.htm)\n    *       * [Structure of the Federal Reserve System](https://www.federalreserve.gov/aboutthefed/fedexplained/who-we-are.htm)\n      * [The Fed Explained](https://www.federalreserve.gov/aboutthefed/the-fed-explained.htm)\n      * [Board Members](https://www.federalreserve.gov/aboutthefed/bios/board/default.htm)\n      * [Advisory Councils](https://www.federalreserve.gov/aboutthefed/advisorydefault.htm)\n      * [Federal Reserve Banks](https://www.federalreserve.gov/aboutthefed/federal-reserve-system.htm)\n      * [Federal Reserve Bank and Branch Directors](https://www.federalreserve.gov/aboutthefed/directors/about.htm)\n      * [Federal Reserve Act](https://www.federalreserve.gov/aboutthefed/fract.htm)\n     ",
+      "metadata": {
+        "artifact_count": 2,
+        "grouping": "by_parse_engine"
+      }
+    },
+    {
+      "context_id": "parse_engine:llama_parse",
+      "source": "parse_artifact",
+      "parse_engine_id": "llama_parse",
+      "object_ids": [
+        "obj_135aec033ec14d6ab8249dfe",
+        "obj_f244bab41fa94c2e9dfe2bad"
+      ],
+      "document_ids": [
+        "doc_99f35d0879f04767a51313ce",
+        "doc_a7b8089b89554916a1365a79"
+      ],
+      "context_chars": 12000,
+      "context_score": 0.9222,
+      "text_preview": "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: llama_parse\nObject ID: obj_135aec033ec14d6ab8249dfe\n\nAn official website of the United States Government Here's how you know\n\n# Federal Open Market Committee\n\nMeeting calendars, statements, and minutes\n\nFOMC Search (2021-2027)\n\nThe FOMC holds eight regularly scheduled meetings during the year and other meetings as needed. Links to policy statements and minutes are in the calendars below. The minutes of regularly scheduled meetings are released three weeks after the date of the policy decision. Committee membership changes at the first regularly scheduled meeting of the year.\n\nFOIA\n\nThe FOMC makes an annual report pursuant to the Freedom of Information Act. The FOMC FOIA Service Center provides information about the status of FOIA requests and the FOIA process.\n\n# 2026 FOMC Meetings\n\n| Month   | Date    | Statement          | Press Conference          | Minutes       ",
+      "metadata": {
+        "artifact_count": 2,
+        "grouping": "by_parse_engine"
+      }
+    },
+    {
+      "context_id": "parse_engine:markitdown",
+      "source": "parse_artifact",
+      "parse_engine_id": "markitdown",
+      "object_ids": [
+        "obj_e036636d057045ef906d473f"
+      ],
+      "document_ids": [
+        "doc_bdfb9d0e152148beaf238b08"
+      ],
+      "context_chars": 6173,
+      "context_score": 0.5333,
+      "text_preview": "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: markitdown\nObject ID: obj_e036636d057045ef906d473f\n\n[Skip to main content](#content)\n\n![US Flag](/images/icon-us-flag.svg)\n\nAn official website of the United States Government\n\nHere's how you know![Expand More](/images/expand_more.svg)\n\n![.gov icon](https://designsystem.digital.gov/assets/img/icon-dot-gov.svg)\n\n**Official websites use .gov**\nA **.gov** website belongs to an official government organization in the United States.\n\n![HTTPS icon](https://designsystem.digital.gov/assets/img/icon-https.svg)\n\n**Secure .gov websites use HTTPS**\nA **lock** (LockLocked padlock icon) or **https://** means you've safely connected to the .gov website. Share sensitive information only on official, secure websites.\n\n[Back to Home](/default.htm)\n[Board of Governors of the Federal Reserve System](/default.htm \"Link to Home Page\")\n\n* Stay Connected\n  + [Federal Reserve Facebook Page](",
+      "metadata": {
+        "artifact_count": 1,
+        "grouping": "by_parse_engine"
+      }
+    }
+  ],
+  "tensorzero_inferences": [
+    {
+      "context_id": "parse_engine:auto",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "auto",
+      "variant_name": "openai",
+      "inference_id": null,
+      "episode_id": null,
+      "answer_text": "",
+      "output": null,
+      "usage": {},
+      "finish_reason": null,
+      "scores": {},
+      "feedback_errors": [],
+      "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: openai: Error 429 Too Many Requests from openai client: {\\n    \\\"error\\\": {\\n        \\\"message\\\": \\\"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\\\",\\n        \\\"type\\\": \\\"insufficient_quota\\\",\\n        \\\"param\\\": null,\\n        \\\"code\\\": \\\"insufficient_quota\\\"\\n    }\\n}\\n [request_id: req_726993d7f7bf410eb00de016db1f1ea5]\"}",
+      "metadata": {
+        "requested_variant": "openai",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:auto",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "auto",
+      "variant_name": "gemini",
+      "inference_id": "019dd8b2-0c09-7fc3-8f73-d3db65d79872",
+      "episode_id": "019dd8b2-0c09-7fc3-8f73-d3efa22d339e",
+      "answer_text": "The provided context lacks specific data on current macroeconomic, inflation, and monetary policy risks, as the 'Federal Reserve FOMC calendar' source only provides website navigation links. However, the 'Federal Reserve Financial Stability Report PDF' identifies four primary financial stability risks: 1) valuation pressures from high asset prices relative to fundamentals, 2) excessive borrowing by businesses and households, 3) excessive leverage within the financial sector, and 4) funding risks that could lead to rapid withdrawals and fire sales. Because the context is weak regarding actual economic data, a comprehensive comparison of macroeconomic and inflation risks across the sources cannot be made.",
+      "output": {
+        "answer": "The provided context lacks specific data on current macroeconomic, inflation, and monetary policy risks, as the 'Federal Reserve FOMC calendar' source only provides website navigation links. However, the 'Federal Reserve Financial Stability Report PDF' identifies four primary financial stability risks: 1) valuation pressures from high asset prices relative to fundamentals, 2) excessive borrowing by businesses and households, 3) excessive leverage within the financial sector, and 4) funding risks that could lead to rapid withdrawals and fire sales. Because the context is weak regarding actual economic data, a comprehensive comparison of macroeconomic and inflation risks across the sources cannot be made.",
+        "citations": [
+          "Federal Reserve FOMC calendar",
+          "Federal Reserve Financial Stability Report PDF"
+        ],
+        "confidence": 0.8,
+        "missing_evidence": [
+          "Specific current macroeconomic risks",
+          "Specific current inflation risks",
+          "Specific current monetary policy risks"
+        ]
+      },
+      "usage": {
+        "input_tokens": 3398,
+        "output_tokens": 208,
+        "cost": null
+      },
+      "finish_reason": "stop",
+      "scores": {
+        "parse_markdown_quality": 0.8187,
+        "rag_context_quality": 0.9222,
+        "llm_answer_quality": 0.7767,
+        "rag_end_to_end_pass": true
+      },
+      "feedback_errors": [],
+      "error": null,
+      "metadata": {
+        "requested_variant": "gemini",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:auto",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "auto",
+      "variant_name": "kimi",
+      "inference_id": null,
+      "episode_id": null,
+      "answer_text": "",
+      "output": null,
+      "usage": {},
+      "finish_reason": null,
+      "scores": {},
+      "feedback_errors": [],
+      "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: kimi_openai_compatible: Error from openai client: Error sending request: error sending request for url (https://api.moonshot.cn/v1/chat/completions)\"}",
+      "metadata": {
+        "requested_variant": "kimi",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:crawl4ai",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "crawl4ai",
+      "variant_name": "openai",
+      "inference_id": null,
+      "episode_id": null,
+      "answer_text": "",
+      "output": null,
+      "usage": {},
+      "finish_reason": null,
+      "scores": {},
+      "feedback_errors": [],
+      "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: openai: Error 429 Too Many Requests from openai client: {\\n    \\\"error\\\": {\\n        \\\"message\\\": \\\"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\\\",\\n        \\\"type\\\": \\\"insufficient_quota\\\",\\n        \\\"param\\\": null,\\n        \\\"code\\\": \\\"insufficient_quota\\\"\\n    }\\n}\\n [request_id: req_c5e0afb577c94382aa19d244a31414ac]\"}",
+      "metadata": {
+        "requested_variant": "openai",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:crawl4ai",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "crawl4ai",
+      "variant_name": "gemini",
+      "inference_id": "019dd8b2-61a4-78b2-b88f-b26b6427ddd9",
+      "episode_id": "019dd8b2-61a4-78b2-b88f-b271575903ce",
+      "answer_text": "The provided sources do not contain information comparing macroeconomic, inflation, monetary policy, or financial stability risks. The context consists entirely of website navigation menus and links to Federal Reserve pages, such as the FOMC calendar and the Beige Book, without providing the actual text or data from those reports.",
+      "output": {
+        "answer": "The provided sources do not contain information comparing macroeconomic, inflation, monetary policy, or financial stability risks. The context consists entirely of website navigation menus and links to Federal Reserve pages, such as the FOMC calendar and the Beige Book, without providing the actual text or data from those reports.",
+        "citations": [
+          "Federal Reserve FOMC calendar",
+          "Federal Reserve Beige Book"
+        ],
+        "confidence": 0,
+        "missing_evidence": [
+          "Macroeconomic risks",
+          "Inflation risks",
+          "Monetary policy risks",
+          "Financial stability risks"
+        ]
+      },
+      "usage": {
+        "input_tokens": 3933,
+        "output_tokens": 139,
+        "cost": null
+      },
+      "finish_reason": "stop",
+      "scores": {
+        "parse_markdown_quality": 0.8187,
+        "rag_context_quality": 0.5333,
+        "llm_answer_quality": 0.4944,
+        "rag_end_to_end_pass": true
+      },
+      "feedback_errors": [],
+      "error": null,
+      "metadata": {
+        "requested_variant": "gemini",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:crawl4ai",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "crawl4ai",
+      "variant_name": "kimi",
+      "inference_id": null,
+      "episode_id": null,
+      "answer_text": "",
+      "output": null,
+      "usage": {},
+      "finish_reason": null,
+      "scores": {},
+      "feedback_errors": [],
+      "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: kimi_openai_compatible: Error from openai client: Error sending request: error sending request for url (https://api.moonshot.cn/v1/chat/completions)\"}",
+      "metadata": {
+        "requested_variant": "kimi",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:llama_parse",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "llama_parse",
+      "variant_name": "openai",
+      "inference_id": null,
+      "episode_id": null,
+      "answer_text": "",
+      "output": null,
+      "usage": {},
+      "finish_reason": null,
+      "scores": {},
+      "feedback_errors": [],
+      "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: openai: Error 429 Too Many Requests from openai client: {\\n    \\\"error\\\": {\\n        \\\"message\\\": \\\"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\\\",\\n        \\\"type\\\": \\\"insufficient_quota\\\",\\n        \\\"param\\\": null,\\n        \\\"code\\\": \\\"insufficient_quota\\\"\\n    }\\n}\\n [request_id: req_bb11a2ec500c43f480ac39f5abe53eae]\"}",
+      "metadata": {
+        "requested_variant": "openai",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:llama_parse",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "llama_parse",
+      "variant_name": "gemini",
+      "inference_id": "019dd8b2-a64e-7963-acef-4f4563c10ee4",
+      "episode_id": "019dd8b2-a64e-7963-acef-4f571a260e0a",
+      "answer_text": "The provided sources do not contain specific current macroeconomic, inflation, or monetary policy risks, making a full comparison impossible. The 'Federal Reserve FOMC calendar' only provides meeting schedules and administrative details. The 'Federal Reserve Financial Stability Report PDF' outlines a framework for financial stability risks rather than current macroeconomic forecasts, identifying four main vulnerabilities: valuation pressures, excessive borrowing by businesses and households, excessive leverage within the financial sector, and funding risks.",
+      "output": {
+        "answer": "The provided sources do not contain specific current macroeconomic, inflation, or monetary policy risks, making a full comparison impossible. The 'Federal Reserve FOMC calendar' only provides meeting schedules and administrative details. The 'Federal Reserve Financial Stability Report PDF' outlines a framework for financial stability risks rather than current macroeconomic forecasts, identifying four main vulnerabilities: valuation pressures, excessive borrowing by businesses and households, excessive leverage within the financial sector, and funding risks.",
+        "citations": [
+          "Federal Reserve FOMC calendar",
+          "Federal Reserve Financial Stability Report PDF"
+        ],
+        "confidence": 0.7,
+        "missing_evidence": [
+          "Specific current macroeconomic risks",
+          "Specific current inflation risks",
+          "Specific current monetary policy risks"
+        ]
+      },
+      "usage": {
+        "input_tokens": 3050,
+        "output_tokens": 170,
+        "cost": null
+      },
+      "finish_reason": "stop",
+      "scores": {
+        "parse_markdown_quality": 0.8187,
+        "rag_context_quality": 0.9222,
+        "llm_answer_quality": 0.7567,
+        "rag_end_to_end_pass": true
+      },
+      "feedback_errors": [],
+      "error": null,
+      "metadata": {
+        "requested_variant": "gemini",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:llama_parse",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "llama_parse",
+      "variant_name": "kimi",
+      "inference_id": null,
+      "episode_id": null,
+      "answer_text": "",
+      "output": null,
+      "usage": {},
+      "finish_reason": null,
+      "scores": {},
+      "feedback_errors": [],
+      "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: kimi_openai_compatible: Error from openai client: Error sending request: error sending request for url (https://api.moonshot.cn/v1/chat/completions)\"}",
+      "metadata": {
+        "requested_variant": "kimi",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:markitdown",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "markitdown",
+      "variant_name": "openai",
+      "inference_id": null,
+      "episode_id": null,
+      "answer_text": "",
+      "output": null,
+      "usage": {},
+      "finish_reason": null,
+      "scores": {},
+      "feedback_errors": [],
+      "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: openai: Error 429 Too Many Requests from openai client: {\\n    \\\"error\\\": {\\n        \\\"message\\\": \\\"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\\\",\\n        \\\"type\\\": \\\"insufficient_quota\\\",\\n        \\\"param\\\": null,\\n        \\\"code\\\": \\\"insufficient_quota\\\"\\n    }\\n}\\n [request_id: req_b1f31c3b507141e38c223b6a29973496]\"}",
+      "metadata": {
+        "requested_variant": "openai",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:markitdown",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "markitdown",
+      "variant_name": "gemini",
+      "inference_id": "019dd8b2-ede6-7cd0-96d3-3309c765d5ba",
+      "episode_id": "019dd8b2-ede6-7cd0-96d3-33190b73aa4f",
+      "answer_text": "The provided context does not contain any information regarding macroeconomic, inflation, monetary policy, or financial stability risks. The text consists entirely of boilerplate navigation links and site structure for the Federal Reserve website.",
+      "output": {
+        "answer": "The provided context does not contain any information regarding macroeconomic, inflation, monetary policy, or financial stability risks. The text consists entirely of boilerplate navigation links and site structure for the Federal Reserve website.",
+        "citations": [
+          "Federal Reserve FOMC calendar"
+        ],
+        "confidence": 0,
+        "missing_evidence": [
+          "Macroeconomic risks",
+          "Inflation risks",
+          "Monetary policy risks",
+          "Financial stability risks"
+        ]
+      },
+      "usage": {
+        "input_tokens": 2240,
+        "output_tokens": 112,
+        "cost": null
+      },
+      "finish_reason": "stop",
+      "scores": {
+        "parse_markdown_quality": 0.8187,
+        "rag_context_quality": 0.5333,
+        "llm_answer_quality": 0.4944,
+        "rag_end_to_end_pass": true
+      },
+      "feedback_errors": [],
+      "error": null,
+      "metadata": {
+        "requested_variant": "gemini",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:markitdown",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "markitdown",
+      "variant_name": "kimi",
+      "inference_id": null,
+      "episode_id": null,
+      "answer_text": "",
+      "output": null,
+      "usage": {},
+      "finish_reason": null,
+      "scores": {},
+      "feedback_errors": [],
+      "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: kimi_openai_compatible: Error from openai client: Error sending request: error sending request for url (https://api.moonshot.cn/v1/chat/completions)\"}",
+      "metadata": {
+        "requested_variant": "kimi",
+        "strategy": "exhaustive"
+      }
+    }
+  ],
+  "evaluation_cases": [
+    {
+      "query": "Compare the main macroeconomic, inflation, monetary policy, and financial stability risks across these sources. Cite source names.",
+      "actual_output": "The provided context lacks specific data on current macroeconomic, inflation, and monetary policy risks, as the 'Federal Reserve FOMC calendar' source only provides website navigation links. However, the 'Federal Reserve Financial Stability Report PDF' identifies four primary financial stability risks: 1) valuation pressures from high asset prices relative to fundamentals, 2) excessive borrowing by businesses and households, 3) excessive leverage within the financial sector, and 4) funding risks that could lead to rapid withdrawals and fire sales. Because the context is weak regarding actual economic data, a comprehensive comparison of macroeconomic and inflation risks across the sources cannot be made.",
+      "expected_keywords": [
+        "fomc",
+        "federal reserve",
+        "monetary policy",
+        "financial stability",
+        "vulnerabilities",
+        "leverage",
+        "economic activity",
+        "district",
+        "prices"
+      ],
+      "retrieval_contexts": [
+        "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: auto\nObject ID: obj_a3a9352337424e8d974bb92b\n\n* [](https://www.federalreserve.gov/aboutthefed.htm)[About the Fed](https://www.federalreserve.gov/aboutthefed.htm)\n    *       * [Structure of the Federal Reserve System](https://www.federalreserve.gov/aboutthefed/fedexplained/who-we-are.htm)\n      * [The Fed Explained](https://www.federalreserve.gov/aboutthefed/the-fed-explained.htm)\n      * [Board Members](https://www.federalreserve.gov/aboutthefed/bios/board/default.htm)\n      * [Advisory Councils](https://www.federalreserve.gov/aboutthefed/advisorydefault.htm)\n      * [Federal Reserve Banks](https://www.federalreserve.gov/aboutthefed/federal-reserve-system.htm)\n      * [Federal Reserve Bank and Branch Directors](https://www.federalreserve.gov/aboutthefed/directors/about.htm)\n      * [Federal Reserve Act](https://www.federalreserve.gov/aboutthefed/fract.htm)\n      * [Currency](https://www.federalreserve.gov/aboutthefed/currency.htm)\n      * [Board Meetings](https://www.federalreserve.gov/aboutthefed/boardmeetings/meetingdates.htm)\n      * [Board Votes](https://www.federalreserve.gov/aboutthefed/boardvotes.htm)\n      * [Careers](https://www.federalreserve.gov/careers.htm)\n      * [Do Business with the Board](https://www.federalreserve.gov/aboutthefed/procurement/tips.htm)\n      * [Holidays Observed - K.8](https://www.federalreserve.gov/aboutthefed/k8.htm)\n      * [Ethics & Values](https://www.federalreserve.gov/aboutthefed/ethics-values.htm)\n      * [Contact](https://www.federalreserve.gov/aboutthefed/contact-us-topics.htm)\n      * [Requesting Information (FOIA)](https://www.federalreserve.gov/foia/about_foia.htm)\n      * [FAQs](https://www.federalreserve.gov/faqs.htm)\n      * [Economic Education](https://www.federalreserve.gov/aboutthefed/educational-tools/default.htm)\n      * [Fed Financial Statements](https://www.federalreserve.gov/aboutthefed/fed-financial-statements.htm)\n      * [Financial Innovation](https://www.federalreserve.gov/aboutthefed/financial-innovation.htm)\n  * [](https://www.federalreserve.gov/newsevents.htm)[News & Events](https://www.federalreserve.gov/newsevents.htm)\n    * [Press Releases](https://www.federalreserve.gov/newsevents/pressreleases.htm)\n    * [Speeches & Testimony](https://www.federalreserve.gov/newsevents/speeches-testimony.htm)\n    * [Calendar](https://www.federalreserve.gov/newsevents/calendar.htm)\n    * [Videos](https://www.federalreserve.gov/videos.htm)\n    * [Photo Gallery](https://www.federalreserve.gov/photogallery.htm)\n    * [Conferences](https://www.federalreserve.gov/conferences.htm)\n  * [](https://www.federalreserve.gov/monetarypolicy.htm)[Monetary Policy](https://www.federalreserve.gov/monetarypolicy.htm)\n    *       * **Federal Open Market Committee**\n      * [About the FOMC](https://www.federalreserve.gov/monetarypolicy/fomc.htm)\n      * [Meeting calendars and information](https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm)\n      * [Transcripts and other historical materials](https://www.federalreserve.gov/monetarypolicy/fomc_historical.htm)\n      * [FAQs](https://www.federalreserve.gov/monetarypolicy/fomc_projectionsfaqs.htm)\n      * **Monetary Policy Principles and Practice**\n      * [Notes](https://www.federalreserve.gov/monetarypolicy/monetary-policy-principles-and-practice.htm)\n      * **Policy Implementation**\n      * [Policy Normalization](https://www.federalreserve.gov/monetarypolicy/policy-normalization.htm)\n      * [Policy Tools](https://www.federalreserve.gov/monetarypolicy/policytools.htm)\n      * **Reports**\n      * [Monetary Policy Report](https://www.federalreserve.gov/monetarypolicy/publications/mpr_default.htm)\n      * [Beige Book](https://www.federalreserve.gov/monetarypolicy/publications/beige-book-default.htm)\n      * [Federal Reserve Balance Sheet Developments](https://www.federalreserve.gov/monetarypolicy/publications/balance-sheet-developments-report.htm)\n      * **Review of Monetary Policy Strategy, Tools, and Communications**\n      * [Overview](https://www.federalreserve.gov/monetarypolicy/review-of-monetary-policy-strategy-tools-and-communications-2025.htm)\n  * [](https://www.federalreserve.gov/supervisionreg.htm)[Supervision & Regulation](https://www.federalreserve.gov/supervisionreg.htm)\n    *       * **Supervision**\n      * [ Community Banks](https://www.federalreserve.gov/supervisionreg/community-banks.htm)\n      * [ Regional Banks and Foreign Banks with U.S. Assets < $100 Billion](https://www.federalreserve.gov/supervisionreg/regional-and-small-foreign-banks.htm)\n      * [ Large Banks and Large Foreign Banks](https://www.federalreserve.gov/supervisionreg/large-banks-and-large-foreign-banks.htm)\n      * [ Global Systemically Important Banks](https://www.federalreserve.gov/supervisionreg/global-systemically-important-banks.htm)\n      * [Financial Market Utilities](https://www.federalreserve.gov/supervisionreg/financial-market-utility-supervision.htm)\n      * [Consumer Compliance](https://www.federalreserve.gov/supervisionreg/consumer-compliance.htm)\n      * [ Resources for Supervised Institutions](https://www.federalreserve.gov/supervisionreg/resources-for-supervised-institutions.htm)\n      * **Reports**\n      * [Federal Reserve Supervision and Regulation Report](https://www.federalreserve.gov/publications/supervision-and-regulation-report.htm)\n      * **Reporting Forms**\n      * [Recent Reporting Form Updates](https://www.federalreserve.gov/apps/reportingforms/recentupdates)\n      * [Information Collections Under Review](https://www.federalreserve.gov/apps/reportingforms/home/review)\n      * [Financial Statements](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"1\"\\])\n      * [Securities Exchange Act of 1934](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"7\"\\])\n      * [Applications/Structure Change](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"2\"\\])\n      * [FFIEC](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"3\"\\])\n      * [Municipal a\n\n---\n\nSource: Federal Reserve Financial Stability Report PDF\nURL: https://www.federalreserve.gov/publications/files/financial-stability-report-20241122.pdf\nParse engine: auto\nObject ID: obj_6bd3b7d0cfd24299ab3d7d23\n\n# Financial Stability Report\n\n# 03.102\n\n15400\n\n3102\n\n154.1714\n\nNovember 2024\n\nBOARD OF GOVERNORS OF THE FEDERAL RESERVE SYSTEM\n\n# The Federal Reserve System\n\nThe Federal Reserve System is the central bank of the United States. It performs five key functions to promote the effective operation of the U.S. economy and, more generally, the public interest.\n\n# The Federal Reserve\n\n- conducts the nation’s monetary policy to promote maximum employment and stable prices in the U.S. economy;\n- promotes the stability of the financial system and seeks to minimize and contain systemic risks through active monitoring and engagement in the U.S. and abroad;\n- promotes the safety and soundness of individual financial institutions and monitors their impact on the financial system as a whole;\n- fosters payment and settlement system safety and efficiency through services to the banking industry and U.S. government that facilitate U.S.-dollar transactions and payments; and\n- promotes consumer protection and community development through consumer-focused supervision and examination, research and analysis of emerging consumer issues and trends, community economic development activities, and administration of consumer laws and regulations.\n\nTo learn more about us, visit www.federalreserve.gov/aboutthefed.htm.\n\n# Contents\n\nPurpose and Framework\n\nOverview\n\n1 Asset Valuations\n\n2 Borrowing by Businesses and Households\n\n3 Leverage in the Financial Sector\n\n4 Funding Risks\n\n5 Near-Term Risks to the Financial System\n\nox 5.1. Survey of Salient Risks to Financial Stability\n\nAppendix: Figure Notes\n\nRevisions\n\nNote: This report generally reflects information that was available as of November 4, 2024.\n\nNO_CONTENT_HERE\n\n# Purpose and Framework\n\nThis report presents the Federal Reserve Board’s current assessment of the stability of the U.S. financial system. By publishing this report, the Board intends to promote public understanding by increasing transparency around, and creating accountability for, the Federal Reserve’s views on this topic. Financial stability supports the objectives assigned to the Federal Reserve, including full employment and stable prices, a safe and sound banking system, and an efficient payments system.\n\nThe financial system is considered stable when banks, other lenders, and financial markets are able to provide households, communities, and businesses with the financing they need to invest, grow, and participate in a functioning economy—and can do so even when hit by adverse events, or “shocks.”\n\nConsistent with this view of financial stability, the Federal Reserve Board’s monitoring framework distinguishes between shocks to, and vulnerabilities of, the financial system. Shocks are inherently difficult to predict, while vulnerabilities, which are the aspects of the financial system that would exacerbate stress, can be monitored as they build up or recede over time. As a result, the framework focuses primarily on assessing vulnerabilities, with an emphasis on four broad categories and how those categories might interact to amplify stress in the financial system.\n\n1. Valuation pressures arise when asset prices are high relative to economic fundamentals or historical norms. These developments are often driven by an increased willingness of investors to take on risk. As such, elevated valuation pressures may increase the possibility of outsized drops in asset prices (see Section 1, Asset Valuations).\n\nFor a review of the research literature in this area, see Tobias Adrian, Daniel Covitz, and Nellie Liang (2015), “Financial Stability Monitoring,” Annual Review of Financial Economics, vol. 7 (December), pp. 357–95.\n\nFinancial Stability Report\n\n2. Excessive borrowing by businesses and households exposes the borrowers to distress if their incomes decline or the assets they own fall in value. In these cases, businesses and households with high debt burdens may need to cut back spending, affecting economic activity and causing losses for investors (see Section 2, Borrowing by Businesses and Households).\n\n3. Excessive leverage within the financial sector increases the risk that financial institutions will not have the ability to absorb losses without disruptions to their normal business operations when hit by adverse shocks. In those situations, institutions will be forced to cut back lending, sell their assets, or even shut down. Such responses can impair credit access for households and businesses, further weakening economic activity (see Section 3, Leverage in the Financial Sector).\n\n4. Funding risks expose the financial system to the possibility that investors will rapidly withdraw their funds from a particular institution or sector, creating strains across markets or institutions. Many financial institutions raise funds from the public with a commitment to return their investors’ money on short notice, but those institutions then invest much of those funds in assets that are hard to sell quickly or have a long maturity. This liquidity and maturity transformation can create an incentive for investors to withdraw funds quickly in adverse situations. Facing such withdrawals, financial institutions may need to sell assets quickly at “fire sale” prices, thereby incurring losses and potentially becoming insolvent, as well as causing additional price declines that can create stress across markets and at other institutions (see Section 4, Funding Risks).\n\nThe Federal Reserve’s monitoring framework also tracks domestic and international developments to identify near-term risks—that is, plausible adverse developments or shocks that could "
+      ],
+      "metadata": {
+        "run_id": "tzcx_20260429_095703_9ffc497f",
+        "dataset_key": "tensorzero_cortex_tzcx_20260429_095703_9ffc497f",
+        "context_id": "parse_engine:auto",
+        "context_source": "parse_artifact",
+        "parse_engine_id": "auto",
+        "tensorzero_inference_id": "019dd8b2-0c09-7fc3-8f73-d3db65d79872",
+        "tensorzero_episode_id": "019dd8b2-0c09-7fc3-8f73-d3efa22d339e",
+        "tensorzero_variant": "gemini",
+        "tensorzero_usage": {
+          "input_tokens": 3398,
+          "output_tokens": 208,
+          "cost": null
+        },
+        "tensorzero_finish_reason": "stop",
+        "scores": {
+          "parse_markdown_quality": 0.8187,
+          "rag_context_quality": 0.9222,
+          "llm_answer_quality": 0.7767,
+          "rag_end_to_end_pass": true
+        },
+        "cortex_eval_mode": "async",
+        "knowledge_events": {
+          "enabled": true,
+          "status": "failed",
+          "error": "Job job_1f6312d2e6a0429e8438fe7d ended as failed: {'job_id': 'job_1f6312d2e6a0429e8438fe7d', 'job_type': 'knowledge_add', 'status': 'failed', 'operation_name': 'knowledge.add', 'submitted_at': '2026-04-29T10:03:50.251602', 'progress_percent': None, 'queue_name': None, 'target_type': 'dataset', 'target_id': 'dataset_be17a8d5d20c42c0b3f1dbe3', 'correlation_id': 'request_ae36713a3ab446048d5330fc', 'started_at': '2026-04-29T10:03:54.155298', 'completed_at': '2026-04-29T10:03:54.232525', 'error': {'code': 'config_error', 'message': 'config_error: Cognee add currently supports only `text` and `uri` inputs for live runtime execution.'}, 'metrics': {'queue_latency_ms': 3903, 'run_latency_ms': 77}, 'telemetry': {'trace_id': '81e1d9090c93fa68ff752807204c7d81', 'span_id': '00a16b939fb58ae0', 'request_id': 'request_ae36713a3ab446048d5330fc', 'deployment_ring': None, 'experiment_variant': None}}",
+          "fallback": "parse_artifacts",
+          "fallback_reason": "failed"
+        }
+      }
+    },
+    {
+      "query": "Compare the main macroeconomic, inflation, monetary policy, and financial stability risks across these sources. Cite source names.",
+      "actual_output": "The provided sources do not contain information comparing macroeconomic, inflation, monetary policy, or financial stability risks. The context consists entirely of website navigation menus and links to Federal Reserve pages, such as the FOMC calendar and the Beige Book, without providing the actual text or data from those reports.",
+      "expected_keywords": [
+        "fomc",
+        "federal reserve",
+        "monetary policy",
+        "financial stability",
+        "vulnerabilities",
+        "leverage",
+        "economic activity",
+        "district",
+        "prices"
+      ],
+      "retrieval_contexts": [
+        "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: crawl4ai\nObject ID: obj_3305bc295ceb4a279775238b\n\n* [](https://www.federalreserve.gov/aboutthefed.htm)[About the Fed](https://www.federalreserve.gov/aboutthefed.htm)\n    *       * [Structure of the Federal Reserve System](https://www.federalreserve.gov/aboutthefed/fedexplained/who-we-are.htm)\n      * [The Fed Explained](https://www.federalreserve.gov/aboutthefed/the-fed-explained.htm)\n      * [Board Members](https://www.federalreserve.gov/aboutthefed/bios/board/default.htm)\n      * [Advisory Councils](https://www.federalreserve.gov/aboutthefed/advisorydefault.htm)\n      * [Federal Reserve Banks](https://www.federalreserve.gov/aboutthefed/federal-reserve-system.htm)\n      * [Federal Reserve Bank and Branch Directors](https://www.federalreserve.gov/aboutthefed/directors/about.htm)\n      * [Federal Reserve Act](https://www.federalreserve.gov/aboutthefed/fract.htm)\n      * [Currency](https://www.federalreserve.gov/aboutthefed/currency.htm)\n      * [Board Meetings](https://www.federalreserve.gov/aboutthefed/boardmeetings/meetingdates.htm)\n      * [Board Votes](https://www.federalreserve.gov/aboutthefed/boardvotes.htm)\n      * [Careers](https://www.federalreserve.gov/careers.htm)\n      * [Do Business with the Board](https://www.federalreserve.gov/aboutthefed/procurement/tips.htm)\n      * [Holidays Observed - K.8](https://www.federalreserve.gov/aboutthefed/k8.htm)\n      * [Ethics & Values](https://www.federalreserve.gov/aboutthefed/ethics-values.htm)\n      * [Contact](https://www.federalreserve.gov/aboutthefed/contact-us-topics.htm)\n      * [Requesting Information (FOIA)](https://www.federalreserve.gov/foia/about_foia.htm)\n      * [FAQs](https://www.federalreserve.gov/faqs.htm)\n      * [Economic Education](https://www.federalreserve.gov/aboutthefed/educational-tools/default.htm)\n      * [Fed Financial Statements](https://www.federalreserve.gov/aboutthefed/fed-financial-statements.htm)\n      * [Financial Innovation](https://www.federalreserve.gov/aboutthefed/financial-innovation.htm)\n  * [](https://www.federalreserve.gov/newsevents.htm)[News & Events](https://www.federalreserve.gov/newsevents.htm)\n    * [Press Releases](https://www.federalreserve.gov/newsevents/pressreleases.htm)\n    * [Speeches & Testimony](https://www.federalreserve.gov/newsevents/speeches-testimony.htm)\n    * [Calendar](https://www.federalreserve.gov/newsevents/calendar.htm)\n    * [Videos](https://www.federalreserve.gov/videos.htm)\n    * [Photo Gallery](https://www.federalreserve.gov/photogallery.htm)\n    * [Conferences](https://www.federalreserve.gov/conferences.htm)\n  * [](https://www.federalreserve.gov/monetarypolicy.htm)[Monetary Policy](https://www.federalreserve.gov/monetarypolicy.htm)\n    *       * **Federal Open Market Committee**\n      * [About the FOMC](https://www.federalreserve.gov/monetarypolicy/fomc.htm)\n      * [Meeting calendars and information](https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm)\n      * [Transcripts and other historical materials](https://www.federalreserve.gov/monetarypolicy/fomc_historical.htm)\n      * [FAQs](https://www.federalreserve.gov/monetarypolicy/fomc_projectionsfaqs.htm)\n      * **Monetary Policy Principles and Practice**\n      * [Notes](https://www.federalreserve.gov/monetarypolicy/monetary-policy-principles-and-practice.htm)\n      * **Policy Implementation**\n      * [Policy Normalization](https://www.federalreserve.gov/monetarypolicy/policy-normalization.htm)\n      * [Policy Tools](https://www.federalreserve.gov/monetarypolicy/policytools.htm)\n      * **Reports**\n      * [Monetary Policy Report](https://www.federalreserve.gov/monetarypolicy/publications/mpr_default.htm)\n      * [Beige Book](https://www.federalreserve.gov/monetarypolicy/publications/beige-book-default.htm)\n      * [Federal Reserve Balance Sheet Developments](https://www.federalreserve.gov/monetarypolicy/publications/balance-sheet-developments-report.htm)\n      * **Review of Monetary Policy Strategy, Tools, and Communications**\n      * [Overview](https://www.federalreserve.gov/monetarypolicy/review-of-monetary-policy-strategy-tools-and-communications-2025.htm)\n  * [](https://www.federalreserve.gov/supervisionreg.htm)[Supervision & Regulation](https://www.federalreserve.gov/supervisionreg.htm)\n    *       * **Supervision**\n      * [ Community Banks](https://www.federalreserve.gov/supervisionreg/community-banks.htm)\n      * [ Regional Banks and Foreign Banks with U.S. Assets < $100 Billion](https://www.federalreserve.gov/supervisionreg/regional-and-small-foreign-banks.htm)\n      * [ Large Banks and Large Foreign Banks](https://www.federalreserve.gov/supervisionreg/large-banks-and-large-foreign-banks.htm)\n      * [ Global Systemically Important Banks](https://www.federalreserve.gov/supervisionreg/global-systemically-important-banks.htm)\n      * [Financial Market Utilities](https://www.federalreserve.gov/supervisionreg/financial-market-utility-supervision.htm)\n      * [Consumer Compliance](https://www.federalreserve.gov/supervisionreg/consumer-compliance.htm)\n      * [ Resources for Supervised Institutions](https://www.federalreserve.gov/supervisionreg/resources-for-supervised-institutions.htm)\n      * **Reports**\n      * [Federal Reserve Supervision and Regulation Report](https://www.federalreserve.gov/publications/supervision-and-regulation-report.htm)\n      * **Reporting Forms**\n      * [Recent Reporting Form Updates](https://www.federalreserve.gov/apps/reportingforms/recentupdates)\n      * [Information Collections Under Review](https://www.federalreserve.gov/apps/reportingforms/home/review)\n      * [Financial Statements](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"1\"\\])\n      * [Securities Exchange Act of 1934](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"7\"\\])\n      * [Applications/Structure Change](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"2\"\\])\n      * [FFIEC](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"3\"\\])\n      * [Municipal a\n\n---\n\nSource: Federal Reserve Beige Book\nURL: https://www.federalreserve.gov/monetarypolicy/beigebook/default.htm\nParse engine: crawl4ai\nObject ID: obj_189bad5331c54607928473f8\n\n* [](https://www.federalreserve.gov/aboutthefed.htm)[About the Fed](https://www.federalreserve.gov/aboutthefed.htm)\n    *       * [Structure of the Federal Reserve System](https://www.federalreserve.gov/aboutthefed/structure-federal-reserve-system.htm)\n      * [The Fed Explained](https://www.federalreserve.gov/aboutthefed/the-fed-explained.htm)\n      * [Board Members](https://www.federalreserve.gov/aboutthefed/bios/board/default.htm)\n      * [Advisory Councils](https://www.federalreserve.gov/aboutthefed/advisorydefault.htm)\n      * [Federal Reserve Banks](https://www.federalreserve.gov/aboutthefed/federal-reserve-system.htm)\n      * [Federal Reserve Act](https://www.federalreserve.gov/aboutthefed/fract.htm)\n      * [Currency](https://www.federalreserve.gov/aboutthefed/currency.htm)\n      * [Board Meetings](https://www.federalreserve.gov/aboutthefed/boardmeetings/meetingdates.htm)\n      * [Board Votes](https://www.federalreserve.gov/aboutthefed/boardvotes.htm)\n      * [Diversity & Inclusion](https://www.federalreserve.gov/aboutthefed/diversityinclusion.htm)\n      * [Careers](https://www.federalreserve.gov/careers.htm)\n      * [Do Business with the Board](https://www.federalreserve.gov/aboutthefed/procurement/about.htm)\n      * [Holidays Observed - K.8](https://www.federalreserve.gov/aboutthefed/k8.htm)\n      * [Ethics & Values](https://www.federalreserve.gov/aboutthefed/ethics-values.htm)\n      * [Contact ](https://www.federalreserve.gov/aboutthefed/contact-us-topics.htm)\n      * [Requesting Information (FOIA)](https://www.federalreserve.gov/foia/about_foia.htm)\n      * [FAQs](https://www.federalreserve.gov/faqs.htm)\n      * [Economic Education](https://www.federalreserve.gov/aboutthefed/educational-tools/default.htm)\n      * [Fed Financial Statements](https://www.federalreserve.gov/aboutthefed/fed-financial-statements.htm)\n      * [Innovation](https://www.federalreserve.gov/aboutthefed/innovation.htm)\n  * [](https://www.federalreserve.gov/newsevents.htm)[News & Events](https://www.federalreserve.gov/newsevents.htm)\n    * [Press Releases](https://www.federalreserve.gov/newsevents/pressreleases.htm)\n    * [Speeches](https://www.federalreserve.gov/newsevents/speeches.htm)\n    * [Testimony](https://www.federalreserve.gov/newsevents/testimony.htm)\n    * [Calendar](https://www.federalreserve.gov/newsevents/calendar.htm)\n    * [Videos ](https://www.federalreserve.gov/videos.htm)\n    * [Photo Gallery ](https://www.federalreserve.gov/photogallery.htm)\n    * [Conferences](https://www.federalreserve.gov/conferences.htm)\n  * [](https://www.federalreserve.gov/monetarypolicy.htm)[Monetary Policy](https://www.federalreserve.gov/monetarypolicy.htm)\n    *       * **Federal Open Market Committee**\n      * [About the FOMC](https://www.federalreserve.gov/monetarypolicy/fomc.htm)\n      * [Meeting calendars and information](https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm)\n      * [Transcripts and other historical materials](https://www.federalreserve.gov/monetarypolicy/fomc_historical.htm)\n      * [FAQs](https://www.federalreserve.gov/monetarypolicy/fomc_projectionsfaqs.htm)\n      * **Monetary Policy Principles and Practice**\n      * [Notes](https://www.federalreserve.gov/monetarypolicy/monetary-policy-principles-and-practice.htm)\n      * **Policy Implementation**\n      * [Policy Normalization](https://www.federalreserve.gov/monetarypolicy/policy-normalization.htm)\n      * [Policy Tools](https://www.federalreserve.gov/monetarypolicy/policytools.htm)\n      * **Reports**\n      * [Monetary Policy Report](https://www.federalreserve.gov/monetarypolicy/mpr_default.htm)\n      * [Beige Book](https://www.federalreserve.gov/monetarypolicy/beige-book-default.htm)\n      * [Federal Reserve Balance Sheet Developments](https://www.federalreserve.gov/monetarypolicy/balance-sheet-developments-report.htm)\n      * **Review of Monetary Policy Strategy, Tools, and Communications**\n      * [Overview](https://www.federalreserve.gov/monetarypolicy/review-of-monetary-policy-strategy-tools-and-communications.htm)\n  * [](https://www.federalreserve.gov/supervisionreg.htm)[Supervision & Regulation](https://www.federalreserve.gov/supervisionreg.htm)\n    *       * **Institution Supervision**\n      * [Community & Regional Financial Institutions](https://www.federalreserve.gov/supervisionreg/community-and-regional-financial-institutions.htm)\n      * [Large Financial Institutions](https://www.federalreserve.gov/supervisionreg/large-financial-institutions.htm)\n      * [Foreign Banking Organizations](https://www.federalreserve.gov/supervisionreg/foreign-banking-organizations.htm)\n      * [Financial Market Utilities](https://www.federalreserve.gov/supervisionreg/financial-market-utility-supervision.htm)\n      * [Consumer Compliance](https://www.federalreserve.gov/supervisionreg/consumer-compliance.htm)\n      * **Reports**\n      * [Federal Reserve Supervision and Regulation Report](https://www.federalreserve.gov/publications/supervision-and-regulation-report.htm)\n      * **Reporting Forms**\n      * [All Reporting Forms](https://www.federalreserve.gov/apps/reportforms/default.aspx)\n      * [Recent Updates](https://www.federalreserve.gov/supervisionreg/reporting-forms-whats-new.htm)\n      * [Information collections under review](https://www.federalreserve.gov/apps/reportforms/review.aspx)\n      * [Financial Statements](https://www.federalreserve.gov/apps/reportforms/categoryindex.aspx?xTdTa+FaSlI=)\n      * [Applications/structure change](https://www.federalreserve.gov/apps/reportforms/categoryindex.aspx?+PhkJwiBjbA=)\n      * [Federal Financial Institutions Examination Council (FFIEC)](http"
+      ],
+      "metadata": {
+        "run_id": "tzcx_20260429_095703_9ffc497f",
+        "dataset_key": "tensorzero_cortex_tzcx_20260429_095703_9ffc497f",
+        "context_id": "parse_engine:crawl4ai",
+        "context_source": "parse_artifact",
+        "parse_engine_id": "crawl4ai",
+        "tensorzero_inference_id": "019dd8b2-61a4-78b2-b88f-b26b6427ddd9",
+        "tensorzero_episode_id": "019dd8b2-61a4-78b2-b88f-b271575903ce",
+        "tensorzero_variant": "gemini",
+        "tensorzero_usage": {
+          "input_tokens": 3933,
+          "output_tokens": 139,
+          "cost": null
+        },
+        "tensorzero_finish_reason": "stop",
+        "scores": {
+          "parse_markdown_quality": 0.8187,
+          "rag_context_quality": 0.5333,
+          "llm_answer_quality": 0.4944,
+          "rag_end_to_end_pass": true
+        },
+        "cortex_eval_mode": "async",
+        "knowledge_events": {
+          "enabled": true,
+          "status": "failed",
+          "error": "Job job_1f6312d2e6a0429e8438fe7d ended as failed: {'job_id': 'job_1f6312d2e6a0429e8438fe7d', 'job_type': 'knowledge_add', 'status': 'failed', 'operation_name': 'knowledge.add', 'submitted_at': '2026-04-29T10:03:50.251602', 'progress_percent': None, 'queue_name': None, 'target_type': 'dataset', 'target_id': 'dataset_be17a8d5d20c42c0b3f1dbe3', 'correlation_id': 'request_ae36713a3ab446048d5330fc', 'started_at': '2026-04-29T10:03:54.155298', 'completed_at': '2026-04-29T10:03:54.232525', 'error': {'code': 'config_error', 'message': 'config_error: Cognee add currently supports only `text` and `uri` inputs for live runtime execution.'}, 'metrics': {'queue_latency_ms': 3903, 'run_latency_ms': 77}, 'telemetry': {'trace_id': '81e1d9090c93fa68ff752807204c7d81', 'span_id': '00a16b939fb58ae0', 'request_id': 'request_ae36713a3ab446048d5330fc', 'deployment_ring': None, 'experiment_variant': None}}",
+          "fallback": "parse_artifacts",
+          "fallback_reason": "failed"
+        }
+      }
+    },
+    {
+      "query": "Compare the main macroeconomic, inflation, monetary policy, and financial stability risks across these sources. Cite source names.",
+      "actual_output": "The provided sources do not contain specific current macroeconomic, inflation, or monetary policy risks, making a full comparison impossible. The 'Federal Reserve FOMC calendar' only provides meeting schedules and administrative details. The 'Federal Reserve Financial Stability Report PDF' outlines a framework for financial stability risks rather than current macroeconomic forecasts, identifying four main vulnerabilities: valuation pressures, excessive borrowing by businesses and households, excessive leverage within the financial sector, and funding risks.",
+      "expected_keywords": [
+        "fomc",
+        "federal reserve",
+        "monetary policy",
+        "financial stability",
+        "vulnerabilities",
+        "leverage",
+        "economic activity",
+        "district",
+        "prices"
+      ],
+      "retrieval_contexts": [
+        "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: llama_parse\nObject ID: obj_135aec033ec14d6ab8249dfe\n\nAn official website of the United States Government Here's how you know\n\n# Federal Open Market Committee\n\nMeeting calendars, statements, and minutes\n\nFOMC Search (2021-2027)\n\nThe FOMC holds eight regularly scheduled meetings during the year and other meetings as needed. Links to policy statements and minutes are in the calendars below. The minutes of regularly scheduled meetings are released three weeks after the date of the policy decision. Committee membership changes at the first regularly scheduled meeting of the year.\n\nFOIA\n\nThe FOMC makes an annual report pursuant to the Freedom of Information Act. The FOMC FOIA Service Center provides information about the status of FOIA requests and the FOIA process.\n\n# 2026 FOMC Meetings\n\n| Month   | Date    | Statement          | Press Conference          | Minutes            |\n| ------- | ------- | ------------------ | ------------------------- | ------------------ |\n| January | 27-28   | PDF HTML |                           |                    |\n| March   | 17-18\\* | PDF HTML | Projection Materials | PDF HTML |\n| April   | 28-29   |                    |                           |                    |\n| June    | 16-17\\* |                    |                           |                    |\n\n# 2025 FOMC Meetings\n\n| Month   | Date    | Statement  | Press Conference     | Minutes    | | |\n| ------- | ------- | ---------- | -------------------- | ---------- |---|---|\n| January | 28-29   | PDF | HTML |                      |            | |\n| March   | 18-19\\* | PDF | HTML | Projection Materials | PDF | HTML |\n| May     | 6-7     | PDF | HTML |                      |            | |\n| June    | 17-18\\* |            |                      |            | | |\n\n* Meeting associated with a Summary of Economic Projections.\n\n# Statement on Longer-Run Goals and Monetary Policy Strategy\n\n# 2024 FOMC Meetings\n\n| Month              | Date       | Statement  | Press Conference | Minutes    | Projection Materials | Implementation Note          | Release Date                 |                     |                          | | |\n| ------------------ | ---------- | ---------- | ---------------- | ---------- | -------------------- | ---------------------------- | ---------------------------- | ------------------- | ------------------------ |---|---|\n|                    |            | July       | 29-30            | Statement: | PDF | HTML           | Minutes:                     | PDF | HTML                   | Implementation Note | (Released July 09, 2025) |\n| 22 (notation vote) | Statement: | PDF | HTML | Minutes:         | PDF | HTML | Implementation Note  | (Released August 20, 2025)   |                              |                     |                          |\n| September          | 16-17\\*    | Statement: | PDF | HTML       | Minutes:   | PDF | HTML           | Implementation Note          | (Released October 08, 2025)  |                     |                          |\n| 28-29              | Statement: | PDF | HTML | Minutes:         | PDF | HTML | Implementation Note  | (Released November 19, 2025) |                              |                     |                          |\n| December           | 9-10\\*     | Statement: | PDF | HTML       | Minutes:   | PDF | HTML           | Implementation Note          | (Released December 30, 2025) |                     |                          |\n\n* Meeting associated with a Summary of Economic Projections.\n\n# Statement on Longer-Run Goals and Monetary Policy Strategy\n\nImplementation Note\n\n| Month     | Statement | Press Conference | Minutes    | Projection Materials | Implementation Note | Release Date                 | | |\n| --------- | --------- | ---------------- | ---------- | -------------------- | ------------------- | ---------------------------- |---|---|\n| March     | 19-20\\*   | PDF | HTML       | PDF | HTML |                      |                     | (Released February 21, 2024) |\n| Apr/May   | 30-1      | PDF | HTML       | PDF | HTML |                      |                     | (Released April 10, 2024)    |\n| June      | 11-12\\*   | PDF | HTML       | PDF | HTML |                      |                     | (Released July 03, 2024)     |\n| July      | 30-31     | PDF | HTML       | PDF | HTML |                      |                     | (Released August 21, 2024)   |\n| September | 17-18\\*   | PDF | HTML       | PDF | HTML |                      |                     | (Released October 09, 2024)  |\n| November  | 6-7       | PDF | HTML       | PDF | HTML |                      |                     | (Released November 26, 2024) |\n\nDecember      17-18*\n\nStatement:              Press Conference                    Minutes:\n\nPDF | HTML              Projection Materials                PDF | HTML\n\nImplementation Note     PDF | HTML                          (Released January 08, 2025)\n\n* Meeting associated with a Summary of Economic Projections.\n\n# 2023 FOMC Meetings\n\n# Jan/Feb       31-1\n\nStatement:              Press Conference              Minutes:\n\nPDF | HTML                                            PDF | HTML\n\nImplementation Note     Statement on Longer-Run       (Released February 22, 2023)\n\nGoals and Monetary Policy     Strategy\n\n# March         21-22*\n\nStatement:              Press Conference              Minutes:\n\nPDF | HTML              Projection Materials          PDF | HTML\n\nImplementation Note     PDF | HTML                    (Released April 12, 2023)\n\n# May           2-3\n\nStatement:              Press Conference              Minutes:\n\nPDF | HTML                                            PDF | HTML\n\nImplementation Note                                   (Released May 24, 2023)\n\n# June          13-14*\n\nStatement:              Press Conference              Minutes:\n\nPDF | HTML              Projection Materials          PDF | HTML\n\nImplementation Note     PDF | HTML                    (Released July 05, 2023)\n\n# July          25-26\n\nStatement:              Press Conference\n\n---\n\nSource: Federal Reserve Financial Stability Report PDF\nURL: https://www.federalreserve.gov/publications/files/financial-stability-report-20241122.pdf\nParse engine: llama_parse\nObject ID: obj_f244bab41fa94c2e9dfe2bad\n\n# Financial Stability Report\n\n# 03.102\n\n15400\n\n3102\n\n154.1714\n\nNovember 2024\n\nBOARD OF GOVERNORS OF THE FEDERAL RESERVE SYSTEM\n\n# The Federal Reserve System\n\nThe Federal Reserve System is the central bank of the United States. It performs five key functions to promote the effective operation of the U.S. economy and, more generally, the public interest.\n\n# The Federal Reserve\n\n- conducts the nation’s monetary policy to promote maximum employment and stable prices in the U.S. economy;\n- promotes the stability of the financial system and seeks to minimize and contain systemic risks through active monitoring and engagement in the U.S. and abroad;\n- promotes the safety and soundness of individual financial institutions and monitors their impact on the financial system as a whole;\n- fosters payment and settlement system safety and efficiency through services to the banking industry and U.S. government that facilitate U.S.-dollar transactions and payments; and\n- promotes consumer protection and community development through consumer-focused supervision and examination, research and analysis of emerging consumer issues and trends, community economic development activities, and administration of consumer laws and regulations.\n\nTo learn more about us, visit www.federalreserve.gov/aboutthefed.htm.\n\n# Contents\n\nPurpose and Framework\n\nOverview\n\n1 Asset Valuations\n\n2 Borrowing by Businesses and Households\n\n3 Leverage in the Financial Sector\n\n4 Funding Risks\n\n5 Near-Term Risks to the Financial System\n\nox 5.1. Survey of Salient Risks to Financial Stability\n\nAppendix: Figure Notes\n\nRevisions\n\nNote: This report generally reflects information that was available as of November 4, 2024.\n\nNO_CONTENT_HERE\n\n# Purpose and Framework\n\nThis report presents the Federal Reserve Board’s current assessment of the stability of the U.S. financial system. By publishing this report, the Board intends to promote public understanding by increasing transparency around, and creating accountability for, the Federal Reserve’s views on this topic. Financial stability supports the objectives assigned to the Federal Reserve, including full employment and stable prices, a safe and sound banking system, and an efficient payments system.\n\nThe financial system is considered stable when banks, other lenders, and financial markets are able to provide households, communities, and businesses with the financing they need to invest, grow, and participate in a functioning economy—and can do so even when hit by adverse events, or “shocks.”\n\nConsistent with this view of financial stability, the Federal Reserve Board’s monitoring framework distinguishes between shocks to, and vulnerabilities of, the financial system. Shocks are inherently difficult to predict, while vulnerabilities, which are the aspects of the financial system that would exacerbate stress, can be monitored as they build up or recede over time. As a result, the framework focuses primarily on assessing vulnerabilities, with an emphasis on four broad categories and how those categories might interact to amplify stress in the financial system.\n\n1. Valuation pressures arise when asset prices are high relative to economic fundamentals or historical norms. These developments are often driven by an increased willingness of investors to take on risk. As such, elevated valuation pressures may increase the possibility of outsized drops in asset prices (see Section 1, Asset Valuations).\n\nFor a review of the research literature in this area, see Tobias Adrian, Daniel Covitz, and Nellie Liang (2015), “Financial Stability Monitoring,” Annual Review of Financial Economics, vol. 7 (December), pp. 357–95.\n\nFinancial Stability Report\n\n2. Excessive borrowing by businesses and households exposes the borrowers to distress if their incomes decline or the assets they own fall in value. In these cases, businesses and households with high debt burdens may need to cut back spending, affecting economic activity and causing losses for investors (see Section 2, Borrowing by Businesses and Households).\n\n3. Excessive leverage within the financial sector increases the risk that financial institutions will not have the ability to absorb losses without disruptions to their normal business operations when hit by adverse shocks. In those situations, institutions will be forced to cut back lending, sell their assets, or even shut down. Such responses can impair credit access for households and businesses, further weakening economic activity (see Section 3, Leverage in the Financial Sector).\n\n4. Funding risks expose the financial system to the possibility that investors will rapidly withdraw their funds from a particular institution or sector, creating strains across markets or institutions. Many financial institutions raise funds from the public with a commitment to return their investors’ money on short notice, but those institutions then invest much of those funds in assets that are hard to sell quickly or have a long maturity. This liquidity and maturity transformation can create an incentive for investors to withdraw funds quickly in adverse situations. Facing such withdrawals, financial institutions may need to sell assets quickly at “fire sale” prices, thereby incurring losses and potentially becoming insolvent, as well as causing additional price declines that can create stress across markets and at other institutions (see Section 4, Funding Risks).\n\nThe Federal Reserve’s monitoring framework also tracks domestic and international developments to identify near-term risks—that is, plausible adverse developments or shocks "
+      ],
+      "metadata": {
+        "run_id": "tzcx_20260429_095703_9ffc497f",
+        "dataset_key": "tensorzero_cortex_tzcx_20260429_095703_9ffc497f",
+        "context_id": "parse_engine:llama_parse",
+        "context_source": "parse_artifact",
+        "parse_engine_id": "llama_parse",
+        "tensorzero_inference_id": "019dd8b2-a64e-7963-acef-4f4563c10ee4",
+        "tensorzero_episode_id": "019dd8b2-a64e-7963-acef-4f571a260e0a",
+        "tensorzero_variant": "gemini",
+        "tensorzero_usage": {
+          "input_tokens": 3050,
+          "output_tokens": 170,
+          "cost": null
+        },
+        "tensorzero_finish_reason": "stop",
+        "scores": {
+          "parse_markdown_quality": 0.8187,
+          "rag_context_quality": 0.9222,
+          "llm_answer_quality": 0.7567,
+          "rag_end_to_end_pass": true
+        },
+        "cortex_eval_mode": "async",
+        "knowledge_events": {
+          "enabled": true,
+          "status": "failed",
+          "error": "Job job_1f6312d2e6a0429e8438fe7d ended as failed: {'job_id': 'job_1f6312d2e6a0429e8438fe7d', 'job_type': 'knowledge_add', 'status': 'failed', 'operation_name': 'knowledge.add', 'submitted_at': '2026-04-29T10:03:50.251602', 'progress_percent': None, 'queue_name': None, 'target_type': 'dataset', 'target_id': 'dataset_be17a8d5d20c42c0b3f1dbe3', 'correlation_id': 'request_ae36713a3ab446048d5330fc', 'started_at': '2026-04-29T10:03:54.155298', 'completed_at': '2026-04-29T10:03:54.232525', 'error': {'code': 'config_error', 'message': 'config_error: Cognee add currently supports only `text` and `uri` inputs for live runtime execution.'}, 'metrics': {'queue_latency_ms': 3903, 'run_latency_ms': 77}, 'telemetry': {'trace_id': '81e1d9090c93fa68ff752807204c7d81', 'span_id': '00a16b939fb58ae0', 'request_id': 'request_ae36713a3ab446048d5330fc', 'deployment_ring': None, 'experiment_variant': None}}",
+          "fallback": "parse_artifacts",
+          "fallback_reason": "failed"
+        }
+      }
+    },
+    {
+      "query": "Compare the main macroeconomic, inflation, monetary policy, and financial stability risks across these sources. Cite source names.",
+      "actual_output": "The provided context does not contain any information regarding macroeconomic, inflation, monetary policy, or financial stability risks. The text consists entirely of boilerplate navigation links and site structure for the Federal Reserve website.",
+      "expected_keywords": [
+        "fomc",
+        "federal reserve",
+        "monetary policy",
+        "financial stability",
+        "vulnerabilities",
+        "leverage",
+        "economic activity",
+        "district",
+        "prices"
+      ],
+      "retrieval_contexts": [
+        "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: markitdown\nObject ID: obj_e036636d057045ef906d473f\n\n[Skip to main content](#content)\n\n![US Flag](/images/icon-us-flag.svg)\n\nAn official website of the United States Government\n\nHere's how you know![Expand More](/images/expand_more.svg)\n\n![.gov icon](https://designsystem.digital.gov/assets/img/icon-dot-gov.svg)\n\n**Official websites use .gov**\nA **.gov** website belongs to an official government organization in the United States.\n\n![HTTPS icon](https://designsystem.digital.gov/assets/img/icon-https.svg)\n\n**Secure .gov websites use HTTPS**\nA **lock** (LockLocked padlock icon) or **https://** means you've safely connected to the .gov website. Share sensitive information only on official, secure websites.\n\n[Back to Home](/default.htm)\n[Board of Governors of the Federal Reserve System](/default.htm \"Link to Home Page\")\n\n* Stay Connected\n  + [Federal Reserve Facebook Page](https://www.facebook.com/federalreserve)\n  + [Federal Reserve Instagram Page](https://www.instagram.com/federalreserveboard/)\n  + [Federal Reserve YouTube Page](https://www.youtube.com/federalreserve)\n  + [Federal Reserve Flickr Page](https://www.flickr.com/photos/federalreserve/)\n  + [Federal Reserve LinkedIn Page](https://www.linkedin.com/company/federal-reserve-board)\n  + [Federal Reserve Threads Page](https://www.threads.net/%40federalreserveboard)\n  + [Federal Reserve X Page](https://x.com/federalreserve)\n  + [Federal Reserve Bluesky Page](https://bsky.app/profile/federalreserve.gov)\n  + [Subscribe to RSS](/feeds/feeds.htm)\n  + [Subscribe to Email](/subscribe.htm)\n* [Recent Postings](/recentpostings.htm)\n* [Calendar](/newsevents/calendar.htm)\n* [Publications](/publications.htm)\n* [Site Map](/sitemap.htm)\n* [A-Z index](/azindex.htm)\n* [Careers](/careers.htm)\n* [FAQs](/faqs.htm)\n* [Videos](/videos.htm)\n* [Contact](/aboutthefed/contact-us-topics.htm)\n\nSearch\n\nSubmit Search Button\n\n[Advanced](//www.fedsearch.org/board_public/)\n\nToggle Dropdown Menu\n\n[# Board of Governors of the Federal Reserve System\n\n*The Federal Reserve, the central bank of the United States, provides\nthe nation with a safe, flexible, and stable monetary and financial\nsystem.*](/default.htm \"Link to Home Page\")\n\nMain Menu Toggle Button\nSections\n\nSearch Toggle Button\n\nSearch\n\nSearch Submit Button\nSubmit\n\n* [About\n  the Fed](/aboutthefed.htm)\n  + - [Structure of the Federal Reserve System](/aboutthefed/fedexplained/who-we-are.htm)\n    - [The Fed Explained](/aboutthefed/the-fed-explained.htm)\n    - [Board Members](/aboutthefed/bios/board/default.htm)\n    - [Advisory Councils](/aboutthefed/advisorydefault.htm)\n    - [Federal Reserve Banks](/aboutthefed/federal-reserve-system.htm)\n    - [Federal Reserve Bank and Branch Directors](/aboutthefed/directors/about.htm)\n    - [Federal Reserve Act](/aboutthefed/fract.htm)\n    - [Currency](/aboutthefed/currency.htm)\n    - [Board Meetings](/aboutthefed/boardmeetings/meetingdates.htm)\n    - [Board Votes](/aboutthefed/boardvotes.htm)\n    - [Careers](/careers.htm)\n    - [Do Business with the Board](/aboutthefed/procurement/tips.htm)\n    - [Holidays Observed - K.8](/aboutthefed/k8.htm)\n    - [Ethics & Values](/aboutthefed/ethics-values.htm)\n    - [Contact](/aboutthefed/contact-us-topics.htm)\n    - [Requesting Information (FOIA)](/foia/about_foia.htm)\n    - [FAQs](/faqs.htm)\n    - [Economic Education](/aboutthefed/educational-tools/default.htm)\n    - [Fed Financial Statements](/aboutthefed/fed-financial-statements.htm)\n    - [Financial Innovation](/aboutthefed/financial-innovation.htm)\n* [News\n  & Events](/newsevents.htm)\n  + [Press Releases](/newsevents/pressreleases.htm)\n  + [Speeches & Testimony](/newsevents/speeches-testimony.htm)\n  + [Calendar](/newsevents/calendar.htm)\n  + [Videos](/videos.htm)\n  + [Photo Gallery](/photogallery.htm)\n  + [Conferences](/conferences.htm)\n* [Monetary\n  Policy](/monetarypolicy.htm)\n  + - **Federal Open Market Committee**\n    - [About the FOMC](/monetarypolicy/fomc.htm)\n    - [Meeting calendars and information](/monetarypolicy/fomccalendars.htm)\n    - [Transcripts and other historical materials](/monetarypolicy/fomc_historical.htm)\n    - [FAQs](/monetarypolicy/fomc_projectionsfaqs.htm)\n    - **Monetary Policy Principles and Practice**\n    - [Notes](/monetarypolicy/monetary-policy-principles-and-practice.htm)\n    - **Policy Implementation**\n    - [Policy Normalization](/monetarypolicy/policy-normalization.htm)\n    - [Policy Tools](/monetarypolicy/policytools.htm)\n    - **Reports**\n    - [Monetary Policy Report](/monetarypolicy/publications/mpr_default.htm)\n    - [Beige Book](/monetarypolicy/publications/beige-book-default.htm)\n    - [Federal Reserve Balance Sheet Developments](/monetarypolicy/publications/balance-sheet-developments-report.htm)\n    - **Review of Monetary Policy Strategy, Tools, and Communications**\n    - [Overview](/monetarypolicy/review-of-monetary-policy-strategy-tools-and-communications-2025.htm)\n* [Supervision\n  & Regulation](/supervisionreg.htm)\n  + - **Supervision**\n    - [Community Banks](/supervisionreg/community-banks.htm)\n    - [Regional Banks and Foreign Banks with U.S. Assets < $100 Billion](/supervisionreg/regional-and-small-foreign-banks.htm)\n    - [Large Banks and Large Foreign Banks](/supervisionreg/large-banks-and-large-foreign-banks.htm)\n    - [Global Systemically Important Banks](/supervisionreg/global-systemically-important-banks.htm)\n    - [Financial Market\n      Utilities](/supervisionreg/financial-market-utility-supervision.htm)\n    - [Consumer\n      Compliance](/supervisionreg/consumer-compliance.htm)\n    - [Resources for Supervised Institutions](/supervisionreg/resources-for-supervised-institutions.htm)\n    - **Reports**\n    - [Federal Reserve\n      Supervision and Regulation Report](/publications/supervision-and-regulation-report.htm)\n    - **Reporting Forms**\n    - [Recent Reporting Form Updates](/apps/reportingforms/recentupdates)\n    - [Information Collections\n      Under Review](/apps/reportingforms/home/review)\n    - [Financial\n      Statements](/apps/ReportingForms/?reportTypesIdsJson=[\"1\"])\n    -"
+      ],
+      "metadata": {
+        "run_id": "tzcx_20260429_095703_9ffc497f",
+        "dataset_key": "tensorzero_cortex_tzcx_20260429_095703_9ffc497f",
+        "context_id": "parse_engine:markitdown",
+        "context_source": "parse_artifact",
+        "parse_engine_id": "markitdown",
+        "tensorzero_inference_id": "019dd8b2-ede6-7cd0-96d3-3309c765d5ba",
+        "tensorzero_episode_id": "019dd8b2-ede6-7cd0-96d3-33190b73aa4f",
+        "tensorzero_variant": "gemini",
+        "tensorzero_usage": {
+          "input_tokens": 2240,
+          "output_tokens": 112,
+          "cost": null
+        },
+        "tensorzero_finish_reason": "stop",
+        "scores": {
+          "parse_markdown_quality": 0.8187,
+          "rag_context_quality": 0.5333,
+          "llm_answer_quality": 0.4944,
+          "rag_end_to_end_pass": true
+        },
+        "cortex_eval_mode": "async",
+        "knowledge_events": {
+          "enabled": true,
+          "status": "failed",
+          "error": "Job job_1f6312d2e6a0429e8438fe7d ended as failed: {'job_id': 'job_1f6312d2e6a0429e8438fe7d', 'job_type': 'knowledge_add', 'status': 'failed', 'operation_name': 'knowledge.add', 'submitted_at': '2026-04-29T10:03:50.251602', 'progress_percent': None, 'queue_name': None, 'target_type': 'dataset', 'target_id': 'dataset_be17a8d5d20c42c0b3f1dbe3', 'correlation_id': 'request_ae36713a3ab446048d5330fc', 'started_at': '2026-04-29T10:03:54.155298', 'completed_at': '2026-04-29T10:03:54.232525', 'error': {'code': 'config_error', 'message': 'config_error: Cognee add currently supports only `text` and `uri` inputs for live runtime execution.'}, 'metrics': {'queue_latency_ms': 3903, 'run_latency_ms': 77}, 'telemetry': {'trace_id': '81e1d9090c93fa68ff752807204c7d81', 'span_id': '00a16b939fb58ae0', 'request_id': 'request_ae36713a3ab446048d5330fc', 'deployment_ring': None, 'experiment_variant': None}}",
+          "fallback": "parse_artifacts",
+          "fallback_reason": "failed"
+        }
+      }
+    }
+  ],
+  "scorecard": {
+    "parse_markdown_quality": 0.8187,
+    "rag_context_quality": 0.7278,
+    "llm_answer_quality": 0.6305,
+    "rag_end_to_end_pass_rate": 1.0,
+    "rag_end_to_end_pass": true,
+    "tensorzero_strategy": "exhaustive",
+    "tensorzero_variants_requested": [
+      "openai",
+      "gemini",
+      "kimi"
+    ],
+    "tensorzero_variant_counts": {
+      "openai": 4,
+      "gemini": 4,
+      "kimi": 4
+    },
+    "tensorzero_inference_count": 4,
+    "tensorzero_error_count": 8,
+    "parse_success_count": 8,
+    "parse_failure_count": 7,
+    "parse_by_engine": {
+      "auto": {
+        "success": 2,
+        "failure": 1,
+        "avg_score": 1.0,
+        "markdown_chars": 253934
+      },
+      "crawl4ai": {
+        "success": 2,
+        "failure": 1,
+        "avg_score": 0.775,
+        "markdown_chars": 119522
+      },
+      "markitdown": {
+        "success": 1,
+        "failure": 2,
+        "avg_score": 1.0,
+        "markdown_chars": 42750
+      },
+      "llama_parse": {
+        "success": 2,
+        "failure": 1,
+        "avg_score": 1.0,
+        "markdown_chars": 187779
+      },
+      "docling": {
+        "success": 1,
+        "failure": 2,
+        "avg_score": 0.0,
+        "markdown_chars": 0
+      }
+    },
+    "context_group_count": 4,
+    "context_source": "parse_artifact_fallback",
+    "knowledge_status": "failed",
+    "cortex_eval_mode": "async",
+    "cortex_eval_types": [
+      "rag",
+      "custom"
+    ]
+  },
+  "report_json_path": "D:\\code\\codex\\cortex\\examples\\tensorzero-cortex\\artifacts\\tzcx_20260429_095703_9ffc497f\\report.json",
+  "report_markdown_path": "D:\\code\\codex\\cortex\\examples\\tensorzero-cortex\\artifacts\\tzcx_20260429_095703_9ffc497f\\report.md",
+  "eval_dataset_jsonl_path": "D:\\code\\codex\\cortex\\examples\\tensorzero-cortex\\artifacts\\tzcx_20260429_095703_9ffc497f\\tensorzero_eval_dataset.jsonl",
+  "knowledge_graph_html_path": null,
+  "cortex_eval_result": {
+    "mode": "async",
+    "engine_id": "deepeval",
+    "runs": {
+      "rag": {
+        "status": "failed",
+        "error": "Job job_7d532d205d6a442f970a2ca4 ended as failed: {'job_id': 'job_7d532d205d6a442f970a2ca4', 'job_type': 'eval', 'status': 'failed', 'operation_name': 'evaluation.rag', 'submitted_at': '2026-04-29T10:05:12.493118', 'progress_percent': None, 'queue_name': None, 'target_type': 'existing_outputs', 'target_id': None, 'correlation_id': 'request_48520f308cd641bc81b75252', 'started_at': '2026-04-29T10:05:19.074152', 'completed_at': '2026-04-29T10:05:28.471165', 'error': {'code': None, 'message': \"Error code: 429 - [{'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_requests_per_model, limit: 25, model: gemini-3.1-pro\\\\nPlease retry in 29.841160039s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_requests_per_model', 'quotaId': 'GenerateRequestsPerMinutePerProjectPerModel', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.1-pro'}, 'quotaValue': '25'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '29s'}]}}]\"}, 'metrics': {'queue_latency_ms': 6581, 'run_latency_ms': 9397}, 'telemetry': {'trace_id': '5d0a4c748c64e38e70b67e81f55b3045', 'span_id': '29621b29e6ec575a', 'request_id': 'request_48520f308cd641bc81b75252', 'deployment_ring': None, 'experiment_variant': None}}"
+      },
+      "custom": {
+        "status": "failed",
+        "error": "Job job_29a59fbd150f4e3ab1c508f9 ended as failed: {'job_id': 'job_29a59fbd150f4e3ab1c508f9', 'job_type': 'eval', 'status': 'failed', 'operation_name': 'evaluation.custom', 'submitted_at': '2026-04-29T10:05:30.615132', 'progress_percent': None, 'queue_name': None, 'target_type': 'existing_outputs', 'target_id': None, 'correlation_id': 'request_4195092815dc4494a438381f', 'started_at': '2026-04-29T10:06:29.246427', 'completed_at': '2026-04-29T10:06:44.740134', 'error': {'code': None, 'message': \"Error code: 429 - [{'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_requests_per_model, limit: 25, model: gemini-3.1-pro\\\\nPlease retry in 13.578246154s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_requests_per_model', 'quotaId': 'GenerateRequestsPerMinutePerProjectPerModel', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.1-pro'}, 'quotaValue': '25'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '13s'}]}}]\"}, 'metrics': {'queue_latency_ms': 58631, 'run_latency_ms': 15493}, 'telemetry': {'trace_id': 'de89ae453b5c8a34cb3ee581fb7de42d', 'span_id': 'd766afc6ff0ffe6f', 'request_id': 'request_4195092815dc4494a438381f', 'deployment_ring': None, 'experiment_variant': None}}"
+      }
+    }
+  }
+}

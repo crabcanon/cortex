@@ -1,0 +1,186 @@
+{
+  "parse": {
+    "requested_sources": [
+      "https://home.treasury.gov/news/press-releases"
+    ],
+    "engine_id": "llama_parse",
+    "scene": null,
+    "results": [
+      {
+        "job_id": "job_a0b744ba0538486299956616",
+        "document": {
+          "document_id": "doc_710b87bc24d34358a14f95da",
+          "source_type": "url",
+          "source_format": "application/octet-stream",
+          "markdown": "# An official website of the United States government\n\nHere’s how you know\n# FREEDO M250\n\n# Countdown to America's 250th Anniversary\n\nJuly 4, 2026\n\n# U.S. DEPARTMENT OF THE TREASURY\n\n# Press Releases\n\n# June 2, 2026\n\n# Economic Fury Targets Iran’s Largest Digital Asset Exchange for Terror Finance and Sanctions Evasion\n\n# June 2, 2026\n\n# Treasury Department Announces New Appointment\n\n# June 2, 2026\n\n# Treasury Sanctions Rebel Commanders Driving Conflict in the Democratic Republic of the Congo\n\n# June 2, 2026\n\n# New Analysis: The Working Families Tax Cuts Delivers the Largest Share of Tax Relief to American Families and Workers\n\n# June 1, 2026\n\n# U.S. Treasury, U.S. Mint Launch FIFA Coins with All Proceeds to Military Families' Youth Soccer\n\n# May 29, 2026\n\nEconomic Fury Targets Iranian Network Defrauding U.S. Firms to Supply Tehran’s Military\n\n# Remarks by Treasury Secretary Scott Bessent before the 2026 Reagan National Economic Forum: While America Slept\n\nMay 29, 2026\n\n# Joint Statement by the U.S. Department of the Treasury and the State Bank of Viet Nam\n\nMay 29, 2026\n\n# Treasury, IRS Issue Section 892 Proposed Regulations to Provide Grandfathering Protection and Transitional Relief to Sovereign Investors\n\nMay 29, 2026\n\n# Secretary Bessent Delivers Economic Security Address, Brings “Trump Accounts Tour” to California\n\nMay 28, 2026\n\n# 1\n\n# 2\n\n# 3\n\n# …",
+          "audit": {
+            "created_at": "2026-06-03T07:44:39.867433Z",
+            "updated_at": "2026-06-03T07:44:39.867433Z",
+            "created_by": "tensorzero-cortex-demo",
+            "updated_by": null
+          },
+          "source_url": "https://home.treasury.gov/news/press-releases",
+          "source_object_id": null,
+          "source_uri": "https://home.treasury.gov/news/press-releases",
+          "canonical_url": "https://home.treasury.gov/news/press-releases",
+          "title": "press-releases",
+          "language_code": "und",
+          "detected_mime_type": null,
+          "category_tags": [],
+          "labels": [],
+          "access_policy": null,
+          "markdown_sha256": "7967d1fd14a75b4b356777de71b39c8078b3dff8b4c8c96d676f504885afcdd8",
+          "normalized_metadata": {
+            "title": "press-releases",
+            "author": null,
+            "publish_date": null,
+            "language": "und",
+            "description": null,
+            "summary": null,
+            "keywords": [],
+            "category_tags": []
+          },
+          "metadata": {
+            "title": "press-releases",
+            "source_ref": "https://home.treasury.gov/news/press-releases",
+            "document_count": 2,
+            "document_0_metadata": {},
+            "document_1_metadata": {},
+            "raw_metadata": {
+              "source_ref": "https://home.treasury.gov/news/press-releases",
+              "documents": [
+                {},
+                {}
+              ]
+            },
+            "engine_payload_summary": {
+              "parser": "llama_parse",
+              "document_count": 2
+            }
+          },
+          "parser": {
+            "engine_key": "llama_parse",
+            "display_name": "LlamaParse",
+            "engine_family": "document_remote",
+            "engine_version": "0.6.94",
+            "profile_ref": "llama_parse_document_fidelity",
+            "template_ref": null,
+            "fallback_used": false
+          },
+          "provenance": {
+            "input_kind": "url",
+            "fetched_at": "2026-06-03T07:44:39.864584Z",
+            "final_url": "https://home.treasury.gov/news/press-releases",
+            "http_status": null,
+            "content_length_bytes": null,
+            "parser_version": "0.6.94",
+            "content_hash_sha256": "7967d1fd14a75b4b356777de71b39c8078b3dff8b4c8c96d676f504885afcdd8"
+          }
+        },
+        "artifacts": {
+          "markdown_object": null,
+          "raw_html_object": null,
+          "screenshot_object": null,
+          "pdf_object": null,
+          "ssl_certificate": null
+        },
+        "diagnostics": {
+          "selected_engine_key": "llama_parse",
+          "fallback_used": false,
+          "engine_attempts": [
+            {
+              "attempt_no": 1,
+              "engine_key": "llama_parse",
+              "status": "succeeded",
+              "started_at": "2026-06-03T07:44:04.440406Z",
+              "completed_at": "2026-06-03T07:44:39.867113Z",
+              "error_code": null,
+              "warning": null,
+              "diagnostics": {
+                "engine_options": {}
+              }
+            }
+          ],
+          "warnings": [],
+          "link_counts": {},
+          "media_counts": {},
+          "anti_bot_strategy": null,
+          "used_proxy": null,
+          "timings_ms": {
+            "fetch": null,
+            "render": null,
+            "normalize": 0,
+            "total": 0
+          },
+          "telemetry": {
+            "trace_id": "ab81e02edfac89d07faedb1988be7a21",
+            "span_id": "dab2138a9b0816bf",
+            "request_id": null,
+            "deployment_ring": null,
+            "experiment_variant": null
+          }
+        },
+        "telemetry": {
+          "trace_id": "ab81e02edfac89d07faedb1988be7a21",
+          "span_id": "dab2138a9b0816bf",
+          "request_id": null,
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      }
+    ]
+  },
+  "storage": {
+    "object_id": "obj_7274df7049004c97a7302c5e",
+    "filename": "US-Treasury-press-releases-llama_parse.md",
+    "content_type": "text/markdown",
+    "size_bytes": 1642,
+    "status": "available",
+    "audit": {
+      "created_at": "2026-06-03T07:44:40.035689",
+      "updated_at": "2026-06-03T07:44:40.035697",
+      "created_by": "tensorzero-cortex-demo",
+      "updated_by": null
+    },
+    "current_version_id": "objver_3b9d3fc3fe8a4e1498d49af2",
+    "bucket": "cortex-local",
+    "object_key": "tenant_demo/obj_7274df7049004c97a7302c5e/US-Treasury-press-releases-llama_parse.md",
+    "checksum_sha256": "4570675de91db23defd76a5c16822dd9aaac467ab7d609eeff16b3a100af7d08",
+    "etag": "\"1363ef150ee9cfaf1a37c056ede2138e\"",
+    "storage_class": null,
+    "metadata": {
+      "engine_id": "llama_parse",
+      "job_id": "job_a0b744ba0538486299956616",
+      "parse_mode": "sync",
+      "parse_score": "0.6601",
+      "run": "tensorzero-cortex",
+      "source_name": "US Treasury press releases",
+      "source_url": "https://home.treasury.gov/news/press-releases"
+    },
+    "tags": [
+      "tensorzero",
+      "finance",
+      "parsed-markdown",
+      "llama_parse"
+    ],
+    "version": {
+      "object_version_id": "objver_3b9d3fc3fe8a4e1498d49af2",
+      "version_no": 1,
+      "size_bytes": 1642,
+      "provider_version_ref": null,
+      "checksum_sha256": "4570675de91db23defd76a5c16822dd9aaac467ab7d609eeff16b3a100af7d08",
+      "etag": "\"1363ef150ee9cfaf1a37c056ede2138e\"",
+      "is_latest": true,
+      "created_at": "2026-06-03T07:44:40.040714"
+    },
+    "access_policy": {
+      "access_level": "tenant_shared",
+      "owner_actor_id": null,
+      "classification_labels": [],
+      "allowed_role_keys": [],
+      "denied_role_keys": [],
+      "purpose_tags": [],
+      "constraints": {}
+    }
+  }
+}

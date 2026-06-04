@@ -1,0 +1,201 @@
+[
+  {
+    "context_id": "parse_engine:auto",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "auto",
+    "variant_name": "openrouter",
+    "inference_id": "019e0677-ac1d-7043-85fa-41af64a6fe20",
+    "episode_id": "019e0677-ac1d-7043-85fa-41b2fb7213bd",
+    "answer_text": "The provided Federal Reserve FOMC calendar source lists meeting dates and related links but does not contain any discussion of macroeconomic, inflation, monetary‑policy, or financial‑stability risks, so a comparative analysis cannot be derived from it.",
+    "output": {
+      "answer": "The provided Federal Reserve FOMC calendar source lists meeting dates and related links but does not contain any discussion of macroeconomic, inflation, monetary‑policy, or financial‑stability risks, so a comparative analysis cannot be derived from it.",
+      "citations": [
+        "Federal Reserve FOMC calendar"
+      ],
+      "confidence": 0.2,
+      "missing_evidence": [
+        "macroeconomic risk assessment",
+        "inflation risk assessment",
+        "monetary policy risk assessment",
+        "financial stability risk assessment"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2134,
+      "output_tokens": 323,
+      "provider_cache_read_input_tokens": 0,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.7444,
+      "rag_context_quality": 1.0,
+      "llm_answer_quality": 0.84,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:crawl4ai",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "crawl4ai",
+    "variant_name": "openrouter",
+    "inference_id": "019e0677-bbd9-7621-a2ff-353e5943d1ee",
+    "episode_id": "019e0677-bbd9-7621-a2ff-354c1df0202d",
+    "answer_text": "The FOMC calendar page mainly lists meeting dates and links to other Fed resources; it does not contain substantive discussion of macro‑economic, inflation, monetary‑policy or financial‑stability risks. Consequently, the source provides no direct comparison of those risk categories, and any assessment would be speculative.",
+    "output": {
+      "answer": "The FOMC calendar page mainly lists meeting dates and links to other Fed resources; it does not contain substantive discussion of macro‑economic, inflation, monetary‑policy or financial‑stability risks. Consequently, the source provides no direct comparison of those risk categories, and any assessment would be speculative.",
+      "citations": [
+        "obj_5ecc324b4428486fb4bf8635"
+      ],
+      "confidence": 0.15,
+      "missing_evidence": [
+        "explicit analysis of macroeconomic risks",
+        "inflation outlook details",
+        "monetary‑policy risk assessment",
+        "financial‑stability risk commentary"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2138,
+      "output_tokens": 244,
+      "provider_cache_read_input_tokens": 384,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.7444,
+      "rag_context_quality": 1.0,
+      "llm_answer_quality": 0.4633,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:jina_reader",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "jina_reader",
+    "variant_name": "openrouter",
+    "inference_id": "019e0677-c80e-72a0-ba5f-b986e7e96a57",
+    "episode_id": "019e0677-c80e-72a0-ba5f-b992046f6c1c",
+    "answer_text": "The provided FOMC calendar source lists meeting dates, statements, and minutes but does not contain substantive discussion of macroeconomic outlook, inflation dynamics, monetary‑policy stance, or financial‑stability risks. Consequently, a comparison of those risk dimensions across sources cannot be performed from the available information.",
+    "output": {
+      "answer": "The provided FOMC calendar source lists meeting dates, statements, and minutes but does not contain substantive discussion of macroeconomic outlook, inflation dynamics, monetary‑policy stance, or financial‑stability risks. Consequently, a comparison of those risk dimensions across sources cannot be performed from the available information.",
+      "citations": [
+        "obj_c4b698def4d64fa5bb7a29f2"
+      ],
+      "confidence": 0.15,
+      "missing_evidence": [
+        "macroeconomic risk assessment",
+        "inflation risk analysis",
+        "monetary policy risk commentary",
+        "financial stability risk discussion"
+      ]
+    },
+    "usage": {
+      "input_tokens": 1263,
+      "output_tokens": 222,
+      "provider_cache_read_input_tokens": 0,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.7444,
+      "rag_context_quality": 0.6224,
+      "llm_answer_quality": 0.6467,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:llama_parse",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "llama_parse",
+    "variant_name": "openrouter",
+    "inference_id": "019e0677-d3da-7023-9efd-e55ee7e74c0f",
+    "episode_id": "019e0677-d3da-7023-9efd-e56570a0976d",
+    "answer_text": "The supplied source – the Federal Reserve FOMC calendar – only enumerates meeting dates, statement links, and implementation notes; it does not contain any discussion of macroeconomic conditions, inflation outlooks, monetary‑policy actions, or financial‑stability concerns. Consequently, there is no information to compare the main risks across those dimensions.",
+    "output": {
+      "answer": "The supplied source – the Federal Reserve FOMC calendar – only enumerates meeting dates, statement links, and implementation notes; it does not contain any discussion of macroeconomic conditions, inflation outlooks, monetary‑policy actions, or financial‑stability concerns. Consequently, there is no information to compare the main risks across those dimensions.",
+      "citations": [
+        "Federal Reserve FOMC calendar"
+      ],
+      "confidence": 0.2,
+      "missing_evidence": [
+        "Documents or statements that describe macroeconomic trends, inflation expectations, monetary‑policy decisions, and financial‑stability assessments."
+      ]
+    },
+    "usage": {
+      "input_tokens": 1836,
+      "output_tokens": 291,
+      "provider_cache_read_input_tokens": 384,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.7444,
+      "rag_context_quality": 1.0,
+      "llm_answer_quality": 0.6567,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:markitdown",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "markitdown",
+    "variant_name": "openrouter",
+    "inference_id": "019e0677-e5ce-7800-88db-50607a83bc8d",
+    "episode_id": "019e0677-e5ce-7800-88db-5079c54ecc49",
+    "answer_text": "The provided Federal Reserve FOMC calendar page does not contain any discussion of macroeconomic, inflation, monetary‑policy, or financial‑stability risks, so a comparison of those risks across sources cannot be made from this context.",
+    "output": {
+      "answer": "The provided Federal Reserve FOMC calendar page does not contain any discussion of macroeconomic, inflation, monetary‑policy, or financial‑stability risks, so a comparison of those risks across sources cannot be made from this context.",
+      "citations": [
+        "Federal Reserve FOMC calendar"
+      ],
+      "confidence": 0.2,
+      "missing_evidence": [
+        "Sources that describe macroeconomic outlook, inflation dynamics, monetary‑policy stance, and financial‑stability concerns."
+      ]
+    },
+    "usage": {
+      "input_tokens": 2221,
+      "output_tokens": 271,
+      "provider_cache_read_input_tokens": 384,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.7444,
+      "rag_context_quality": 1.0,
+      "llm_answer_quality": 0.6567,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  }
+]

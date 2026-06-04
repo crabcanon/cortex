@@ -1,0 +1,204 @@
+[
+  {
+    "context_id": "parse_engine:auto",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "auto",
+    "variant_name": "openrouter",
+    "inference_id": "019e0b5a-a4ce-7b03-9b3f-795f953fde77",
+    "episode_id": "019e0b5a-a4ce-7b03-9b3f-796fd4017295",
+    "answer_text": "The supplied Federal Reserve FOMC calendar source mainly lists navigation links (e.g., About the Fed, Monetary Policy, Supervision & Regulation) and does not contain substantive discussion of macro‑economic outlook, inflation trends, monetary‑policy actions, or financial‑stability risks. Consequently, a direct comparison of those topics across the listed sources cannot be derived from the provided material. To perform such a comparison you would need detailed content from specific reports such as the Beige Book, Monetary Policy Report, or the Supervision and Regulation Report, which are referenced but not included in the current context.",
+    "output": {
+      "answer": "The supplied Federal Reserve FOMC calendar source mainly lists navigation links (e.g., About the Fed, Monetary Policy, Supervision & Regulation) and does not contain substantive discussion of macro‑economic outlook, inflation trends, monetary‑policy actions, or financial‑stability risks. Consequently, a direct comparison of those topics across the listed sources cannot be derived from the provided material. To perform such a comparison you would need detailed content from specific reports such as the Beige Book, Monetary Policy Report, or the Supervision and Regulation Report, which are referenced but not included in the current context.",
+      "citations": [
+        "obj_f910ea3f6c5d4df0b4ebd553"
+      ],
+      "confidence": 0.2,
+      "missing_evidence": [
+        "Beige Book analysis of macro‑economy and inflation",
+        "Monetary Policy Report discussion of policy stance",
+        "Supervision and Regulation Report assessment of financial‑stability risks"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2144,
+      "output_tokens": 383,
+      "provider_cache_read_input_tokens": 384,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.7444,
+      "rag_context_quality": 1.0,
+      "llm_answer_quality": 0.84,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:crawl4ai",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "crawl4ai",
+    "variant_name": "openrouter",
+    "inference_id": "019e0b5a-c695-78b2-af67-7a9b0631d1e1",
+    "episode_id": "019e0b5a-c695-78b2-af67-7aa811e67443",
+    "answer_text": "当前提供的来源仅是美国联邦储备委员会（Fed）FOMC 日历页面的导航列表，列出了关于 Fed 结构、新闻、货币政策、监管等多个子页面的链接，但并未包含具体的宏观经济、通胀、货币政策或金融稳定风险的实质性内容。因此，无法在这些来源之间进行比较。要进行比较，需要查阅各具体报告（如《Monetary Policy Report》《Beige Book》《Federal Reserve Supervision and Regulation Report》等）中的相关章节。",
+    "output": {
+      "answer": "当前提供的来源仅是美国联邦储备委员会（Fed）FOMC 日历页面的导航列表，列出了关于 Fed 结构、新闻、货币政策、监管等多个子页面的链接，但并未包含具体的宏观经济、通胀、货币政策或金融稳定风险的实质性内容。因此，无法在这些来源之间进行比较。要进行比较，需要查阅各具体报告（如《Monetary Policy Report》《Beige Book》《Federal Reserve Supervision and Regulation Report》等）中的相关章节。",
+      "citations": [
+        "obj_96d42e082b884ee6b7ff97a5"
+      ],
+      "confidence": 0.15,
+      "missing_evidence": [
+        "具体宏观经济分析",
+        "通货膨胀评估",
+        "货币政策决策细节",
+        "金融稳定风险评估"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2149,
+      "output_tokens": 404,
+      "provider_cache_read_input_tokens": 384,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.7444,
+      "rag_context_quality": 1.0,
+      "llm_answer_quality": 0.83,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:jina_reader",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "jina_reader",
+    "variant_name": "openrouter",
+    "inference_id": "019e0b5a-d409-74b1-9c48-0b2c4e0d2438",
+    "episode_id": "019e0b5a-d409-74b1-9c48-0b38e9d1a4b5",
+    "answer_text": "The provided source (Federal Reserve FOMC calendar) only lists meeting dates, statements, and minutes links; it does not contain substantive commentary on macro‑economic conditions, inflation trends, monetary‑policy decisions, or financial‑stability risks, so a comparison across those topics cannot be made from this material.",
+    "output": {
+      "answer": "The provided source (Federal Reserve FOMC calendar) only lists meeting dates, statements, and minutes links; it does not contain substantive commentary on macro‑economic conditions, inflation trends, monetary‑policy decisions, or financial‑stability risks, so a comparison across those topics cannot be made from this material.",
+      "citations": [
+        "obj_067400b39d424d4988bf1639"
+      ],
+      "confidence": 0.2,
+      "missing_evidence": [
+        "macro‑economic analysis",
+        "inflation outlook",
+        "monetary‑policy stance",
+        "financial‑stability risk assessment"
+      ]
+    },
+    "usage": {
+      "input_tokens": 1268,
+      "output_tokens": 317,
+      "provider_cache_read_input_tokens": 384,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.7444,
+      "rag_context_quality": 0.6224,
+      "llm_answer_quality": 0.6567,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:llama_parse",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "llama_parse",
+    "variant_name": "openrouter",
+    "inference_id": "019e0b5a-df80-7300-91e6-f626f6d3d711",
+    "episode_id": "019e0b5a-df80-7300-91e6-f6388a130545",
+    "answer_text": "提供的唯一来源是美国联邦储备委员会（FOMC）会议日历，它仅列出会议的日期、声明、新闻发布会和会议纪要的链接，而未包含具体的宏观经济分析、通货膨胀评估、货币政策决定或金融稳定风险的内容。因此，无法在该来源中比较宏观经济、通胀、货币政策及金融稳定风险的主要信息。要进行比较，需要查阅实际的FOMC声明、会议纪要或经济预测报告等文档。",
+    "output": {
+      "answer": "提供的唯一来源是美国联邦储备委员会（FOMC）会议日历，它仅列出会议的日期、声明、新闻发布会和会议纪要的链接，而未包含具体的宏观经济分析、通货膨胀评估、货币政策决定或金融稳定风险的内容。因此，无法在该来源中比较宏观经济、通胀、货币政策及金融稳定风险的主要信息。要进行比较，需要查阅实际的FOMC声明、会议纪要或经济预测报告等文档。",
+      "citations": [
+        "obj_69efe9a640ab4d7895444516"
+      ],
+      "confidence": 0.2,
+      "missing_evidence": [
+        "FOMC声明文本",
+        "FOMC会议纪要内容",
+        "经济预测报告中关于通胀和金融稳定的分析"
+      ]
+    },
+    "usage": {
+      "input_tokens": 1814,
+      "output_tokens": 344,
+      "provider_cache_read_input_tokens": 384,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.7444,
+      "rag_context_quality": 1.0,
+      "llm_answer_quality": 0.4733,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:markitdown",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "markitdown",
+    "variant_name": "openrouter",
+    "inference_id": "019e0b5a-ec09-7460-83c4-64b29277f357",
+    "episode_id": "019e0b5a-ec09-7460-83c4-64c320beccf8",
+    "answer_text": "The supplied source – the Federal Reserve’s FOMC calendar page – only lists meeting dates and navigation links; it does not contain any substantive discussion of macro‑economic conditions, inflation trends, monetary‑policy decisions, or financial‑stability risks. Consequently, a comparison of those topics across the listed sources cannot be performed with the available information.",
+    "output": {
+      "answer": "The supplied source – the Federal Reserve’s FOMC calendar page – only lists meeting dates and navigation links; it does not contain any substantive discussion of macro‑economic conditions, inflation trends, monetary‑policy decisions, or financial‑stability risks. Consequently, a comparison of those topics across the listed sources cannot be performed with the available information.",
+      "citations": [
+        "obj_21ebf948b0ae45acb0e1f55f"
+      ],
+      "confidence": 0.2,
+      "missing_evidence": [
+        "FOMC statements or minutes that discuss macro‑economic outlook",
+        "Beige Book or Monetary Policy Report for inflation and policy guidance",
+        "Supervision and Regulation Report for financial‑stability risk assessment"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2229,
+      "output_tokens": 445,
+      "provider_cache_read_input_tokens": 384,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.7444,
+      "rag_context_quality": 1.0,
+      "llm_answer_quality": 0.84,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openrouter",
+      "strategy": "exhaustive"
+    }
+  }
+]

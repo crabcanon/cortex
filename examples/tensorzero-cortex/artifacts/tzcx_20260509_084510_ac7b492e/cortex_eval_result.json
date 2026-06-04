@@ -1,0 +1,14 @@
+{
+  "mode": "async",
+  "engine_id": "deepeval",
+  "runs": {
+    "rag": {
+      "status": "failed",
+      "error": "Cortex API is unreachable at http://127.0.0.1:8080 while calling POST /v1/eval/jobs: [WinError 10061] 由于目标计算机积极拒绝，无法连接。. Start Cortex API or set CORTEX_BASE_URL to the reachable address."
+    },
+    "custom": {
+      "status": "failed",
+      "error": "Cortex API is unreachable at http://127.0.0.1:8080 while calling POST /v1/eval/jobs: [WinError 10061] 由于目标计算机积极拒绝，无法连接。. Start Cortex API or set CORTEX_BASE_URL to the reachable address."
+    }
+  }
+}

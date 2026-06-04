@@ -1,0 +1,801 @@
+{
+  "run_id": "tzcx_20260429_082717_c6bea727",
+  "dataset_key": "tensorzero_cortex_tzcx_20260429_082717_c6bea727",
+  "tensorzero_gateway_url": "http://127.0.0.1:3002",
+  "tensorzero_ui_url": "http://127.0.0.1:4000",
+  "parse_artifacts": [
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "url_name": "Federal Reserve FOMC calendar",
+      "engine_id": "markitdown",
+      "parse_mode": "sync",
+      "job_id": "job_markitdown",
+      "document_id": "doc_markitdown",
+      "object_id": "obj_Federal-",
+      "markdown_chars": 86,
+      "context_excerpt": "# Macro risks from markitdown\nInflation, monetary policy, financial stability, growth.",
+      "parse_score": 0.1454,
+      "error": null,
+      "metadata": {
+        "format_hint": "html",
+        "parser": {
+          "engine_key": "markitdown"
+        },
+        "source_format": "text/html",
+        "title": "markitdown",
+        "markdown_sha256": "abc"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "url_name": "Federal Reserve FOMC calendar",
+      "engine_id": "docling",
+      "parse_mode": "async",
+      "job_id": "job_docling",
+      "document_id": "doc_docling",
+      "object_id": "obj_Federal-",
+      "markdown_chars": 83,
+      "context_excerpt": "# Macro risks from docling\nInflation, monetary policy, financial stability, growth.",
+      "parse_score": 0.1453,
+      "error": null,
+      "metadata": {
+        "format_hint": "html",
+        "parser": {
+          "engine_key": "docling"
+        },
+        "source_format": "text/html",
+        "title": "docling",
+        "markdown_sha256": "abc"
+      }
+    }
+  ],
+  "context_groups": [
+    {
+      "context_id": "parse_engine:docling",
+      "source": "parse_artifact",
+      "parse_engine_id": "docling",
+      "object_ids": [
+        "obj_Federal-"
+      ],
+      "document_ids": [
+        "doc_docling"
+      ],
+      "context_chars": 237,
+      "context_score": 0.7178,
+      "text_preview": "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: docling\nObject ID: obj_Federal-\n\n# Macro risks from docling\nInflation, monetary policy, financial stability, growth.",
+      "metadata": {
+        "artifact_count": 1,
+        "grouping": "by_parse_engine"
+      }
+    },
+    {
+      "context_id": "parse_engine:markitdown",
+      "source": "parse_artifact",
+      "parse_engine_id": "markitdown",
+      "object_ids": [
+        "obj_Federal-"
+      ],
+      "document_ids": [
+        "doc_markitdown"
+      ],
+      "context_chars": 243,
+      "context_score": 0.7182,
+      "text_preview": "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: markitdown\nObject ID: obj_Federal-\n\n# Macro risks from markitdown\nInflation, monetary policy, financial stability, growth.",
+      "metadata": {
+        "artifact_count": 1,
+        "grouping": "by_parse_engine"
+      }
+    }
+  ],
+  "tensorzero_inferences": [
+    {
+      "context_id": "parse_engine:docling",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "docling",
+      "variant_name": "openai",
+      "inference_id": "inf_openai_parse_engine:docling",
+      "episode_id": "ep_1",
+      "answer_text": "openai says inflation and financial stability risks matter.",
+      "output": {
+        "answer": "openai says inflation and financial stability risks matter.",
+        "citations": [
+          "fake"
+        ]
+      },
+      "usage": {
+        "input_tokens": 10,
+        "output_tokens": 20
+      },
+      "finish_reason": "stop",
+      "scores": {
+        "parse_markdown_quality": 0.1454,
+        "rag_context_quality": 0.7178,
+        "llm_answer_quality": 0.45,
+        "rag_end_to_end_pass": false
+      },
+      "feedback_errors": [],
+      "error": null,
+      "metadata": {
+        "requested_variant": "openai",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:docling",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "docling",
+      "variant_name": "gemini",
+      "inference_id": "inf_gemini_parse_engine:docling",
+      "episode_id": "ep_1",
+      "answer_text": "gemini says inflation and financial stability risks matter.",
+      "output": {
+        "answer": "gemini says inflation and financial stability risks matter.",
+        "citations": [
+          "fake"
+        ]
+      },
+      "usage": {
+        "input_tokens": 10,
+        "output_tokens": 20
+      },
+      "finish_reason": "stop",
+      "scores": {
+        "parse_markdown_quality": 0.1454,
+        "rag_context_quality": 0.7178,
+        "llm_answer_quality": 0.45,
+        "rag_end_to_end_pass": false
+      },
+      "feedback_errors": [],
+      "error": null,
+      "metadata": {
+        "requested_variant": "gemini",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:markitdown",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "markitdown",
+      "variant_name": "openai",
+      "inference_id": "inf_openai_parse_engine:markitdown",
+      "episode_id": "ep_1",
+      "answer_text": "openai says inflation and financial stability risks matter.",
+      "output": {
+        "answer": "openai says inflation and financial stability risks matter.",
+        "citations": [
+          "fake"
+        ]
+      },
+      "usage": {
+        "input_tokens": 10,
+        "output_tokens": 20
+      },
+      "finish_reason": "stop",
+      "scores": {
+        "parse_markdown_quality": 0.1454,
+        "rag_context_quality": 0.7182,
+        "llm_answer_quality": 0.45,
+        "rag_end_to_end_pass": false
+      },
+      "feedback_errors": [],
+      "error": null,
+      "metadata": {
+        "requested_variant": "openai",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:markitdown",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "markitdown",
+      "variant_name": "gemini",
+      "inference_id": "inf_gemini_parse_engine:markitdown",
+      "episode_id": "ep_1",
+      "answer_text": "gemini says inflation and financial stability risks matter.",
+      "output": {
+        "answer": "gemini says inflation and financial stability risks matter.",
+        "citations": [
+          "fake"
+        ]
+      },
+      "usage": {
+        "input_tokens": 10,
+        "output_tokens": 20
+      },
+      "finish_reason": "stop",
+      "scores": {
+        "parse_markdown_quality": 0.1454,
+        "rag_context_quality": 0.7182,
+        "llm_answer_quality": 0.45,
+        "rag_end_to_end_pass": false
+      },
+      "feedback_errors": [],
+      "error": null,
+      "metadata": {
+        "requested_variant": "gemini",
+        "strategy": "exhaustive"
+      }
+    }
+  ],
+  "evaluation_cases": [
+    {
+      "query": "What risks matter?",
+      "actual_output": "openai says inflation and financial stability risks matter.",
+      "expected_keywords": [
+        "fomc",
+        "federal reserve",
+        "monetary policy"
+      ],
+      "retrieval_contexts": [
+        "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: docling\nObject ID: obj_Federal-\n\n# Macro risks from docling\nInflation, monetary policy, financial stability, growth."
+      ],
+      "metadata": {
+        "run_id": "tzcx_20260429_082717_c6bea727",
+        "dataset_key": "tensorzero_cortex_tzcx_20260429_082717_c6bea727",
+        "context_id": "parse_engine:docling",
+        "context_source": "parse_artifact",
+        "parse_engine_id": "docling",
+        "tensorzero_inference_id": "inf_openai_parse_engine:docling",
+        "tensorzero_episode_id": "ep_1",
+        "tensorzero_variant": "openai",
+        "tensorzero_usage": {
+          "input_tokens": 10,
+          "output_tokens": 20
+        },
+        "tensorzero_finish_reason": "stop",
+        "scores": {
+          "parse_markdown_quality": 0.1454,
+          "rag_context_quality": 0.7178,
+          "llm_answer_quality": 0.45,
+          "rag_end_to_end_pass": false
+        },
+        "cortex_eval_mode": "sync",
+        "knowledge_events": {
+          "enabled": false,
+          "status": "skipped",
+          "fallback": "parse_artifact_fallback",
+          "fallback_reason": "skipped"
+        }
+      }
+    },
+    {
+      "query": "What risks matter?",
+      "actual_output": "gemini says inflation and financial stability risks matter.",
+      "expected_keywords": [
+        "fomc",
+        "federal reserve",
+        "monetary policy"
+      ],
+      "retrieval_contexts": [
+        "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: docling\nObject ID: obj_Federal-\n\n# Macro risks from docling\nInflation, monetary policy, financial stability, growth."
+      ],
+      "metadata": {
+        "run_id": "tzcx_20260429_082717_c6bea727",
+        "dataset_key": "tensorzero_cortex_tzcx_20260429_082717_c6bea727",
+        "context_id": "parse_engine:docling",
+        "context_source": "parse_artifact",
+        "parse_engine_id": "docling",
+        "tensorzero_inference_id": "inf_gemini_parse_engine:docling",
+        "tensorzero_episode_id": "ep_1",
+        "tensorzero_variant": "gemini",
+        "tensorzero_usage": {
+          "input_tokens": 10,
+          "output_tokens": 20
+        },
+        "tensorzero_finish_reason": "stop",
+        "scores": {
+          "parse_markdown_quality": 0.1454,
+          "rag_context_quality": 0.7178,
+          "llm_answer_quality": 0.45,
+          "rag_end_to_end_pass": false
+        },
+        "cortex_eval_mode": "sync",
+        "knowledge_events": {
+          "enabled": false,
+          "status": "skipped",
+          "fallback": "parse_artifact_fallback",
+          "fallback_reason": "skipped"
+        }
+      }
+    },
+    {
+      "query": "What risks matter?",
+      "actual_output": "openai says inflation and financial stability risks matter.",
+      "expected_keywords": [
+        "fomc",
+        "federal reserve",
+        "monetary policy"
+      ],
+      "retrieval_contexts": [
+        "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: markitdown\nObject ID: obj_Federal-\n\n# Macro risks from markitdown\nInflation, monetary policy, financial stability, growth."
+      ],
+      "metadata": {
+        "run_id": "tzcx_20260429_082717_c6bea727",
+        "dataset_key": "tensorzero_cortex_tzcx_20260429_082717_c6bea727",
+        "context_id": "parse_engine:markitdown",
+        "context_source": "parse_artifact",
+        "parse_engine_id": "markitdown",
+        "tensorzero_inference_id": "inf_openai_parse_engine:markitdown",
+        "tensorzero_episode_id": "ep_1",
+        "tensorzero_variant": "openai",
+        "tensorzero_usage": {
+          "input_tokens": 10,
+          "output_tokens": 20
+        },
+        "tensorzero_finish_reason": "stop",
+        "scores": {
+          "parse_markdown_quality": 0.1454,
+          "rag_context_quality": 0.7182,
+          "llm_answer_quality": 0.45,
+          "rag_end_to_end_pass": false
+        },
+        "cortex_eval_mode": "sync",
+        "knowledge_events": {
+          "enabled": false,
+          "status": "skipped",
+          "fallback": "parse_artifact_fallback",
+          "fallback_reason": "skipped"
+        }
+      }
+    },
+    {
+      "query": "What risks matter?",
+      "actual_output": "gemini says inflation and financial stability risks matter.",
+      "expected_keywords": [
+        "fomc",
+        "federal reserve",
+        "monetary policy"
+      ],
+      "retrieval_contexts": [
+        "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: markitdown\nObject ID: obj_Federal-\n\n# Macro risks from markitdown\nInflation, monetary policy, financial stability, growth."
+      ],
+      "metadata": {
+        "run_id": "tzcx_20260429_082717_c6bea727",
+        "dataset_key": "tensorzero_cortex_tzcx_20260429_082717_c6bea727",
+        "context_id": "parse_engine:markitdown",
+        "context_source": "parse_artifact",
+        "parse_engine_id": "markitdown",
+        "tensorzero_inference_id": "inf_gemini_parse_engine:markitdown",
+        "tensorzero_episode_id": "ep_1",
+        "tensorzero_variant": "gemini",
+        "tensorzero_usage": {
+          "input_tokens": 10,
+          "output_tokens": 20
+        },
+        "tensorzero_finish_reason": "stop",
+        "scores": {
+          "parse_markdown_quality": 0.1454,
+          "rag_context_quality": 0.7182,
+          "llm_answer_quality": 0.45,
+          "rag_end_to_end_pass": false
+        },
+        "cortex_eval_mode": "sync",
+        "knowledge_events": {
+          "enabled": false,
+          "status": "skipped",
+          "fallback": "parse_artifact_fallback",
+          "fallback_reason": "skipped"
+        }
+      }
+    }
+  ],
+  "scorecard": {
+    "parse_markdown_quality": 0.1454,
+    "rag_context_quality": 0.718,
+    "llm_answer_quality": 0.45,
+    "rag_end_to_end_pass_rate": 0.0,
+    "rag_end_to_end_pass": false,
+    "tensorzero_strategy": "exhaustive",
+    "tensorzero_variants_requested": [
+      "openai",
+      "gemini"
+    ],
+    "tensorzero_variant_counts": {
+      "openai": 2,
+      "gemini": 2
+    },
+    "tensorzero_inference_count": 4,
+    "tensorzero_error_count": 0,
+    "parse_success_count": 2,
+    "parse_failure_count": 0,
+    "parse_by_engine": {
+      "markitdown": {
+        "success": 1,
+        "failure": 0,
+        "avg_score": 0.1454,
+        "markdown_chars": 86
+      },
+      "docling": {
+        "success": 1,
+        "failure": 0,
+        "avg_score": 0.1453,
+        "markdown_chars": 83
+      }
+    },
+    "context_group_count": 2,
+    "context_source": "parse_artifact_fallback",
+    "knowledge_status": "skipped",
+    "cortex_eval_mode": "sync",
+    "cortex_eval_types": [
+      "rag",
+      "custom"
+    ]
+  },
+  "report_json_path": "D:\\code\\codex\\cortex\\examples\\tensorzero-cortex\\artifacts\\tzcx_20260429_082717_c6bea727\\report.json",
+  "report_markdown_path": "D:\\code\\codex\\cortex\\examples\\tensorzero-cortex\\artifacts\\tzcx_20260429_082717_c6bea727\\report.md",
+  "eval_dataset_jsonl_path": "D:\\code\\codex\\cortex\\examples\\tensorzero-cortex\\artifacts\\tzcx_20260429_082717_c6bea727\\tensorzero_eval_dataset.jsonl",
+  "cortex_eval_result": {
+    "mode": "sync",
+    "engine_id": "deepeval",
+    "runs": {
+      "rag": {
+        "mode": "sync",
+        "kwargs": {
+          "name": "TensorZero Cortex RAG Eval tzcx_20260429_082717_c6bea727",
+          "test_cases": [
+            {
+              "user_input": "What risks matter?",
+              "actual_output": "openai says inflation and financial stability risks matter.",
+              "expected_output": "fomc, federal reserve, monetary policy",
+              "retrieval_contexts": [
+                "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: docling\nObject ID: obj_Federal-\n\n# Macro risks from docling\nInflation, monetary policy, financial stability, growth."
+              ],
+              "metadata": {
+                "run_id": "tzcx_20260429_082717_c6bea727",
+                "dataset_key": "tensorzero_cortex_tzcx_20260429_082717_c6bea727",
+                "context_id": "parse_engine:docling",
+                "context_source": "parse_artifact",
+                "parse_engine_id": "docling",
+                "tensorzero_inference_id": "inf_openai_parse_engine:docling",
+                "tensorzero_episode_id": "ep_1",
+                "tensorzero_variant": "openai",
+                "tensorzero_usage": {
+                  "input_tokens": 10,
+                  "output_tokens": 20
+                },
+                "tensorzero_finish_reason": "stop",
+                "scores": {
+                  "parse_markdown_quality": 0.1454,
+                  "rag_context_quality": 0.7178,
+                  "llm_answer_quality": 0.45,
+                  "rag_end_to_end_pass": false
+                },
+                "cortex_eval_mode": "sync",
+                "knowledge_events": {
+                  "enabled": false,
+                  "status": "skipped",
+                  "fallback": "parse_artifact_fallback",
+                  "fallback_reason": "skipped"
+                }
+              }
+            },
+            {
+              "user_input": "What risks matter?",
+              "actual_output": "gemini says inflation and financial stability risks matter.",
+              "expected_output": "fomc, federal reserve, monetary policy",
+              "retrieval_contexts": [
+                "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: docling\nObject ID: obj_Federal-\n\n# Macro risks from docling\nInflation, monetary policy, financial stability, growth."
+              ],
+              "metadata": {
+                "run_id": "tzcx_20260429_082717_c6bea727",
+                "dataset_key": "tensorzero_cortex_tzcx_20260429_082717_c6bea727",
+                "context_id": "parse_engine:docling",
+                "context_source": "parse_artifact",
+                "parse_engine_id": "docling",
+                "tensorzero_inference_id": "inf_gemini_parse_engine:docling",
+                "tensorzero_episode_id": "ep_1",
+                "tensorzero_variant": "gemini",
+                "tensorzero_usage": {
+                  "input_tokens": 10,
+                  "output_tokens": 20
+                },
+                "tensorzero_finish_reason": "stop",
+                "scores": {
+                  "parse_markdown_quality": 0.1454,
+                  "rag_context_quality": 0.7178,
+                  "llm_answer_quality": 0.45,
+                  "rag_end_to_end_pass": false
+                },
+                "cortex_eval_mode": "sync",
+                "knowledge_events": {
+                  "enabled": false,
+                  "status": "skipped",
+                  "fallback": "parse_artifact_fallback",
+                  "fallback_reason": "skipped"
+                }
+              }
+            },
+            {
+              "user_input": "What risks matter?",
+              "actual_output": "openai says inflation and financial stability risks matter.",
+              "expected_output": "fomc, federal reserve, monetary policy",
+              "retrieval_contexts": [
+                "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: markitdown\nObject ID: obj_Federal-\n\n# Macro risks from markitdown\nInflation, monetary policy, financial stability, growth."
+              ],
+              "metadata": {
+                "run_id": "tzcx_20260429_082717_c6bea727",
+                "dataset_key": "tensorzero_cortex_tzcx_20260429_082717_c6bea727",
+                "context_id": "parse_engine:markitdown",
+                "context_source": "parse_artifact",
+                "parse_engine_id": "markitdown",
+                "tensorzero_inference_id": "inf_openai_parse_engine:markitdown",
+                "tensorzero_episode_id": "ep_1",
+                "tensorzero_variant": "openai",
+                "tensorzero_usage": {
+                  "input_tokens": 10,
+                  "output_tokens": 20
+                },
+                "tensorzero_finish_reason": "stop",
+                "scores": {
+                  "parse_markdown_quality": 0.1454,
+                  "rag_context_quality": 0.7182,
+                  "llm_answer_quality": 0.45,
+                  "rag_end_to_end_pass": false
+                },
+                "cortex_eval_mode": "sync",
+                "knowledge_events": {
+                  "enabled": false,
+                  "status": "skipped",
+                  "fallback": "parse_artifact_fallback",
+                  "fallback_reason": "skipped"
+                }
+              }
+            },
+            {
+              "user_input": "What risks matter?",
+              "actual_output": "gemini says inflation and financial stability risks matter.",
+              "expected_output": "fomc, federal reserve, monetary policy",
+              "retrieval_contexts": [
+                "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: markitdown\nObject ID: obj_Federal-\n\n# Macro risks from markitdown\nInflation, monetary policy, financial stability, growth."
+              ],
+              "metadata": {
+                "run_id": "tzcx_20260429_082717_c6bea727",
+                "dataset_key": "tensorzero_cortex_tzcx_20260429_082717_c6bea727",
+                "context_id": "parse_engine:markitdown",
+                "context_source": "parse_artifact",
+                "parse_engine_id": "markitdown",
+                "tensorzero_inference_id": "inf_gemini_parse_engine:markitdown",
+                "tensorzero_episode_id": "ep_1",
+                "tensorzero_variant": "gemini",
+                "tensorzero_usage": {
+                  "input_tokens": 10,
+                  "output_tokens": 20
+                },
+                "tensorzero_finish_reason": "stop",
+                "scores": {
+                  "parse_markdown_quality": 0.1454,
+                  "rag_context_quality": 0.7182,
+                  "llm_answer_quality": 0.45,
+                  "rag_end_to_end_pass": false
+                },
+                "cortex_eval_mode": "sync",
+                "knowledge_events": {
+                  "enabled": false,
+                  "status": "skipped",
+                  "fallback": "parse_artifact_fallback",
+                  "fallback_reason": "skipped"
+                }
+              }
+            }
+          ],
+          "eval_type": "rag",
+          "engine_id": "deepeval",
+          "metrics": [
+            {
+              "metric_key": "rag.answer_relevance",
+              "threshold": 0.65,
+              "weight": 0.25,
+              "params": {}
+            },
+            {
+              "metric_key": "rag.faithfulness",
+              "threshold": 0.65,
+              "weight": 0.25,
+              "params": {}
+            },
+            {
+              "metric_key": "rag.contextual_precision",
+              "threshold": 0.6,
+              "weight": 0.2,
+              "params": {}
+            },
+            {
+              "metric_key": "rag.contextual_recall",
+              "threshold": 0.6,
+              "weight": 0.2,
+              "params": {}
+            },
+            {
+              "metric_key": "rag.contextual_relevance",
+              "threshold": 0.6,
+              "weight": 0.1,
+              "params": {}
+            }
+          ],
+          "persist_report_object": true
+        }
+      },
+      "custom": {
+        "mode": "sync",
+        "kwargs": {
+          "name": "TensorZero Cortex CUSTOM Eval tzcx_20260429_082717_c6bea727",
+          "test_cases": [
+            {
+              "user_input": "What risks matter?",
+              "actual_output": "openai says inflation and financial stability risks matter.",
+              "expected_output": "fomc, federal reserve, monetary policy",
+              "retrieval_contexts": [
+                "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: docling\nObject ID: obj_Federal-\n\n# Macro risks from docling\nInflation, monetary policy, financial stability, growth."
+              ],
+              "metadata": {
+                "run_id": "tzcx_20260429_082717_c6bea727",
+                "dataset_key": "tensorzero_cortex_tzcx_20260429_082717_c6bea727",
+                "context_id": "parse_engine:docling",
+                "context_source": "parse_artifact",
+                "parse_engine_id": "docling",
+                "tensorzero_inference_id": "inf_openai_parse_engine:docling",
+                "tensorzero_episode_id": "ep_1",
+                "tensorzero_variant": "openai",
+                "tensorzero_usage": {
+                  "input_tokens": 10,
+                  "output_tokens": 20
+                },
+                "tensorzero_finish_reason": "stop",
+                "scores": {
+                  "parse_markdown_quality": 0.1454,
+                  "rag_context_quality": 0.7178,
+                  "llm_answer_quality": 0.45,
+                  "rag_end_to_end_pass": false
+                },
+                "cortex_eval_mode": "sync",
+                "knowledge_events": {
+                  "enabled": false,
+                  "status": "skipped",
+                  "fallback": "parse_artifact_fallback",
+                  "fallback_reason": "skipped"
+                }
+              }
+            },
+            {
+              "user_input": "What risks matter?",
+              "actual_output": "gemini says inflation and financial stability risks matter.",
+              "expected_output": "fomc, federal reserve, monetary policy",
+              "retrieval_contexts": [
+                "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: docling\nObject ID: obj_Federal-\n\n# Macro risks from docling\nInflation, monetary policy, financial stability, growth."
+              ],
+              "metadata": {
+                "run_id": "tzcx_20260429_082717_c6bea727",
+                "dataset_key": "tensorzero_cortex_tzcx_20260429_082717_c6bea727",
+                "context_id": "parse_engine:docling",
+                "context_source": "parse_artifact",
+                "parse_engine_id": "docling",
+                "tensorzero_inference_id": "inf_gemini_parse_engine:docling",
+                "tensorzero_episode_id": "ep_1",
+                "tensorzero_variant": "gemini",
+                "tensorzero_usage": {
+                  "input_tokens": 10,
+                  "output_tokens": 20
+                },
+                "tensorzero_finish_reason": "stop",
+                "scores": {
+                  "parse_markdown_quality": 0.1454,
+                  "rag_context_quality": 0.7178,
+                  "llm_answer_quality": 0.45,
+                  "rag_end_to_end_pass": false
+                },
+                "cortex_eval_mode": "sync",
+                "knowledge_events": {
+                  "enabled": false,
+                  "status": "skipped",
+                  "fallback": "parse_artifact_fallback",
+                  "fallback_reason": "skipped"
+                }
+              }
+            },
+            {
+              "user_input": "What risks matter?",
+              "actual_output": "openai says inflation and financial stability risks matter.",
+              "expected_output": "fomc, federal reserve, monetary policy",
+              "retrieval_contexts": [
+                "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: markitdown\nObject ID: obj_Federal-\n\n# Macro risks from markitdown\nInflation, monetary policy, financial stability, growth."
+              ],
+              "metadata": {
+                "run_id": "tzcx_20260429_082717_c6bea727",
+                "dataset_key": "tensorzero_cortex_tzcx_20260429_082717_c6bea727",
+                "context_id": "parse_engine:markitdown",
+                "context_source": "parse_artifact",
+                "parse_engine_id": "markitdown",
+                "tensorzero_inference_id": "inf_openai_parse_engine:markitdown",
+                "tensorzero_episode_id": "ep_1",
+                "tensorzero_variant": "openai",
+                "tensorzero_usage": {
+                  "input_tokens": 10,
+                  "output_tokens": 20
+                },
+                "tensorzero_finish_reason": "stop",
+                "scores": {
+                  "parse_markdown_quality": 0.1454,
+                  "rag_context_quality": 0.7182,
+                  "llm_answer_quality": 0.45,
+                  "rag_end_to_end_pass": false
+                },
+                "cortex_eval_mode": "sync",
+                "knowledge_events": {
+                  "enabled": false,
+                  "status": "skipped",
+                  "fallback": "parse_artifact_fallback",
+                  "fallback_reason": "skipped"
+                }
+              }
+            },
+            {
+              "user_input": "What risks matter?",
+              "actual_output": "gemini says inflation and financial stability risks matter.",
+              "expected_output": "fomc, federal reserve, monetary policy",
+              "retrieval_contexts": [
+                "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: markitdown\nObject ID: obj_Federal-\n\n# Macro risks from markitdown\nInflation, monetary policy, financial stability, growth."
+              ],
+              "metadata": {
+                "run_id": "tzcx_20260429_082717_c6bea727",
+                "dataset_key": "tensorzero_cortex_tzcx_20260429_082717_c6bea727",
+                "context_id": "parse_engine:markitdown",
+                "context_source": "parse_artifact",
+                "parse_engine_id": "markitdown",
+                "tensorzero_inference_id": "inf_gemini_parse_engine:markitdown",
+                "tensorzero_episode_id": "ep_1",
+                "tensorzero_variant": "gemini",
+                "tensorzero_usage": {
+                  "input_tokens": 10,
+                  "output_tokens": 20
+                },
+                "tensorzero_finish_reason": "stop",
+                "scores": {
+                  "parse_markdown_quality": 0.1454,
+                  "rag_context_quality": 0.7182,
+                  "llm_answer_quality": 0.45,
+                  "rag_end_to_end_pass": false
+                },
+                "cortex_eval_mode": "sync",
+                "knowledge_events": {
+                  "enabled": false,
+                  "status": "skipped",
+                  "fallback": "parse_artifact_fallback",
+                  "fallback_reason": "skipped"
+                }
+              }
+            }
+          ],
+          "eval_type": "custom",
+          "engine_id": "deepeval",
+          "metrics": [
+            {
+              "metric_key": "quality.correctness",
+              "threshold": 0.65,
+              "weight": 0.35,
+              "params": {}
+            },
+            {
+              "metric_key": "quality.completeness",
+              "threshold": 0.65,
+              "weight": 0.25,
+              "params": {}
+            },
+            {
+              "metric_key": "quality.relevance",
+              "threshold": 0.65,
+              "weight": 0.25,
+              "params": {}
+            },
+            {
+              "metric_key": "custom.g_eval",
+              "threshold": 0.65,
+              "weight": 0.15,
+              "params": {}
+            }
+          ],
+          "persist_report_object": true
+        }
+      }
+    }
+  }
+}

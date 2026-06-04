@@ -1,0 +1,474 @@
+{
+  "mode": "async",
+  "engine_id": "deepeval",
+  "runs": {
+    "rag": {
+      "mode": "async",
+      "job_id": "job_4a156be40a154819bd6c1e9c",
+      "accepted": {
+        "job_id": "job_4a156be40a154819bd6c1e9c",
+        "job_type": "eval",
+        "status": "queued",
+        "submitted_at": "2026-05-09T07:29:25.125664",
+        "poll_url": "/v1/jobs/job_4a156be40a154819bd6c1e9c",
+        "result_url": "/v1/eval/jobs/job_4a156be40a154819bd6c1e9c/result",
+        "cancel_url": "/v1/jobs/job_4a156be40a154819bd6c1e9c/cancel",
+        "telemetry": {
+          "trace_id": "dec3adc7bae62445a53a982a36bd4e70",
+          "span_id": "bf02ed60ca221c8f",
+          "request_id": "request_58b204592077450ea833e9d2",
+          "deployment_ring": null,
+          "experiment_variant": null
+        },
+        "eval_type": "rag",
+        "engine_id": "deepeval"
+      },
+      "job": {
+        "job_id": "job_4a156be40a154819bd6c1e9c",
+        "job_type": "eval",
+        "status": "succeeded",
+        "operation_name": "evaluation.rag",
+        "submitted_at": "2026-05-09T07:29:25.125664",
+        "progress_percent": null,
+        "queue_name": null,
+        "target_type": "existing_outputs",
+        "target_id": null,
+        "correlation_id": "request_58b204592077450ea833e9d2",
+        "started_at": "2026-05-09T07:29:25.321860",
+        "completed_at": null,
+        "error": null,
+        "metrics": {
+          "queue_latency_ms": 196,
+          "run_latency_ms": null
+        },
+        "telemetry": {
+          "trace_id": "dec3adc7bae62445a53a982a36bd4e70",
+          "span_id": "bf02ed60ca221c8f",
+          "request_id": "request_58b204592077450ea833e9d2",
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      },
+      "result": {
+        "eval_type": "rag",
+        "engine_id": "deepeval",
+        "status": "succeeded",
+        "summary": {
+          "overall_passed": true,
+          "composite_score": 0.9377777777777778,
+          "metric_count": 5,
+          "passed_metric_count": 5,
+          "failed_metric_count": 0,
+          "summary_by_namespace": {
+            "rag": 0.9377777777777778
+          }
+        },
+        "metrics": [
+          {
+            "metric_key": "rag.answer_relevance",
+            "status": "passed",
+            "display_name": "rag.answer_relevance",
+            "score": 1.0,
+            "threshold": 0.65,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": "AnswerRelevancyMetric",
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because the response fully addressed the request with no irrelevant content.",
+                  "score": 1.0
+                },
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because the response fully addressed the request with no irrelevant content.",
+                  "score": 1.0
+                },
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because the response fully addressed the request with no irrelevant content.",
+                  "score": 1.0
+                }
+              ],
+              "engine_options": {}
+            }
+          },
+          {
+            "metric_key": "rag.faithfulness",
+            "status": "passed",
+            "display_name": "rag.faithfulness",
+            "score": 1.0,
+            "threshold": 0.65,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": "FaithfulnessMetric",
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because there are no contradictions, indicating perfect faithfulness to the retrieval context.",
+                  "score": 1.0
+                },
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because there are no contradictions, indicating perfect faithfulness to the retrieval context.",
+                  "score": 1.0
+                },
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because there are no contradictions, indicating perfect faithfulness to the retrieval context.",
+                  "score": 1.0
+                }
+              ],
+              "engine_options": {}
+            }
+          },
+          {
+            "metric_key": "rag.contextual_precision",
+            "status": "passed",
+            "display_name": "rag.contextual_precision",
+            "score": 1.0,
+            "threshold": 0.6,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": "ContextualPrecisionMetric",
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because the first node (rank 1) is relevant, as shown by the reason \"The document is from the 'Federal Reserve FOMC calendar' and explicitly discusses the Federal Open Market Committee (FOMC) and monetary policy, which directly relates to the expected output terms 'fomc', 'federal reserve', and 'monetary policy'\", and there are no irrelevant nodes ahead of it.",
+                  "score": 1.0
+                },
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because the only node (rank 1) is relevant, as indicated by the reason \"The document is from the Federal Reserve FOMC calendar and explicitly mentions the Federal Open Market Committee (FOMC), the Federal Reserve, and monetary policy, which directly matches the expected output terms 'fomc, federal reserve, monetary policy'\", and there are no irrelevant nodes to lower the ranking.",
+                  "score": 1.0
+                },
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because the only node (rank 1) is relevant, as indicated by the reason \"The document is directly relevant as it provides information about FOMC (Federal Open Market Committee) meetings and monetary policy. It explicitly addresses 'monetary policy' through the FOMC calendar and statements, which are core components of the expected output. The source name 'Federal Reserve FOMC calendar' matches the expected output keywords 'fomc' and 'federal reserve'.\" and there are no irrelevant nodes ranked above it.",
+                  "score": 1.0
+                }
+              ],
+              "engine_options": {}
+            }
+          },
+          {
+            "metric_key": "rag.contextual_recall",
+            "status": "passed",
+            "display_name": "rag.contextual_recall",
+            "score": 1.0,
+            "threshold": 0.6,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": "ContextualRecallMetric",
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because each term in the expected output (fomc, federal reserve, monetary policy) is directly found in node 1 of the retrieval context.",
+                  "score": 1.0
+                },
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because the expected output directly aligns with node 1 in the retrieval context, which explicitly mentions FOMC, Federal Reserve, and monetary policy.",
+                  "score": 1.0
+                },
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because each term in the expected output ('fomc', 'federal reserve', 'monetary policy') is directly supported by node 1 in the retrieval context, with clear mentions and relevant content, and there are no unsupportive gaps.",
+                  "score": 1.0
+                }
+              ],
+              "engine_options": {}
+            }
+          },
+          {
+            "metric_key": "rag.contextual_relevance",
+            "status": "passed",
+            "display_name": "rag.contextual_relevance",
+            "score": 0.6888888888888888,
+            "threshold": 0.6,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": "ContextualRelevancyMetric",
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": true,
+                  "reason": "The score is 0.67 because the retrieval contains relevant statements such as \"The source has a Monetary Policy section covering Federal Open Market Committee (FOMC)...\" and \"The source covers Monetary Policy Principles and Practice...\", but also includes irrelevant parts like \"Structure of the Federal Reserve System\" and \"Press Releases\" which do not address macroeconomic conditions, inflation, monetary policy, or financial stability risks, reducing the overall relevance.",
+                  "score": 0.6666666666666666
+                },
+                {
+                  "passed": true,
+                  "reason": "The score is 0.60 because, while the retrieval context includes relevant statements such as \"The Federal Reserve FOMC calendar provides information about Federal Open Market Committee meeting schedules and monetary policy decisions\" and mentions \"Monetary Policy, Policy Tools, and the Monetary Policy Report,\" it also contains largely irrelevant organizational details like \"Structure of the Federal Reserve System,\" \"Board Members,\" and \"Advisory Councils\" that do not address macroeconomic indicators, inflation, or financial stability risks.",
+                  "score": 0.6
+                },
+                {
+                  "passed": true,
+                  "reason": "The score is 0.80 because the retrieval context includes irrelevant FOIA details (e.g., \"The FOMC makes an annual report pursuant to the Freedom of Information Act\") while also providing some relevant FOMC meeting information (e.g., \"The FOMC holds eight regularly scheduled meetings during the year and other meetings as needed.\").",
+                  "score": 0.8
+                }
+              ],
+              "engine_options": {}
+            }
+          }
+        ],
+        "eval_run_id": "erun_1893d0d132f348beb8bfc0b3",
+        "job_id": "job_4a156be40a154819bd6c1e9c",
+        "name": "TensorZero Cortex RAG Eval tzcx_20260509_072729_c3ac976e",
+        "profile_key": "auto_default",
+        "source_summary": {
+          "input_type": "inline_test_cases",
+          "test_case_count": 3
+        },
+        "target_summary": {
+          "target_type": "existing_outputs"
+        },
+        "samples": {
+          "total": 3,
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0
+        },
+        "artifacts": [
+          {
+            "object_id": "obj_f4ae193ed78c4fa596d10c2a",
+            "label": "evaluation_report",
+            "content_type": "application/json",
+            "format": "json",
+            "description": "Canonical Cortex evaluation report."
+          }
+        ],
+        "telemetry": null,
+        "started_at": "2026-05-09T07:29:27.672951Z",
+        "completed_at": "2026-05-09T07:29:41.694507Z"
+      }
+    },
+    "custom": {
+      "mode": "async",
+      "job_id": "job_6747e71c37624043807950c8",
+      "accepted": {
+        "job_id": "job_6747e71c37624043807950c8",
+        "job_type": "eval",
+        "status": "queued",
+        "submitted_at": "2026-05-09T07:29:43.244793",
+        "poll_url": "/v1/jobs/job_6747e71c37624043807950c8",
+        "result_url": "/v1/eval/jobs/job_6747e71c37624043807950c8/result",
+        "cancel_url": "/v1/jobs/job_6747e71c37624043807950c8/cancel",
+        "telemetry": {
+          "trace_id": "749b921354385f3841bde82e3256e795",
+          "span_id": "b9159dbd3dd92f77",
+          "request_id": "request_e96c98430b4c40c4bcd914f7",
+          "deployment_ring": null,
+          "experiment_variant": null
+        },
+        "eval_type": "custom",
+        "engine_id": "deepeval"
+      },
+      "job": {
+        "job_id": "job_6747e71c37624043807950c8",
+        "job_type": "eval",
+        "status": "succeeded",
+        "operation_name": "evaluation.custom",
+        "submitted_at": "2026-05-09T07:29:43.244793",
+        "progress_percent": null,
+        "queue_name": null,
+        "target_type": "existing_outputs",
+        "target_id": null,
+        "correlation_id": "request_e96c98430b4c40c4bcd914f7",
+        "started_at": "2026-05-09T07:29:48.572518",
+        "completed_at": null,
+        "error": null,
+        "metrics": {
+          "queue_latency_ms": 5327,
+          "run_latency_ms": null
+        },
+        "telemetry": {
+          "trace_id": "749b921354385f3841bde82e3256e795",
+          "span_id": "b9159dbd3dd92f77",
+          "request_id": "request_e96c98430b4c40c4bcd914f7",
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      },
+      "result": {
+        "eval_type": "custom",
+        "engine_id": "deepeval",
+        "status": "partial",
+        "summary": {
+          "overall_passed": false,
+          "composite_score": 0.20833333333333331,
+          "metric_count": 4,
+          "passed_metric_count": 0,
+          "failed_metric_count": 4,
+          "summary_by_namespace": {
+            "custom": 0.20000000000000004,
+            "quality": 0.2111111111111111
+          }
+        },
+        "metrics": [
+          {
+            "metric_key": "quality.correctness",
+            "status": "failed",
+            "display_name": "quality.correctness",
+            "score": 0.16666666666666666,
+            "threshold": 0.65,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": null,
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": false,
+                  "reason": "The Actual Output provides a detailed, multi-paragraph analysis in Chinese comparing macroeconomic, inflation, monetary policy, and financial stability risks across Federal Reserve sources. However, the Expected Output is simply 'fomc, federal reserve, monetary policy' - three comma-separated source names. The Actual Output fundamentally misaligns with the Expected Output format and content. While the Actual Output does reference relevant sources from the Retrieval Context (Beige Book, Monetary Policy Report, FOMC, Policy Tools, Supervision and Regulation Report), it delivers an extensive comparative analysis rather than the concise list of source names requested. The Retrieval Context contains sufficient information to generate the Expected Output, but the Actual Output demonstrates a significant misinterpretation of the task requirements, providing analytical depth instead of the requested source name extraction.",
+                  "score": 0.1
+                },
+                {
+                  "passed": false,
+                  "reason": "The Actual Output provides a detailed explanation of why the source cannot fulfill the request, correctly identifying that the FOMC calendar only contains meeting dates and navigation links without substantive economic analysis. However, the Expected Output appears to be a simple list of keywords (fomc, federal reserve, monetary policy) rather than a comparative analysis as requested in the Input. The Actual Output is more accurate and helpful given the retrieval context, which confirms the source lacks the macroeconomic, inflation, and financial stability commentary needed for the comparison. The Expected Output seems to be either incomplete or misaligned with the Input's request for a substantive comparison with source attribution.",
+                  "score": 0.3
+                },
+                {
+                  "passed": false,
+                  "reason": "Actual Output correctly analyzes Retrieval Context (Federal Reserve FOMC calendar, obj_133b312b74974798803b5cce) as containing only meeting dates and links without substantive macroeconomic, inflation, monetary policy, or financial stability discussions, making comparison impossible per Input query. However, it fails exact match or acceptable variation with Expected Output ('fomc, federal reserve, monetary policy'), showing discrepancy likely from misinterpreting context as insufficient for expected source listing rather than extracting implied sources.",
+                  "score": 0.1
+                }
+              ],
+              "engine_options": {}
+            }
+          },
+          {
+            "metric_key": "quality.completeness",
+            "status": "failed",
+            "display_name": "quality.completeness",
+            "score": 0.2333333333333333,
+            "threshold": 0.65,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": null,
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": false,
+                  "reason": "The Actual Output provides a detailed, multi-paragraph analysis in Chinese comparing macroeconomic, inflation, monetary policy, and financial stability risks across Federal Reserve sources, with specific document names cited (Beige Book, Monetary Policy Report, FOMC, Supervision and Regulation Report). However, the Expected Output is simply 'fomc, federal reserve, monetary policy' - three key terms. The Actual Output vastly exceeds the expected scope and format. While the Actual Output is well-structured and sourced from the Retrieval Context, it does not match the Expected Output's requirement for a concise list of primary source names. The Actual Output demonstrates comprehensive analysis but fails to meet the specific, minimal expected format. Additionally, the Retrieval Context provided contains only Federal Reserve FOMC calendar navigation structure and does not include the detailed content about Beige Book, Monetary Policy Report, or Supervision and Regulation Report that the Actual Output references, creating a disconnect between claimed sources and available context.",
+                  "score": 0.2
+                },
+                {
+                  "passed": false,
+                  "reason": "The Actual Output correctly identifies that the FOMC calendar source lacks substantive commentary on macroeconomic conditions, inflation, monetary policy actions, and financial stability risks—which were the core requirements of the Chinese-language input asking for a comparison of these topics across sources. However, the Expected Output consists only of three keywords (fomc, federal reserve, monetary policy) without any comparative analysis or source attribution as explicitly requested in the input. The Actual Output provides accurate assessment of source limitations but fails to deliver the expected keyword-based summary format. The Retrieval Context supports the Actual Output's conclusion that the source contains only structural navigation links and meeting dates. The response demonstrates analytical rigor in acknowledging data insufficiency, but does not align with the Expected Output format, creating a mismatch between what was delivered and what was anticipated.",
+                  "score": 0.3
+                },
+                {
+                  "passed": false,
+                  "reason": "The Actual Output correctly identifies that the FOMC calendar source lacks substantive macroeconomic analysis, inflation trends, monetary policy decisions, and financial stability risk discussions. However, it fails to meet the task requirements. The Input requests a comparison of macro-economic, inflation, monetary policy, and financial stability risks across sources with source attribution. The Expected Output specifies key terms (fomc, federal reserve, monetary policy) that should be identified. The Actual Output acknowledges the source limitation but provides no comparison across multiple sources, no substantive content extraction, and no structured identification of the expected key terms. The Retrieval Context confirms the source contains only meeting calendars and links without analytical content. The response demonstrates accurate source assessment but completely fails to deliver the requested comparative analysis or expected output format.",
+                  "score": 0.2
+                }
+              ],
+              "engine_options": {}
+            }
+          },
+          {
+            "metric_key": "quality.relevance",
+            "status": "failed",
+            "display_name": "quality.relevance",
+            "score": 0.2333333333333333,
+            "threshold": 0.65,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": null,
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": false,
+                  "reason": "The Actual Output significantly misaligns with the Expected Output. The input requests a comparison of macroeconomic, inflation, monetary policy, and financial stability risks across sources with source names noted. The Expected Output provides three concise source identifiers: 'fomc, federal reserve, monetary policy'. However, the Actual Output delivers an extensive narrative analysis with detailed categorization of information sources and comparative insights. While the Actual Output is comprehensive and well-structured, it fails to match the Expected Output's format and brevity. The Actual Output does reference relevant sources (Beige Book, Monetary Policy Report, FOMC, Supervision and Regulation Report) from the Retrieval Context, demonstrating contextual relevance. However, the fundamental mismatch in output format—detailed prose versus concise source listing—represents a critical deviation from the task requirement. The response addresses the input's substantive request but not in the expected format.",
+                  "score": 0.3
+                },
+                {
+                  "passed": false,
+                  "reason": "The user input asks for a comparison of macroeconomic, inflation, monetary‑policy, and financial‑stability risks across multiple sources, with explicit mention of source names. The actual output only discusses one source (the Federal Reserve FOMC calendar) and explains that it lacks substantive content on those topics, without attempting to compare any other sources or even listing them. The retrieval context is limited to the FOMC calendar and related Fed pages, which does not support a multi‑source comparison as required. The expected output keywords (‘fomc, federal reserve, monetary policy’) are partially present in the actual output, but the response fails to address the comparative task or to reference multiple sources by name, making it misaligned with both the input request and the expected outcome.",
+                  "score": 0.2
+                },
+                {
+                  "passed": false,
+                  "reason": "The user asks for a comparison of macroeconomic, inflation, monetary‑policy, and financial‑stability risks across multiple sources, explicitly requesting that source names be cited. The Actual Output, however, only discusses a single source (the Federal Reserve FOMC calendar) and correctly notes that this calendar does not contain substantive analysis of those topics. It therefore fails to compare any sources or to address the multi‑source comparison requested in the Input. The Retrieval Context likewise only describes a meeting‑calendar page and does not provide the required macroeconomic or policy‑risk content. The Expected Output keywords (‘fomc, federal reserve, monetary policy’) are loosely related to the topic but do not match the task of comparing several sources’ risk assessments. Overall, the response is factually accurate about the limitations of the given source but does not attempt the requested cross‑source comparison and omits any mention of the other listed sources, so it is only minimally aligned with the task.",
+                  "score": 0.2
+                }
+              ],
+              "engine_options": {}
+            }
+          },
+          {
+            "metric_key": "custom.g_eval",
+            "status": "failed",
+            "display_name": "custom.g_eval",
+            "score": 0.20000000000000004,
+            "threshold": 0.65,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": null,
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": false,
+                  "reason": "The Actual Output provides a detailed, multi-paragraph analysis in Chinese that comprehensively addresses the input query about comparing macroeconomic, inflation, monetary policy, and financial stability risks across sources with source attribution. However, the Expected Output is simply 'fomc, federal reserve, monetary policy' - three key terms. The Actual Output vastly exceeds the expected output in scope and detail, providing structured comparisons with specific document names (Beige Book, Monetary Policy Report, FOMC pages, Supervision and Regulation Report) rather than the concise keyword format expected. While the Actual Output is substantively accurate and well-reasoned based on the Retrieval Context, it fundamentally misaligns with the Expected Output format, which appears to request only primary source identifiers rather than a full analytical comparison. The Retrieval Context supports the sources mentioned in the Actual Output, but the Expected Output suggests a much simpler, keyword-based response was required.",
+                  "score": 0.2
+                },
+                {
+                  "passed": false,
+                  "reason": "Retrieval Context is irrelevant to Input as it concerns unrelated topics like AI training and code commits, not macroeconomics or monetary policy, failing step 1. Actual Output analyzes a Federal Reserve FOMC calendar (matching Retrieval Context in test case but not search results), but does not address the query to compare multiple sources on economic topics with source names, misaligning with Expected Output 'fomc, federal reserve, monetary policy' and failing steps 2-3. No task fidelity to Input's comparison request.",
+                  "score": 0.2
+                },
+                {
+                  "passed": false,
+                  "reason": "The Actual Output correctly identifies that the Retrieval Context (Federal Reserve FOMC calendar) lacks substantive discussion of macroeconomic outlook, inflation trends, monetary policy decisions, and financial stability risks—it only contains meeting dates and links. However, this response fundamentally fails the task. The Input requests a comparison of macro-economic, inflation, monetary policy, and financial stability risks across multiple sources with source attribution. The Retrieval Context provided contains only one source (FOMC calendar), making any meaningful comparison impossible. The Actual Output acknowledges this limitation but does not attempt to address the core request. The Expected Output lists only keywords (fomc, federal reserve, monetary policy) rather than the requested comparative analysis with source names. The misalignment between Input (requesting detailed comparative analysis) and both Actual and Expected Outputs (providing either a limitation statement or keywords) indicates a fundamental breakdown in task execution. The Retrieval Context itself is inadequate for the stated task, as it provides only structural information about meeting schedules rather than substantive economic analysis.",
+                  "score": 0.2
+                }
+              ],
+              "engine_options": {}
+            }
+          }
+        ],
+        "eval_run_id": "erun_7659ad78f23d4b47aca631b9",
+        "job_id": "job_6747e71c37624043807950c8",
+        "name": "TensorZero Cortex CUSTOM Eval tzcx_20260509_072729_c3ac976e",
+        "profile_key": "auto_default",
+        "source_summary": {
+          "input_type": "inline_test_cases",
+          "test_case_count": 3
+        },
+        "target_summary": {
+          "target_type": "existing_outputs"
+        },
+        "samples": {
+          "total": 3,
+          "passed": 0,
+          "failed": 4,
+          "skipped": 0
+        },
+        "artifacts": [
+          {
+            "object_id": "obj_21acf693296d4914aa2a9d79",
+            "label": "evaluation_report",
+            "content_type": "application/json",
+            "format": "json",
+            "description": "Canonical Cortex evaluation report."
+          }
+        ],
+        "telemetry": null,
+        "started_at": "2026-05-09T07:29:50.579982Z",
+        "completed_at": "2026-05-09T07:30:00.537586Z"
+      }
+    }
+  }
+}

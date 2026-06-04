@@ -1,0 +1,202 @@
+{
+  "parse": {
+    "requested_sources": [
+      "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+    ],
+    "engine_id": "llama_parse",
+    "scene": null,
+    "results": [
+      {
+        "job_id": "job_9787a0314eaf4cdfaa888120",
+        "document": {
+          "document_id": "doc_6aaee2ebd9af497cad15b135",
+          "source_type": "url",
+          "source_format": "text/html",
+          "markdown": "An official website of the United States Government Here's how you know\n\n# Federal Open Market Committee\n\nMeeting calendars, statements, and minutes\n\nFOMC Search (2021-2027)\n\nThe FOMC holds eight regularly scheduled meetings during the year and other meetings as needed. Links to policy statements and minutes are in the calendars below. The minutes of regularly scheduled meetings are released three weeks after the date of the policy decision. Committee membership changes at the first regularly scheduled meeting of the year.\n\nFOIA\n\nThe FOMC makes an annual report pursuant to the Freedom of Information Act. The FOMC FOIA Service Center provides information about the status of FOIA requests and the FOIA process.\n\n# 2026 FOMC Meetings\n\n| Month   | Date    | Statement  | Press Conference     | Minutes    | | |\n| ------- | ------- | ---------- | -------------------- | ---------- |---|---|\n| January | 27-28   | PDF | HTML |                      | PDF | HTML |\n| March   | 17-18\\* | PDF | HTML | Projection Materials | PDF | HTML |\n| April   | 28-29   |            |                      |            | | |\n| June    | 16-17\\* |            |                      |            | | |\n\n# 2025 FOMC Meetings\n\n| Month   | Date    | Statement  | Press Conference     | Minutes    | | |\n| ------- | ------- | ---------- | -------------------- | ---------- |---|---|\n| January | 28-29   | PDF | HTML |                      |            | |\n| March   | 18-19\\* | PDF | HTML | Projection Materials | PDF | HTML |\n| May     | 6-7     | PDF | HTML |                      |            | |\n| June    | 17-18\\* |            |                      |            | | |\n\nStatement: Implementation Note (Released February 19, 2025)\n\nStatement: Implementation Note PDF | HTML (Released April 09, 2025)\n\nStatement: Implementation Note (Released May 28, 2025)\n\n# Other Meetings\n\n- July 28-29\n- September 15-16*\n- October 27-28\n- December 8-9*\n\n* Meeting associated with a Summary of Economic Projections.\n\n# Statement on Longer-Run Goals and Monetary Policy Strategy\n\n# 2024 FOMC Meetings\n\n| Month              | Date       | Statement  | Press Conference | Minutes    | Projection Materials | Implementation Note          | Release Date                 |            |            |                          | | | | |\n| ------------------ | ---------- | ---------- | ---------------- | ---------- | -------------------- | ---------------------------- | ---------------------------- | ---------- | ---------- | ------------------------ |---|---|---|---|\n|                    |            |            | July             | 29-30      | Statement:           | PDF | HTML                   | PDF | HTML                   | PDF | HTML | PDF | HTML | (Released July 09, 2025) |\n| 22 (notation vote) | Statement: | PDF | HTML |                  | PDF | HTML |                      | (Released August 20, 2025)   |                              |            |            |                          | | |\n| September          | 16-17\\*    | Statement: | PDF | HTML       | PDF | HTML | PDF | HTML           | PDF | HTML                   | (Released October 08, 2025)  |            |            |                          |\n| 28-29              | Statement: | PDF | HTML |                  | PDF | HTML |                      | (Released November 19, 2025) |                              |            |            |                          | | |\n| December           | 9-10\\*     | Statement: | PDF | HTML       | PDF | HTML | PDF | HTML           | PDF | HTML                   | (Released December 30, 2025) |            |            |                          |\n\n* Meeting associated with a Summary of Economic Projections.\n\n# Statement on Longer-Run Goals and Monetary Policy Strategy\n\n(Released February 21, 2024)\n\n| Month     | Statement  | Press Conference | Minutes    | Projection Materials | Implementation Note | Release Date                 | | |\n| --------- | ---------- | ---------------- | ---------- | -------------------- | ------------------- | ---------------------------- |---|---|\n| March     | PDF | HTML | Press Conference | PDF | HTML |                      | Implementation Note |                              |\n| April/May | PDF | HTML | Press Conference | PDF | HTML |                      | Implementation Note | (Released May 22, 2024)      |\n| June      | PDF | HTML | Press Conference | PDF | HTML | Projection Materials | Implementation Note | (Released July 03, 2024)     |\n| July      | PDF | HTML | Press Conference | PDF | HTML |                      | Implementation Note | (Released August 21, 2024)   |\n| September | PDF | HTML | Press Conference | PDF | HTML | Projection Materials | Implementation Note | (Released October 09, 2024)  |\n| November  | PDF | HTML | Press Conference | PDF | HTML |                      | Implementation Note | (Released November 26, 2024) |\n\nDecember      17-18*\n\nStatement:              Press Conference                    Minutes:\n\nPDF | HTML              Projection Materials                PDF | HTML\n\nImplementation Note     PDF | HTML                          (Released January 08, 2025)\n\n* Meeting associated with a Summary of Economic Projections.\n\n# 2023 FOMC Meetings\n\n| Jan/Feb                      | 31-1                                                       | |\n| ---------------------------- | ---------------------------------------------------------- |---|\n| Statement:                   | Press Conference                                           | |\n| Minutes:                     | PDF | HTML                                                 |\n| Implementation Note          | Statement on Longer-Run Goals and Monetary Policy Strategy | |\n| (Released February 22, 2023) |                                                            | |\n\n| March                     | 21-22\\*              | | |\n| ------------------------- | -------------------- |---|---|\n| Statement:                | Press Conference     | | |\n| Minutes:                  | Projection Materials | | |\n| PDF | HTML                | PDF | HTML           |\n| Implementation Note       | PDF | HTML           | |\n| (Released April 12, 2023) |                      | | |\n\n| May                     | 2-3              | |\n| ----------------------- | ---------------- |---|\n| Statement:              | Press Conference | |\n| Minutes:                | PDF | HTML       |\n| Implementation Note     |                  | |\n| (Released May 24, 2023) |                  | |\n\n| June                     | 13-14\\*              | | |\n| ------------------------ | -------------------- |---|---|\n| Statement:               | Press Conference     | | |\n| Minutes:                 | Projection Materials | | |\n| PDF | HTML               | PDF | HTML           |\n| Implementation Note      | PDF | HTML           | |\n| (Released July 05, 2023) |                      | | |\n\n| July                       | 25-26            | |\n| -------------------------- | ---------------- |---|\n| Statement:                 | Press Conference | |\n| Minutes:                   | PDF | HTML       |\n| Implementation Note        |                  | |\n| (Released August 16, 2023) |                  | |\n\n| September | 19-20\\* |\n| --------- | ------- |\n\n# 2022 FOMC Meetings\n\n| January                                                                 | 25-26                                                      |                  |          |            |   |            | | |\n| ----------------------------------------------------------------------- | ---------------------------------------------------------- | ---------------- | -------- | ---------- | - | ---------- |---|---|\n| Statement:                                                              |                                                            | Press Conference | Minutes: | PDF | HTML |   | PDF | HTML |\n| Implementation Note                                                     | Statement on Longer-Run Goals and Monetary Policy Strategy |                  |          |            |   |            | | |\n| Principles for Reducing the Size of the Federal Reserve's Balance Sheet |                                                            |                  |          |            |   |            | | |\n| (Released February 16, 2022)                                            |                                                            |                  |          |            |   |            | | |\n\n| March               | 15-16\\*          |                           |            |                      |            | | |\n| ------------------- | ---------------- | ------------------------- | ---------- | -------------------- | ---------- |---|---|\n| Statement:          | Press Conference | Minutes:                  | PDF | HTML | Projection Materials | PDF | HTML |\n| Implementation Note | PDF | HTML       | (Released April 06, 2022) |            |                      |            | |\n\n| May                 | 3-4                         |                         |            |   |            | | |\n| ------------------- | --------------------------- | ----------------------- | ---------- | - | ---------- |---|---|\n| Statement:          | Press Conference            | Minutes:                | PDF | HTML |   | PDF | HTML |\n| Implementation Note | Plans for Reducing the Size |                         |            |   |            | | |\n|                     |                             | (Released May 25, 2022) |            |   |            | | |\n\nof the Federal Reserve's Balance Sheet\n\n# 2022 FOMC Meetings\n\n| Month     | Date    | Statement           | Press Conference     | Minutes                      | | |\n| --------- | ------- | ------------------- | -------------------- | ---------------------------- |---|---|\n| June      | 14-15\\* | PDF | HTML          | Projection Materials | PDF | HTML                   |\n|           |         | Implementation Note | PDF | HTML           | (Released July 06, 2022)     | |\n| July      | 26-27   | PDF | HTML          |                      | PDF | HTML                   |\n|           |         | Implementation Note |                      | (Released August 17, 2022)   | | |\n| September | 20-21\\* | PDF | HTML          | Projection Materials | PDF | HTML                   |\n|           |         | Implementation Note | PDF | HTML           | (Released October 12, 2022)  | |\n| November  | 1-2     | PDF | HTML          |                      | PDF | HTML                   |\n|           |         | Implementation Note |                      | (Released November 23, 2022) | | |\n| December  | 13-14\\* | PDF | HTML          | Projection Materials | PDF | HTML                   |\n|           |         | Implementation Note | PDF | HTML           | (Released January 04, 2023)  | |\n\n* Meeting associated with a Summary of Economic Projections.\n\n# 2021 FOMC Meetings\n\n| Month   | Date  | Statement           | Press Conference | Minutes                 | | |\n| ------- | ----- | ------------------- | ---------------- | ----------------------- |---|---|\n| January | 26-27 | PDF | HTML          | Press Conference | PDF | HTML              |\n|         |       | Implementation Note |                  | Statement on Longer-Run | | |\n\nGoals and Monetary Policy (Released February 17, 2021)\n\n# Strategy\n\n| Month             | Statement  | Press Conference     | Minutes    | Implementation Note                                        | | | |\n| ----------------- | ---------- | -------------------- | ---------- | ---------------------------------------------------------- |---|---|---|\n| March 16-17\\*     | PDF | HTML | Projection Materials | PDF | HTML | Implementation Note PDF | HTML (Released April 07, 2021)   |\n| April 27-28       | PDF | HTML |                      | PDF | HTML | Implementation Note (Released May 19, 2021)                | |\n| June 15-16\\*      | PDF | HTML | Projection Materials | PDF | HTML | Implementation Note PDF | HTML (Released July 07, 2021)    |\n| July 27-28        | PDF | HTML |                      | PDF | HTML | Implementation Note (Released August 18, 2021)             | |\n| September 21-22\\* | PDF | HTML | Projection Materials | PDF | HTML | Implementation Note PDF | HTML (Released October 13, 2021) |\n| November 2-3      | PDF | HTML |                      | PDF | HTML | Implementation Note (Released November 24, 2021)           | |\n| December 14-15\\*  | PDF | HTML | Projection Materials | PDF | HTML |                                                            | |\n\nImplementation Note    PDF | HTML                           (Released January 05, 2022)\n\n# Meeting associated with a Summary of Economic Projections.\n\n# 2027 FOMC Meetings\n\n| January   | 26-27 |\n| --------- | ----- |\n| March     | 16-17 |\n| April     | 27-28 |\n| June      | 8-9   |\n| July      | 27-28 |\n| September | 14-15 |\n| October   | 26-27 |\n| December  | 7-8   |\n\n* Meeting associated with a Summary of Economic Projections.\n\nNote: A two-day meeting is scheduled for January 25-26, 2028. Each meeting date is tentative until confirmed at the meeting immediately preceding it.\n\nLast Update: April 08, 2026",
+          "audit": {
+            "created_at": "2026-04-29T08:51:16.216908Z",
+            "updated_at": "2026-04-29T08:51:16.216908Z",
+            "created_by": "tensorzero-cortex-demo",
+            "updated_by": null
+          },
+          "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+          "source_object_id": null,
+          "source_uri": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+          "canonical_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+          "title": "fomccalendars.htm",
+          "language_code": "und",
+          "detected_mime_type": "text/html",
+          "category_tags": [],
+          "labels": [],
+          "access_policy": null,
+          "markdown_sha256": "f02863c36c571b592732daba0742a808d469f5bbeacfb1f5121da092146af616",
+          "normalized_metadata": {
+            "title": "fomccalendars.htm",
+            "author": null,
+            "publish_date": null,
+            "language": "und",
+            "description": null,
+            "summary": null,
+            "keywords": [],
+            "category_tags": []
+          },
+          "metadata": {
+            "title": "fomccalendars.htm",
+            "source_ref": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+            "document_count": 10,
+            "document_0_metadata": {},
+            "document_1_metadata": {},
+            "document_2_metadata": {},
+            "document_3_metadata": {},
+            "document_4_metadata": {},
+            "document_5_metadata": {},
+            "document_6_metadata": {},
+            "document_7_metadata": {},
+            "document_8_metadata": {},
+            "document_9_metadata": {},
+            "raw_metadata": {
+              "source_ref": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+              "documents": [
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {}
+              ]
+            },
+            "engine_payload_summary": {
+              "parser": "llama_parse",
+              "document_count": 10
+            }
+          },
+          "parser": {
+            "engine_key": "llama_parse",
+            "display_name": "LlamaParse",
+            "engine_family": "document_remote",
+            "engine_version": "0.6.94",
+            "profile_ref": "llama_parse_document_fidelity",
+            "template_ref": null,
+            "fallback_used": false
+          },
+          "provenance": {
+            "input_kind": "url",
+            "fetched_at": "2026-04-29T08:51:16.216112Z",
+            "final_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+            "http_status": null,
+            "content_length_bytes": null,
+            "parser_version": "0.6.94",
+            "content_hash_sha256": "f02863c36c571b592732daba0742a808d469f5bbeacfb1f5121da092146af616"
+          }
+        },
+        "artifacts": {
+          "markdown_object": null,
+          "raw_html_object": null,
+          "screenshot_object": null,
+          "pdf_object": null,
+          "ssl_certificate": null
+        },
+        "diagnostics": {
+          "selected_engine_key": "llama_parse",
+          "fallback_used": false,
+          "engine_attempts": [
+            {
+              "attempt_no": 1,
+              "engine_key": "llama_parse",
+              "status": "succeeded",
+              "started_at": "2026-04-29T08:50:42.591775Z",
+              "completed_at": "2026-04-29T08:51:16.216658Z",
+              "error_code": null,
+              "warning": null,
+              "diagnostics": {
+                "engine_options": {}
+              }
+            }
+          ],
+          "warnings": [],
+          "link_counts": {},
+          "media_counts": {},
+          "anti_bot_strategy": null,
+          "used_proxy": null,
+          "timings_ms": {
+            "fetch": null,
+            "render": null,
+            "normalize": 0,
+            "total": 0
+          },
+          "telemetry": {
+            "trace_id": "37880ec350bef60918c98c24b6a249ed",
+            "span_id": "156f0abd7c8c5243",
+            "request_id": null,
+            "deployment_ring": null,
+            "experiment_variant": null
+          }
+        },
+        "telemetry": {
+          "trace_id": "37880ec350bef60918c98c24b6a249ed",
+          "span_id": "156f0abd7c8c5243",
+          "request_id": null,
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      }
+    ]
+  },
+  "storage": {
+    "object_id": "obj_b8622ba9ad844ae9b6d83380",
+    "filename": "Federal-Reserve-FOMC-calendar-llama_parse.md",
+    "content_type": "text/markdown",
+    "size_bytes": 13454,
+    "status": "available",
+    "audit": {
+      "created_at": "2026-04-29T08:51:16.269415",
+      "updated_at": "2026-04-29T08:51:16.269418",
+      "created_by": "tensorzero-cortex-demo",
+      "updated_by": null
+    },
+    "current_version_id": "objver_a9662f2136484908b8c4acbe",
+    "bucket": "cortex-local",
+    "object_key": "tenant_demo/obj_b8622ba9ad844ae9b6d83380/Federal-Reserve-FOMC-calendar-llama_parse.md",
+    "checksum_sha256": "2a0092bc370387e925861d7fb67139ce18a7228e795e4839d32f592115d14b48",
+    "etag": "\"262e0398d32e7e2b15e548f327dad2fe\"",
+    "storage_class": null,
+    "metadata": {
+      "engine_id": "llama_parse",
+      "job_id": "job_9787a0314eaf4cdfaa888120",
+      "parse_mode": "sync",
+      "parse_score": "1.0",
+      "run": "tensorzero-cortex",
+      "source_name": "Federal Reserve FOMC calendar",
+      "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+    },
+    "tags": [
+      "tensorzero",
+      "finance",
+      "parsed-markdown",
+      "llama_parse"
+    ],
+    "version": {
+      "object_version_id": "objver_a9662f2136484908b8c4acbe",
+      "version_no": 1,
+      "size_bytes": 13454,
+      "provider_version_ref": null,
+      "checksum_sha256": "2a0092bc370387e925861d7fb67139ce18a7228e795e4839d32f592115d14b48",
+      "etag": "\"262e0398d32e7e2b15e548f327dad2fe\"",
+      "is_latest": true,
+      "created_at": "2026-04-29T08:51:16.271641"
+    },
+    "access_policy": {
+      "access_level": "tenant_shared",
+      "owner_actor_id": null,
+      "classification_labels": [],
+      "allowed_role_keys": [],
+      "denied_role_keys": [],
+      "purpose_tags": [],
+      "constraints": {}
+    }
+  }
+}

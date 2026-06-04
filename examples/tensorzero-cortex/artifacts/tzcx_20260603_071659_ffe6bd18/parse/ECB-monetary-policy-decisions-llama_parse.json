@@ -1,0 +1,290 @@
+{
+  "parse": {
+    "requested_sources": [
+      "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html"
+    ],
+    "engine_id": "llama_parse",
+    "scene": null,
+    "results": [
+      {
+        "job_id": "job_cfd1ac4e98624036adf0b81b",
+        "document": {
+          "document_id": "doc_d95685fef3994e3ab5977833",
+          "source_type": "url",
+          "source_format": "text/html",
+          "markdown": "# Monetary policy statements\n\nThe Governing Council takes its monetary policy decision every six weeks. Immediately after the meeting, the President and the Vice President of the ECB explain the decision at the press conference and answer questions from journalists. The press conference can be watched live at 14:45 CET and on demand shortly after.\n\n# Monetary policy decisions\n\n# Monetary policy accounts\n\n# Most recent press conference\n\nEnter keyword and filter the list below\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nNO_CONTENT_HERE\n\nCopyright 2026, European Central Bank",
+          "audit": {
+            "created_at": "2026-06-03T07:46:49.487661Z",
+            "updated_at": "2026-06-03T07:46:49.487661Z",
+            "created_by": "tensorzero-cortex-demo",
+            "updated_by": null
+          },
+          "source_url": "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html",
+          "source_object_id": null,
+          "source_uri": "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html",
+          "canonical_url": "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html",
+          "title": "index.en.html",
+          "language_code": "und",
+          "detected_mime_type": "text/html",
+          "category_tags": [],
+          "labels": [],
+          "access_policy": null,
+          "markdown_sha256": "23ee555a6ab2206b76c16c0ba8a6b535e2bdf6767475b66bd8faf5d068243164",
+          "normalized_metadata": {
+            "title": "index.en.html",
+            "author": null,
+            "publish_date": null,
+            "language": "und",
+            "description": null,
+            "summary": null,
+            "keywords": [],
+            "category_tags": []
+          },
+          "metadata": {
+            "title": "index.en.html",
+            "source_ref": "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html",
+            "document_count": 54,
+            "document_0_metadata": {},
+            "document_1_metadata": {},
+            "document_2_metadata": {},
+            "document_3_metadata": {},
+            "document_4_metadata": {},
+            "document_5_metadata": {},
+            "document_6_metadata": {},
+            "document_7_metadata": {},
+            "document_8_metadata": {},
+            "document_9_metadata": {},
+            "document_10_metadata": {},
+            "document_11_metadata": {},
+            "document_12_metadata": {},
+            "document_13_metadata": {},
+            "document_14_metadata": {},
+            "document_15_metadata": {},
+            "document_16_metadata": {},
+            "document_17_metadata": {},
+            "document_18_metadata": {},
+            "document_19_metadata": {},
+            "document_20_metadata": {},
+            "document_21_metadata": {},
+            "document_22_metadata": {},
+            "document_23_metadata": {},
+            "document_24_metadata": {},
+            "document_25_metadata": {},
+            "document_26_metadata": {},
+            "document_27_metadata": {},
+            "document_28_metadata": {},
+            "document_29_metadata": {},
+            "document_30_metadata": {},
+            "document_31_metadata": {},
+            "document_32_metadata": {},
+            "document_33_metadata": {},
+            "document_34_metadata": {},
+            "document_35_metadata": {},
+            "document_36_metadata": {},
+            "document_37_metadata": {},
+            "document_38_metadata": {},
+            "document_39_metadata": {},
+            "document_40_metadata": {},
+            "document_41_metadata": {},
+            "document_42_metadata": {},
+            "document_43_metadata": {},
+            "document_44_metadata": {},
+            "document_45_metadata": {},
+            "document_46_metadata": {},
+            "document_47_metadata": {},
+            "document_48_metadata": {},
+            "document_49_metadata": {},
+            "document_50_metadata": {},
+            "document_51_metadata": {},
+            "document_52_metadata": {},
+            "document_53_metadata": {},
+            "raw_metadata": {
+              "source_ref": "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html",
+              "documents": [
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {}
+              ]
+            },
+            "engine_payload_summary": {
+              "parser": "llama_parse",
+              "document_count": 54
+            }
+          },
+          "parser": {
+            "engine_key": "llama_parse",
+            "display_name": "LlamaParse",
+            "engine_family": "document_remote",
+            "engine_version": "0.6.94",
+            "profile_ref": "llama_parse_document_fidelity",
+            "template_ref": null,
+            "fallback_used": false
+          },
+          "provenance": {
+            "input_kind": "url",
+            "fetched_at": "2026-06-03T07:46:49.486853Z",
+            "final_url": "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html",
+            "http_status": null,
+            "content_length_bytes": null,
+            "parser_version": "0.6.94",
+            "content_hash_sha256": "23ee555a6ab2206b76c16c0ba8a6b535e2bdf6767475b66bd8faf5d068243164"
+          }
+        },
+        "artifacts": {
+          "markdown_object": null,
+          "raw_html_object": null,
+          "screenshot_object": null,
+          "pdf_object": null,
+          "ssl_certificate": null
+        },
+        "diagnostics": {
+          "selected_engine_key": "llama_parse",
+          "fallback_used": false,
+          "engine_attempts": [
+            {
+              "attempt_no": 1,
+              "engine_key": "llama_parse",
+              "status": "succeeded",
+              "started_at": "2026-06-03T07:46:10.169004Z",
+              "completed_at": "2026-06-03T07:46:49.487481Z",
+              "error_code": null,
+              "warning": null,
+              "diagnostics": {
+                "engine_options": {}
+              }
+            }
+          ],
+          "warnings": [],
+          "link_counts": {},
+          "media_counts": {},
+          "anti_bot_strategy": null,
+          "used_proxy": null,
+          "timings_ms": {
+            "fetch": null,
+            "render": null,
+            "normalize": 0,
+            "total": 0
+          },
+          "telemetry": {
+            "trace_id": "345e09e1dab14f9f169be34117c719d5",
+            "span_id": "4ec7f86bfca88972",
+            "request_id": null,
+            "deployment_ring": null,
+            "experiment_variant": null
+          }
+        },
+        "telemetry": {
+          "trace_id": "345e09e1dab14f9f169be34117c719d5",
+          "span_id": "4ec7f86bfca88972",
+          "request_id": null,
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      }
+    ]
+  },
+  "storage": {
+    "object_id": "obj_c02f1df03f9744f9952b3868",
+    "filename": "ECB-monetary-policy-decisions-llama_parse.md",
+    "content_type": "text/markdown",
+    "size_bytes": 1709,
+    "status": "available",
+    "audit": {
+      "created_at": "2026-06-03T07:46:49.532788",
+      "updated_at": "2026-06-03T07:46:49.532793",
+      "created_by": "tensorzero-cortex-demo",
+      "updated_by": null
+    },
+    "current_version_id": "objver_48d34264983441fc8025514f",
+    "bucket": "cortex-local",
+    "object_key": "tenant_demo/obj_c02f1df03f9744f9952b3868/ECB-monetary-policy-decisions-llama_parse.md",
+    "checksum_sha256": "20e9c685b029c884046f1c1b8564ca16749a518729e2e9dd659dfab522a19843",
+    "etag": "\"df7542d9901b87ec243612695cc4d6e2\"",
+    "storage_class": null,
+    "metadata": {
+      "engine_id": "llama_parse",
+      "job_id": "job_cfd1ac4e98624036adf0b81b",
+      "parse_mode": "sync",
+      "parse_score": "0.3613",
+      "run": "tensorzero-cortex",
+      "source_name": "ECB monetary policy decisions",
+      "source_url": "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/html/index.en.html"
+    },
+    "tags": [
+      "tensorzero",
+      "finance",
+      "parsed-markdown",
+      "llama_parse"
+    ],
+    "version": {
+      "object_version_id": "objver_48d34264983441fc8025514f",
+      "version_no": 1,
+      "size_bytes": 1709,
+      "provider_version_ref": null,
+      "checksum_sha256": "20e9c685b029c884046f1c1b8564ca16749a518729e2e9dd659dfab522a19843",
+      "etag": "\"df7542d9901b87ec243612695cc4d6e2\"",
+      "is_latest": true,
+      "created_at": "2026-06-03T07:46:49.537787"
+    },
+    "access_policy": {
+      "access_level": "tenant_shared",
+      "owner_actor_id": null,
+      "classification_labels": [],
+      "allowed_role_keys": [],
+      "denied_role_keys": [],
+      "purpose_tags": [],
+      "constraints": {}
+    }
+  }
+}

@@ -1,0 +1,201 @@
+{
+  "parse": {
+    "requested_sources": [
+      "https://www.bankofengland.co.uk/monetary-policy-report"
+    ],
+    "engine_id": "jina_reader",
+    "scene": null,
+    "results": [
+      {
+        "job_id": "job_30a30ea54fe44d21a152371c",
+        "document": {
+          "document_id": "doc_ef53a42cab354c9286264410",
+          "source_type": "url",
+          "source_format": "text/html",
+          "markdown": "Title: Page not found | Bank of England\n\nURL Source: https://www.bankofengland.co.uk/monetary-policy-report\n\nMarkdown Content:\n```markdown\n# Page not found\n\n## Our use of cookies\n\nWe use necessary cookies to make our site work (for example, to manage your session). We’d also like to use some non-essential cookies (including third-party cookies) to help us improve the site. By clicking ‘Accept recommended settings’ on this banner, you accept our use of optional cookies.\n\n| Necessary cookies | Analytics cookies |  |\n| --- | --- | --- |\n| Yes | Yes | [Accept recommended cookies](#) |\n| Yes | No | [Proceed with necessary cookies only](#) |\n\n### Necessary cookies\n\nNecessary cookies enable core functionality on our website such as security, network management, and accessibility. You may disable these by changing your browser settings, but this may affect how the website functions.\n\n### Analytics cookies\n\nWe use analytics cookies so we can keep track of the number of visitors to various parts of the site and understand how our website is used. For more information on how these cookies work please see our [Cookie policy](/legal/privacy-and-cookie-policy).\n\n[Skip to main content](#main-content)\n\n---\n\n## Main Menu\n\n*   **Topics**\n    *   [Banknotes](/banknotes)\n        *   [Counterfeit banknotes](/banknotes/counterfeit-banknotes)\n        *   [Current banknotes](/banknotes/current-banknotes)\n        *   [Damaged and contaminated banknotes](/banknotes/damaged-and-contaminated-banknotes)\n        *   [Exchanging old banknotes](/banknotes/exchanging-old-banknotes)\n        *   [Note Circulation Scheme](/banknotes/note-circulation-scheme)\n        *   [Advice for retailers and businesses](/banknotes/retailers-and-businesses)\n        *   [Scottish and Northern Ireland banknotes](/banknotes/scottish-and-northern-ireland-banknotes)\n        *   [Using images of banknotes](/banknotes/using-images-of-banknotes)\n        *   [Wholesale cash supervision](/banknotes/wholesale-cash-supervision)\n        *   [Withdrawn banknotes](/banknotes/withdrawn-banknotes)\n    *   [Careers](/careers)\n        *   [Application tips](/careers/application-tips)\n        *   [Career Returner Programme](/careers/career-returner)\n        *   [Future talent](/careers/future-talent)\n        *   [Our locations](/careers/our-locations)\n        *   [Research careers](/careers/research-careers)\n        *   [We value diversity and inclusion](/careers/we-value-diversity-and-inclusion)\n        *   [What we offer you](/careers/what-we-offer-you)\n        *   [Why you should join us](/careers/why-you-should-join-us)\n    *   [Climate change](/climate-change)\n    *   [Digital pound](/the-digital-pound)\n    *   [Education]\n    *   [...]\n*   **Monetary policy**\n    *   [...]\n*   **Payment and settlement**\n    *   [...]\n*   **Prudential regulation**\n    *\n\n*\n\n---\n\n## Search our website\n\n**Search**\n\n---\n\n## Follow Us\n\n* **Twitter:**\n  [* Follow us on Twitter Opens in a new window*][twitter]\n\n* **LinkedIn:**\n  [* Connect with us on LinkedIn Opens in a new window*][linkedin]\n\n* **Facebook:**\n  [* Add us on Facebook Opens in a new window*][facebook]\n\n* **Instagram:**\n  [* Follow us on Instagram Opens in a new window*][instagram]\n\n* **YouTube:**\n  [* Watch us on YouTube Opens in a new window*][youtube]\n\n* **Flickr:**\n  [* Find us on Flickr Opens in a new window*][flickr]\n\n---\n\n## Useful Links\n\n* **About us**: [/about]([Link opens in a new tab])\n* **Archive**: [/archive]([Link opens in a new tab])\n* **Careers**: [/careers]([Link opens in a new tab])\n* **Contact us**: [/contact]([Link opens in a new tab])\n\n---\n\n## Contact Information\n\n### Bank of England\n\nThreadneedle Street, London, EC2R 8AH\nSwitchboard: [+44(0)20 3461 4444 Open in a new window]\nEnquiries: [+44(0)20 3461 4878 Open in a new window]\n\n### Bank of England Museum\n\nBartholomew Lane, London, EC2R 8AH\n\n---\n\n## Footer Links\n\n[](/)\n\n[",
+          "audit": {
+            "created_at": "2026-06-03T07:47:56.137150Z",
+            "updated_at": "2026-06-03T07:47:56.137150Z",
+            "created_by": "tensorzero-cortex-demo",
+            "updated_by": null
+          },
+          "source_url": "https://www.bankofengland.co.uk/monetary-policy-report",
+          "source_object_id": null,
+          "source_uri": "https://www.bankofengland.co.uk/monetary-policy-report",
+          "canonical_url": "https://www.bankofengland.co.uk/monetary-policy-report",
+          "title": "Page not found",
+          "language_code": "und",
+          "detected_mime_type": "text/plain; charset=utf-8",
+          "category_tags": [],
+          "labels": [],
+          "access_policy": null,
+          "markdown_sha256": "509da9cd66e8e2e3dd5730bd243f39dcc10ace7ba329691a43c16f8a425f0bb1",
+          "normalized_metadata": {
+            "title": "Page not found",
+            "author": null,
+            "publish_date": null,
+            "language": "und",
+            "description": null,
+            "summary": null,
+            "keywords": [],
+            "category_tags": []
+          },
+          "metadata": {
+            "title": "Page not found",
+            "reader_url": "https://r.jina.ai/https://www.bankofengland.co.uk/monetary-policy-report",
+            "source_host": "www.bankofengland.co.uk",
+            "raw_metadata": {
+              "response_headers": {
+                "date": "Wed, 03 Jun 2026 07:47:55 GMT",
+                "content-type": "text/plain; charset=utf-8",
+                "content-length": "1508",
+                "connection": "keep-alive",
+                "vary": "*",
+                "x-usage-tokens": "12000",
+                "content-encoding": "br",
+                "x-decompressed-content-length": "3921",
+                "cache-control": "no-transform",
+                "server": "cloudflare",
+                "traceparent": "00-f7d8a888235802892363aa921abca2d2-b66cf09ed85e0c2f-00",
+                "x-cloud-trace-context": "f7d8a888235802892363aa921abca2d2/13145145977413176367",
+                "via": "1.1 google",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "DYNAMIC",
+                "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+                "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=laujIGiUkdGQqzkbZc2UnalEP9pCtvh9mdPmKze5Tc4hZIJ2v06jZ8%2BskuTv%2BCqmeKeoqwoefAnF%2FbZtUwKWnh1JO%2B6%2FUje5fwtnKHesjlIXnyvXHXAsoFzVQNcc923FJag6Om%2B26w%3D%3D\"}]}",
+                "cf-ray": "a05d17651da934db-LAX"
+              }
+            },
+            "engine_payload_summary": {
+              "base_url": "https://r.jina.ai",
+              "used_readerlm_v2": true
+            }
+          },
+          "parser": {
+            "engine_key": "jina_reader",
+            "display_name": "Jina Reader",
+            "engine_family": "web_remote",
+            "engine_version": "jina-reader-http",
+            "profile_ref": "jina_reader_balanced",
+            "template_ref": null,
+            "fallback_used": false
+          },
+          "provenance": {
+            "input_kind": "url",
+            "fetched_at": "2026-06-03T07:47:56.136820Z",
+            "final_url": "https://www.bankofengland.co.uk/monetary-policy-report",
+            "http_status": 200,
+            "content_length_bytes": 3921,
+            "parser_version": "jina-reader-http",
+            "content_hash_sha256": "9befe110f29f9e431f3d4f8f8aba3e90c2f9bc506f06390cb1ff50f85dfd47de"
+          }
+        },
+        "artifacts": {
+          "markdown_object": null,
+          "raw_html_object": null,
+          "screenshot_object": null,
+          "pdf_object": null,
+          "ssl_certificate": null
+        },
+        "diagnostics": {
+          "selected_engine_key": "jina_reader",
+          "fallback_used": false,
+          "engine_attempts": [
+            {
+              "attempt_no": 1,
+              "engine_key": "jina_reader",
+              "status": "succeeded",
+              "started_at": "2026-06-03T07:47:41.008708Z",
+              "completed_at": "2026-06-03T07:47:56.136867Z",
+              "error_code": null,
+              "warning": null,
+              "diagnostics": {
+                "engine_options": {
+                  "use_readerlm_v2": true
+                }
+              }
+            }
+          ],
+          "warnings": [],
+          "link_counts": {},
+          "media_counts": {},
+          "anti_bot_strategy": null,
+          "used_proxy": null,
+          "timings_ms": {
+            "fetch": null,
+            "render": null,
+            "normalize": 0,
+            "total": 0
+          },
+          "telemetry": {
+            "trace_id": "4cef25278ee1e926b3813b6d155bf55e",
+            "span_id": "90fd3ecc6694c4da",
+            "request_id": null,
+            "deployment_ring": null,
+            "experiment_variant": null
+          }
+        },
+        "telemetry": {
+          "trace_id": "4cef25278ee1e926b3813b6d155bf55e",
+          "span_id": "90fd3ecc6694c4da",
+          "request_id": null,
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      }
+    ]
+  },
+  "storage": {
+    "object_id": "obj_fc2b0ddd38734cd4abe9f60b",
+    "filename": "Bank-of-England-Monetary-Policy-Report-jina_reader.md",
+    "content_type": "text/markdown",
+    "size_bytes": 4174,
+    "status": "available",
+    "audit": {
+      "created_at": "2026-06-03T07:47:56.182511",
+      "updated_at": "2026-06-03T07:47:56.182517",
+      "created_by": "tensorzero-cortex-demo",
+      "updated_by": null
+    },
+    "current_version_id": "objver_ffeb21998c86455ba3167fd2",
+    "bucket": "cortex-local",
+    "object_key": "tenant_demo/obj_fc2b0ddd38734cd4abe9f60b/Bank-of-England-Monetary-Policy-Report-jina_reader.md",
+    "checksum_sha256": "890e3d4f1f39821d791bd27741a842ddaa7235cfb864e28b31709c8097ab5b4f",
+    "etag": "\"b5f3ad0eabd51fd44df865746fbad4f7\"",
+    "storage_class": null,
+    "metadata": {
+      "engine_id": "jina_reader",
+      "job_id": "job_30a30ea54fe44d21a152371c",
+      "parse_mode": "sync",
+      "parse_score": "0.4202",
+      "run": "tensorzero-cortex",
+      "source_name": "Bank of England Monetary Policy Report",
+      "source_url": "https://www.bankofengland.co.uk/monetary-policy-report"
+    },
+    "tags": [
+      "tensorzero",
+      "finance",
+      "parsed-markdown",
+      "jina_reader"
+    ],
+    "version": {
+      "object_version_id": "objver_ffeb21998c86455ba3167fd2",
+      "version_no": 1,
+      "size_bytes": 4174,
+      "provider_version_ref": null,
+      "checksum_sha256": "890e3d4f1f39821d791bd27741a842ddaa7235cfb864e28b31709c8097ab5b4f",
+      "etag": "\"b5f3ad0eabd51fd44df865746fbad4f7\"",
+      "is_latest": true,
+      "created_at": "2026-06-03T07:47:56.187821"
+    },
+    "access_policy": {
+      "access_level": "tenant_shared",
+      "owner_actor_id": null,
+      "classification_labels": [],
+      "allowed_role_keys": [],
+      "denied_role_keys": [],
+      "purpose_tags": [],
+      "constraints": {}
+    }
+  }
+}

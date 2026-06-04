@@ -1,0 +1,109 @@
+{
+  "parse": {
+    "requested_sources": [
+      "https://home.treasury.gov/news/press-releases"
+    ],
+    "engine_id": "docling",
+    "scene": null,
+    "jobs": [
+      {
+        "job_id": "job_20f53d9bb6bd414f88476a88",
+        "job_type": "parse",
+        "status": "queued",
+        "submitted_at": "2026-06-03T07:44:48.260460",
+        "poll_url": "/v1/jobs/job_20f53d9bb6bd414f88476a88",
+        "result_url": "/v1/parse/jobs/job_20f53d9bb6bd414f88476a88/result",
+        "cancel_url": "/v1/jobs/job_20f53d9bb6bd414f88476a88/cancel",
+        "telemetry": {
+          "trace_id": "e946eb67f4446498be66312b47f1ccf8",
+          "span_id": "f3c38307a7e9f17b",
+          "request_id": "request_99f5eb9f724141c5a2c93fd7",
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      }
+    ],
+    "job_statuses": [
+      {
+        "job_id": "job_20f53d9bb6bd414f88476a88",
+        "job_type": "parse",
+        "status": "succeeded",
+        "operation_name": "parse.document.async",
+        "submitted_at": "2026-06-03T07:44:48.260460",
+        "progress_percent": null,
+        "queue_name": null,
+        "target_type": "parse_source",
+        "target_id": "https://home.treasury.gov/news/press-releases",
+        "correlation_id": "request_99f5eb9f724141c5a2c93fd7",
+        "started_at": "2026-06-03T07:44:49.063682",
+        "completed_at": "2026-06-03T07:44:50.967143",
+        "error": null,
+        "metrics": {
+          "queue_latency_ms": 803,
+          "run_latency_ms": 1903
+        },
+        "telemetry": {
+          "trace_id": "e946eb67f4446498be66312b47f1ccf8",
+          "span_id": "f3c38307a7e9f17b",
+          "request_id": "request_99f5eb9f724141c5a2c93fd7",
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      }
+    ],
+    "results": []
+  },
+  "storage": {
+    "object_id": "obj_5e05a7f63f0f439d896ad9f5",
+    "filename": "US-Treasury-press-releases-docling.md",
+    "content_type": "text/markdown",
+    "size_bytes": 215,
+    "status": "available",
+    "audit": {
+      "created_at": "2026-06-03T07:44:51.404186",
+      "updated_at": "2026-06-03T07:44:51.404193",
+      "created_by": "tensorzero-cortex-demo",
+      "updated_by": null
+    },
+    "current_version_id": "objver_b6d9b515b98b42c6921d7acc",
+    "bucket": "cortex-local",
+    "object_key": "tenant_demo/obj_5e05a7f63f0f439d896ad9f5/US-Treasury-press-releases-docling.md",
+    "checksum_sha256": "033fadca998e8336711173e63e1a84ef10ee9ed3c271d8039d438c2ad12d7ee4",
+    "etag": "\"73c70e128237b17d009b4b7c533de63a\"",
+    "storage_class": null,
+    "metadata": {
+      "engine_id": "docling",
+      "job_id": "job_20f53d9bb6bd414f88476a88",
+      "parse_mode": "async",
+      "parse_score": "0.0",
+      "run": "tensorzero-cortex",
+      "source_name": "US Treasury press releases",
+      "source_url": "https://home.treasury.gov/news/press-releases"
+    },
+    "tags": [
+      "tensorzero",
+      "finance",
+      "parsed-markdown",
+      "docling"
+    ],
+    "version": {
+      "object_version_id": "objver_b6d9b515b98b42c6921d7acc",
+      "version_no": 1,
+      "size_bytes": 215,
+      "provider_version_ref": null,
+      "checksum_sha256": "033fadca998e8336711173e63e1a84ef10ee9ed3c271d8039d438c2ad12d7ee4",
+      "etag": "\"73c70e128237b17d009b4b7c533de63a\"",
+      "is_latest": true,
+      "created_at": "2026-06-03T07:44:51.411235"
+    },
+    "access_policy": {
+      "access_level": "tenant_shared",
+      "owner_actor_id": null,
+      "classification_labels": [],
+      "allowed_role_keys": [],
+      "denied_role_keys": [],
+      "purpose_tags": [],
+      "constraints": {}
+    }
+  }
+}

@@ -1,0 +1,474 @@
+{
+  "mode": "async",
+  "engine_id": "deepeval",
+  "runs": {
+    "rag": {
+      "mode": "async",
+      "job_id": "job_0e9838dbcaf34afd966ca142",
+      "accepted": {
+        "job_id": "job_0e9838dbcaf34afd966ca142",
+        "job_type": "eval",
+        "status": "queued",
+        "submitted_at": "2026-05-20T05:11:59.621199",
+        "poll_url": "/v1/jobs/job_0e9838dbcaf34afd966ca142",
+        "result_url": "/v1/eval/jobs/job_0e9838dbcaf34afd966ca142/result",
+        "cancel_url": "/v1/jobs/job_0e9838dbcaf34afd966ca142/cancel",
+        "telemetry": {
+          "trace_id": "7d62533bad8439c2f5847eff5bb668a4",
+          "span_id": "e42c552089a5299d",
+          "request_id": "request_d202cb0b00134731a98b92d0",
+          "deployment_ring": null,
+          "experiment_variant": null
+        },
+        "eval_type": "rag",
+        "engine_id": "deepeval"
+      },
+      "job": {
+        "job_id": "job_0e9838dbcaf34afd966ca142",
+        "job_type": "eval",
+        "status": "succeeded",
+        "operation_name": "evaluation.rag",
+        "submitted_at": "2026-05-20T05:11:59.621199",
+        "progress_percent": null,
+        "queue_name": null,
+        "target_type": "existing_outputs",
+        "target_id": null,
+        "correlation_id": "request_d202cb0b00134731a98b92d0",
+        "started_at": "2026-05-20T05:12:01.735445",
+        "completed_at": null,
+        "error": null,
+        "metrics": {
+          "queue_latency_ms": 2114,
+          "run_latency_ms": null
+        },
+        "telemetry": {
+          "trace_id": "7d62533bad8439c2f5847eff5bb668a4",
+          "span_id": "e42c552089a5299d",
+          "request_id": "request_d202cb0b00134731a98b92d0",
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      },
+      "result": {
+        "eval_type": "rag",
+        "engine_id": "deepeval",
+        "status": "partial",
+        "summary": {
+          "overall_passed": false,
+          "composite_score": 0.6266666666666667,
+          "metric_count": 5,
+          "passed_metric_count": 3,
+          "failed_metric_count": 2,
+          "summary_by_namespace": {
+            "rag": 0.6266666666666667
+          }
+        },
+        "metrics": [
+          {
+            "metric_key": "rag.answer_relevance",
+            "status": "passed",
+            "display_name": "rag.answer_relevance",
+            "score": 1.0,
+            "threshold": 0.65,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": "AnswerRelevancyMetric",
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because the response fully addressed the request with no irrelevant statements.",
+                  "score": 1.0
+                },
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because the response fully addressed the request with no irrelevant statements.",
+                  "score": 1.0
+                },
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because the response fully addressed the request with no irrelevant statements.",
+                  "score": 1.0
+                }
+              ],
+              "engine_options": {}
+            }
+          },
+          {
+            "metric_key": "rag.faithfulness",
+            "status": "passed",
+            "display_name": "rag.faithfulness",
+            "score": 0.6666666666666666,
+            "threshold": 0.65,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": "FaithfulnessMetric",
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because there are no contradictions, indicating perfect faithfulness to the retrieval context.",
+                  "score": 1.0
+                },
+                {
+                  "passed": false,
+                  "reason": "The score is 0.50 because the actual output falsely claims there is no monetary policy information, yet the retrieval context clearly includes monetary policy links and sections, creating a clear contradiction.",
+                  "score": 0.5
+                },
+                {
+                  "passed": false,
+                  "reason": "The score is 0.5 because the actual output only reflected a simple meeting schedule and links, while the retrieval context also contains extra details such as FOIA service center information, the annual report, committee membership changes, and descriptive text that were omitted.",
+                  "score": 0.5
+                }
+              ],
+              "engine_options": {}
+            }
+          },
+          {
+            "metric_key": "rag.contextual_precision",
+            "status": "passed",
+            "display_name": "rag.contextual_precision",
+            "score": 1.0,
+            "threshold": 0.6,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": "ContextualPrecisionMetric",
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because the sole node (rank 1) is relevant – the reason states \"The context is from the Federal Reserve FOMC calendar and clearly includes 'Federal Open Market Committee', 'Monetary Policy', and related Fed navigation, which is relevant to comparing macroeconomic, inflation, monetary policy, and financial stability risks.\" – and there are no irrelevant nodes to push it down.",
+                  "score": 1.0
+                },
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because the node at rank 1 is relevant – \"The context is directly from the 'Federal Reserve FOMC calendar' source and includes 'Monetary Policy' and 'Federal Open Market Committee', which are relevant to comparing macroeconomic and monetary policy risks.\" – and there are no irrelevant nodes to lower its ranking.",
+                  "score": 1.0
+                },
+                {
+                  "passed": true,
+                  "reason": "The score is 1.00 because the sole node (rank 1) is relevant, as shown by the reason \"The context is a Federal Reserve source and directly contains 'FOMC', 'monetarypolicy', and the Fed meeting calendars, which are relevant to comparing monetary policy and financial stability sources.\"",
+                  "score": 1.0
+                }
+              ],
+              "engine_options": {}
+            }
+          },
+          {
+            "metric_key": "rag.contextual_recall",
+            "status": "failed",
+            "display_name": "rag.contextual_recall",
+            "score": 0.4666666666666666,
+            "threshold": 0.6,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": "ContextualRecallMetric",
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": false,
+                  "reason": "The score is 0.40 because node 1 in retrieval context supports the first three terms (fomc, federal reserve, monetary policy) in the expected output, but no nodes support the remaining terms (financial stability, vulnerabilities, leverage).",
+                  "score": 0.4
+                },
+                {
+                  "passed": false,
+                  "reason": "The score is 0.33 because node 1 in retrieval context only covers FOMC, Federal Reserve and Monetary Policy, supporting those three terms, while it offers no evidence for financial stability, vulnerabilities, or leverage.",
+                  "score": 0.3333333333333333
+                },
+                {
+                  "passed": true,
+                  "reason": "The score is 0.67 because node 1 in the retrieval context supports FOMC, the Federal Reserve, monetary policy and financial stability, but provides no mention of vulnerabilities or leverage, leaving those items unsupported.",
+                  "score": 0.6666666666666666
+                }
+              ],
+              "engine_options": {}
+            }
+          },
+          {
+            "metric_key": "rag.contextual_relevance",
+            "status": "failed",
+            "display_name": "rag.contextual_relevance",
+            "score": 0.0,
+            "threshold": 0.6,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": "ContextualRelevancyMetric",
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": false,
+                  "reason": "The score is 0.00 because the retrieval context only offers navigation items and metadata—e.g., \"The retrieval context contains the source name 'Federal Reserve FOMC calendar', but it does not provide any macroeconomic, inflation, monetary policy, or financial stability risk analysis...\" and \"The retrieval context includes 'Parse engine: auto', which is metadata about parsing and not relevant to macroeconomic, inflation, monetary policy, or financial stability risks\"—and contains no substantive statements about the requested risks.",
+                  "score": 0.0
+                },
+                {
+                  "passed": false,
+                  "reason": "The score is 0.00 because the retrieval context only provides source labels, URLs, and navigation items—e.g., \"Source: Federal Reserve FOMC calendar\", \"https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\", and \"Board Members\"—none of which discuss macroeconomic, inflation, monetary policy, or financial stability risks, as highlighted in the irrelevancy reasons.",
+                  "score": 0.0
+                },
+                {
+                  "passed": false,
+                  "reason": "The score is 0.00 because every retrieved statement concerns FOMC scheduling and procedural details (e.g., \"The statement about the FOMC meeting schedule is not relevant to the input request to compare the main macroeconomic, inflation, monetary policy, and financial stability risks across sources.\") and none address the requested macroeconomic, inflation, monetary policy, or financial stability risks.",
+                  "score": 0.0
+                }
+              ],
+              "engine_options": {}
+            }
+          }
+        ],
+        "eval_run_id": "erun_307adaf8d0a043cbaccc4164",
+        "job_id": "job_0e9838dbcaf34afd966ca142",
+        "name": "TensorZero Cortex RAG Eval tzcx_20260520_030852_8f1d1f63",
+        "profile_key": "auto_default",
+        "source_summary": {
+          "input_type": "inline_test_cases",
+          "test_case_count": 3
+        },
+        "target_summary": {
+          "target_type": "existing_outputs"
+        },
+        "samples": {
+          "total": 3,
+          "passed": 3,
+          "failed": 2,
+          "skipped": 0
+        },
+        "artifacts": [
+          {
+            "object_id": "obj_41d9d24068524cadb5a8e792",
+            "label": "evaluation_report",
+            "content_type": "application/json",
+            "format": "json",
+            "description": "Canonical Cortex evaluation report."
+          }
+        ],
+        "telemetry": null,
+        "started_at": "2026-05-20T05:12:05.993468Z",
+        "completed_at": "2026-05-20T05:12:27.971762Z"
+      }
+    },
+    "custom": {
+      "mode": "async",
+      "job_id": "job_c01a86d770fb4392af340d27",
+      "accepted": {
+        "job_id": "job_c01a86d770fb4392af340d27",
+        "job_type": "eval",
+        "status": "queued",
+        "submitted_at": "2026-05-20T05:12:29.886623",
+        "poll_url": "/v1/jobs/job_c01a86d770fb4392af340d27",
+        "result_url": "/v1/eval/jobs/job_c01a86d770fb4392af340d27/result",
+        "cancel_url": "/v1/jobs/job_c01a86d770fb4392af340d27/cancel",
+        "telemetry": {
+          "trace_id": "a70bc54ca10e290c2dc20d1d01cdf6d2",
+          "span_id": "e790bf917135562d",
+          "request_id": "request_c3475aca79ac4f598b87ca38",
+          "deployment_ring": null,
+          "experiment_variant": null
+        },
+        "eval_type": "custom",
+        "engine_id": "deepeval"
+      },
+      "job": {
+        "job_id": "job_c01a86d770fb4392af340d27",
+        "job_type": "eval",
+        "status": "succeeded",
+        "operation_name": "evaluation.custom",
+        "submitted_at": "2026-05-20T05:12:29.886623",
+        "progress_percent": null,
+        "queue_name": null,
+        "target_type": "existing_outputs",
+        "target_id": null,
+        "correlation_id": "request_c3475aca79ac4f598b87ca38",
+        "started_at": "2026-05-20T05:12:34.753951",
+        "completed_at": null,
+        "error": null,
+        "metrics": {
+          "queue_latency_ms": 4867,
+          "run_latency_ms": null
+        },
+        "telemetry": {
+          "trace_id": "a70bc54ca10e290c2dc20d1d01cdf6d2",
+          "span_id": "e790bf917135562d",
+          "request_id": "request_c3475aca79ac4f598b87ca38",
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      },
+      "result": {
+        "eval_type": "custom",
+        "engine_id": "deepeval",
+        "status": "partial",
+        "summary": {
+          "overall_passed": false,
+          "composite_score": 0.275,
+          "metric_count": 4,
+          "passed_metric_count": 0,
+          "failed_metric_count": 4,
+          "summary_by_namespace": {
+            "custom": 0.3666666666666667,
+            "quality": 0.24444444444444444
+          }
+        },
+        "metrics": [
+          {
+            "metric_key": "quality.correctness",
+            "status": "failed",
+            "display_name": "quality.correctness",
+            "score": 0.16666666666666666,
+            "threshold": 0.65,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": null,
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": false,
+                  "reason": "The response identifies that the retrieval context is mostly navigation links, but it fails to answer the request to compare macroeconomic, inflation, monetary policy, and financial stability risks across the sources. It also does not cite source names in the required comparative way, and it omits the expected terms tied to the Federal Reserve/FOMC and financial stability themes.",
+                  "score": 0.3
+                },
+                {
+                  "passed": false,
+                  "reason": "The response is not aligned with the expected output, which should reference topics like FOMC, Federal Reserve, monetary policy, financial stability, vulnerabilities, and leverage. Instead, it says the context lacks this information and describes the page as a navigational menu, even though the retrieval context clearly contains Federal Reserve monetary policy and FOMC links. It also fails to compare the sources or cite source names as requested.",
+                  "score": 0.1
+                },
+                {
+                  "passed": false,
+                  "reason": "The response is only a generic disclaimer about missing macroeconomic and inflation risk information, but the retrieval context clearly contains Federal Reserve FOMC calendar material and the expected output lists key terms tied to that source. It does not compare the requested risks across sources, cite source names, or reflect the expected output content, so it fails the evaluation steps.",
+                  "score": 0.1
+                }
+              ],
+              "engine_options": {}
+            }
+          },
+          {
+            "metric_key": "quality.completeness",
+            "status": "failed",
+            "display_name": "quality.completeness",
+            "score": 0.3,
+            "threshold": 0.65,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": null,
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": false,
+                  "reason": "The response correctly notes that the retrieval context is mostly a Federal Reserve navigation/menu page and does not provide substantive information to compare macroeconomic, inflation, monetary policy, or financial stability risks. However, it fails to address the requested comparison or cite the source names from the expected output, so it only partially satisfies the evaluation steps.",
+                  "score": 0.3
+                },
+                {
+                  "passed": false,
+                  "reason": "The response correctly notices that the retrieval context is largely a Federal Reserve navigation/menu page and does not contain detailed macroeconomic, inflation, monetary policy, or financial stability analysis. However, it does not follow the evaluation task well because it fails to compare the source names or address the expected topics in the requested way, and it omits the key expected terms tied to the test case such as FOMC, vulnerabilities, and leverage. It also gives a blanket statement rather than assessing each required element against the provided context.",
+                  "score": 0.4
+                },
+                {
+                  "passed": false,
+                  "reason": "The response only states that the context lacks macroeconomic, inflation, monetary policy, and financial stability risks and notes that the source is an FOMC meeting calendar. It does not compare risks across the sources, does not cite source names beyond a generic mention of the context, and omits the expected topics such as federal reserve, monetary policy, financial stability, vulnerabilities, and leverage.",
+                  "score": 0.2
+                }
+              ],
+              "engine_options": {}
+            }
+          },
+          {
+            "metric_key": "quality.relevance",
+            "status": "failed",
+            "display_name": "quality.relevance",
+            "score": 0.26666666666666666,
+            "threshold": 0.65,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": null,
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": false,
+                  "reason": "The response is only partially aligned: it correctly notices the retrieval context is mostly a Federal Reserve navigation/menu page and does not actually compare macroeconomic, inflation, monetary policy, and financial stability risks. However, it fails to address the requested comparison or cite source names as asked in the input, and it does not reflect the expected topical keywords such as FOMC, financial stability, vulnerabilities, or leverage.",
+                  "score": 0.3
+                },
+                {
+                  "passed": false,
+                  "reason": "The response does not compare the macroeconomic, inflation, monetary policy, and financial stability risks across the sources or cite source names as requested. It mainly says the context lacks relevant information, despite the retrieval context including Federal Reserve monetary policy and FOMC materials that could support a source-based comparison. The format is a simple meta-commentary rather than an answer aligned with the expected keywords like fomc, federal reserve, monetary policy, financial stability, vulnerabilities, and leverage.",
+                  "score": 0.2
+                },
+                {
+                  "passed": false,
+                  "reason": "The response stays relevant to the input by discussing the supplied Federal Reserve/FOMC context and correctly notes that it does not contain macroeconomic, inflation, monetary policy, or financial stability risk analysis. However, it does not compare risks across sources or cite source names beyond a generic reference to the context, and it does not reflect the expected keywords about FOMC, monetary policy, vulnerabilities, or leverage.",
+                  "score": 0.3
+                }
+              ],
+              "engine_options": {}
+            }
+          },
+          {
+            "metric_key": "custom.g_eval",
+            "status": "failed",
+            "display_name": "custom.g_eval",
+            "score": 0.3666666666666667,
+            "threshold": 0.65,
+            "unit": "score",
+            "engine_id": "deepeval",
+            "native_metric_key": null,
+            "sample_size": 3,
+            "details": {
+              "case_results": [
+                {
+                  "passed": false,
+                  "reason": "The response correctly notes that the retrieval context is mostly navigation/menu content and does not provide substantive material for comparing macroeconomic, inflation, monetary policy, or financial stability risks. However, it fails to address the input’s request to compare the sources and cite source names, and it does not match the expected output terms about FOMC, monetary policy, financial stability, vulnerabilities, or leverage.",
+                  "score": 0.4
+                },
+                {
+                  "passed": false,
+                  "reason": "The response correctly notes that the retrieval context is mostly a Federal Reserve site navigation/menu and does not provide substantive discussion of macroeconomic, inflation, monetary policy, or financial stability risks. However, it does not actually compare the requested sources or cite source names, and it fails to use the expected content terms such as FOMC, monetary policy, vulnerabilities, or leverage to address the comparison task.",
+                  "score": 0.4
+                },
+                {
+                  "passed": false,
+                  "reason": "The response correctly notes that the retrieval context is about FOMC meeting calendars rather than macroeconomic, inflation, monetary policy, or financial stability risks, so it does not invent unsupported details. However, it fails to answer the comparison request or cite source names beyond a generic description, and it does not incorporate the expected topics such as monetary policy, vulnerabilities, or leverage from the provided expected output.",
+                  "score": 0.3
+                }
+              ],
+              "engine_options": {}
+            }
+          }
+        ],
+        "eval_run_id": "erun_e244bb64f1b84501808846cb",
+        "job_id": "job_c01a86d770fb4392af340d27",
+        "name": "TensorZero Cortex CUSTOM Eval tzcx_20260520_030852_8f1d1f63",
+        "profile_key": "auto_default",
+        "source_summary": {
+          "input_type": "inline_test_cases",
+          "test_case_count": 3
+        },
+        "target_summary": {
+          "target_type": "existing_outputs"
+        },
+        "samples": {
+          "total": 3,
+          "passed": 0,
+          "failed": 4,
+          "skipped": 0
+        },
+        "artifacts": [
+          {
+            "object_id": "obj_8b66181d5d3144d1a7c0b51c",
+            "label": "evaluation_report",
+            "content_type": "application/json",
+            "format": "json",
+            "description": "Canonical Cortex evaluation report."
+          }
+        ],
+        "telemetry": null,
+        "started_at": "2026-05-20T05:12:37.055876Z",
+        "completed_at": "2026-05-20T05:12:44.310900Z"
+      }
+    }
+  }
+}

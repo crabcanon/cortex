@@ -1,0 +1,1137 @@
+{
+  "run_id": "tzcx_20260509_060746_0cf97b90",
+  "dataset_key": "tensorzero_cortex_tzcx_20260509_060746_0cf97b90",
+  "tensorzero_gateway_url": "http://127.0.0.1:3002",
+  "tensorzero_ui_url": "http://127.0.0.1:4000",
+  "parse_artifacts": [
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "url_name": "Federal Reserve FOMC calendar",
+      "engine_id": "auto",
+      "parse_mode": "sync",
+      "job_id": "job_838ea549080e4ce5848e2e5d",
+      "document_id": "doc_58b49092587a49e48e42e398",
+      "object_id": "obj_f910ea3f6c5d4df0b4ebd553",
+      "markdown_chars": 78026,
+      "context_excerpt": "* [](https://www.federalreserve.gov/aboutthefed.htm)[About the Fed](https://www.federalreserve.gov/aboutthefed.htm)\n    *       * [Structure of the Federal Reserve System](https://www.federalreserve.gov/aboutthefed/fedexplained/who-we-are.htm)\n      * [The Fed Explained](https://www.federalreserve.gov/aboutthefed/the-fed-explained.htm)\n      * [Board Members](https://www.federalreserve.gov/aboutthefed/bios/board/default.htm)\n      * [Advisory Councils](https://www.federalreserve.gov/aboutthefed/advisorydefault.htm)\n      * [Federal Reserve Banks](https://www.federalreserve.gov/aboutthefed/federal-reserve-system.htm)\n      * [Federal Reserve Bank and Branch Directors](https://www.federalreserve.gov/aboutthefed/directors/about.htm)\n      * [Federal Reserve Act](https://www.federalreserve.gov/aboutthefed/fract.htm)\n      * [Currency](https://www.federalreserve.gov/aboutthefed/currency.htm)\n      * [Board Meetings](https://www.federalreserve.gov/aboutthefed/boardmeetings/meetingdates.htm)\n      * [Board Votes](https://www.federalreserve.gov/aboutthefed/boardvotes.htm)\n      * [Careers](https://www.federalreserve.gov/careers.htm)\n      * [Do Business with the Board](https://www.federalreserve.gov/aboutthefed/procurement/tips.htm)\n      * [Holidays Observed - K.8](https://www.federalreserve.gov/aboutthefed/k8.htm)\n      * [Ethics & Values](https://www.federalreserve.gov/aboutthefed/ethics-values.htm)\n      * [Contact](https://www.federalreserve.gov/aboutthefed/contact-us-topics.htm)\n      * [Requesting Information (FOIA)](https://www.federalreserve.gov/foia/about_foia.htm)\n      * [FAQs](https://www.federalreserve.gov/faqs.htm)\n      * [Economic Education](https://www.federalreserve.gov/aboutthefed/educational-tools/default.htm)\n      * [Fed Financial Statements](https://www.federalreserve.gov/aboutthefed/fed-financial-statements.htm)\n      * [Financial Innovation](https://www.federalreserve.gov/aboutthefed/financial-innovation.htm)\n  * [](https://www.federalreserve.gov/newsevents.htm)[News & Events](https://www.federalreserve.gov/newsevents.htm)\n    * [Press Releases](https://www.federalreserve.gov/newsevents/pressreleases.htm)\n    * [Speeches & Testimony](https://www.federalreserve.gov/newsevents/speeches-testimony.htm)\n    * [Calendar](https://www.federalreserve.gov/newsevents/calendar.htm)\n    * [Videos](https://www.federalreserve.gov/videos.htm)\n    * [Photo Gallery](https://www.federalreserve.gov/photogallery.htm)\n    * [Conferences](https://www.federalreserve.gov/conferences.htm)\n  * [](https://www.federalreserve.gov/monetarypolicy.htm)[Monetary Policy](https://www.federalreserve.gov/monetarypolicy.htm)\n    *       * **Federal Open Market Committee**\n      * [About the FOMC](https://www.federalreserve.gov/monetarypolicy/fomc.htm)\n      * [Meeting calendars and information](https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm)\n      * [Transcripts and other historical materials](https://www.federalreserve.gov/monetarypolicy/fomc_historical.htm)\n      * [FAQs](https://www.federalreserve.gov/monetarypolicy/fomc_projectionsfaqs.htm)\n      * **Monetary Policy Principles and Practice**\n      * [Notes](https://www.federalreserve.gov/monetarypolicy/monetary-policy-principles-and-practice.htm)\n      * **Policy Implementation**\n      * [Policy Normalization](https://www.federalreserve.gov/monetarypolicy/policy-normalization.htm)\n      * [Policy Tools](https://www.federalreserve.gov/monetarypolicy/policytools.htm)\n      * **Reports**\n      * [Monetary Policy Report](https://www.federalreserve.gov/monetarypolicy/publications/mpr_default.htm)\n      * [Beige Book](https://www.federalreserve.gov/monetarypolicy/publications/beige-book-default.htm)\n      * [Federal Reserve Balance Sheet Developments](https://www.federalreserve.gov/monetarypolicy/publications/balance-sheet-developments-report.htm)\n      * **Review of Monetary Policy Strategy, Tools, and Communications**\n      * [Overview](https://www.federalreserve.gov/monetarypolicy/review-of-monetary-policy-strategy-tools-and-communications-2025.htm)\n  * [](https://www.federalreserve.gov/supervisionreg.htm)[Supervision & Regulation](https://www.federalreserve.gov/supervisionreg.htm)\n    *       * **Supervision**\n      * [ Community Banks](https://www.federalreserve.gov/supervisionreg/community-banks.htm)\n      * [ Regional Banks and Foreign Banks with U.S. Assets < $100 Billion](https://www.federalreserve.gov/supervisionreg/regional-and-small-foreign-banks.htm)\n      * [ Large Banks and Large Foreign Banks](https://www.federalreserve.gov/supervisionreg/large-banks-and-large-foreign-banks.htm)\n      * [ Global Systemically Important Banks](https://www.federalreserve.gov/supervisionreg/global-systemically-important-banks.htm)\n      * [Financial Market Utilities](https://www.federalreserve.gov/supervisionreg/financial-market-utility-supervision.htm)\n      * [Consumer Compliance](https://www.federalreserve.gov/supervisionreg/consumer-compliance.htm)\n      * [ Resources for Supervised Institutions](https://www.federalreserve.gov/supervisionreg/resources-for-supervised-institutions.htm)\n      * **Reports**\n      * [Federal Reserve Supervision and Regulation Report](https://www.federalreserve.gov/publications/supervision-and-regulation-report.htm)\n      * **Reporting Forms**\n      * [Recent Reporting Form Updates](https://www.federalreserve.gov/apps/reportingforms/recentupdates)\n      * [Information Collections Under Review](https://www.federalreserve.gov/apps/reportingforms/home/review)\n      * [Financial Statements](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"1\"\\])\n      * [Securities Exchange Act of 1934](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"7\"\\])\n      * [Applications/Structure Change](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"2\"\\])\n      * [FFIEC](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"3\"\\])\n      * [Municipal a",
+      "parse_score": 1.0,
+      "error": null,
+      "metadata": {
+        "format_hint": "html",
+        "parser": {
+          "engine_key": "crawl4ai",
+          "display_name": "Crawl4AI",
+          "engine_family": "web_interactive",
+          "engine_version": "0.8.6",
+          "profile_ref": "crawl4ai_balanced",
+          "template_ref": null,
+          "fallback_used": false
+        },
+        "source_format": "text/html",
+        "title": "The Fed - Meeting calendars and information",
+        "markdown_sha256": "2ca882f8f50997dda260dcb2e3774209728c6f31cf9e998e3e29c60ada714d7d"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "url_name": "Federal Reserve FOMC calendar",
+      "engine_id": "crawl4ai",
+      "parse_mode": "sync",
+      "job_id": "job_c4503b58b751497b985a4744",
+      "document_id": "doc_e6721b56d92a43d893657e19",
+      "object_id": "obj_96d42e082b884ee6b7ff97a5",
+      "markdown_chars": 78026,
+      "context_excerpt": "* [](https://www.federalreserve.gov/aboutthefed.htm)[About the Fed](https://www.federalreserve.gov/aboutthefed.htm)\n    *       * [Structure of the Federal Reserve System](https://www.federalreserve.gov/aboutthefed/fedexplained/who-we-are.htm)\n      * [The Fed Explained](https://www.federalreserve.gov/aboutthefed/the-fed-explained.htm)\n      * [Board Members](https://www.federalreserve.gov/aboutthefed/bios/board/default.htm)\n      * [Advisory Councils](https://www.federalreserve.gov/aboutthefed/advisorydefault.htm)\n      * [Federal Reserve Banks](https://www.federalreserve.gov/aboutthefed/federal-reserve-system.htm)\n      * [Federal Reserve Bank and Branch Directors](https://www.federalreserve.gov/aboutthefed/directors/about.htm)\n      * [Federal Reserve Act](https://www.federalreserve.gov/aboutthefed/fract.htm)\n      * [Currency](https://www.federalreserve.gov/aboutthefed/currency.htm)\n      * [Board Meetings](https://www.federalreserve.gov/aboutthefed/boardmeetings/meetingdates.htm)\n      * [Board Votes](https://www.federalreserve.gov/aboutthefed/boardvotes.htm)\n      * [Careers](https://www.federalreserve.gov/careers.htm)\n      * [Do Business with the Board](https://www.federalreserve.gov/aboutthefed/procurement/tips.htm)\n      * [Holidays Observed - K.8](https://www.federalreserve.gov/aboutthefed/k8.htm)\n      * [Ethics & Values](https://www.federalreserve.gov/aboutthefed/ethics-values.htm)\n      * [Contact](https://www.federalreserve.gov/aboutthefed/contact-us-topics.htm)\n      * [Requesting Information (FOIA)](https://www.federalreserve.gov/foia/about_foia.htm)\n      * [FAQs](https://www.federalreserve.gov/faqs.htm)\n      * [Economic Education](https://www.federalreserve.gov/aboutthefed/educational-tools/default.htm)\n      * [Fed Financial Statements](https://www.federalreserve.gov/aboutthefed/fed-financial-statements.htm)\n      * [Financial Innovation](https://www.federalreserve.gov/aboutthefed/financial-innovation.htm)\n  * [](https://www.federalreserve.gov/newsevents.htm)[News & Events](https://www.federalreserve.gov/newsevents.htm)\n    * [Press Releases](https://www.federalreserve.gov/newsevents/pressreleases.htm)\n    * [Speeches & Testimony](https://www.federalreserve.gov/newsevents/speeches-testimony.htm)\n    * [Calendar](https://www.federalreserve.gov/newsevents/calendar.htm)\n    * [Videos](https://www.federalreserve.gov/videos.htm)\n    * [Photo Gallery](https://www.federalreserve.gov/photogallery.htm)\n    * [Conferences](https://www.federalreserve.gov/conferences.htm)\n  * [](https://www.federalreserve.gov/monetarypolicy.htm)[Monetary Policy](https://www.federalreserve.gov/monetarypolicy.htm)\n    *       * **Federal Open Market Committee**\n      * [About the FOMC](https://www.federalreserve.gov/monetarypolicy/fomc.htm)\n      * [Meeting calendars and information](https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm)\n      * [Transcripts and other historical materials](https://www.federalreserve.gov/monetarypolicy/fomc_historical.htm)\n      * [FAQs](https://www.federalreserve.gov/monetarypolicy/fomc_projectionsfaqs.htm)\n      * **Monetary Policy Principles and Practice**\n      * [Notes](https://www.federalreserve.gov/monetarypolicy/monetary-policy-principles-and-practice.htm)\n      * **Policy Implementation**\n      * [Policy Normalization](https://www.federalreserve.gov/monetarypolicy/policy-normalization.htm)\n      * [Policy Tools](https://www.federalreserve.gov/monetarypolicy/policytools.htm)\n      * **Reports**\n      * [Monetary Policy Report](https://www.federalreserve.gov/monetarypolicy/publications/mpr_default.htm)\n      * [Beige Book](https://www.federalreserve.gov/monetarypolicy/publications/beige-book-default.htm)\n      * [Federal Reserve Balance Sheet Developments](https://www.federalreserve.gov/monetarypolicy/publications/balance-sheet-developments-report.htm)\n      * **Review of Monetary Policy Strategy, Tools, and Communications**\n      * [Overview](https://www.federalreserve.gov/monetarypolicy/review-of-monetary-policy-strategy-tools-and-communications-2025.htm)\n  * [](https://www.federalreserve.gov/supervisionreg.htm)[Supervision & Regulation](https://www.federalreserve.gov/supervisionreg.htm)\n    *       * **Supervision**\n      * [ Community Banks](https://www.federalreserve.gov/supervisionreg/community-banks.htm)\n      * [ Regional Banks and Foreign Banks with U.S. Assets < $100 Billion](https://www.federalreserve.gov/supervisionreg/regional-and-small-foreign-banks.htm)\n      * [ Large Banks and Large Foreign Banks](https://www.federalreserve.gov/supervisionreg/large-banks-and-large-foreign-banks.htm)\n      * [ Global Systemically Important Banks](https://www.federalreserve.gov/supervisionreg/global-systemically-important-banks.htm)\n      * [Financial Market Utilities](https://www.federalreserve.gov/supervisionreg/financial-market-utility-supervision.htm)\n      * [Consumer Compliance](https://www.federalreserve.gov/supervisionreg/consumer-compliance.htm)\n      * [ Resources for Supervised Institutions](https://www.federalreserve.gov/supervisionreg/resources-for-supervised-institutions.htm)\n      * **Reports**\n      * [Federal Reserve Supervision and Regulation Report](https://www.federalreserve.gov/publications/supervision-and-regulation-report.htm)\n      * **Reporting Forms**\n      * [Recent Reporting Form Updates](https://www.federalreserve.gov/apps/reportingforms/recentupdates)\n      * [Information Collections Under Review](https://www.federalreserve.gov/apps/reportingforms/home/review)\n      * [Financial Statements](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"1\"\\])\n      * [Securities Exchange Act of 1934](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"7\"\\])\n      * [Applications/Structure Change](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"2\"\\])\n      * [FFIEC](https://www.federalreserve.gov/apps/ReportingForms/?reportTypesIdsJson=\\[\"3\"\\])\n      * [Municipal a",
+      "parse_score": 1.0,
+      "error": null,
+      "metadata": {
+        "format_hint": "html",
+        "parser": {
+          "engine_key": "crawl4ai",
+          "display_name": "Crawl4AI",
+          "engine_family": "web_interactive",
+          "engine_version": "0.8.6",
+          "profile_ref": "crawl4ai_balanced",
+          "template_ref": null,
+          "fallback_used": false
+        },
+        "source_format": "text/html",
+        "title": "The Fed - Meeting calendars and information",
+        "markdown_sha256": "2ca882f8f50997dda260dcb2e3774209728c6f31cf9e998e3e29c60ada714d7d"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "url_name": "Federal Reserve FOMC calendar",
+      "engine_id": "markitdown",
+      "parse_mode": "sync",
+      "job_id": "job_9a13df856a79461fb6398a8b",
+      "document_id": "doc_e4b0807109454f74b2c98f56",
+      "object_id": "obj_21ebf948b0ae45acb0e1f55f",
+      "markdown_chars": 43010,
+      "context_excerpt": "[Skip to main content](#content)\n\n![US Flag](/images/icon-us-flag.svg)\n\nAn official website of the United States Government\n\nHere's how you know![Expand More](/images/expand_more.svg)\n\n![.gov icon](https://designsystem.digital.gov/assets/img/icon-dot-gov.svg)\n\n**Official websites use .gov**\nA **.gov** website belongs to an official government organization in the United States.\n\n![HTTPS icon](https://designsystem.digital.gov/assets/img/icon-https.svg)\n\n**Secure .gov websites use HTTPS**\nA **lock** (LockLocked padlock icon) or **https://** means you've safely connected to the .gov website. Share sensitive information only on official, secure websites.\n\n[Back to Home](/default.htm)\n[Board of Governors of the Federal Reserve System](/default.htm \"Link to Home Page\")\n\n* Stay Connected\n  + [Federal Reserve Facebook Page](https://www.facebook.com/federalreserve)\n  + [Federal Reserve Instagram Page](https://www.instagram.com/federalreserveboard/)\n  + [Federal Reserve YouTube Page](https://www.youtube.com/federalreserve)\n  + [Federal Reserve Flickr Page](https://www.flickr.com/photos/federalreserve/)\n  + [Federal Reserve LinkedIn Page](https://www.linkedin.com/company/federal-reserve-board)\n  + [Federal Reserve Threads Page](https://www.threads.net/%40federalreserveboard)\n  + [Federal Reserve X Page](https://x.com/federalreserve)\n  + [Federal Reserve Bluesky Page](https://bsky.app/profile/federalreserve.gov)\n  + [Subscribe to RSS](/feeds/feeds.htm)\n  + [Subscribe to Email](/subscribe.htm)\n* [Recent Postings](/recentpostings.htm)\n* [Calendar](/newsevents/calendar.htm)\n* [Publications](/publications.htm)\n* [Site Map](/sitemap.htm)\n* [A-Z index](/azindex.htm)\n* [Careers](/careers.htm)\n* [FAQs](/faqs.htm)\n* [Videos](/videos.htm)\n* [Contact](/aboutthefed/contact-us-topics.htm)\n\nSearch\n\nSubmit Search Button\n\n[Advanced](//www.fedsearch.org/board_public/)\n\nToggle Dropdown Menu\n\n[# Board of Governors of the Federal Reserve System\n\n*The Federal Reserve, the central bank of the United States, provides\nthe nation with a safe, flexible, and stable monetary and financial\nsystem.*](/default.htm \"Link to Home Page\")\n\nMain Menu Toggle Button\nSections\n\nSearch Toggle Button\n\nSearch\n\nSearch Submit Button\nSubmit\n\n* [About\n  the Fed](/aboutthefed.htm)\n  + - [Structure of the Federal Reserve System](/aboutthefed/fedexplained/who-we-are.htm)\n    - [The Fed Explained](/aboutthefed/the-fed-explained.htm)\n    - [Board Members](/aboutthefed/bios/board/default.htm)\n    - [Advisory Councils](/aboutthefed/advisorydefault.htm)\n    - [Federal Reserve Banks](/aboutthefed/federal-reserve-system.htm)\n    - [Federal Reserve Bank and Branch Directors](/aboutthefed/directors/about.htm)\n    - [Federal Reserve Act](/aboutthefed/fract.htm)\n    - [Currency](/aboutthefed/currency.htm)\n    - [Board Meetings](/aboutthefed/boardmeetings/meetingdates.htm)\n    - [Board Votes](/aboutthefed/boardvotes.htm)\n    - [Careers](/careers.htm)\n    - [Do Business with the Board](/aboutthefed/procurement/tips.htm)\n    - [Holidays Observed - K.8](/aboutthefed/k8.htm)\n    - [Ethics & Values](/aboutthefed/ethics-values.htm)\n    - [Contact](/aboutthefed/contact-us-topics.htm)\n    - [Requesting Information (FOIA)](/foia/about_foia.htm)\n    - [FAQs](/faqs.htm)\n    - [Economic Education](/aboutthefed/educational-tools/default.htm)\n    - [Fed Financial Statements](/aboutthefed/fed-financial-statements.htm)\n    - [Financial Innovation](/aboutthefed/financial-innovation.htm)\n* [News\n  & Events](/newsevents.htm)\n  + [Press Releases](/newsevents/pressreleases.htm)\n  + [Speeches & Testimony](/newsevents/speeches-testimony.htm)\n  + [Calendar](/newsevents/calendar.htm)\n  + [Videos](/videos.htm)\n  + [Photo Gallery](/photogallery.htm)\n  + [Conferences](/conferences.htm)\n* [Monetary\n  Policy](/monetarypolicy.htm)\n  + - **Federal Open Market Committee**\n    - [About the FOMC](/monetarypolicy/fomc.htm)\n    - [Meeting calendars and information](/monetarypolicy/fomccalendars.htm)\n    - [Transcripts and other historical materials](/monetarypolicy/fomc_historical.htm)\n    - [FAQs](/monetarypolicy/fomc_projectionsfaqs.htm)\n    - **Monetary Policy Principles and Practice**\n    - [Notes](/monetarypolicy/monetary-policy-principles-and-practice.htm)\n    - **Policy Implementation**\n    - [Policy Normalization](/monetarypolicy/policy-normalization.htm)\n    - [Policy Tools](/monetarypolicy/policytools.htm)\n    - **Reports**\n    - [Monetary Policy Report](/monetarypolicy/publications/mpr_default.htm)\n    - [Beige Book](/monetarypolicy/publications/beige-book-default.htm)\n    - [Federal Reserve Balance Sheet Developments](/monetarypolicy/publications/balance-sheet-developments-report.htm)\n    - **Review of Monetary Policy Strategy, Tools, and Communications**\n    - [Overview](/monetarypolicy/review-of-monetary-policy-strategy-tools-and-communications-2025.htm)\n* [Supervision\n  & Regulation](/supervisionreg.htm)\n  + - **Supervision**\n    - [Community Banks](/supervisionreg/community-banks.htm)\n    - [Regional Banks and Foreign Banks with U.S. Assets < $100 Billion](/supervisionreg/regional-and-small-foreign-banks.htm)\n    - [Large Banks and Large Foreign Banks](/supervisionreg/large-banks-and-large-foreign-banks.htm)\n    - [Global Systemically Important Banks](/supervisionreg/global-systemically-important-banks.htm)\n    - [Financial Market\n      Utilities](/supervisionreg/financial-market-utility-supervision.htm)\n    - [Consumer\n      Compliance](/supervisionreg/consumer-compliance.htm)\n    - [Resources for Supervised Institutions](/supervisionreg/resources-for-supervised-institutions.htm)\n    - **Reports**\n    - [Federal Reserve\n      Supervision and Regulation Report](/publications/supervision-and-regulation-report.htm)\n    - **Reporting Forms**\n    - [Recent Reporting Form Updates](/apps/reportingforms/recentupdates)\n    - [Information Collections\n      Under Review](/apps/reportingforms/home/review)\n    - [Financial\n      Statements](/apps/ReportingForms/?reportTypesIdsJson=[\"1\"])\n    -",
+      "parse_score": 1.0,
+      "error": null,
+      "metadata": {
+        "format_hint": "html",
+        "parser": {
+          "engine_key": "markitdown",
+          "display_name": "Microsoft MarkItDown",
+          "engine_family": "document_local",
+          "engine_version": "0.1.5",
+          "profile_ref": "markitdown_lightweight",
+          "template_ref": null,
+          "fallback_used": false
+        },
+        "source_format": "text/html",
+        "title": "fomccalendars.htm",
+        "markdown_sha256": "239dad0da1c95de0b3f0e6884b5c2dffceba0ff90fe734facb0bccfa290da89d"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "url_name": "Federal Reserve FOMC calendar",
+      "engine_id": "llama_parse",
+      "parse_mode": "sync",
+      "job_id": "job_5a13b2e87c004461bfffcd7f",
+      "document_id": "doc_1ff061db27e84fadac70f20a",
+      "object_id": "obj_69efe9a640ab4d7895444516",
+      "markdown_chars": 13730,
+      "context_excerpt": "An official website of the United States Government Here's how you know\n\n# Federal Open Market Committee\n\nMeeting calendars, statements, and minutes\n\nFOMC Search (2021-2027)\n\nThe FOMC holds eight regularly scheduled meetings during the year and other meetings as needed. Links to policy statements and minutes are in the calendars below. The minutes of regularly scheduled meetings are released three weeks after the date of the policy decision. Committee membership changes at the first regularly scheduled meeting of the year.\n\nFOIA\n\nThe FOMC makes an annual report pursuant to the Freedom of Information Act. The FOMC FOIA Service Center provides information about the status of FOIA requests and the FOIA process.\n\n# 2026 FOMC Meetings\n\n| Month   | Date    | Statement          | Press Conference          | Minutes                                      |\n| ------- | ------- | ------------------ | ------------------------- | -------------------------------------------- |\n| January | 27-28   | PDF HTML |                           |                                              |\n| March   | 17-18\\* | PDF HTML | Projection Materials | PDF HTML (Released April 08, 2026) |\n| April   | 28-29   | PDF HTML |                           |                                              |\n\n# 2025 FOMC Meetings\n\n| January                                          | 28-29                     |            | | |\n| ------------------------------------------------ | ------------------------- | ---------- |---|---|\n| Statement:                                       | Press Conference          | Minutes:   | | |\n| PDF | HTML                                       |                           | PDF | HTML |\n| Implementation Note (Released February 19, 2025) |                           |            | | |\n| March                                            | 18-19\\*                   |            | | |\n| Statement:                                       | Press Conference          | Minutes:   | | |\n| PDF | HTML                                       | Projection Materials      | PDF | HTML |\n| Implementation Note                              | PDF | HTML                |            | |\n|                                                  | (Released April 09, 2025) |            | | |\n| May                                              | 6-7                       |            | | |\n| Statement:                                       | Press Conference          | Minutes:   | | |\n| PDF | HTML                                       |                           | PDF | HTML |\n| Implementation Note (Released May 28, 2025)      |                           |            | | |\n\nJune  16-17*\n\nJuly    28-29\n\nSeptember  15-16*\n\nOctober  27-28\n\nDecember  8-9*\n\n* Meeting associated with a Summary of Economic Projections.\n\n# 2023 FOMC Meetings\n\n| Month     | Date               | Statement                                                  | Press Conference | Minutes  | Implementation Note | Release Date                 | |\n| --------- | ------------------ | ---------------------------------------------------------- | ---------------- | -------- | ------------------- | ---------------------------- |---|\n| June      | 17-18\\*            | Statement:                                                 | Press Conference | Minutes: | PDF | HTML          | (Released July 09, 2025)     |\n| July      | 29-30              | Statement:                                                 | Press Conference | Minutes: | PDF | HTML          | (Released August 20, 2025)   |\n| August    | 22 (notation vote) | Statement on Longer-Run Goals and Monetary Policy Strategy |                  |          |                     |                              | |\n| September | 16-17\\*            | Statement:                                                 | Press Conference | Minutes: | PDF | HTML          | (Released October 08, 2025)  |\n| October   | 28-29              | Statement:                                                 | Press Conference | Minutes: | PDF | HTML          | (Released November 19, 2025) |\n| December  | 9-10\\*             | Statement:                                                 | Press Conference | Minutes: | PDF | HTML          | (Released December 30, 2025) |\n\n* Meeting associated with a Summary of Economic Projections.\n\n# 2024 FOMC Meetings\n\n| Month   | Date  |\n| ------- | ----- |\n| January | 30-31 |\n\n# Statement on Longer-Run Goals and Monetary Policy Strategy\n\n(Released February 21, 2024)\n\n| Month     | Statement  | Press Conference | Minutes    | Projection Materials | Implementation Note | Release Date                 | | |\n| --------- | ---------- | ---------------- | ---------- | -------------------- | ------------------- | ---------------------------- |---|---|\n| March     | PDF | HTML | Press Conference | PDF | HTML |                      | Implementation Note |                              |\n| April/May | PDF | HTML | Press Conference | PDF | HTML |                      | Implementation Note | (Released May 22, 2024)      |\n| June      | PDF | HTML | Press Conference | PDF | HTML | Projection Materials | Implementation Note | (Released July 03, 2024)     |\n| July      | PDF | HTML | Press Conference | PDF | HTML |                      | Implementation Note | (Released August 21, 2024)   |\n| September | PDF | HTML | Press Conference | PDF | HTML | Projection Materials | Implementation Note | (Released October 09, 2024)  |\n| November  | PDF | HTML | Press Conference | PDF | HTML |                      | Implementation Note | (Released November 26, 2024) |\n\nDecember      17-18*\n\nStatement:              Press Conference                    Minutes:\n\nPDF | HTML              Projection Materials                PDF | HTML\n\nImplementation Note     PDF | HTML                          (Released January 08, 2025)\n\n* Meeting associated with a Summary of Economic Projections.\n\n# 2023 FOMC Meetings\n\n| Jan/Feb                      | 31-1                   ",
+      "parse_score": 1.0,
+      "error": null,
+      "metadata": {
+        "format_hint": "html",
+        "parser": {
+          "engine_key": "llama_parse",
+          "display_name": "LlamaParse",
+          "engine_family": "document_remote",
+          "engine_version": "0.6.94",
+          "profile_ref": "llama_parse_document_fidelity",
+          "template_ref": null,
+          "fallback_used": false
+        },
+        "source_format": "text/html",
+        "title": "fomccalendars.htm",
+        "markdown_sha256": "6e2b7c2c34d243ef682dd68d9aa9cedbee2513b27107dd1709580f19d6b8a75d"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "url_name": "Federal Reserve FOMC calendar",
+      "engine_id": "jina_reader",
+      "parse_mode": "sync",
+      "job_id": "job_5ad6269ec1354bc9b73858c6",
+      "document_id": "doc_1d0235e9370c47ac9f435660",
+      "object_id": "obj_067400b39d424d4988bf1639",
+      "markdown_chars": 1903,
+      "context_excerpt": "Title: The Fed - Meeting calendars and information\n\nURL Source: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\n\nMarkdown Content:\n```markdown\n# The Fed - Meeting calendars and information\n\n## Main Content\n\n### Meeting calendars, statements, and minutes (2021-2027)\n\nThe FOMC holds eight regularly scheduled meetings during the year and other meetings as needed. Links to policy statements and minutes are in the calendars below. The minutes of regularly scheduled meetings are released three weeks after the date of the policy decision. Committee membership changes at the first regularly scheduled meeting of the year.\n\n**FOIA**\nThe FOMC makes an [annual report](/foia/fomc/annualreports.htm) pursuant to the Freedom of Information Act. The FOMC FOIA [Service Center](/foia/fomc/servicecenter.htm) provides information about the status of FOIA requests and the FOIA process.\n\n[2026](#42828) | [2025](#42827) | [2024](#39116) | [2023](#36495) | [2022](#32979) | [2021](#27443)\nFuture Year: [2027](#45694)\n\n#### 2026 FOMC Meetings\n\n##### January\n- **Date:** 27-28\n- **Statement:**\n  - [PDF](/monetarypolicy/files/monetary20260128a1.pdf) | [HTML](/newsevents/pressreleases/monetary20260128a.htm)\n  - [Implementation Note](/newsevents/pressreleases/monetary20260128a1.htm)\n- **Press Conference:** [Link](/monetarypolicy/fomcpressconf20260128.htm)\n- **Minutes:**\n  - [PDF](/monetarypolicy/files/fomcminutes20260128.pdf) | [HTML](/monetarypolicy/fomcminutes20260128.htm)\n  - (Released February 18, 2026)\n\n##### March\n- **Date:** 17-18*\n- **Statement:**\n  - [PDF](/monetarypolicy/files/monetary20260318a1.pdf) | [HTML](/newsevents/pressreleases/monetary20260318a.htm)\n  - [Implementation Note](/newsevents/pressreleases/monetary20260318a.htm)\n- **Press Conference:** [Link](/monetarypolicy/fomcpresconf20260318.htm)\n- **Projection Materials:**\n  - [PDF](/monetarypolicy/files/fomcprojtabl\n```",
+      "parse_score": 0.4666,
+      "error": null,
+      "metadata": {
+        "format_hint": "html",
+        "parser": {
+          "engine_key": "jina_reader",
+          "display_name": "Jina Reader",
+          "engine_family": "web_remote",
+          "engine_version": "jina-reader-http",
+          "profile_ref": "jina_reader_balanced",
+          "template_ref": null,
+          "fallback_used": false
+        },
+        "source_format": "text/html",
+        "title": "The Fed - Meeting calendars and information",
+        "markdown_sha256": "77532c7a9bb41ac81e3a932b9e0efa6589a02335283dd2cf8c66cfd978ab9b06"
+      }
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "url_name": "Federal Reserve FOMC calendar",
+      "engine_id": "docling",
+      "parse_mode": "async",
+      "job_id": "job_dc52da46a516425e8c5cd371",
+      "document_id": null,
+      "object_id": "obj_6ca197ba76324c7385431be4",
+      "markdown_chars": 0,
+      "context_excerpt": null,
+      "parse_score": 0.0,
+      "error": null,
+      "metadata": {
+        "format_hint": "html",
+        "parser": null,
+        "source_format": null,
+        "title": null,
+        "markdown_sha256": null
+      }
+    }
+  ],
+  "context_groups": [
+    {
+      "context_id": "parse_engine:auto",
+      "source": "parse_artifact",
+      "parse_engine_id": "auto",
+      "object_ids": [
+        "obj_f910ea3f6c5d4df0b4ebd553"
+      ],
+      "document_ids": [
+        "doc_58b49092587a49e48e42e398"
+      ],
+      "context_chars": 6000,
+      "context_score": 1.0,
+      "text_preview": "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: auto\nObject ID: obj_f910ea3f6c5d4df0b4ebd553\n\n* [](https://www.federalreserve.gov/aboutthefed.htm)[About the Fed](https://www.federalreserve.gov/aboutthefed.htm)\n    *       * [Structure of the Federal Reserve System](https://www.federalreserve.gov/aboutthefed/fedexplained/who-we-are.htm)\n      * [The Fed Explained](https://www.federalreserve.gov/aboutthefed/the-fed-explained.htm)\n      * [Board Members](https://www.federalreserve.gov/aboutthefed/bios/board/default.htm)\n      * [Advisory Councils](https://www.federalreserve.gov/aboutthefed/advisorydefault.htm)\n      * [Federal Reserve Banks](https://www.federalreserve.gov/aboutthefed/federal-reserve-system.htm)\n      * [Federal Reserve Bank and Branch Directors](https://www.federalreserve.gov/aboutthefed/directors/about.htm)\n      * [Federal Reserve Act](https://www.federalreserve.gov/aboutthefed/fract.htm)\n      * [",
+      "metadata": {
+        "artifact_count": 1,
+        "grouping": "by_parse_engine"
+      }
+    },
+    {
+      "context_id": "parse_engine:crawl4ai",
+      "source": "parse_artifact",
+      "parse_engine_id": "crawl4ai",
+      "object_ids": [
+        "obj_96d42e082b884ee6b7ff97a5"
+      ],
+      "document_ids": [
+        "doc_e6721b56d92a43d893657e19"
+      ],
+      "context_chars": 6000,
+      "context_score": 1.0,
+      "text_preview": "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: crawl4ai\nObject ID: obj_96d42e082b884ee6b7ff97a5\n\n* [](https://www.federalreserve.gov/aboutthefed.htm)[About the Fed](https://www.federalreserve.gov/aboutthefed.htm)\n    *       * [Structure of the Federal Reserve System](https://www.federalreserve.gov/aboutthefed/fedexplained/who-we-are.htm)\n      * [The Fed Explained](https://www.federalreserve.gov/aboutthefed/the-fed-explained.htm)\n      * [Board Members](https://www.federalreserve.gov/aboutthefed/bios/board/default.htm)\n      * [Advisory Councils](https://www.federalreserve.gov/aboutthefed/advisorydefault.htm)\n      * [Federal Reserve Banks](https://www.federalreserve.gov/aboutthefed/federal-reserve-system.htm)\n      * [Federal Reserve Bank and Branch Directors](https://www.federalreserve.gov/aboutthefed/directors/about.htm)\n      * [Federal Reserve Act](https://www.federalreserve.gov/aboutthefed/fract.htm)\n     ",
+      "metadata": {
+        "artifact_count": 1,
+        "grouping": "by_parse_engine"
+      }
+    },
+    {
+      "context_id": "parse_engine:jina_reader",
+      "source": "parse_artifact",
+      "parse_engine_id": "jina_reader",
+      "object_ids": [
+        "obj_067400b39d424d4988bf1639"
+      ],
+      "document_ids": [
+        "doc_1d0235e9370c47ac9f435660"
+      ],
+      "context_chars": 2077,
+      "context_score": 0.6224,
+      "text_preview": "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: jina_reader\nObject ID: obj_067400b39d424d4988bf1639\n\nTitle: The Fed - Meeting calendars and information\n\nURL Source: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\n\nMarkdown Content:\n```markdown\n# The Fed - Meeting calendars and information\n\n## Main Content\n\n### Meeting calendars, statements, and minutes (2021-2027)\n\nThe FOMC holds eight regularly scheduled meetings during the year and other meetings as needed. Links to policy statements and minutes are in the calendars below. The minutes of regularly scheduled meetings are released three weeks after the date of the policy decision. Committee membership changes at the first regularly scheduled meeting of the year.\n\n**FOIA**\nThe FOMC makes an [annual report](/foia/fomc/annualreports.htm) pursuant to the Freedom of Information Act. The FOMC FOIA [Service Center](/foia/fomc/servicecenter.htm) provides i",
+      "metadata": {
+        "artifact_count": 1,
+        "grouping": "by_parse_engine"
+      }
+    },
+    {
+      "context_id": "parse_engine:llama_parse",
+      "source": "parse_artifact",
+      "parse_engine_id": "llama_parse",
+      "object_ids": [
+        "obj_69efe9a640ab4d7895444516"
+      ],
+      "document_ids": [
+        "doc_1ff061db27e84fadac70f20a"
+      ],
+      "context_chars": 6000,
+      "context_score": 1.0,
+      "text_preview": "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: llama_parse\nObject ID: obj_69efe9a640ab4d7895444516\n\nAn official website of the United States Government Here's how you know\n\n# Federal Open Market Committee\n\nMeeting calendars, statements, and minutes\n\nFOMC Search (2021-2027)\n\nThe FOMC holds eight regularly scheduled meetings during the year and other meetings as needed. Links to policy statements and minutes are in the calendars below. The minutes of regularly scheduled meetings are released three weeks after the date of the policy decision. Committee membership changes at the first regularly scheduled meeting of the year.\n\nFOIA\n\nThe FOMC makes an annual report pursuant to the Freedom of Information Act. The FOMC FOIA Service Center provides information about the status of FOIA requests and the FOIA process.\n\n# 2026 FOMC Meetings\n\n| Month   | Date    | Statement          | Press Conference          | Minutes       ",
+      "metadata": {
+        "artifact_count": 1,
+        "grouping": "by_parse_engine"
+      }
+    },
+    {
+      "context_id": "parse_engine:markitdown",
+      "source": "parse_artifact",
+      "parse_engine_id": "markitdown",
+      "object_ids": [
+        "obj_21ebf948b0ae45acb0e1f55f"
+      ],
+      "document_ids": [
+        "doc_e4b0807109454f74b2c98f56"
+      ],
+      "context_chars": 6000,
+      "context_score": 1.0,
+      "text_preview": "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: markitdown\nObject ID: obj_21ebf948b0ae45acb0e1f55f\n\n[Skip to main content](#content)\n\n![US Flag](/images/icon-us-flag.svg)\n\nAn official website of the United States Government\n\nHere's how you know![Expand More](/images/expand_more.svg)\n\n![.gov icon](https://designsystem.digital.gov/assets/img/icon-dot-gov.svg)\n\n**Official websites use .gov**\nA **.gov** website belongs to an official government organization in the United States.\n\n![HTTPS icon](https://designsystem.digital.gov/assets/img/icon-https.svg)\n\n**Secure .gov websites use HTTPS**\nA **lock** (LockLocked padlock icon) or **https://** means you've safely connected to the .gov website. Share sensitive information only on official, secure websites.\n\n[Back to Home](/default.htm)\n[Board of Governors of the Federal Reserve System](/default.htm \"Link to Home Page\")\n\n* Stay Connected\n  + [Federal Reserve Facebook Page](",
+      "metadata": {
+        "artifact_count": 1,
+        "grouping": "by_parse_engine"
+      }
+    }
+  ],
+  "tensorzero_inferences": [
+    {
+      "context_id": "parse_engine:auto",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "auto",
+      "variant_name": "openrouter",
+      "inference_id": "019e0b5a-a4ce-7b03-9b3f-795f953fde77",
+      "episode_id": "019e0b5a-a4ce-7b03-9b3f-796fd4017295",
+      "answer_text": "The supplied Federal Reserve FOMC calendar source mainly lists navigation links (e.g., About the Fed, Monetary Policy, Supervision & Regulation) and does not contain substantive discussion of macro‑economic outlook, inflation trends, monetary‑policy actions, or financial‑stability risks. Consequently, a direct comparison of those topics across the listed sources cannot be derived from the provided material. To perform such a comparison you would need detailed content from specific reports such as the Beige Book, Monetary Policy Report, or the Supervision and Regulation Report, which are referenced but not included in the current context.",
+      "output": {
+        "answer": "The supplied Federal Reserve FOMC calendar source mainly lists navigation links (e.g., About the Fed, Monetary Policy, Supervision & Regulation) and does not contain substantive discussion of macro‑economic outlook, inflation trends, monetary‑policy actions, or financial‑stability risks. Consequently, a direct comparison of those topics across the listed sources cannot be derived from the provided material. To perform such a comparison you would need detailed content from specific reports such as the Beige Book, Monetary Policy Report, or the Supervision and Regulation Report, which are referenced but not included in the current context.",
+        "citations": [
+          "obj_f910ea3f6c5d4df0b4ebd553"
+        ],
+        "confidence": 0.2,
+        "missing_evidence": [
+          "Beige Book analysis of macro‑economy and inflation",
+          "Monetary Policy Report discussion of policy stance",
+          "Supervision and Regulation Report assessment of financial‑stability risks"
+        ]
+      },
+      "usage": {
+        "input_tokens": 2144,
+        "output_tokens": 383,
+        "provider_cache_read_input_tokens": 384,
+        "cost": null
+      },
+      "finish_reason": "stop",
+      "scores": {
+        "parse_markdown_quality": 0.7444,
+        "rag_context_quality": 1.0,
+        "llm_answer_quality": 0.84,
+        "rag_end_to_end_pass": true
+      },
+      "feedback_errors": [],
+      "error": null,
+      "metadata": {
+        "requested_variant": "openrouter",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:crawl4ai",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "crawl4ai",
+      "variant_name": "openrouter",
+      "inference_id": "019e0b5a-c695-78b2-af67-7a9b0631d1e1",
+      "episode_id": "019e0b5a-c695-78b2-af67-7aa811e67443",
+      "answer_text": "当前提供的来源仅是美国联邦储备委员会（Fed）FOMC 日历页面的导航列表，列出了关于 Fed 结构、新闻、货币政策、监管等多个子页面的链接，但并未包含具体的宏观经济、通胀、货币政策或金融稳定风险的实质性内容。因此，无法在这些来源之间进行比较。要进行比较，需要查阅各具体报告（如《Monetary Policy Report》《Beige Book》《Federal Reserve Supervision and Regulation Report》等）中的相关章节。",
+      "output": {
+        "answer": "当前提供的来源仅是美国联邦储备委员会（Fed）FOMC 日历页面的导航列表，列出了关于 Fed 结构、新闻、货币政策、监管等多个子页面的链接，但并未包含具体的宏观经济、通胀、货币政策或金融稳定风险的实质性内容。因此，无法在这些来源之间进行比较。要进行比较，需要查阅各具体报告（如《Monetary Policy Report》《Beige Book》《Federal Reserve Supervision and Regulation Report》等）中的相关章节。",
+        "citations": [
+          "obj_96d42e082b884ee6b7ff97a5"
+        ],
+        "confidence": 0.15,
+        "missing_evidence": [
+          "具体宏观经济分析",
+          "通货膨胀评估",
+          "货币政策决策细节",
+          "金融稳定风险评估"
+        ]
+      },
+      "usage": {
+        "input_tokens": 2149,
+        "output_tokens": 404,
+        "provider_cache_read_input_tokens": 384,
+        "cost": null
+      },
+      "finish_reason": "stop",
+      "scores": {
+        "parse_markdown_quality": 0.7444,
+        "rag_context_quality": 1.0,
+        "llm_answer_quality": 0.83,
+        "rag_end_to_end_pass": true
+      },
+      "feedback_errors": [],
+      "error": null,
+      "metadata": {
+        "requested_variant": "openrouter",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:jina_reader",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "jina_reader",
+      "variant_name": "openrouter",
+      "inference_id": "019e0b5a-d409-74b1-9c48-0b2c4e0d2438",
+      "episode_id": "019e0b5a-d409-74b1-9c48-0b38e9d1a4b5",
+      "answer_text": "The provided source (Federal Reserve FOMC calendar) only lists meeting dates, statements, and minutes links; it does not contain substantive commentary on macro‑economic conditions, inflation trends, monetary‑policy decisions, or financial‑stability risks, so a comparison across those topics cannot be made from this material.",
+      "output": {
+        "answer": "The provided source (Federal Reserve FOMC calendar) only lists meeting dates, statements, and minutes links; it does not contain substantive commentary on macro‑economic conditions, inflation trends, monetary‑policy decisions, or financial‑stability risks, so a comparison across those topics cannot be made from this material.",
+        "citations": [
+          "obj_067400b39d424d4988bf1639"
+        ],
+        "confidence": 0.2,
+        "missing_evidence": [
+          "macro‑economic analysis",
+          "inflation outlook",
+          "monetary‑policy stance",
+          "financial‑stability risk assessment"
+        ]
+      },
+      "usage": {
+        "input_tokens": 1268,
+        "output_tokens": 317,
+        "provider_cache_read_input_tokens": 384,
+        "cost": null
+      },
+      "finish_reason": "stop",
+      "scores": {
+        "parse_markdown_quality": 0.7444,
+        "rag_context_quality": 0.6224,
+        "llm_answer_quality": 0.6567,
+        "rag_end_to_end_pass": true
+      },
+      "feedback_errors": [],
+      "error": null,
+      "metadata": {
+        "requested_variant": "openrouter",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:llama_parse",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "llama_parse",
+      "variant_name": "openrouter",
+      "inference_id": "019e0b5a-df80-7300-91e6-f626f6d3d711",
+      "episode_id": "019e0b5a-df80-7300-91e6-f6388a130545",
+      "answer_text": "提供的唯一来源是美国联邦储备委员会（FOMC）会议日历，它仅列出会议的日期、声明、新闻发布会和会议纪要的链接，而未包含具体的宏观经济分析、通货膨胀评估、货币政策决定或金融稳定风险的内容。因此，无法在该来源中比较宏观经济、通胀、货币政策及金融稳定风险的主要信息。要进行比较，需要查阅实际的FOMC声明、会议纪要或经济预测报告等文档。",
+      "output": {
+        "answer": "提供的唯一来源是美国联邦储备委员会（FOMC）会议日历，它仅列出会议的日期、声明、新闻发布会和会议纪要的链接，而未包含具体的宏观经济分析、通货膨胀评估、货币政策决定或金融稳定风险的内容。因此，无法在该来源中比较宏观经济、通胀、货币政策及金融稳定风险的主要信息。要进行比较，需要查阅实际的FOMC声明、会议纪要或经济预测报告等文档。",
+        "citations": [
+          "obj_69efe9a640ab4d7895444516"
+        ],
+        "confidence": 0.2,
+        "missing_evidence": [
+          "FOMC声明文本",
+          "FOMC会议纪要内容",
+          "经济预测报告中关于通胀和金融稳定的分析"
+        ]
+      },
+      "usage": {
+        "input_tokens": 1814,
+        "output_tokens": 344,
+        "provider_cache_read_input_tokens": 384,
+        "cost": null
+      },
+      "finish_reason": "stop",
+      "scores": {
+        "parse_markdown_quality": 0.7444,
+        "rag_context_quality": 1.0,
+        "llm_answer_quality": 0.4733,
+        "rag_end_to_end_pass": true
+      },
+      "feedback_errors": [],
+      "error": null,
+      "metadata": {
+        "requested_variant": "openrouter",
+        "strategy": "exhaustive"
+      }
+    },
+    {
+      "context_id": "parse_engine:markitdown",
+      "context_source": "parse_artifact",
+      "parse_engine_id": "markitdown",
+      "variant_name": "openrouter",
+      "inference_id": "019e0b5a-ec09-7460-83c4-64b29277f357",
+      "episode_id": "019e0b5a-ec09-7460-83c4-64c320beccf8",
+      "answer_text": "The supplied source – the Federal Reserve’s FOMC calendar page – only lists meeting dates and navigation links; it does not contain any substantive discussion of macro‑economic conditions, inflation trends, monetary‑policy decisions, or financial‑stability risks. Consequently, a comparison of those topics across the listed sources cannot be performed with the available information.",
+      "output": {
+        "answer": "The supplied source – the Federal Reserve’s FOMC calendar page – only lists meeting dates and navigation links; it does not contain any substantive discussion of macro‑economic conditions, inflation trends, monetary‑policy decisions, or financial‑stability risks. Consequently, a comparison of those topics across the listed sources cannot be performed with the available information.",
+        "citations": [
+          "obj_21ebf948b0ae45acb0e1f55f"
+        ],
+        "confidence": 0.2,
+        "missing_evidence": [
+          "FOMC statements or minutes that discuss macro‑economic outlook",
+          "Beige Book or Monetary Policy Report for inflation and policy guidance",
+          "Supervision and Regulation Report for financial‑stability risk assessment"
+        ]
+      },
+      "usage": {
+        "input_tokens": 2229,
+        "output_tokens": 445,
+        "provider_cache_read_input_tokens": 384,
+        "cost": null
+      },
+      "finish_reason": "stop",
+      "scores": {
+        "parse_markdown_quality": 0.7444,
+        "rag_context_quality": 1.0,
+        "llm_answer_quality": 0.84,
+        "rag_end_to_end_pass": true
+      },
+      "feedback_errors": [],
+      "error": null,
+      "metadata": {
+        "requested_variant": "openrouter",
+        "strategy": "exhaustive"
+      }
+    }
+  ],
+  "evaluation_cases": [
+    {
+      "query": "对比这些来源中主要的宏观经济、通货膨胀、货币政策及金融稳定风险。请注明来源名称。",
+      "actual_output": "The supplied Federal Reserve FOMC calendar source mainly lists navigation links (e.g., About the Fed, Monetary Policy, Supervision & Regulation) and does not contain substantive discussion of macro‑economic outlook, inflation trends, monetary‑policy actions, or financial‑stability risks. Consequently, a direct comparison of those topics across the listed sources cannot be derived from the provided material. To perform such a comparison you would need detailed content from specific reports such as the Beige Book, Monetary Policy Report, or the Supervision and Regulation Report, which are referenced but not included in the current context.",
+      "expected_keywords": [
+        "fomc",
+        "federal reserve",
+        "monetary policy"
+      ],
+      "retrieval_contexts": [
+        "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: auto\nObject ID: obj_f910ea3f6c5d4df0b4ebd553\n\n* [](https://www.federalreserve.gov/aboutthefed.htm)[About the Fed](https://www.federalreserve.gov/aboutthefed.htm)\n    *       * [Structure of the Federal Reserve System](https://www.federalreserve.gov/aboutthefed/fedexplained/who-we-are.htm)\n      * [The Fed Explained](https://www.federalreserve.gov/aboutthefed/the-fed-explained.htm)\n      * [Board Members](https://www.federalreserve.gov/aboutthefed/bios/board/default.htm)\n      * [Advisory Councils](https://www.federalreserve.gov/aboutthefed/advisorydefault.htm)\n      * [Federal Reserve Banks](https://www.federalreserve.gov/aboutthefed/federal-reserve-system.htm)\n      * [Federal Reserve Bank and Branch Directors](https://www.federalreserve.gov/aboutthefed/directors/about.htm)\n      * [Federal Reserve Act](https://www.federalreserve.gov/aboutthefed/fract.htm)\n      * [Currency](https://www.federalreserve.gov/aboutthefed/currency.htm)\n      * [Board Meetings](https://www.federalreserve.gov/aboutthefed/boardmeetings/meetingdates.htm)\n      * [Board Votes](https://www.federalreserve.gov/aboutthefed/boardvotes.htm)\n      * [Careers](https://www.federalreserve.gov/careers.htm)\n      * [Do Business with the Board](https://www.federalreserve.gov/aboutthefed/procurement/tips.htm)\n      * [Holidays Observed - K.8](https://www.federalreserve.gov/aboutthefed/k8.htm)\n      * [Ethics & Values](https://www.federalreserve.gov/aboutthefed/ethics-values.htm)\n      * [Contact](https://www.federalreserve.gov/aboutthefed/contact-us-topics.htm)\n      * [Requesting Information (FOIA)](https://www.federalreserve.gov/foia/about_foia.htm)\n      * [FAQs](https://www.federalreserve.gov/faqs.htm)\n      * [Economic Education](https://www.federalreserve.gov/aboutthefed/educational-tools/default.htm)\n      * [Fed Financial Statements](https://www.federalreserve.gov/aboutthefed/fed-financial-statements.htm)\n      * [Financial Innovation](https://www.federalreserve.gov/aboutthefed/financial-innovation.htm)\n  * [](https://www.federalreserve.gov/newsevents.htm)[News & Events](https://www.federalreserve.gov/newsevents.htm)\n    * [Press Releases](https://www.federalreserve.gov/newsevents/pressreleases.htm)\n    * [Speeches & Testimony](https://www.federalreserve.gov/newsevents/speeches-testimony.htm)\n    * [Calendar](https://www.federalreserve.gov/newsevents/calendar.htm)\n    * [Videos](https://www.federalreserve.gov/videos.htm)\n    * [Photo Gallery](https://www.federalreserve.gov/photogallery.htm)\n    * [Conferences](https://www.federalreserve.gov/conferences.htm)\n  * [](https://www.federalreserve.gov/monetarypolicy.htm)[Monetary Policy](https://www.federalreserve.gov/monetarypolicy.htm)\n    *       * **Federal Open Market Committee**\n      * [About the FOMC](https://www.federalreserve.gov/monetarypolicy/fomc.htm)\n      * [Meeting calendars and information](https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm)\n      * [Transcripts and other historical materials](https://www.federalreserve.gov/monetarypolicy/fomc_historical.htm)\n      * [FAQs](https://www.federalreserve.gov/monetarypolicy/fomc_projectionsfaqs.htm)\n      * **Monetary Policy Principles and Practice**\n      * [Notes](https://www.federalreserve.gov/monetarypolicy/monetary-policy-principles-and-practice.htm)\n      * **Policy Implementation**\n      * [Policy Normalization](https://www.federalreserve.gov/monetarypolicy/policy-normalization.htm)\n      * [Policy Tools](https://www.federalreserve.gov/monetarypolicy/policytools.htm)\n      * **Reports**\n      * [Monetary Policy Report](https://www.federalreserve.gov/monetarypolicy/publications/mpr_default.htm)\n      * [Beige Book](https://www.federalreserve.gov/monetarypolicy/publications/beige-book-default.htm)\n      * [Federal Reserve Balance Sheet Developments](https://www.federalreserve.gov/monetarypolicy/publications/balance-s"
+      ],
+      "metadata": {
+        "run_id": "tzcx_20260509_060746_0cf97b90",
+        "dataset_key": "tensorzero_cortex_tzcx_20260509_060746_0cf97b90",
+        "context_id": "parse_engine:auto",
+        "context_source": "parse_artifact",
+        "parse_engine_id": "auto",
+        "tensorzero_inference_id": "019e0b5a-a4ce-7b03-9b3f-795f953fde77",
+        "tensorzero_episode_id": "019e0b5a-a4ce-7b03-9b3f-796fd4017295",
+        "tensorzero_variant": "openrouter",
+        "tensorzero_usage": {
+          "input_tokens": 2144,
+          "output_tokens": 383,
+          "provider_cache_read_input_tokens": 384,
+          "cost": null
+        },
+        "tensorzero_finish_reason": "stop",
+        "scores": {
+          "parse_markdown_quality": 0.7444,
+          "rag_context_quality": 1.0,
+          "llm_answer_quality": 0.84,
+          "rag_end_to_end_pass": true
+        },
+        "cortex_eval_mode": "async",
+        "knowledge_events": {
+          "enabled": true,
+          "status": "failed",
+          "error": "Job job_f5ae7a148c574aff8d1431e2 ended as failed: {'job_id': 'job_f5ae7a148c574aff8d1431e2', 'job_type': 'knowledge_add', 'status': 'failed', 'operation_name': 'knowledge.add', 'submitted_at': '2026-05-09T06:08:25.115126', 'progress_percent': None, 'queue_name': None, 'target_type': 'dataset', 'target_id': 'dataset_0093b5ee81824ac9b6963941', 'correlation_id': 'request_fe15ae4e0f8f452688ea06b5', 'started_at': '2026-05-09T06:08:31.955257', 'completed_at': '2026-05-09T06:09:09.510015', 'error': {'code': 'knowledge_worker_failed', 'message': 'Embedding connection test timed out after 30s. Check that your embedding endpoint is reachable. Set COGNEE_SKIP_CONNECTION_TEST=true to bypass this check.'}, 'metrics': {'queue_latency_ms': 6840, 'run_latency_ms': 37554}, 'telemetry': {'trace_id': 'bb222992bc3bb679b0463361fed4e78f', 'span_id': 'd709cbdcdf77b480', 'request_id': 'request_fe15ae4e0f8f452688ea06b5', 'deployment_ring': None, 'experiment_variant': None}}",
+          "fallback": "parse_artifacts",
+          "fallback_reason": "failed"
+        }
+      }
+    },
+    {
+      "query": "对比这些来源中主要的宏观经济、通货膨胀、货币政策及金融稳定风险。请注明来源名称。",
+      "actual_output": "当前提供的来源仅是美国联邦储备委员会（Fed）FOMC 日历页面的导航列表，列出了关于 Fed 结构、新闻、货币政策、监管等多个子页面的链接，但并未包含具体的宏观经济、通胀、货币政策或金融稳定风险的实质性内容。因此，无法在这些来源之间进行比较。要进行比较，需要查阅各具体报告（如《Monetary Policy Report》《Beige Book》《Federal Reserve Supervision and Regulation Report》等）中的相关章节。",
+      "expected_keywords": [
+        "fomc",
+        "federal reserve",
+        "monetary policy"
+      ],
+      "retrieval_contexts": [
+        "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: crawl4ai\nObject ID: obj_96d42e082b884ee6b7ff97a5\n\n* [](https://www.federalreserve.gov/aboutthefed.htm)[About the Fed](https://www.federalreserve.gov/aboutthefed.htm)\n    *       * [Structure of the Federal Reserve System](https://www.federalreserve.gov/aboutthefed/fedexplained/who-we-are.htm)\n      * [The Fed Explained](https://www.federalreserve.gov/aboutthefed/the-fed-explained.htm)\n      * [Board Members](https://www.federalreserve.gov/aboutthefed/bios/board/default.htm)\n      * [Advisory Councils](https://www.federalreserve.gov/aboutthefed/advisorydefault.htm)\n      * [Federal Reserve Banks](https://www.federalreserve.gov/aboutthefed/federal-reserve-system.htm)\n      * [Federal Reserve Bank and Branch Directors](https://www.federalreserve.gov/aboutthefed/directors/about.htm)\n      * [Federal Reserve Act](https://www.federalreserve.gov/aboutthefed/fract.htm)\n      * [Currency](https://www.federalreserve.gov/aboutthefed/currency.htm)\n      * [Board Meetings](https://www.federalreserve.gov/aboutthefed/boardmeetings/meetingdates.htm)\n      * [Board Votes](https://www.federalreserve.gov/aboutthefed/boardvotes.htm)\n      * [Careers](https://www.federalreserve.gov/careers.htm)\n      * [Do Business with the Board](https://www.federalreserve.gov/aboutthefed/procurement/tips.htm)\n      * [Holidays Observed - K.8](https://www.federalreserve.gov/aboutthefed/k8.htm)\n      * [Ethics & Values](https://www.federalreserve.gov/aboutthefed/ethics-values.htm)\n      * [Contact](https://www.federalreserve.gov/aboutthefed/contact-us-topics.htm)\n      * [Requesting Information (FOIA)](https://www.federalreserve.gov/foia/about_foia.htm)\n      * [FAQs](https://www.federalreserve.gov/faqs.htm)\n      * [Economic Education](https://www.federalreserve.gov/aboutthefed/educational-tools/default.htm)\n      * [Fed Financial Statements](https://www.federalreserve.gov/aboutthefed/fed-financial-statements.htm)\n      * [Financial Innovation](https://www.federalreserve.gov/aboutthefed/financial-innovation.htm)\n  * [](https://www.federalreserve.gov/newsevents.htm)[News & Events](https://www.federalreserve.gov/newsevents.htm)\n    * [Press Releases](https://www.federalreserve.gov/newsevents/pressreleases.htm)\n    * [Speeches & Testimony](https://www.federalreserve.gov/newsevents/speeches-testimony.htm)\n    * [Calendar](https://www.federalreserve.gov/newsevents/calendar.htm)\n    * [Videos](https://www.federalreserve.gov/videos.htm)\n    * [Photo Gallery](https://www.federalreserve.gov/photogallery.htm)\n    * [Conferences](https://www.federalreserve.gov/conferences.htm)\n  * [](https://www.federalreserve.gov/monetarypolicy.htm)[Monetary Policy](https://www.federalreserve.gov/monetarypolicy.htm)\n    *       * **Federal Open Market Committee**\n      * [About the FOMC](https://www.federalreserve.gov/monetarypolicy/fomc.htm)\n      * [Meeting calendars and information](https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm)\n      * [Transcripts and other historical materials](https://www.federalreserve.gov/monetarypolicy/fomc_historical.htm)\n      * [FAQs](https://www.federalreserve.gov/monetarypolicy/fomc_projectionsfaqs.htm)\n      * **Monetary Policy Principles and Practice**\n      * [Notes](https://www.federalreserve.gov/monetarypolicy/monetary-policy-principles-and-practice.htm)\n      * **Policy Implementation**\n      * [Policy Normalization](https://www.federalreserve.gov/monetarypolicy/policy-normalization.htm)\n      * [Policy Tools](https://www.federalreserve.gov/monetarypolicy/policytools.htm)\n      * **Reports**\n      * [Monetary Policy Report](https://www.federalreserve.gov/monetarypolicy/publications/mpr_default.htm)\n      * [Beige Book](https://www.federalreserve.gov/monetarypolicy/publications/beige-book-default.htm)\n      * [Federal Reserve Balance Sheet Developments](https://www.federalreserve.gov/monetarypolicy/publications/balan"
+      ],
+      "metadata": {
+        "run_id": "tzcx_20260509_060746_0cf97b90",
+        "dataset_key": "tensorzero_cortex_tzcx_20260509_060746_0cf97b90",
+        "context_id": "parse_engine:crawl4ai",
+        "context_source": "parse_artifact",
+        "parse_engine_id": "crawl4ai",
+        "tensorzero_inference_id": "019e0b5a-c695-78b2-af67-7a9b0631d1e1",
+        "tensorzero_episode_id": "019e0b5a-c695-78b2-af67-7aa811e67443",
+        "tensorzero_variant": "openrouter",
+        "tensorzero_usage": {
+          "input_tokens": 2149,
+          "output_tokens": 404,
+          "provider_cache_read_input_tokens": 384,
+          "cost": null
+        },
+        "tensorzero_finish_reason": "stop",
+        "scores": {
+          "parse_markdown_quality": 0.7444,
+          "rag_context_quality": 1.0,
+          "llm_answer_quality": 0.83,
+          "rag_end_to_end_pass": true
+        },
+        "cortex_eval_mode": "async",
+        "knowledge_events": {
+          "enabled": true,
+          "status": "failed",
+          "error": "Job job_f5ae7a148c574aff8d1431e2 ended as failed: {'job_id': 'job_f5ae7a148c574aff8d1431e2', 'job_type': 'knowledge_add', 'status': 'failed', 'operation_name': 'knowledge.add', 'submitted_at': '2026-05-09T06:08:25.115126', 'progress_percent': None, 'queue_name': None, 'target_type': 'dataset', 'target_id': 'dataset_0093b5ee81824ac9b6963941', 'correlation_id': 'request_fe15ae4e0f8f452688ea06b5', 'started_at': '2026-05-09T06:08:31.955257', 'completed_at': '2026-05-09T06:09:09.510015', 'error': {'code': 'knowledge_worker_failed', 'message': 'Embedding connection test timed out after 30s. Check that your embedding endpoint is reachable. Set COGNEE_SKIP_CONNECTION_TEST=true to bypass this check.'}, 'metrics': {'queue_latency_ms': 6840, 'run_latency_ms': 37554}, 'telemetry': {'trace_id': 'bb222992bc3bb679b0463361fed4e78f', 'span_id': 'd709cbdcdf77b480', 'request_id': 'request_fe15ae4e0f8f452688ea06b5', 'deployment_ring': None, 'experiment_variant': None}}",
+          "fallback": "parse_artifacts",
+          "fallback_reason": "failed"
+        }
+      }
+    },
+    {
+      "query": "对比这些来源中主要的宏观经济、通货膨胀、货币政策及金融稳定风险。请注明来源名称。",
+      "actual_output": "The provided source (Federal Reserve FOMC calendar) only lists meeting dates, statements, and minutes links; it does not contain substantive commentary on macro‑economic conditions, inflation trends, monetary‑policy decisions, or financial‑stability risks, so a comparison across those topics cannot be made from this material.",
+      "expected_keywords": [
+        "fomc",
+        "federal reserve",
+        "monetary policy"
+      ],
+      "retrieval_contexts": [
+        "Source: Federal Reserve FOMC calendar\nURL: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\nParse engine: jina_reader\nObject ID: obj_067400b39d424d4988bf1639\n\nTitle: The Fed - Meeting calendars and information\n\nURL Source: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm\n\nMarkdown Content:\n```markdown\n# The Fed - Meeting calendars and information\n\n## Main Content\n\n### Meeting calendars, statements, and minutes (2021-2027)\n\nThe FOMC holds eight regularly scheduled meetings during the year and other meetings as needed. Links to policy statements and minutes are in the calendars below. The minutes of regularly scheduled meetings are released three weeks after the date of the policy decision. Committee membership changes at the first regularly scheduled meeting of the year.\n\n**FOIA**\nThe FOMC makes an [annual report](/foia/fomc/annualreports.htm) pursuant to the Freedom of Information Act. The FOMC FOIA [Service Center](/foia/fomc/servicecenter.htm) provides information about the status of FOIA requests and the FOIA process.\n\n[2026](#42828) | [2025](#42827) | [2024](#39116) | [2023](#36495) | [2022](#32979) | [2021](#27443)\nFuture Year: [2027](#45694)\n\n#### 2026 FOMC Meetings\n\n##### January\n- **Date:** 27-28\n- **Statement:**\n  - [PDF](/monetarypolicy/files/monetary20260128a1.pdf) | [HTML](/newsevents/pressreleases/monetary20260128a.htm)\n  - [Implementation Note](/newsevents/pressreleases/monetary20260128a1.htm)\n- **Press Conference:** [Link](/monetarypolicy/fomcpressconf20260128.htm)\n- **Minutes:**\n  - [PDF](/monetarypolicy/files/fomcminutes20260128.pdf) | [HTML](/monetarypolicy/fomcminutes20260128.htm)\n  - (Released February 18, 2026)\n\n##### March\n- **Date:** 17-18*\n- **Statement:**\n  - [PDF](/monetarypolicy/files/monetary20260318a1.pdf) | [HTML](/newsevents/pressreleases/monetary20260318a.htm)\n  - [Implementation Note](/newsevents/pressreleases/monetary20260318a.htm)\n- **Press Conference:** [Link](/monetarypolicy/fomcpresconf20260318.htm)\n- **Projection Materials:**\n  - [PDF](/monetarypolicy/files/fomcprojtabl\n```"
+      ],
+      "metadata": {
+        "run_id": "tzcx_20260509_060746_0cf97b90",
+        "dataset_key": "tensorzero_cortex_tzcx_20260509_060746_0cf97b90",
+        "context_id": "parse_engine:jina_reader",
+        "context_source": "parse_artifact",
+        "parse_engine_id": "jina_reader",
+        "tensorzero_inference_id": "019e0b5a-d409-74b1-9c48-0b2c4e0d2438",
+        "tensorzero_episode_id": "019e0b5a-d409-74b1-9c48-0b38e9d1a4b5",
+        "tensorzero_variant": "openrouter",
+        "tensorzero_usage": {
+          "input_tokens": 1268,
+          "output_tokens": 317,
+          "provider_cache_read_input_tokens": 384,
+          "cost": null
+        },
+        "tensorzero_finish_reason": "stop",
+        "scores": {
+          "parse_markdown_quality": 0.7444,
+          "rag_context_quality": 0.6224,
+          "llm_answer_quality": 0.6567,
+          "rag_end_to_end_pass": true
+        },
+        "cortex_eval_mode": "async",
+        "knowledge_events": {
+          "enabled": true,
+          "status": "failed",
+          "error": "Job job_f5ae7a148c574aff8d1431e2 ended as failed: {'job_id': 'job_f5ae7a148c574aff8d1431e2', 'job_type': 'knowledge_add', 'status': 'failed', 'operation_name': 'knowledge.add', 'submitted_at': '2026-05-09T06:08:25.115126', 'progress_percent': None, 'queue_name': None, 'target_type': 'dataset', 'target_id': 'dataset_0093b5ee81824ac9b6963941', 'correlation_id': 'request_fe15ae4e0f8f452688ea06b5', 'started_at': '2026-05-09T06:08:31.955257', 'completed_at': '2026-05-09T06:09:09.510015', 'error': {'code': 'knowledge_worker_failed', 'message': 'Embedding connection test timed out after 30s. Check that your embedding endpoint is reachable. Set COGNEE_SKIP_CONNECTION_TEST=true to bypass this check.'}, 'metrics': {'queue_latency_ms': 6840, 'run_latency_ms': 37554}, 'telemetry': {'trace_id': 'bb222992bc3bb679b0463361fed4e78f', 'span_id': 'd709cbdcdf77b480', 'request_id': 'request_fe15ae4e0f8f452688ea06b5', 'deployment_ring': None, 'experiment_variant': None}}",
+          "fallback": "parse_artifacts",
+          "fallback_reason": "failed"
+        }
+      }
+    }
+  ],
+  "scorecard": {
+    "parse_markdown_quality": 0.7444,
+    "rag_context_quality": 0.9245,
+    "llm_answer_quality": 0.728,
+    "rag_end_to_end_pass_rate": 1.0,
+    "rag_end_to_end_pass": true,
+    "tensorzero_strategy": "exhaustive",
+    "tensorzero_variants_requested": [
+      "openrouter"
+    ],
+    "tensorzero_variant_counts": {
+      "openrouter": 5
+    },
+    "tensorzero_inference_count": 5,
+    "tensorzero_error_count": 0,
+    "parse_success_count": 6,
+    "parse_failure_count": 0,
+    "parse_by_engine": {
+      "auto": {
+        "success": 1,
+        "failure": 0,
+        "avg_score": 1.0,
+        "markdown_chars": 78026
+      },
+      "crawl4ai": {
+        "success": 1,
+        "failure": 0,
+        "avg_score": 1.0,
+        "markdown_chars": 78026
+      },
+      "markitdown": {
+        "success": 1,
+        "failure": 0,
+        "avg_score": 1.0,
+        "markdown_chars": 43010
+      },
+      "llama_parse": {
+        "success": 1,
+        "failure": 0,
+        "avg_score": 1.0,
+        "markdown_chars": 13730
+      },
+      "jina_reader": {
+        "success": 1,
+        "failure": 0,
+        "avg_score": 0.4666,
+        "markdown_chars": 1903
+      },
+      "docling": {
+        "success": 1,
+        "failure": 0,
+        "avg_score": 0.0,
+        "markdown_chars": 0
+      }
+    },
+    "context_group_count": 5,
+    "context_source": "parse_artifact_fallback",
+    "knowledge_status": "failed",
+    "cortex_eval_mode": "async",
+    "cortex_eval_types": [
+      "rag",
+      "custom"
+    ]
+  },
+  "report_json_path": "D:\\code\\codex\\cortex\\examples\\tensorzero-cortex\\artifacts\\tzcx_20260509_060746_0cf97b90\\report.json",
+  "report_markdown_path": "D:\\code\\codex\\cortex\\examples\\tensorzero-cortex\\artifacts\\tzcx_20260509_060746_0cf97b90\\report.md",
+  "eval_dataset_jsonl_path": "D:\\code\\codex\\cortex\\examples\\tensorzero-cortex\\artifacts\\tzcx_20260509_060746_0cf97b90\\tensorzero_eval_dataset.jsonl",
+  "knowledge_graph_html_path": null,
+  "cortex_eval_result": {
+    "mode": "async",
+    "engine_id": "deepeval",
+    "runs": {
+      "rag": {
+        "mode": "async",
+        "job_id": "job_90c90ae329bc4a1ab33bf201",
+        "accepted": {
+          "job_id": "job_90c90ae329bc4a1ab33bf201",
+          "job_type": "eval",
+          "status": "queued",
+          "submitted_at": "2026-05-09T06:09:32.007649",
+          "poll_url": "/v1/jobs/job_90c90ae329bc4a1ab33bf201",
+          "result_url": "/v1/eval/jobs/job_90c90ae329bc4a1ab33bf201/result",
+          "cancel_url": "/v1/jobs/job_90c90ae329bc4a1ab33bf201/cancel",
+          "telemetry": {
+            "trace_id": "448ae7edde3cab857016162e22d4146c",
+            "span_id": "9cb87a4d49d8d556",
+            "request_id": "request_ee60723ca59e47dc942e559f",
+            "deployment_ring": null,
+            "experiment_variant": null
+          },
+          "eval_type": "rag",
+          "engine_id": "deepeval"
+        },
+        "job": {
+          "job_id": "job_90c90ae329bc4a1ab33bf201",
+          "job_type": "eval",
+          "status": "succeeded",
+          "operation_name": "evaluation.rag",
+          "submitted_at": "2026-05-09T06:09:32.007649",
+          "progress_percent": null,
+          "queue_name": null,
+          "target_type": "existing_outputs",
+          "target_id": null,
+          "correlation_id": "request_ee60723ca59e47dc942e559f",
+          "started_at": "2026-05-09T06:09:34.021775",
+          "completed_at": null,
+          "error": null,
+          "metrics": {
+            "queue_latency_ms": 2014,
+            "run_latency_ms": null
+          },
+          "telemetry": {
+            "trace_id": "448ae7edde3cab857016162e22d4146c",
+            "span_id": "9cb87a4d49d8d556",
+            "request_id": "request_ee60723ca59e47dc942e559f",
+            "deployment_ring": null,
+            "experiment_variant": null
+          }
+        },
+        "result": {
+          "eval_type": "rag",
+          "engine_id": "deepeval",
+          "status": "partial",
+          "summary": {
+            "overall_passed": false,
+            "composite_score": 0.8333333333333334,
+            "metric_count": 5,
+            "passed_metric_count": 4,
+            "failed_metric_count": 1,
+            "summary_by_namespace": {
+              "rag": 0.8333333333333334
+            }
+          },
+          "metrics": [
+            {
+              "metric_key": "rag.answer_relevance",
+              "status": "passed",
+              "display_name": "rag.answer_relevance",
+              "score": 1.0,
+              "threshold": 0.65,
+              "unit": "score",
+              "engine_id": "deepeval",
+              "native_metric_key": "AnswerRelevancyMetric",
+              "sample_size": 3,
+              "details": {
+                "case_results": [
+                  {
+                    "passed": true,
+                    "reason": "The score is 1.00 because the response fully addressed the request with no irrelevant content.",
+                    "score": 1.0
+                  },
+                  {
+                    "passed": true,
+                    "reason": "The score is 1.00 because the response fully addressed the request with no irrelevant content.",
+                    "score": 1.0
+                  },
+                  {
+                    "passed": true,
+                    "reason": "The score is 1.00 because the response fully addressed the request with no irrelevant content.",
+                    "score": 1.0
+                  }
+                ],
+                "engine_options": {}
+              }
+            },
+            {
+              "metric_key": "rag.faithfulness",
+              "status": "passed",
+              "display_name": "rag.faithfulness",
+              "score": 1.0,
+              "threshold": 0.65,
+              "unit": "score",
+              "engine_id": "deepeval",
+              "native_metric_key": "FaithfulnessMetric",
+              "sample_size": 3,
+              "details": {
+                "case_results": [
+                  {
+                    "passed": true,
+                    "reason": "The score is 1.00 because there are no contradictions, indicating perfect faithfulness to the retrieval context.",
+                    "score": 1.0
+                  },
+                  {
+                    "passed": true,
+                    "reason": "The score is 1.00 because there are no contradictions, indicating perfect faithfulness to the retrieval context.",
+                    "score": 1.0
+                  },
+                  {
+                    "passed": true,
+                    "reason": "The score is 1.00 because there are no contradictions, indicating perfect faithfulness to the retrieval context.",
+                    "score": 1.0
+                  }
+                ],
+                "engine_options": {}
+              }
+            },
+            {
+              "metric_key": "rag.contextual_precision",
+              "status": "passed",
+              "display_name": "rag.contextual_precision",
+              "score": 1.0,
+              "threshold": 0.6,
+              "unit": "score",
+              "engine_id": "deepeval",
+              "native_metric_key": "ContextualPrecisionMetric",
+              "sample_size": 3,
+              "details": {
+                "case_results": [
+                  {
+                    "passed": true,
+                    "reason": "The score is 1.00 because the only node (rank 1) is relevant, as shown by the reason \"The document explicitly mentions the Federal Open Market Committee (FOMC) and the Federal Reserve's monetary policy, which directly relates to the expected output terms 'fomc', 'federal reserve', and 'monetary policy'.\"",
+                    "score": 1.0
+                  },
+                  {
+                    "passed": true,
+                    "reason": "The score is 1.00 because the first node is relevant, as the reason states \"The document explicitly mentions the Federal Open Market Committee (FOMC), the Federal Reserve, and monetary policy, which directly aligns with the expected output terms 'fomc, federal reserve, monetary policy' and is therefore remotely useful for answering the user query about macroeconomic, inflation, monetary policy, and financial stability risks.\".",
+                    "score": 1.0
+                  },
+                  {
+                    "passed": true,
+                    "reason": "The score is 1.00 because the sole node (rank 1) is relevant, as shown by the reason \"The context is from 'Source: Federal Reserve FOMC calendar' and details FOMC meetings, statements, and monetary policy information, directly relating to 'federal reserve' and 'monetary policy' in the expected output. It mentions 'The FOMC holds eight regularly scheduled meetings' and provides links to policy statements.\" and there are no irrelevant nodes to lower the ranking.",
+                    "score": 1.0
+                  }
+                ],
+                "engine_options": {}
+              }
+            },
+            {
+              "metric_key": "rag.contextual_recall",
+              "status": "passed",
+              "display_name": "rag.contextual_recall",
+              "score": 1.0,
+              "threshold": 0.6,
+              "unit": "score",
+              "engine_id": "deepeval",
+              "native_metric_key": "ContextualRecallMetric",
+              "sample_size": 3,
+              "details": {
+                "case_results": [
+                  {
+                    "passed": true,
+                    "reason": "The score is 1.00 because every term in the expected output is directly linked to node 1 in the retrieval context, with clear references to the Federal Open Market Committee and the Monetary Policy sections.",
+                    "score": 1.0
+                  },
+                  {
+                    "passed": true,
+                    "reason": "The score is 1.00 because sentence 1 aligns perfectly with node 1 in the retrieval context, which explicitly mentions the FOMC, the Federal Reserve, and monetary policy.",
+                    "score": 1.0
+                  },
+                  {
+                    "passed": true,
+                    "reason": "The score is 1.00 because each term in the expected output ('fomc', 'federal reserve', 'monetary policy') is directly matched by node(s) in retrieval context, providing clear attribution for every sentence.",
+                    "score": 1.0
+                  }
+                ],
+                "engine_options": {}
+              }
+            },
+            {
+              "metric_key": "rag.contextual_relevance",
+              "status": "failed",
+              "display_name": "rag.contextual_relevance",
+              "score": 0.16666666666666666,
+              "threshold": 0.6,
+              "unit": "score",
+              "engine_id": "deepeval",
+              "native_metric_key": "ContextualRelevancyMetric",
+              "sample_size": 3,
+              "details": {
+                "case_results": [
+                  {
+                    "passed": false,
+                    "reason": "The score is 0.00 because the retrieval context only contains navigation menu links and structural elements from the Federal Reserve website (\"About the Fed\", \"News & Events\", \"Monetary Policy\", etc.) with no substantive content about macroeconomic indicators, inflation, monetary policy, or financial stability risks, and there are no relevant statements.",
+                    "score": 0.0
+                  },
+                  {
+                    "passed": false,
+                    "reason": "The score is 0.50 because the retrieval context mixes irrelevant material (e.g., \"links to About the Fed, including structure, board members, Federal Reserve Banks\" and \"News & Events sections such as Press Releases, Speeches & Testimony\") with a limited relevant portion (e.g., \"The source contains sections on Monetary Policy including Federal Open Market Committee (FOMC)...\"), resulting in only moderate contextual relevance.",
+                    "score": 0.5
+                  },
+                  {
+                    "passed": false,
+                    "reason": "The score is 0.00 because the retrieval context only describes FOMC meeting frequency, minutes release timing, and committee composition changes, which do not address the requested comparison of macroeconomic conditions, inflation, monetary policy, or financial stability risks.",
+                    "score": 0.0
+                  }
+                ],
+                "engine_options": {}
+              }
+            }
+          ],
+          "eval_run_id": "erun_c785530713d140aea1f10a12",
+          "job_id": "job_90c90ae329bc4a1ab33bf201",
+          "name": "TensorZero Cortex RAG Eval tzcx_20260509_060746_0cf97b90",
+          "profile_key": "auto_default",
+          "source_summary": {
+            "input_type": "inline_test_cases",
+            "test_case_count": 3
+          },
+          "target_summary": {
+            "target_type": "existing_outputs"
+          },
+          "samples": {
+            "total": 3,
+            "passed": 4,
+            "failed": 1,
+            "skipped": 0
+          },
+          "artifacts": [
+            {
+              "object_id": "obj_2c0beb7aa6c84cf5806b67c0",
+              "label": "evaluation_report",
+              "content_type": "application/json",
+              "format": "json",
+              "description": "Canonical Cortex evaluation report."
+            }
+          ],
+          "telemetry": null,
+          "started_at": "2026-05-09T06:09:36.075073Z",
+          "completed_at": "2026-05-09T06:09:56.309866Z"
+        }
+      },
+      "custom": {
+        "mode": "async",
+        "job_id": "job_38dd84b3312b4147bf17c9d5",
+        "accepted": {
+          "job_id": "job_38dd84b3312b4147bf17c9d5",
+          "job_type": "eval",
+          "status": "queued",
+          "submitted_at": "2026-05-09T06:09:59.197030",
+          "poll_url": "/v1/jobs/job_38dd84b3312b4147bf17c9d5",
+          "result_url": "/v1/eval/jobs/job_38dd84b3312b4147bf17c9d5/result",
+          "cancel_url": "/v1/jobs/job_38dd84b3312b4147bf17c9d5/cancel",
+          "telemetry": {
+            "trace_id": "d79a569405002d52c652297fefcb6290",
+            "span_id": "5e9887d7996c69a6",
+            "request_id": "request_dbcaea660a534e3295761f3e",
+            "deployment_ring": null,
+            "experiment_variant": null
+          },
+          "eval_type": "custom",
+          "engine_id": "deepeval"
+        },
+        "job": {
+          "job_id": "job_38dd84b3312b4147bf17c9d5",
+          "job_type": "eval",
+          "status": "succeeded",
+          "operation_name": "evaluation.custom",
+          "submitted_at": "2026-05-09T06:09:59.197030",
+          "progress_percent": null,
+          "queue_name": null,
+          "target_type": "existing_outputs",
+          "target_id": null,
+          "correlation_id": "request_dbcaea660a534e3295761f3e",
+          "started_at": "2026-05-09T06:10:03.707084",
+          "completed_at": null,
+          "error": null,
+          "metrics": {
+            "queue_latency_ms": 4510,
+            "run_latency_ms": null
+          },
+          "telemetry": {
+            "trace_id": "d79a569405002d52c652297fefcb6290",
+            "span_id": "5e9887d7996c69a6",
+            "request_id": "request_dbcaea660a534e3295761f3e",
+            "deployment_ring": null,
+            "experiment_variant": null
+          }
+        },
+        "result": {
+          "eval_type": "custom",
+          "engine_id": "deepeval",
+          "status": "partial",
+          "summary": {
+            "overall_passed": false,
+            "composite_score": 0.20833333333333331,
+            "metric_count": 4,
+            "passed_metric_count": 0,
+            "failed_metric_count": 4,
+            "summary_by_namespace": {
+              "custom": 0.16666666666666666,
+              "quality": 0.2222222222222222
+            }
+          },
+          "metrics": [
+            {
+              "metric_key": "quality.correctness",
+              "status": "failed",
+              "display_name": "quality.correctness",
+              "score": 0.16666666666666666,
+              "threshold": 0.65,
+              "unit": "score",
+              "engine_id": "deepeval",
+              "native_metric_key": null,
+              "sample_size": 3,
+              "details": {
+                "case_results": [
+                  {
+                    "passed": false,
+                    "reason": "Actual Output analyzes the Federal Reserve FOMC calendar context but does not compare macroeconomic, inflation, monetary policy, or financial stability risks across multiple sources as required by the Input, nor does it match the Expected Output 'fomc, federal reserve, monetary policy'. Retrieval Context contains only one source (FOMC calendar) lacking substantive data for comparison, confirming discrepancies from missing multi-source context per steps 1-3.",
+                    "score": 0.1
+                  },
+                  {
+                    "passed": false,
+                    "reason": "The Actual Output correctly identifies that the Retrieval Context contains only navigation links and structural information from the Federal Reserve FOMC calendar page, lacking substantive content on macroeconomic indicators, inflation, monetary policy, and financial stability risks. However, the Expected Output requests only keyword extraction ('fomc, federal reserve, monetary policy'), while the Actual Output provides a detailed explanation of why comparison is impossible. The Actual Output is factually accurate and more informative than the Expected Output, but represents a fundamental mismatch in task interpretation—the user asked for a comparison with source attribution, the Actual Output explained why this is impossible, yet the Expected Output appears to expect simple keyword extraction. The Actual Output demonstrates better understanding of the retrieval context limitations but fails to align with the Expected Output format.",
+                    "score": 0.2
+                  },
+                  {
+                    "passed": false,
+                    "reason": "Actual output correctly notes the Federal Reserve FOMC calendar lacks substantive content on macroeconomics, inflation, monetary policy, or financial stability risks, aligning with retrieval context of only meeting dates and links (step 3). However, it fails to match expected output 'fomc, federal reserve, monetary policy' or provide any comparison across sources (step 1), and given search results [1-8] contain no relevant economic content like Git diffs or IRC logs, it does not logically address the multi-source input query (step 2).",
+                    "score": 0.2
+                  }
+                ],
+                "engine_options": {}
+              }
+            },
+            {
+              "metric_key": "quality.completeness",
+              "status": "failed",
+              "display_name": "quality.completeness",
+              "score": 0.13333333333333333,
+              "threshold": 0.65,
+              "unit": "score",
+              "engine_id": "deepeval",
+              "native_metric_key": null,
+              "sample_size": 3,
+              "details": {
+                "case_results": [
+                  {
+                    "passed": false,
+                    "reason": "Actual Output analyzes the Federal Reserve FOMC calendar source from Retrieval Context but fails to address the Input's core requirement to compare macroeconomic, inflation, monetary policy, and financial stability risks across 'these sources' (evident from 8 diverse search results like Hacker News, Hugging Face commits), noting sources by name. It omits any comparison or reference to multiple sources and ignores Expected Output's key elements (fomc, federal reserve, monetary policy), resulting in incomplete coverage of the task.",
+                    "score": 0.1
+                  },
+                  {
+                    "passed": false,
+                    "reason": "Actual Output analyzes the Retrieval Context (Federal Reserve FOMC calendar links) and correctly notes lack of substantive content on macroeconomic, inflation, monetary policy, or financial stability risks for comparison, addressing step 1 (key requirements) and step 3 (context support). However, it fails step 2 by not matching Expected Output's simple keywords ('fomc, federal reserve, monetary policy') and omits source names as required in Input, resulting in incomplete coverage per step 4.",
+                    "score": 0.1
+                  },
+                  {
+                    "passed": false,
+                    "reason": "Actual Output correctly identifies that the single Retrieval Context (Federal Reserve FOMC calendar) lacks substantive content on macro-economic conditions, inflation, monetary policy, or financial stability risks, aligning with step 3 by noting no support for comparison. However, it fails step 1 and 2 by not addressing the Input's requirement to contrast 'these sources' (implying multiple) and note source names as in Expected Output ('fomc, federal reserve, monetary policy'), resulting in incomplete coverage per step 4.",
+                    "score": 0.2
+                  }
+                ],
+                "engine_options": {}
+              }
+            },
+            {
+              "metric_key": "quality.relevance",
+              "status": "failed",
+              "display_name": "quality.relevance",
+              "score": 0.36666666666666664,
+              "threshold": 0.65,
+              "unit": "score",
+              "engine_id": "deepeval",
+              "native_metric_key": null,
+              "sample_size": 3,
+              "details": {
+                "case_results": [
+                  {
+                    "passed": false,
+                    "reason": "Actual Output analyzes Federal Reserve FOMC calendar content from Retrieval Context, correctly noting lack of substantive macroeconomic, inflation, monetary policy, or financial stability details, but completely ignores the provided Search Results [1]-[8] (e.g., Hacker News, Hugging Face commits, IRC logs) which contain no relevant economic data and mismatch the Input's 'these sources' referring to search results, not FOMC context; fails alignment with Expected Output 'fomc, federal reserve, monetary policy' and deviates from task by not comparing listed sources.",
+                    "score": 0.1
+                  },
+                  {
+                    "passed": true,
+                    "reason": "The Actual Output correctly identifies that the provided Retrieval Context is a navigation list for the Federal Reserve FOMC calendar and related pages, not substantive content on macroeconomic, inflation, monetary policy, or financial stability risks. It therefore explains why a comparison across sources cannot be performed, which aligns with the Input’s request to contrast such risks and to cite sources. However, the Expected Output lists only keywords (fomc, federal reserve, monetary policy), suggesting a much simpler, keyword‑oriented response was anticipated. The Actual Output is accurate and relevant but more elaborate and cautious than the Expected Output, and it does not attempt to fabricate a comparison from the non‑substantive context. Overall, it stays on‑topic and uses the Retrieval Context appropriately, though it diverges in form and level of detail from the Expected Output.",
+                    "score": 0.7
+                  },
+                  {
+                    "passed": false,
+                    "reason": "The task requires comparing macroeconomic conditions, inflation, monetary policy, and financial stability risks across sources with source attribution. The Actual Output correctly identifies that the retrieval context (Federal Reserve FOMC calendar) contains only meeting dates and administrative information without substantive analysis of these topics. However, the Expected Output appears to be keywords rather than a proper comparison with source names as requested. The Actual Output is more accurate in acknowledging the limitation, but neither output fulfills the original task requirement to compare these economic topics across sources with proper attribution. The Retrieval Context supports the Actual Output's assessment that the source lacks the necessary analytical content.",
+                    "score": 0.3
+                  }
+                ],
+                "engine_options": {}
+              }
+            },
+            {
+              "metric_key": "custom.g_eval",
+              "status": "failed",
+              "display_name": "custom.g_eval",
+              "score": 0.16666666666666666,
+              "threshold": 0.65,
+              "unit": "score",
+              "engine_id": "deepeval",
+              "native_metric_key": null,
+              "sample_size": 3,
+              "details": {
+                "case_results": [
+                  {
+                    "passed": false,
+                    "reason": "Retrieval Context is entirely irrelevant to the Input query about macroeconomic, inflation, monetary policy, and financial stability risks, consisting instead of unrelated sources like Hacker News, Hugging Face commits, and IRC logs with no economic content. Actual Output references a non-existent 'Federal Reserve FOMC calendar source' from the separate Test Case, failing to address the provided Search Results or Input. It misaligns completely with Expected Output ('fomc, federal reserve, monetary policy') and violates task fidelity by not comparing sources as instructed.",
+                    "score": 0.1
+                  },
+                  {
+                    "passed": false,
+                    "reason": "Actual Output incorrectly describes Retrieval Context as Fed FOMC calendar navigation without substantive content on macroeconomics/inflation/monetary policy, ignoring explicit links to 'Monetary Policy', 'Monetary Policy Report', and 'Beige Book'; fails to contrast sources as Input requires or align with Expected Output's keywords 'fomc, federal reserve, monetary policy'; Retrieval Context is relevant to Input but Actual Output does not use it effectively, showing low task fidelity and correctness.",
+                    "score": 0.2
+                  },
+                  {
+                    "passed": false,
+                    "reason": "Actual Output correctly interprets the Retrieval Context (Federal Reserve FOMC calendar) as lacking substantive content on macroeconomics, inflation, monetary policy, or financial risks, aligning with step 1 and step 3. However, it fails step 2 by not matching the Expected Output ('fomc, federal reserve, monetary policy'), which expects identification and comparison of sources despite limited content, and shows low task fidelity to the query's demand for source-named contrasts.",
+                    "score": 0.2
+                  }
+                ],
+                "engine_options": {}
+              }
+            }
+          ],
+          "eval_run_id": "erun_14444e5ca9c14c60a49acdd3",
+          "job_id": "job_38dd84b3312b4147bf17c9d5",
+          "name": "TensorZero Cortex CUSTOM Eval tzcx_20260509_060746_0cf97b90",
+          "profile_key": "auto_default",
+          "source_summary": {
+            "input_type": "inline_test_cases",
+            "test_case_count": 3
+          },
+          "target_summary": {
+            "target_type": "existing_outputs"
+          },
+          "samples": {
+            "total": 3,
+            "passed": 0,
+            "failed": 4,
+            "skipped": 0
+          },
+          "artifacts": [
+            {
+              "object_id": "obj_905c2e36bc6c472a81e071c6",
+              "label": "evaluation_report",
+              "content_type": "application/json",
+              "format": "json",
+              "description": "Canonical Cortex evaluation report."
+            }
+          ],
+          "telemetry": null,
+          "started_at": "2026-05-09T06:10:06.304921Z",
+          "completed_at": "2026-05-09T06:10:22.943706Z"
+        }
+      }
+    }
+  }
+}

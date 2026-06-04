@@ -141,5 +141,5 @@ __marimo__/
 .npm-cache/
 
 # Example runtime artifacts
-examples/tensorzero-cortex/artifacts/
+# examples/tensorzero-cortex/artifacts/
 examples/tensorzero-cortex/tensorzero/tensorzero.toml

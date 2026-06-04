@@ -1,0 +1,22 @@
+{
+  "parse": {
+    "results": [
+      {
+        "job_id": "job_docling",
+        "document": {
+          "document_id": "doc_docling",
+          "markdown": "# Macro risks from docling\nInflation, monetary policy, financial stability, growth.",
+          "parser": {
+            "engine_key": "docling"
+          },
+          "source_format": "text/html",
+          "title": "docling",
+          "markdown_sha256": "abc"
+        }
+      }
+    ]
+  },
+  "storage": {
+    "object_id": "obj_Federal-"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "mode": "async",
+  "engine_id": "deepeval",
+  "runs": {
+    "rag": {
+      "status": "failed",
+      "error": "Job job_c90a4c75096b46a68621f659 ended as failed: {'job_id': 'job_c90a4c75096b46a68621f659', 'job_type': 'eval', 'status': 'failed', 'operation_name': 'evaluation.rag', 'submitted_at': '2026-04-29T12:08:33.644102', 'progress_percent': None, 'queue_name': None, 'target_type': 'existing_outputs', 'target_id': None, 'correlation_id': 'request_1c70cac3fdcf4f04a06f2bb8', 'started_at': '2026-04-29T12:08:36.567854', 'completed_at': '2026-04-29T12:08:52.076460', 'error': {'code': 'evaluation_worker_failed', 'message': 'RetryError[<Future at 0x75ae0844b740 state=finished raised APIConnectionError>]'}, 'metrics': {'queue_latency_ms': 2923, 'run_latency_ms': 15508}, 'telemetry': {'trace_id': '5e79b19c4cdb7e2cb82efbac46792a61', 'span_id': '5d32ea0341bd7cba', 'request_id': 'request_1c70cac3fdcf4f04a06f2bb8', 'deployment_ring': None, 'experiment_variant': None}}"
+    },
+    "custom": {
+      "status": "failed",
+      "error": "Job job_7ccbfe8aadc14c589a44b713 ended as failed: {'job_id': 'job_7ccbfe8aadc14c589a44b713', 'job_type': 'eval', 'status': 'failed', 'operation_name': 'evaluation.custom', 'submitted_at': '2026-04-29T12:08:54.794718', 'progress_percent': None, 'queue_name': None, 'target_type': 'existing_outputs', 'target_id': None, 'correlation_id': 'request_28d5c9cd80fa4ba18a66348b', 'started_at': '2026-04-29T12:09:01.401600', 'completed_at': '2026-04-29T12:09:18.078311', 'error': {'code': 'evaluation_worker_failed', 'message': 'RetryError[<Future at 0x715294783a70 state=finished raised APIConnectionError>]'}, 'metrics': {'queue_latency_ms': 6606, 'run_latency_ms': 16676}, 'telemetry': {'trace_id': '370b914810b3d72cd313d0a204ec2ea9', 'span_id': 'aa4e97d8c002bf62', 'request_id': 'request_28d5c9cd80fa4ba18a66348b', 'deployment_ring': None, 'experiment_variant': None}}"
+    }
+  }
+}

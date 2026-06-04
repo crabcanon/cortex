@@ -1,0 +1,394 @@
+[
+  {
+    "context_id": "parse_engine:auto",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "auto",
+    "variant_name": "openai",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: openai: Error 429 Too Many Requests from openai client: {\\n    \\\"error\\\": {\\n        \\\"message\\\": \\\"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\\\",\\n        \\\"type\\\": \\\"insufficient_quota\\\",\\n        \\\"param\\\": null,\\n        \\\"code\\\": \\\"insufficient_quota\\\"\\n    }\\n}\\n [request_id: req_060a4eed589c4422888092e8d1394ddd]\"}",
+    "metadata": {
+      "requested_variant": "openai",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:auto",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "auto",
+    "variant_name": "gemini",
+    "inference_id": "019e43cb-046f-7493-ac3d-901e7428ba4b",
+    "episode_id": "019e43cb-046f-7493-ac3d-9025f19fbf33",
+    "answer_text": "The provided context does not contain any information to compare macroeconomic, inflation, monetary policy, and financial stability risks. It consists entirely of a navigation menu and a list of links for the Federal Reserve website.",
+    "output": {
+      "answer": "The provided context does not contain any information to compare macroeconomic, inflation, monetary policy, and financial stability risks. It consists entirely of a navigation menu and a list of links for the Federal Reserve website.",
+      "citations": [
+        "Federal Reserve FOMC calendar"
+      ],
+      "confidence": 0,
+      "missing_evidence": [
+        "Information on macroeconomic risks",
+        "Information on inflation risks",
+        "Information on monetary policy risks",
+        "Information on financial stability risks"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2209,
+      "output_tokens": 120,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.8135,
+      "rag_context_quality": 0.65,
+      "llm_answer_quality": 0.6167,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "gemini",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:auto",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "auto",
+    "variant_name": "kimi",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: kimi_openai_compatible: Error from openai client: Error sending request: error sending request for url (https://api.moonshot.cn/v1/chat/completions)\"}",
+    "metadata": {
+      "requested_variant": "kimi",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:crawl4ai",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "crawl4ai",
+    "variant_name": "openai",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: openai: Error 429 Too Many Requests from openai client: {\\n    \\\"error\\\": {\\n        \\\"message\\\": \\\"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\\\",\\n        \\\"type\\\": \\\"insufficient_quota\\\",\\n        \\\"param\\\": null,\\n        \\\"code\\\": \\\"insufficient_quota\\\"\\n    }\\n}\\n [request_id: req_36045a00c9f5488da238051704ab3830]\"}",
+    "metadata": {
+      "requested_variant": "openai",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:crawl4ai",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "crawl4ai",
+    "variant_name": "gemini",
+    "inference_id": "019e43cb-4f6e-74e3-b9f3-6e1ff63e9d11",
+    "episode_id": "019e43cb-4f6e-74e3-b9f3-6e245d43ec09",
+    "answer_text": "The provided context does not contain any information regarding macroeconomic, inflation, monetary policy, or financial stability risks. It only consists of a navigational menu and sitemap for the Federal Reserve website.",
+    "output": {
+      "answer": "The provided context does not contain any information regarding macroeconomic, inflation, monetary policy, or financial stability risks. It only consists of a navigational menu and sitemap for the Federal Reserve website.",
+      "citations": [
+        "Federal Reserve FOMC calendar",
+        "obj_4a120db4c2104e07951075ca"
+      ],
+      "confidence": 0,
+      "missing_evidence": [
+        "Macroeconomic risks",
+        "Inflation risks",
+        "Monetary policy risks",
+        "Financial stability risks"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2212,
+      "output_tokens": 98,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.8135,
+      "rag_context_quality": 0.65,
+      "llm_answer_quality": 0.6167,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "gemini",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:crawl4ai",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "crawl4ai",
+    "variant_name": "kimi",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: kimi_openai_compatible: Error from openai client: Error sending request: error sending request for url (https://api.moonshot.cn/v1/chat/completions)\"}",
+    "metadata": {
+      "requested_variant": "kimi",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:jina_reader",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "jina_reader",
+    "variant_name": "openai",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: openai: Error 429 Too Many Requests from openai client: {\\n    \\\"error\\\": {\\n        \\\"message\\\": \\\"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\\\",\\n        \\\"type\\\": \\\"insufficient_quota\\\",\\n        \\\"param\\\": null,\\n        \\\"code\\\": \\\"insufficient_quota\\\"\\n    }\\n}\\n [request_id: req_a6c6fbba0a0b4a8681c10b15e6b28101]\"}",
+    "metadata": {
+      "requested_variant": "openai",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:jina_reader",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "jina_reader",
+    "variant_name": "gemini",
+    "inference_id": "019e43cb-95b8-7341-af0b-86d130c72685",
+    "episode_id": "019e43cb-95b8-7341-af0b-86e52fb6da55",
+    "answer_text": "The provided context does not contain any information regarding macroeconomic, inflation, monetary policy, or financial stability risks. It only provides a schedule of Federal Reserve FOMC meetings and links to related documents.",
+    "output": {
+      "answer": "The provided context does not contain any information regarding macroeconomic, inflation, monetary policy, or financial stability risks. It only provides a schedule of Federal Reserve FOMC meetings and links to related documents.",
+      "citations": [
+        "Federal Reserve FOMC calendar"
+      ],
+      "confidence": 0,
+      "missing_evidence": [
+        "macroeconomic risks",
+        "inflation risks",
+        "monetary policy risks",
+        "financial stability risks"
+      ]
+    },
+    "usage": {
+      "input_tokens": 1582,
+      "output_tokens": 74,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.8135,
+      "rag_context_quality": 0.4602,
+      "llm_answer_quality": 0.6167,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "gemini",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:jina_reader",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "jina_reader",
+    "variant_name": "kimi",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: kimi_openai_compatible: Error from openai client: Error sending request: error sending request for url (https://api.moonshot.cn/v1/chat/completions)\"}",
+    "metadata": {
+      "requested_variant": "kimi",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:llama_parse",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "llama_parse",
+    "variant_name": "openai",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: openai: Error 429 Too Many Requests from openai client: {\\n    \\\"error\\\": {\\n        \\\"message\\\": \\\"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\\\",\\n        \\\"type\\\": \\\"insufficient_quota\\\",\\n        \\\"param\\\": null,\\n        \\\"code\\\": \\\"insufficient_quota\\\"\\n    }\\n}\\n [request_id: req_a937ab749c39498aa8ab19ed8aa914c5]\"}",
+    "metadata": {
+      "requested_variant": "openai",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:llama_parse",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "llama_parse",
+    "variant_name": "gemini",
+    "inference_id": "019e43cb-c6d9-7dc0-9d04-ecba202bda21",
+    "episode_id": "019e43cb-c6d9-7dc0-9d04-eccdbfff44e3",
+    "answer_text": "The provided source (Federal Reserve FOMC calendar) does not contain any information regarding macroeconomic, inflation, monetary policy, or financial stability risks. The text only provides a schedule of FOMC meetings, press conferences, and document release dates for the years 2024 through 2027.",
+    "output": {
+      "answer": "The provided source (Federal Reserve FOMC calendar) does not contain any information regarding macroeconomic, inflation, monetary policy, or financial stability risks. The text only provides a schedule of FOMC meetings, press conferences, and document release dates for the years 2024 through 2027.",
+      "citations": [
+        "Federal Reserve FOMC calendar",
+        "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "obj_6f9b69596a124b51aa2a3f6b"
+      ],
+      "confidence": 1,
+      "missing_evidence": [
+        "Details on macroeconomic risks",
+        "Details on inflation risks",
+        "Details on monetary policy risks",
+        "Details on financial stability risks",
+        "Multiple sources to compare"
+      ]
+    },
+    "usage": {
+      "input_tokens": 1866,
+      "output_tokens": 203,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.8135,
+      "rag_context_quality": 0.65,
+      "llm_answer_quality": 0.8167,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "gemini",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:llama_parse",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "llama_parse",
+    "variant_name": "kimi",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: kimi_openai_compatible: Error from openai client: Error sending request: error sending request for url (https://api.moonshot.cn/v1/chat/completions)\"}",
+    "metadata": {
+      "requested_variant": "kimi",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:markitdown",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "markitdown",
+    "variant_name": "openai",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: openai: Error 429 Too Many Requests from openai client: {\\n    \\\"error\\\": {\\n        \\\"message\\\": \\\"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\\\",\\n        \\\"type\\\": \\\"insufficient_quota\\\",\\n        \\\"param\\\": null,\\n        \\\"code\\\": \\\"insufficient_quota\\\"\\n    }\\n}\\n [request_id: req_393d0a5358974ee7b904aa27fcaa6f1a]\"}",
+    "metadata": {
+      "requested_variant": "openai",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:markitdown",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "markitdown",
+    "variant_name": "gemini",
+    "inference_id": "019e43cc-0a87-7cc3-90f2-8def0bbc2996",
+    "episode_id": "019e43cc-0a87-7cc3-90f2-8df1561f6a91",
+    "answer_text": "The provided context does not contain information comparing macroeconomic, inflation, monetary policy, or financial stability risks. It only consists of navigation menus and boilerplate text from the Federal Reserve website.",
+    "output": {
+      "answer": "The provided context does not contain information comparing macroeconomic, inflation, monetary policy, or financial stability risks. It only consists of navigation menus and boilerplate text from the Federal Reserve website.",
+      "citations": [],
+      "confidence": 0,
+      "missing_evidence": [
+        "Macroeconomic risks",
+        "Inflation risks",
+        "Monetary policy risks",
+        "Financial stability risks"
+      ]
+    },
+    "usage": {
+      "input_tokens": 2210,
+      "output_tokens": 97,
+      "cost": null
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.8135,
+      "rag_context_quality": 0.65,
+      "llm_answer_quality": 0.525,
+      "rag_end_to_end_pass": true
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "gemini",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:markitdown",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "markitdown",
+    "variant_name": "kimi",
+    "inference_id": null,
+    "episode_id": null,
+    "answer_text": "",
+    "output": null,
+    "usage": {},
+    "finish_reason": null,
+    "scores": {},
+    "feedback_errors": [],
+    "error": "TensorZero inference failed: 500 {\"error\":\"All model providers failed to infer with errors: kimi_openai_compatible: Error from openai client: Error sending request: error sending request for url (https://api.moonshot.cn/v1/chat/completions)\"}",
+    "metadata": {
+      "requested_variant": "kimi",
+      "strategy": "exhaustive"
+    }
+  }
+]

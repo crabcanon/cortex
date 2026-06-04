@@ -1,0 +1,109 @@
+{
+  "parse": {
+    "requested_sources": [
+      "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+    ],
+    "engine_id": "docling",
+    "scene": null,
+    "jobs": [
+      {
+        "job_id": "job_4d813b001eaf47d2a5f0f9b5",
+        "job_type": "parse",
+        "status": "queued",
+        "submitted_at": "2026-05-09T08:32:57.570662",
+        "poll_url": "/v1/jobs/job_4d813b001eaf47d2a5f0f9b5",
+        "result_url": "/v1/parse/jobs/job_4d813b001eaf47d2a5f0f9b5/result",
+        "cancel_url": "/v1/jobs/job_4d813b001eaf47d2a5f0f9b5/cancel",
+        "telemetry": {
+          "trace_id": "d2759fe3b807f4fe1a34565bc9edbf05",
+          "span_id": "75b0ef582e1328b3",
+          "request_id": "request_9b683798174b48f38aafdecc",
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      }
+    ],
+    "job_statuses": [
+      {
+        "job_id": "job_4d813b001eaf47d2a5f0f9b5",
+        "job_type": "parse",
+        "status": "succeeded",
+        "operation_name": "parse.document.async",
+        "submitted_at": "2026-05-09T08:32:57.570662",
+        "progress_percent": null,
+        "queue_name": null,
+        "target_type": "parse_source",
+        "target_id": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "correlation_id": "request_9b683798174b48f38aafdecc",
+        "started_at": "2026-05-09T08:32:58.374450",
+        "completed_at": "2026-05-09T08:33:14.425878",
+        "error": null,
+        "metrics": {
+          "queue_latency_ms": 803,
+          "run_latency_ms": 16051
+        },
+        "telemetry": {
+          "trace_id": "d2759fe3b807f4fe1a34565bc9edbf05",
+          "span_id": "75b0ef582e1328b3",
+          "request_id": "request_9b683798174b48f38aafdecc",
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      }
+    ],
+    "results": []
+  },
+  "storage": {
+    "object_id": "obj_5b853af190aa4c958a124af9",
+    "filename": "Federal-Reserve-FOMC-calendar-docling.md",
+    "content_type": "text/markdown",
+    "size_bytes": 236,
+    "status": "available",
+    "audit": {
+      "created_at": "2026-05-09T08:33:15.717478",
+      "updated_at": "2026-05-09T08:33:15.717482",
+      "created_by": "tensorzero-cortex-demo",
+      "updated_by": null
+    },
+    "current_version_id": "objver_951b559295b84461984b94fe",
+    "bucket": "cortex-local",
+    "object_key": "tenant_demo/obj_5b853af190aa4c958a124af9/Federal-Reserve-FOMC-calendar-docling.md",
+    "checksum_sha256": "54a891f9c4cd12c43ecda7e7df1719b2ecc170e580104e077f45790ce2cfe2b8",
+    "etag": "\"fa022621b688551baf4a03b81c8b2fee\"",
+    "storage_class": null,
+    "metadata": {
+      "engine_id": "docling",
+      "job_id": "job_4d813b001eaf47d2a5f0f9b5",
+      "parse_mode": "async",
+      "parse_score": "0.0",
+      "run": "tensorzero-cortex",
+      "source_name": "Federal Reserve FOMC calendar",
+      "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+    },
+    "tags": [
+      "tensorzero",
+      "finance",
+      "parsed-markdown",
+      "docling"
+    ],
+    "version": {
+      "object_version_id": "objver_951b559295b84461984b94fe",
+      "version_no": 1,
+      "size_bytes": 236,
+      "provider_version_ref": null,
+      "checksum_sha256": "54a891f9c4cd12c43ecda7e7df1719b2ecc170e580104e077f45790ce2cfe2b8",
+      "etag": "\"fa022621b688551baf4a03b81c8b2fee\"",
+      "is_latest": true,
+      "created_at": "2026-05-09T08:33:15.722642"
+    },
+    "access_policy": {
+      "access_level": "tenant_shared",
+      "owner_actor_id": null,
+      "classification_labels": [],
+      "allowed_role_keys": [],
+      "denied_role_keys": [],
+      "purpose_tags": [],
+      "constraints": {}
+    }
+  }
+}

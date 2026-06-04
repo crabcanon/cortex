@@ -1,0 +1,201 @@
+{
+  "parse": {
+    "requested_sources": [
+      "https://www.imf.org/external/datamapper/api/v1/NGDP_RPCH/USA"
+    ],
+    "engine_id": "jina_reader",
+    "scene": null,
+    "results": [
+      {
+        "job_id": "job_d246376bb2b040c3abdaf217",
+        "document": {
+          "document_id": "doc_04c4928f4ff749ab84c4dd25",
+          "source_type": "url",
+          "source_format": "text/html",
+          "markdown": "Title:\n\nURL Source: https://www.imf.org/external/datamapper/api/v1/NGDP_RPCH/USA\n\nMarkdown Content:\n```markdown\n{\n  \"countries\": [\n    {\n      \"name\": \"Afghanistan\",\n      \"population_per_citizen\": null,\n      \"area_sq_km\": null,\n      \"currency_code\": \"IRR\"\n    },\n    {\n      \"name\": \"Albania\",\n      \"population_per_citizen\": null,\n      \"area_sq_km\": null,\n      \"currency_code\": null\n    },\n    {\n      \"name\": \"Andorra\",\n      \"population_per_citizen\": null,\n      \"area_sq_km\": null,\n      \"currency_code\": null\n    },\n    {\n      \"name\": \"Angola\",\n      \"population_per_citizen\": null,\n      \"area_sq_km\": null,\n      \"currency_code\": null\n    },\n    {\n      \"name\": \"Antigua & Barbuda\",\n      \"population_per_citizen\": null,\n      \"area_sq_km\": null,\n      \"currency_code\": null\n    },\n    {\n      \"name\": \"Argentina\",\n      \"population_per_citizen\": 42.97, // million people per square kilometer\n      \"area_sq Km2m2km2km2km2km2km2km2km2km2km2km2km2km2 km2 km2 km2 km2 km2 km2 km2 km m m m m m m m m m m m m m m m m m m\n    }\n  ]\n}\n```",
+          "audit": {
+            "created_at": "2026-06-03T07:29:56.591491Z",
+            "updated_at": "2026-06-03T07:29:56.591491Z",
+            "created_by": "tensorzero-cortex-demo",
+            "updated_by": null
+          },
+          "source_url": "https://www.imf.org/external/datamapper/api/v1/NGDP_RPCH/USA",
+          "source_object_id": null,
+          "source_uri": "https://www.imf.org/external/datamapper/api/v1/NGDP_RPCH/USA",
+          "canonical_url": "https://www.imf.org/external/datamapper/api/v1/NGDP_RPCH/USA",
+          "title": "USA",
+          "language_code": "und",
+          "detected_mime_type": "text/plain; charset=utf-8",
+          "category_tags": [],
+          "labels": [],
+          "access_policy": null,
+          "markdown_sha256": "d32a3212108181e500bb14dc0fd78d446e94dce50e34310a1670ff0fde557235",
+          "normalized_metadata": {
+            "title": "USA",
+            "author": null,
+            "publish_date": null,
+            "language": "und",
+            "description": null,
+            "summary": null,
+            "keywords": [],
+            "category_tags": []
+          },
+          "metadata": {
+            "title": "USA",
+            "reader_url": "https://r.jina.ai/https://www.imf.org/external/datamapper/api/v1/NGDP_RPCH/USA",
+            "source_host": "www.imf.org",
+            "raw_metadata": {
+              "response_headers": {
+                "date": "Wed, 03 Jun 2026 07:29:56 GMT",
+                "content-type": "text/plain; charset=utf-8",
+                "content-length": "297",
+                "connection": "keep-alive",
+                "vary": "*",
+                "x-usage-tokens": "12000",
+                "content-encoding": "br",
+                "x-decompressed-content-length": "1048",
+                "cache-control": "no-transform",
+                "server": "cloudflare",
+                "traceparent": "00-355a3181152dbd905a28dd380f7c0592-fcfe0ff0034121d4-00",
+                "x-cloud-trace-context": "355a3181152dbd905a28dd380f7c0592/18230025865163514324",
+                "via": "1.1 google",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "DYNAMIC",
+                "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+                "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=rh8Cdg6HEThVvMgX3I3%2BH1tITOMdq%2FvLlNTRA7irKdtPqQmMz6uKW5%2F3I6pg7VHfDH0unLfkekESfzDIbyu0w3zcrpS90ruMpnk%2BfUmy6lx9Hnoq7NboArP9uDGkPrXXwIuQIWRAnA%3D%3D\"}]}",
+                "cf-ray": "a05cfd29a83402fe-LAX"
+              }
+            },
+            "engine_payload_summary": {
+              "base_url": "https://r.jina.ai",
+              "used_readerlm_v2": true
+            }
+          },
+          "parser": {
+            "engine_key": "jina_reader",
+            "display_name": "Jina Reader",
+            "engine_family": "web_remote",
+            "engine_version": "jina-reader-http",
+            "profile_ref": "jina_reader_balanced",
+            "template_ref": null,
+            "fallback_used": false
+          },
+          "provenance": {
+            "input_kind": "url",
+            "fetched_at": "2026-06-03T07:29:56.591205Z",
+            "final_url": "https://www.imf.org/external/datamapper/api/v1/NGDP_RPCH/USA",
+            "http_status": 200,
+            "content_length_bytes": 1048,
+            "parser_version": "jina-reader-http",
+            "content_hash_sha256": "a3d8d3bd44cf3c6cf95ac7bc300cff9fd81d812b4f96115dbe90c0b60ce4c2a0"
+          }
+        },
+        "artifacts": {
+          "markdown_object": null,
+          "raw_html_object": null,
+          "screenshot_object": null,
+          "pdf_object": null,
+          "ssl_certificate": null
+        },
+        "diagnostics": {
+          "selected_engine_key": "jina_reader",
+          "fallback_used": false,
+          "engine_attempts": [
+            {
+              "attempt_no": 1,
+              "engine_key": "jina_reader",
+              "status": "succeeded",
+              "started_at": "2026-06-03T07:29:47.513296Z",
+              "completed_at": "2026-06-03T07:29:56.591248Z",
+              "error_code": null,
+              "warning": null,
+              "diagnostics": {
+                "engine_options": {
+                  "use_readerlm_v2": true
+                }
+              }
+            }
+          ],
+          "warnings": [],
+          "link_counts": {},
+          "media_counts": {},
+          "anti_bot_strategy": null,
+          "used_proxy": null,
+          "timings_ms": {
+            "fetch": null,
+            "render": null,
+            "normalize": 0,
+            "total": 0
+          },
+          "telemetry": {
+            "trace_id": "ac3cab24e0d580fd0aa195e56fe4dfc9",
+            "span_id": "bc30e49a0c717f15",
+            "request_id": null,
+            "deployment_ring": null,
+            "experiment_variant": null
+          }
+        },
+        "telemetry": {
+          "trace_id": "ac3cab24e0d580fd0aa195e56fe4dfc9",
+          "span_id": "bc30e49a0c717f15",
+          "request_id": null,
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      }
+    ]
+  },
+  "storage": {
+    "object_id": "obj_08ea6a914b154a1c96968ff0",
+    "filename": "IMF-data-API-GDP-growth-jina_reader.md",
+    "content_type": "text/markdown",
+    "size_bytes": 1303,
+    "status": "available",
+    "audit": {
+      "created_at": "2026-06-03T07:29:56.638735",
+      "updated_at": "2026-06-03T07:29:56.638741",
+      "created_by": "tensorzero-cortex-demo",
+      "updated_by": null
+    },
+    "current_version_id": "objver_fe85daf7193d42fa9a5e5004",
+    "bucket": "cortex-local",
+    "object_key": "tenant_demo/obj_08ea6a914b154a1c96968ff0/IMF-data-API-GDP-growth-jina_reader.md",
+    "checksum_sha256": "06e4e71dbec9d025612f291c350bb2a56e24a1acd914d7a29d48f346687d77bd",
+    "etag": "\"c8356f63ab4ff016168186899b654c32\"",
+    "storage_class": null,
+    "metadata": {
+      "engine_id": "jina_reader",
+      "job_id": "job_d246376bb2b040c3abdaf217",
+      "parse_mode": "sync",
+      "parse_score": "0.3124",
+      "run": "tensorzero-cortex",
+      "source_name": "IMF data API GDP growth",
+      "source_url": "https://www.imf.org/external/datamapper/api/v1/NGDP_RPCH/USA"
+    },
+    "tags": [
+      "tensorzero",
+      "finance",
+      "parsed-markdown",
+      "jina_reader"
+    ],
+    "version": {
+      "object_version_id": "objver_fe85daf7193d42fa9a5e5004",
+      "version_no": 1,
+      "size_bytes": 1303,
+      "provider_version_ref": null,
+      "checksum_sha256": "06e4e71dbec9d025612f291c350bb2a56e24a1acd914d7a29d48f346687d77bd",
+      "etag": "\"c8356f63ab4ff016168186899b654c32\"",
+      "is_latest": true,
+      "created_at": "2026-06-03T07:29:56.642648"
+    },
+    "access_policy": {
+      "access_level": "tenant_shared",
+      "owner_actor_id": null,
+      "classification_labels": [],
+      "allowed_role_keys": [],
+      "denied_role_keys": [],
+      "purpose_tags": [],
+      "constraints": {}
+    }
+  }
+}

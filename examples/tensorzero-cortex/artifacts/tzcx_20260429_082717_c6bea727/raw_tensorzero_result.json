@@ -1,0 +1,130 @@
+[
+  {
+    "context_id": "parse_engine:docling",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "docling",
+    "variant_name": "openai",
+    "inference_id": "inf_openai_parse_engine:docling",
+    "episode_id": "ep_1",
+    "answer_text": "openai says inflation and financial stability risks matter.",
+    "output": {
+      "answer": "openai says inflation and financial stability risks matter.",
+      "citations": [
+        "fake"
+      ]
+    },
+    "usage": {
+      "input_tokens": 10,
+      "output_tokens": 20
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.1454,
+      "rag_context_quality": 0.7178,
+      "llm_answer_quality": 0.45,
+      "rag_end_to_end_pass": false
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openai",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:docling",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "docling",
+    "variant_name": "gemini",
+    "inference_id": "inf_gemini_parse_engine:docling",
+    "episode_id": "ep_1",
+    "answer_text": "gemini says inflation and financial stability risks matter.",
+    "output": {
+      "answer": "gemini says inflation and financial stability risks matter.",
+      "citations": [
+        "fake"
+      ]
+    },
+    "usage": {
+      "input_tokens": 10,
+      "output_tokens": 20
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.1454,
+      "rag_context_quality": 0.7178,
+      "llm_answer_quality": 0.45,
+      "rag_end_to_end_pass": false
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "gemini",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:markitdown",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "markitdown",
+    "variant_name": "openai",
+    "inference_id": "inf_openai_parse_engine:markitdown",
+    "episode_id": "ep_1",
+    "answer_text": "openai says inflation and financial stability risks matter.",
+    "output": {
+      "answer": "openai says inflation and financial stability risks matter.",
+      "citations": [
+        "fake"
+      ]
+    },
+    "usage": {
+      "input_tokens": 10,
+      "output_tokens": 20
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.1454,
+      "rag_context_quality": 0.7182,
+      "llm_answer_quality": 0.45,
+      "rag_end_to_end_pass": false
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "openai",
+      "strategy": "exhaustive"
+    }
+  },
+  {
+    "context_id": "parse_engine:markitdown",
+    "context_source": "parse_artifact",
+    "parse_engine_id": "markitdown",
+    "variant_name": "gemini",
+    "inference_id": "inf_gemini_parse_engine:markitdown",
+    "episode_id": "ep_1",
+    "answer_text": "gemini says inflation and financial stability risks matter.",
+    "output": {
+      "answer": "gemini says inflation and financial stability risks matter.",
+      "citations": [
+        "fake"
+      ]
+    },
+    "usage": {
+      "input_tokens": 10,
+      "output_tokens": 20
+    },
+    "finish_reason": "stop",
+    "scores": {
+      "parse_markdown_quality": 0.1454,
+      "rag_context_quality": 0.7182,
+      "llm_answer_quality": 0.45,
+      "rag_end_to_end_pass": false
+    },
+    "feedback_errors": [],
+    "error": null,
+    "metadata": {
+      "requested_variant": "gemini",
+      "strategy": "exhaustive"
+    }
+  }
+]

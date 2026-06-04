@@ -1,0 +1,199 @@
+{
+  "parse": {
+    "requested_sources": [
+      "https://www.oecd.org/en/publications/oecd-economic-outlook-volume-2025-issue-1_83363382-en.html"
+    ],
+    "engine_id": "jina_reader",
+    "scene": null,
+    "results": [
+      {
+        "job_id": "job_fe8362cf70814cdcb4387384",
+        "document": {
+          "document_id": "doc_c8b1e484694e4e0d958af74d",
+          "source_type": "url",
+          "source_format": "text/html",
+          "markdown": "Title: Just a moment...\n\nURL Source: https://www.oecd.org/en/publications/oecd-economic-outlook-volume-2025-issue-1_83363382-en.html\n\nMarkdown Content:\n```markdown\n# www.oecd.org\n\n## Performing security verification\n\nThis website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.\n```",
+          "audit": {
+            "created_at": "2026-06-03T07:43:21.512149Z",
+            "updated_at": "2026-06-03T07:43:21.512149Z",
+            "created_by": "tensorzero-cortex-demo",
+            "updated_by": null
+          },
+          "source_url": "https://www.oecd.org/en/publications/oecd-economic-outlook-volume-2025-issue-1_83363382-en.html",
+          "source_object_id": null,
+          "source_uri": "https://www.oecd.org/en/publications/oecd-economic-outlook-volume-2025-issue-1_83363382-en.html",
+          "canonical_url": "https://www.oecd.org/en/publications/oecd-economic-outlook-volume-2025-issue-1_83363382-en.html",
+          "title": "www.oecd.org",
+          "language_code": "und",
+          "detected_mime_type": "text/plain; charset=utf-8",
+          "category_tags": [],
+          "labels": [],
+          "access_policy": null,
+          "markdown_sha256": "57a8c8bb082edb468bcf6c2ff1909fb845a8bccb079134b18388c11456cc1a49",
+          "normalized_metadata": {
+            "title": "www.oecd.org",
+            "author": null,
+            "publish_date": null,
+            "language": "und",
+            "description": null,
+            "summary": null,
+            "keywords": [],
+            "category_tags": []
+          },
+          "metadata": {
+            "title": "www.oecd.org",
+            "reader_url": "https://r.jina.ai/https://www.oecd.org/en/publications/oecd-economic-outlook-volume-2025-issue-1_83363382-en.html",
+            "source_host": "www.oecd.org",
+            "raw_metadata": {
+              "response_headers": {
+                "date": "Wed, 03 Jun 2026 07:43:21 GMT",
+                "content-type": "text/plain; charset=utf-8",
+                "transfer-encoding": "chunked",
+                "connection": "keep-alive",
+                "vary": "*",
+                "x-usage-tokens": "12000",
+                "server": "cloudflare",
+                "x-cloud-trace-context": "2bc73954a7dc0963aa5de21074571ef1/13186206301745064911",
+                "traceparent": "00-2bc73954a7dc0963aa5de21074571ef1-b6fed0c496882bcf-00",
+                "via": "1.1 google",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "DYNAMIC",
+                "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+                "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=WUz6ayoBQzWuUg6Vj0UCsmLVMddSAud%2Bj%2FUiOyk4vFOEnuuvqHK2qqPm2mluC%2Fi7fvD8FdRnl9p4UTQWiNCBTo%2BLJMgi2uGfCPq7%2Fqn0D1z%2BwZ1fGjyyF5fJoYVSJg%2Fe2U9tbVZ8Iw%3D%3D\"}]}",
+                "content-encoding": "br",
+                "cf-ray": "a05d10bd993f5578-LAX"
+              }
+            },
+            "engine_payload_summary": {
+              "base_url": "https://r.jina.ai",
+              "used_readerlm_v2": true
+            }
+          },
+          "parser": {
+            "engine_key": "jina_reader",
+            "display_name": "Jina Reader",
+            "engine_family": "web_remote",
+            "engine_version": "jina-reader-http",
+            "profile_ref": "jina_reader_balanced",
+            "template_ref": null,
+            "fallback_used": false
+          },
+          "provenance": {
+            "input_kind": "url",
+            "fetched_at": "2026-06-03T07:43:21.508431Z",
+            "final_url": "https://www.oecd.org/en/publications/oecd-economic-outlook-volume-2025-issue-1_83363382-en.html",
+            "http_status": 200,
+            "content_length_bytes": 363,
+            "parser_version": "jina-reader-http",
+            "content_hash_sha256": "57a8c8bb082edb468bcf6c2ff1909fb845a8bccb079134b18388c11456cc1a49"
+          }
+        },
+        "artifacts": {
+          "markdown_object": null,
+          "raw_html_object": null,
+          "screenshot_object": null,
+          "pdf_object": null,
+          "ssl_certificate": null
+        },
+        "diagnostics": {
+          "selected_engine_key": "jina_reader",
+          "fallback_used": false,
+          "engine_attempts": [
+            {
+              "attempt_no": 1,
+              "engine_key": "jina_reader",
+              "status": "succeeded",
+              "started_at": "2026-06-03T07:43:09.859304Z",
+              "completed_at": "2026-06-03T07:43:21.511859Z",
+              "error_code": null,
+              "warning": null,
+              "diagnostics": {
+                "engine_options": {
+                  "use_readerlm_v2": true
+                }
+              }
+            }
+          ],
+          "warnings": [],
+          "link_counts": {},
+          "media_counts": {},
+          "anti_bot_strategy": null,
+          "used_proxy": null,
+          "timings_ms": {
+            "fetch": null,
+            "render": null,
+            "normalize": 0,
+            "total": 0
+          },
+          "telemetry": {
+            "trace_id": "6005fbcf6b986905890c0d8094537460",
+            "span_id": "93c3ae274c02e4f6",
+            "request_id": null,
+            "deployment_ring": null,
+            "experiment_variant": null
+          }
+        },
+        "telemetry": {
+          "trace_id": "6005fbcf6b986905890c0d8094537460",
+          "span_id": "93c3ae274c02e4f6",
+          "request_id": null,
+          "deployment_ring": null,
+          "experiment_variant": null
+        }
+      }
+    ]
+  },
+  "storage": {
+    "object_id": "obj_91977f17352740c88dcaeb54",
+    "filename": "OECD-Economic-Outlook-jina_reader.md",
+    "content_type": "text/markdown",
+    "size_bytes": 661,
+    "status": "available",
+    "audit": {
+      "created_at": "2026-06-03T07:43:21.754309",
+      "updated_at": "2026-06-03T07:43:21.754316",
+      "created_by": "tensorzero-cortex-demo",
+      "updated_by": null
+    },
+    "current_version_id": "objver_1c66f0e0d3d347e1a19eae47",
+    "bucket": "cortex-local",
+    "object_key": "tenant_demo/obj_91977f17352740c88dcaeb54/OECD-Economic-Outlook-jina_reader.md",
+    "checksum_sha256": "cd627229de74149cb1a13124c4ad6f4b203d9718285a04fd4029a94cab1994fa",
+    "etag": "\"c4d673bcb02268d2fc4851cf68f05a1c\"",
+    "storage_class": null,
+    "metadata": {
+      "engine_id": "jina_reader",
+      "job_id": "job_fe8362cf70814cdcb4387384",
+      "parse_mode": "sync",
+      "parse_score": "0.1741",
+      "run": "tensorzero-cortex",
+      "source_name": "OECD Economic Outlook",
+      "source_url": "https://www.oecd.org/en/publications/oecd-economic-outlook-volume-2025-issue-1_83363382-en.html"
+    },
+    "tags": [
+      "tensorzero",
+      "finance",
+      "parsed-markdown",
+      "jina_reader"
+    ],
+    "version": {
+      "object_version_id": "objver_1c66f0e0d3d347e1a19eae47",
+      "version_no": 1,
+      "size_bytes": 661,
+      "provider_version_ref": null,
+      "checksum_sha256": "cd627229de74149cb1a13124c4ad6f4b203d9718285a04fd4029a94cab1994fa",
+      "etag": "\"c4d673bcb02268d2fc4851cf68f05a1c\"",
+      "is_latest": true,
+      "created_at": "2026-06-03T07:43:21.767764"
+    },
+    "access_policy": {
+      "access_level": "tenant_shared",
+      "owner_actor_id": null,
+      "classification_labels": [],
+      "allowed_role_keys": [],
+      "denied_role_keys": [],
+      "purpose_tags": [],
+      "constraints": {}
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "mode": "async",
+  "engine_id": "deepeval",
+  "runs": {
+    "rag": {
+      "status": "failed",
+      "error": "Job job_4f8f13c80ea44d61895f5ce5 ended as failed: {'job_id': 'job_4f8f13c80ea44d61895f5ce5', 'job_type': 'eval', 'status': 'failed', 'operation_name': 'evaluation.rag', 'submitted_at': '2026-04-29T08:58:39.774025', 'progress_percent': None, 'queue_name': None, 'target_type': 'existing_outputs', 'target_id': None, 'correlation_id': 'request_bc9157256c8e48659d251c6e', 'started_at': '2026-04-29T08:58:45.079879', 'completed_at': '2026-04-29T08:58:51.163512', 'error': {'code': 'invalid_api_key', 'message': \"Error code: 401 - {'error': {'message': 'Incorrect API key provided: AIzaSyAb***************************GuG0. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}\"}, 'metrics': {'queue_latency_ms': 5305, 'run_latency_ms': 6083}, 'telemetry': {'trace_id': '0a5360fe9be7b6c72bb7aa9e7a15f1e3', 'span_id': '616b3754c42f5201', 'request_id': 'request_bc9157256c8e48659d251c6e', 'deployment_ring': None, 'experiment_variant': None}}"
+    },
+    "custom": {
+      "status": "failed",
+      "error": "Job job_dbd78ddbb5114f539aec2ba8 ended as failed: {'job_id': 'job_dbd78ddbb5114f539aec2ba8', 'job_type': 'eval', 'status': 'failed', 'operation_name': 'evaluation.custom', 'submitted_at': '2026-04-29T08:58:51.872676', 'progress_percent': None, 'queue_name': None, 'target_type': 'existing_outputs', 'target_id': None, 'correlation_id': 'request_e0402e4d24ae4433ab2c21dd', 'started_at': '2026-04-29T08:59:00.677082', 'completed_at': '2026-04-29T08:59:05.714473', 'error': {'code': 'invalid_api_key', 'message': \"Error code: 401 - {'error': {'message': 'Incorrect API key provided: AIzaSyAb***************************GuG0. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}\"}, 'metrics': {'queue_latency_ms': 8804, 'run_latency_ms': 5037}, 'telemetry': {'trace_id': '74df35d0aac59a84a2a556bc767e675a', 'span_id': '6852b5aeb948619a', 'request_id': 'request_e0402e4d24ae4433ab2c21dd', 'deployment_ring': None, 'experiment_variant': None}}"
+    }
+  }
+}

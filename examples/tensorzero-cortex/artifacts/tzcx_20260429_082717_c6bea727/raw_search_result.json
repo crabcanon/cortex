@@ -1,0 +1,23 @@
+{
+  "source": "parse_artifact_fallback",
+  "reason": "skipped",
+  "error": null,
+  "results": [
+    {
+      "text": "# Macro risks from markitdown\nInflation, monetary policy, financial stability, growth.",
+      "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "source_name": "Federal Reserve FOMC calendar",
+      "engine_id": "markitdown",
+      "object_id": "obj_Federal-",
+      "document_id": "doc_markitdown"
+    },
+    {
+      "text": "# Macro risks from docling\nInflation, monetary policy, financial stability, growth.",
+      "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "source_name": "Federal Reserve FOMC calendar",
+      "engine_id": "docling",
+      "object_id": "obj_Federal-",
+      "document_id": "doc_docling"
+    }
+  ]
+}

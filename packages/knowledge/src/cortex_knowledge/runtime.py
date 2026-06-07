@@ -479,6 +479,8 @@ def build_cognee_runtime(
     enabled = settings.enabled if settings.enabled is not None else cognee_config.enabled
     if not enabled:
         return DisabledCogneeRuntime(reason="Cognee runtime is disabled by configuration.")
+    if not _cognee_available():
+        return DisabledCogneeRuntime(reason="Cognee runtime module is unavailable.")
     runtime = PythonCogneeRuntime(config=_resolved_cognee_config(loaded_runtime))
     if runtime.descriptor.status != "active":
         return DisabledCogneeRuntime(

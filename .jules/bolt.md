@@ -1,0 +1,3 @@
+## 2025-02-18 - Replacing in-memory list filtering with O(1) DB aggregations
+**Learning:** Found an anti-pattern where the maximum sequence number for Job events was determined by calling a `list_for_job` method that queries up to 1000 items and then loads them all into memory just to use array slicing `[-1]`. This is extremely inefficient (O(N)) for something databases can do in O(1) natively.
+**Action:** When needing a max/min or sum calculation, always push the aggregation to the database layer (e.g. `select(func.coalesce(func.max(Model.field), 0))`) instead of pulling entire result sets to application memory.

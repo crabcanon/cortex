@@ -1,0 +1,4 @@
+## 2026-04-12 - [Critical] SQL Injection in Alembic Database Migrations
+**Vulnerability:** Found manual string interpolation inside `op.execute(sa.text(f"DROP TABLE IF EXISTS {table_name}"))` during database downgrades.
+**Learning:** Manual SQL execution with string interpolation in database migrations bypasses built-in identifier quoting, making the migration scripts vulnerable to SQL injection (especially if table names are dynamically derived or manipulated).
+**Prevention:** Use Alembic's built-in schema operations (e.g., `op.drop_table(table_name)`) to ensure safe identifier quoting. For conditional operations like `DROP TABLE IF EXISTS`, do not use manual SQL; instead, inspect the database first with `sa.inspect(op.get_bind()).get_table_names()` and apply the built-in operation conditionally.

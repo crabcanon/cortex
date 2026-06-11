@@ -143,6 +143,8 @@ services:
     shm_size: "1gb"
     environment:
       <<: *cortex-prod-env
+      CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_DOCLING_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.docling.yaml}
+      CORTEX_CRAWL4AI_SKIP_PROBE: "1"
       CORTEX_PARSE_WORKER_ENGINE_KEYS: ${CORTEX_PARSE_WORKER_DOCLING_ENGINE_KEYS:-docling}
     restart: unless-stopped
     volumes:

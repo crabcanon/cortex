@@ -2,7 +2,7 @@ x-cortex-build-api: &cortex-build-api
   context: .
   target: api
   args:
-    PLAYWRIGHT_PYTHON_BASE_IMAGE: ${CORTEX_PLAYWRIGHT_PYTHON_BASE_IMAGE:-mcr.microsoft.com/playwright/python:v1.58.0-noble}
+    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-python:3.12-slim-bookworm}
     UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
     CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.local.yaml}
     CORTEX_PREPARE_CRAWL4AI_RUNTIME: "1"
@@ -11,7 +11,7 @@ x-cortex-build-parse-worker: &cortex-build-parse-worker
   context: .
   target: parse-worker
   args:
-    PLAYWRIGHT_PYTHON_BASE_IMAGE: ${CORTEX_PLAYWRIGHT_PYTHON_BASE_IMAGE:-mcr.microsoft.com/playwright/python:v1.58.0-noble}
+    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-python:3.12-slim-bookworm}
     UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
     CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.local.yaml}
     CORTEX_PREPARE_CRAWL4AI_RUNTIME: "1"
@@ -20,16 +20,17 @@ x-cortex-build-parse-worker-docling: &cortex-build-parse-worker-docling
   context: .
   target: parse-worker-docling
   args:
-    PLAYWRIGHT_PYTHON_BASE_IMAGE: ${CORTEX_PLAYWRIGHT_PYTHON_BASE_IMAGE:-mcr.microsoft.com/playwright/python:v1.58.0-noble}
+    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-python:3.12-slim-bookworm}
     UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
-    CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.local.yaml}
-    CORTEX_PREPARE_CRAWL4AI_RUNTIME: "1"
+    PYTORCH_CPU_INDEX_URL: ${PYTORCH_CPU_INDEX_URL:-https://download.pytorch.org/whl/cpu}
+    CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_DOCLING_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.docling.yaml}
+    CORTEX_PREPARE_CRAWL4AI_RUNTIME: "0"
 
 x-cortex-build-knowledge-worker: &cortex-build-knowledge-worker
   context: .
   target: knowledge-worker
   args:
-    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-ghcr.io/astral-sh/uv:python3.12-bookworm-slim}
+    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-python:3.12-slim-bookworm}
     UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
     CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.local.yaml}
 
@@ -37,7 +38,7 @@ x-cortex-build-evaluation-worker: &cortex-build-evaluation-worker
   context: .
   target: evaluation-worker
   args:
-    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-ghcr.io/astral-sh/uv:python3.12-bookworm-slim}
+    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-python:3.12-slim-bookworm}
     UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
     CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.local.yaml}
 
@@ -45,7 +46,7 @@ x-cortex-build-evaluation-worker-runtime: &cortex-build-evaluation-worker-runtim
   context: .
   target: evaluation-worker-runtime
   args:
-    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-ghcr.io/astral-sh/uv:python3.12-bookworm-slim}
+    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-python:3.12-slim-bookworm}
     UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
     CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.local.yaml}
 
@@ -53,7 +54,7 @@ x-cortex-build-synthesis-worker: &cortex-build-synthesis-worker
   context: .
   target: synthesis-worker
   args:
-    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-ghcr.io/astral-sh/uv:python3.12-bookworm-slim}
+    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-python:3.12-slim-bookworm}
     UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
     CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.local.yaml}
 
@@ -61,8 +62,9 @@ x-cortex-build-synthesis-worker-runtime: &cortex-build-synthesis-worker-runtime
   context: .
   target: synthesis-worker-runtime
   args:
-    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-ghcr.io/astral-sh/uv:python3.12-bookworm-slim}
+    PYTHON_BASE_IMAGE: ${CORTEX_PYTHON_BASE_IMAGE:-python:3.12-slim-bookworm}
     UV_IMAGE: ${CORTEX_UV_IMAGE:-ghcr.io/astral-sh/uv:0.7.22}
+    PYTORCH_CPU_INDEX_URL: ${PYTORCH_CPU_INDEX_URL:-https://download.pytorch.org/whl/cpu}
     CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.local.yaml}
 
 x-cortex-env: &cortex-env
@@ -338,6 +340,8 @@ services:
     extra_hosts: *cortex-extra-hosts
     environment:
       <<: *cortex-env
+      CORTEX_RUNTIME_CONFIG_PATH: ${CORTEX_DOCLING_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.docling.yaml}
+      CORTEX_CRAWL4AI_SKIP_PROBE: "1"
       CORTEX_PARSE_WORKER_ENGINE_KEYS: docling
     depends_on:
       cortex-migrate:

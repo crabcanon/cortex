@@ -14,14 +14,14 @@ servers:
     description: Development / 测试环境
 tags:
   - name: Health
-    description: 运行存活与依赖就绪探针。/ Runtime liveness and dependency readiness probes.
+    description: 运行存活与依赖就绪探针。 / Runtime liveness and dependency readiness probes.
   - name: Observability
-    description: 对齐 OpenTelemetry 的遥测与指标接口。/ OpenTelemetry-aligned telemetry and
+    description: 对齐 OpenTelemetry 的遥测与指标接口。 / OpenTelemetry-aligned telemetry and
       metrics endpoints.
   - name: Jobs
-    description: 通用长任务查询与控制。/ Generic long-running job inspection and control.
+    description: 通用长任务查询与控制。 / Generic long-running job inspection and control.
   - name: Parse
-    description: 面向 URL 与文件的引擎无关解析、标准化与持久化。/ Engine-agnostic parsing, normalization,
+    description: 面向 URL 与文件的引擎无关解析、标准化与持久化。 / Engine-agnostic parsing, normalization,
       and persistence for URLs and files.
   - name: Storage
     description: 上传、查询和下载 S3 后端对象。 / Upload, inspect, and download S3-backed objects.
@@ -29,13 +29,13 @@ tags:
     description: Dataset lifecycle plus Cognee-backed Add, Cognify, Memify, and
       Search operations. / 数据集生命周期与基于 Cognee 的 Add、Cognify、Memify、Search 操作。
   - name: Evaluation
-    description: AI 评测引擎、指标目录、同步校验与异步评测作业。/ AI evaluation engines, metric catalogs,
+    description: AI 评测引擎、指标目录、同步校验与异步评测作业。 / AI evaluation engines, metric catalogs,
       synchronous checks, and asynchronous evaluation jobs.
   - name: Synthesis
-    description: 数据合成引擎以及同步、异步生成工作流。/ Synthetic data engines plus synchronous and
+    description: 数据合成引擎以及同步、异步生成工作流。 / Synthetic data engines plus synchronous and
       asynchronous generation workflows.
   - name: Dev Auth
-    description: 仅本地开发环境启用的 token 生成辅助接口。/ Local-development-only token issuance helper.
+    description: 仅本地开发环境启用的 token 生成辅助接口。 / Local-development-only token issuance helper.
 paths:
   /v1/health/live:
     get:

@@ -1,0 +1,3 @@
+## 2024-10-24 - Database Aggregation for Sequence Calculation
+**Learning:** The codebase previously contained a performance anti-pattern where up to 1000 events were loaded into memory via `list_for_job` array indexing (`existing_events[-1]`) just to determine the maximum sequence number for the next job event insertion. This causes N+1 query-like inefficiencies.
+**Action:** Use direct database aggregation (e.g. `func.coalesce(func.max(Model.field), 0)`) via `get_max_sequence_no` in the Repository layer to calculate the max sequence directly in the database ($O(1)$) instead of fetching entire lists of items into memory.

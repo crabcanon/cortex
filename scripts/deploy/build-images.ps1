@@ -59,6 +59,16 @@ if (-not $Heavy) {
 foreach ($item in $selectedTargets) {
     $image = "${Registry}/${Namespace}/$($item.Image):${Tag}"
     $latest = "${Registry}/${Namespace}/$($item.Image):latest"
+    $targetRuntimeConfigPath = $RuntimeConfigPath
+    $prepareCrawl4AIRuntime = "1"
+    if ($item.Target -eq "parse-worker-docling") {
+        $targetRuntimeConfigPath = if ($env:CORTEX_DOCLING_RUNTIME_CONFIG_PATH) {
+            $env:CORTEX_DOCLING_RUNTIME_CONFIG_PATH
+        } else {
+            "configs/cortex.runtime.docling.yaml"
+        }
+        $prepareCrawl4AIRuntime = "0"
+    }
     $args = [System.Collections.Generic.List[string]]::new()
     $args.Add("buildx")
     $args.Add("build")
@@ -67,12 +77,12 @@ foreach ($item in $selectedTargets) {
     $args.Add("--target")
     $args.Add($item.Target)
     $args.Add("--build-arg")
-    $args.Add("CORTEX_RUNTIME_CONFIG_PATH=${RuntimeConfigPath}")
+    $args.Add("CORTEX_RUNTIME_CONFIG_PATH=${targetRuntimeConfigPath}")
     $args.Add("--build-arg")
-    $args.Add("CORTEX_PREPARE_CRAWL4AI_RUNTIME=1")
+    $args.Add("CORTEX_PREPARE_CRAWL4AI_RUNTIME=${prepareCrawl4AIRuntime}")
     Add-OptionalBuildArg -Args $args -Name "PYTHON_BASE_IMAGE" -Value $env:CORTEX_PYTHON_BASE_IMAGE
-    Add-OptionalBuildArg -Args $args -Name "PLAYWRIGHT_PYTHON_BASE_IMAGE" -Value $env:CORTEX_PLAYWRIGHT_PYTHON_BASE_IMAGE
     Add-OptionalBuildArg -Args $args -Name "UV_IMAGE" -Value $env:CORTEX_UV_IMAGE
+    Add-OptionalBuildArg -Args $args -Name "PYTORCH_CPU_INDEX_URL" -Value $env:PYTORCH_CPU_INDEX_URL
     $args.Add("-t")
     $args.Add($image)
     if (-not $NoLatest) {

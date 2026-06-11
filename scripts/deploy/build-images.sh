@@ -86,23 +86,30 @@ for entry in "${targets[@]}"; do
     continue
   fi
 
+  target_runtime_config_path="$runtime_config_path"
+  prepare_crawl4ai_runtime="1"
+  if [[ "$target" == "parse-worker-docling" ]]; then
+    target_runtime_config_path="${CORTEX_DOCLING_RUNTIME_CONFIG_PATH:-configs/cortex.runtime.docling.yaml}"
+    prepare_crawl4ai_runtime="0"
+  fi
+
   build_args=(
     buildx build
     --platform "$platform"
     --target "$target"
-    --build-arg "CORTEX_RUNTIME_CONFIG_PATH=${runtime_config_path}"
-    --build-arg "CORTEX_PREPARE_CRAWL4AI_RUNTIME=1"
+    --build-arg "CORTEX_RUNTIME_CONFIG_PATH=${target_runtime_config_path}"
+    --build-arg "CORTEX_PREPARE_CRAWL4AI_RUNTIME=${prepare_crawl4ai_runtime}"
     -t "${registry}/${namespace}/${image}:${tag}"
   )
 
   if [[ -n "${CORTEX_PYTHON_BASE_IMAGE:-}" ]]; then
     build_args+=(--build-arg "PYTHON_BASE_IMAGE=${CORTEX_PYTHON_BASE_IMAGE}")
   fi
-  if [[ -n "${CORTEX_PLAYWRIGHT_PYTHON_BASE_IMAGE:-}" ]]; then
-    build_args+=(--build-arg "PLAYWRIGHT_PYTHON_BASE_IMAGE=${CORTEX_PLAYWRIGHT_PYTHON_BASE_IMAGE}")
-  fi
   if [[ -n "${CORTEX_UV_IMAGE:-}" ]]; then
     build_args+=(--build-arg "UV_IMAGE=${CORTEX_UV_IMAGE}")
+  fi
+  if [[ -n "${PYTORCH_CPU_INDEX_URL:-}" ]]; then
+    build_args+=(--build-arg "PYTORCH_CPU_INDEX_URL=${PYTORCH_CPU_INDEX_URL}")
   fi
   if [[ "$tag_latest" == "true" ]]; then
     build_args+=(-t "${registry}/${namespace}/${image}:latest")

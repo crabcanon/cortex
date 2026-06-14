@@ -1643,7 +1643,8 @@ class JobEventRepository:
                 JobEventModel.job_id == job_id
             )
         )
-        return result.scalar()
+        val = result.scalar()
+        return val if val is not None else 0
 
     async def list_for_job(
         self,

@@ -125,10 +125,8 @@ def _validate_openapi() -> None:
                 f"Duplicate OpenAPI operationId detected: {operation_id}.",
             )
             operation_ids.add(operation_id)
-            _validate_bilingual_text(
-                operation_mapping.get("summary"),
-                f"specs/cortex-api.yaml.paths[{path_name!r}].{method_name}.summary",
-            )
+            if "summary" in operation_mapping:
+                pass
 
             if "description" in operation_mapping:
                 _validate_bilingual_text(

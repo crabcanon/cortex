@@ -1,0 +1,3 @@
+## 2024-06-15 - Array Indexing on ORM List Methods causes O(N) memory overhead
+**Learning:** In the Cortex architecture, job event sequences were previously calculated by calling `list_for_job(job_id, limit=1000)` and accessing the last element (`existing_events[-1].sequence_no`). This forces SQLAlchemy to fetch, map, and allocate up to 1000 `JobEventModel` objects in memory just to read a single integer. This anti-pattern limits scalability and degrades performance as jobs accumulate events.
+**Action:** Always use direct database aggregation (e.g. `select(func.coalesce(func.max(JobEventModel.sequence_no), 0))`) to calculate sequence numbers or counts. This transforms an $O(N)$ memory and network operation into an $O(1)$ scalar retrieval.

@@ -1,0 +1,3 @@
+## 2025-01-20 - Array Indexing Anti-Pattern for Sequence Numbers
+**Learning:** Found a systemic anti-pattern where the codebase fetched the maximum sequence number for JobEvents by calling `list_for_job(job_id, limit=1000)` and indexing the last item `[-1]`. This loads up to 1000 records into memory unnecessarily, causing a performance degradation identical to the N+1 query problem.
+**Action:** Next time, always search for list aggregation shortcuts. Use optimized direct SQL aggregations (like `func.max` / `func.coalesce`) in repositories to fetch max sequence numbers with O(1) efficiency and skip loading records entirely.

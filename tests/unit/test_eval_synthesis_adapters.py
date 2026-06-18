@@ -275,9 +275,7 @@ def _install_fake_openai(monkeypatch: pytest.MonkeyPatch) -> type:
             self._owner.requests.append(kwargs)
             return types.SimpleNamespace(
                 choices=[
-                    types.SimpleNamespace(
-                        message=types.SimpleNamespace(content='{"score": 1}')
-                    )
+                    types.SimpleNamespace(message=types.SimpleNamespace(content='{"score": 1}'))
                 ]
             )
 
@@ -290,9 +288,7 @@ def _install_fake_openai(monkeypatch: pytest.MonkeyPatch) -> type:
             self._owner.loops.append(asyncio.get_running_loop())
             return types.SimpleNamespace(
                 choices=[
-                    types.SimpleNamespace(
-                        message=types.SimpleNamespace(content='{"score": 1}')
-                    )
+                    types.SimpleNamespace(message=types.SimpleNamespace(content='{"score": 1}'))
                 ]
             )
 
@@ -441,12 +437,8 @@ def test_evaluation_service_routes_only_to_engines_supporting_eval_type() -> Non
 
 
 def test_evalscope_runtime_extra_declares_service_server_dependency() -> None:
-    pyproject = (
-        Path(__file__).resolve().parents[2] / "packages" / "evaluation" / "pyproject.toml"
-    )
-    optional_dependencies = tomllib.loads(pyproject.read_text())["project"][
-        "optional-dependencies"
-    ]
+    pyproject = Path(__file__).resolve().parents[2] / "packages" / "evaluation" / "pyproject.toml"
+    optional_dependencies = tomllib.loads(pyproject.read_text())["project"]["optional-dependencies"]
 
     assert "evalscope[service]>=1.6,<2" in optional_dependencies["evalscope"]
     assert "fastapi>=0.115,<1" in optional_dependencies["evalscope"]
@@ -585,10 +577,7 @@ def test_evalscope_openqa_rejects_overstrict_min_prompt_length() -> None:
 
 def test_evaluation_error_redaction_handles_openrouter_json_api_keys() -> None:
     key = "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"
-    message = (
-        f'{{"api_key": "{key}", '
-        f'"headers": {{"Authorization": "Bearer {key}"}}}}'
-    )
+    message = f'{{"api_key": "{key}", "headers": {{"Authorization": "Bearer {key}"}}}}'
 
     redacted = _redact_error_message(message)
 

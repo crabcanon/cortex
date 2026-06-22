@@ -161,10 +161,6 @@ class DoclingParseEngine(ParseEngineProtocol):
             ".html": "text/html",
             ".htm": "text/html",
             ".pdf": "application/pdf",
-            ".docx": (
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            ),
-            ".pptx": (
-                "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-            ),
+            ".docx": ("application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+            ".pptx": ("application/vnd.openxmlformats-officedocument.presentationml.presentation"),
         }.get(suffix, "application/octet-stream")

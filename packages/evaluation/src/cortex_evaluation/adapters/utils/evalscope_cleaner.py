@@ -135,9 +135,7 @@ class EvalScopePerfMetricCleaner:
                     continue
                 percentile_suffix = _percentile_metric_suffix(key)
                 if percentile_suffix is not None and isinstance(raw_value, dict):
-                    if self._collect_nested_percentiles(
-                        raw_value, percentile_suffix, output
-                    ):
+                    if self._collect_nested_percentiles(raw_value, percentile_suffix, output):
                         continue
                 self._collect(raw_value, output)
             return
@@ -167,10 +165,7 @@ class EvalScopePerfMetricCleaner:
         if isinstance(value, list | tuple) and len(value) >= 3:
             numbers = [_coerce_float_like(item) for item in value[:3]]
         elif isinstance(value, str):
-            numbers = [
-                _coerce_float_like(item)
-                for item in re.split(r"\s*/\s*|\s*,\s*", value)
-            ]
+            numbers = [_coerce_float_like(item) for item in re.split(r"\s*/\s*|\s*,\s*", value)]
         else:
             numbers = []
         if len(numbers) >= 3 and all(number is not None for number in numbers[:3]):

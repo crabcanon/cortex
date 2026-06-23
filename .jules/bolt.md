@@ -1,0 +1,3 @@
+## 2024-06-25 - Replace memory load array slicing with aggregate queries in job events
+**Learning:** Found a major N+1-like performance bottleneck anti-pattern where calculating the next sequence number for a job event loaded up to 1000 events into memory (`existing_events = list_for_job(...)` then `existing_events[-1].sequence_no`).
+**Action:** Always implement database-level aggregation queries using SQLAlchemy's `func.max` and `func.coalesce` (e.g., `select(func.coalesce(func.max(Model.sequence_no), 0))`) in the repository for $O(1)$ efficiency instead of pulling lists of records to the application layer to find the last item's value.

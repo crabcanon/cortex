@@ -1,0 +1,3 @@
+## 2024-06-25 - Replace N+1 style Array Indexing with Max Aggregation for Sequence Numbers
+**Learning:** In Job Control Services for multiple components (`parse`, `synthesis`, `evaluation`, `knowledge`, `api`), the next sequence number for a job event was determined by loading all events into memory using `list_for_job(job_id, limit=1000)` and accessing the last element `existing_events[-1].sequence_no + 1`. This leads to poor performance, unnecessary database I/O, and heavy memory usage as the event list grows.
+**Action:** Created an optimized `get_max_sequence_no` method in the `JobEventRepository` leveraging SQLAlchemy's `func.max` aggregation, significantly reducing database and memory overhead to O(1) query complexity.

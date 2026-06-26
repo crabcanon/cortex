@@ -1,0 +1,3 @@
+## 2026-06-26 - Optimize sequence number fetching
+**Learning:** Found an anti-pattern where calculating the next sequence number for job events involved fetching up to 1000 full records into application memory to read just one integer via array indexing (`existing_events[-1]`). This created a significant N+1-like performance bottleneck over the network.
+**Action:** Always implement database-level aggregation methods (e.g. `get_max_sequence_no` using `select(func.coalesce(func.max(...), 0))`) in the repository layer instead of loading full collections into memory just to determine bounds or maximums.

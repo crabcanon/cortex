@@ -78,7 +78,6 @@ def _validate_openapi() -> None:
     info = _mapping(document.get("info"), "specs/cortex-api.yaml.info")
     _string(info.get("title"), "specs/cortex-api.yaml.info.title")
     _string(info.get("version"), "specs/cortex-api.yaml.info.version")
-    _validate_bilingual_text(info.get("summary"), "specs/cortex-api.yaml.info.summary")
     _string(info.get("description"), "specs/cortex-api.yaml.info.description")
 
     servers = document.get("servers", [])

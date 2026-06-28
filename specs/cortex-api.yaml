@@ -1,83 +1,83 @@
-﻿openapi: 3.1.0
+openapi: 3.1.0
 info:
   title: Cortex API
   version: 0.0.1
-  summary: 面向数据解析、存储、知识构建、效果评测与数据合成的厂商中立 API。 / Vendor-neutral APIs for parse,
-    storage, knowledge, evaluation, and synthesis.
-  description: Cortex 通过统一契约暴露五类核心
-    API：Parse、Storage、Knowledge、Evaluation、Synthesis。各域共享厂商中立的数据模型、统一的 Job
-    体系、统一权限边界，以及基于 OpenTelemetry 的可观测能力。
+  summary: 面向数据解析、存储、知识构建、效果评测与数据合成的厂商中立 API。 / Vendor-neutral APIs for parse, storage,
+    knowledge, evaluation, and synthesis.
+  description: Cortex 通过统一契约暴露五类核心 API：Parse、Storage、Knowledge、Evaluation、Synthesis。各域共享厂商中立的数据模型、统一的
+    Job 体系、统一权限边界，以及基于 OpenTelemetry 的可观测能力。
 servers:
   - url: https://api.cortex.com
     description: Production / 生产环境
-  - url: " https://dev.cortex.com"
+  - url: ' https://dev.cortex.com'
     description: Development / 测试环境
 tags:
   - name: Health
-    description: 运行存活与依赖就绪探针。/ Runtime liveness and dependency readiness probes.
+    description: Runtime liveness and dependency readiness probes. / 运行存活与依赖就绪探针。
   - name: Observability
-    description: 对齐 OpenTelemetry 的遥测与指标接口。/ OpenTelemetry-aligned telemetry and
-      metrics endpoints.
+    description: OpenTelemetry-aligned telemetry and metrics endpoints. / 对齐 OpenTelemetry
+      的遥测与指标接口。
   - name: Jobs
-    description: 通用长任务查询与控制。/ Generic long-running job inspection and control.
+    description: Generic long-running job inspection and control. / 通用长任务查询与控制。
   - name: Parse
-    description: 面向 URL 与文件的引擎无关解析、标准化与持久化。/ Engine-agnostic parsing, normalization,
-      and persistence for URLs and files.
+    description: Engine-agnostic parsing, normalization, and persistence for URLs
+      and files. / 面向 URL 与文件的引擎无关解析、标准化与持久化。
   - name: Storage
-    description: 上传、查询和下载 S3 后端对象。 / Upload, inspect, and download S3-backed objects.
+    description: Upload, inspect, and download S3-backed objects. / 上传、查询和下载 S3 后端对象。
   - name: Knowledge
-    description: Dataset lifecycle plus Cognee-backed Add, Cognify, Memify, and
-      Search operations. / 数据集生命周期与基于 Cognee 的 Add、Cognify、Memify、Search 操作。
+    description: Dataset lifecycle plus Cognee-backed Add, Cognify, Memify, and Search
+      operations. / 数据集生命周期与基于 Cognee 的 Add、Cognify、Memify、Search 操作。
   - name: Evaluation
-    description: AI 评测引擎、指标目录、同步校验与异步评测作业。/ AI evaluation engines, metric catalogs,
-      synchronous checks, and asynchronous evaluation jobs.
+    description: AI evaluation engines, metric catalogs, synchronous checks, and asynchronous
+      evaluation jobs. / AI 评测引擎、指标目录、同步校验与异步评测作业。
   - name: Synthesis
-    description: 数据合成引擎以及同步、异步生成工作流。/ Synthetic data engines plus synchronous and
-      asynchronous generation workflows.
+    description: Synthetic data engines plus synchronous and asynchronous generation
+      workflows. / 数据合成引擎以及同步、异步生成工作流。
   - name: Dev Auth
-    description: 仅本地开发环境启用的 token 生成辅助接口。/ Local-development-only token issuance helper.
+    description: Local-development-only token issuance helper. / 仅本地开发环境启用的 token
+      生成辅助接口。
 paths:
   /v1/health/live:
     get:
       tags:
         - Health
-      summary: Liveness probe
+      summary: Liveness probe / 存活探针
       operationId: getLiveness
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HealthResponse"
+                $ref: '#/components/schemas/HealthResponse'
   /v1/health/ready:
     get:
       tags:
         - Health
-      summary: Readiness probe
+      summary: Readiness probe / 就绪探针
       operationId: getReadiness
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HealthResponse"
-        "503":
-          description: Service Unavailable
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Service Unavailable / 服务不可用
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HealthResponse"
+                $ref: '#/components/schemas/HealthResponse'
       security:
         - BearerAuth: []
   /v1/jobs/{jobId}:
     get:
       tags:
         - Jobs
-      summary: Get job status
-      description: Return the current state, timestamps, and telemetry context for one
-        long-running job.
+      summary: Get job status / 获取作业状态
+      description: Return the current state, timestamps, and telemetry context for
+        one long-running job. / 返回一个长时间运行作业的当前状态、时间戳和遥测上下文。
       operationId: getJob
       security:
         - BearerAuth: []
@@ -87,33 +87,34 @@ paths:
           required: true
           schema:
             type: string
-            description: Job identifier returned by a create-job endpoint such as Parse,
-              Add, Cognify, or Memify.
+            description: Job identifier returned by a create-job endpoint such as
+              Parse, Add, Cognify, or Memify.
             examples:
               - job_71fe50adf1cb4981bb322f0d74f32598
             title: Jobid
           description: Job identifier returned by a create-job endpoint such as Parse,
             Add, Cognify, or Memify.
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JobStatusDetail"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/JobStatusDetail'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/jobs/{jobId}/events:
     get:
       tags:
         - Jobs
-      summary: List job events
+      summary: List job events / 列表作业事件
       description: Return the ordered event stream for one job, newest first according
-        to the service implementation.
+        to the service implementation. / Return the ordered event stream for one job,
+        newest first according to the service implementation.
       operationId: listJobEvents
       security:
         - BearerAuth: []
@@ -135,35 +136,36 @@ paths:
             type: integer
             maximum: 500
             minimum: 1
-            description: "Maximum number of events to return. Best default: 100."
+            description: 'Maximum number of events to return. Best default: 100.'
             examples:
               - 100
             default: 100
             title: Limit
-          description: "Maximum number of events to return. Best default: 100."
+          description: 'Maximum number of events to return. Best default: 100.'
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/JobEvent"
+                  $ref: '#/components/schemas/JobEvent'
                 title: Response Listjobevents
-        "422":
-          description: Validation Error
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/jobs/{jobId}/cancel:
     post:
       tags:
         - Jobs
-      summary: Cancel a queued or running job
+      summary: Cancel a queued or running job / 取消排队中或运行中的作业
       description: Request cancellation of a queued or running job and return the
-        updated status snapshot.
+        updated status snapshot. / Request cancellation of a queued or running job
+        and return the updated status snapshot.
       operationId: cancelJob
       security:
         - BearerAuth: []
@@ -179,43 +181,47 @@ paths:
             title: Jobid
           description: Job identifier to cancel.
       responses:
-        "202":
-          description: Successful Response
+        '202':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JobStatusDetail"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/JobStatusDetail'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/eval/engines:
     get:
       tags:
         - Evaluation
-      summary: List evaluation engines
+      summary: List evaluation engines / 获取所有评测引擎列表
       description: Returns the currently registered evaluation engines, supported
-        evaluation types, execution modes, and default profile hints.
+        evaluation types, execution modes, and default profile hints. / Returns the
+        currently registered evaluation engines, supported evaluation types, execution
+        modes, and default profile hints.
       operationId: listEvalEngines
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EvalEngineList"
+                $ref: '#/components/schemas/EvalEngineList'
       security:
         - BearerAuth: []
   /v1/eval/metrics:
     get:
       tags:
         - Evaluation
-      summary: List normalized evaluation metrics
-      description: Returns the normalized Cortex metric catalog that maps
-        business-facing metric keys to engine-native implementations across
-        DeepEval, EvalScope, and future adapters.
+      summary: List normalized evaluation metrics / 列表标准化的评测指标
+      description: Returns the normalized Cortex metric catalog that maps business-facing
+        metric keys to engine-native implementations across DeepEval, EvalScope, and
+        future adapters. / Returns the normalized Cortex metric catalog that maps
+        business-facing metric keys to engine-native implementations across DeepEval,
+        EvalScope, and future adapters.
       operationId: listEvalMetrics
       security:
         - BearerAuth: []
@@ -225,8 +231,8 @@ paths:
           required: false
           schema:
             anyOf:
-              - $ref: "#/components/schemas/EvalType"
-              - type: "null"
+              - $ref: '#/components/schemas/EvalType'
+              - type: 'null'
             title: Evaltype
         - name: engineId
           in: query
@@ -234,37 +240,39 @@ paths:
           schema:
             anyOf:
               - type: string
-              - type: "null"
+              - type: 'null'
             title: Engineid
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EvalMetricCatalog"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/EvalMetricCatalog'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/eval/sync:
     post:
       tags:
         - Evaluation
-      summary: Execute a synchronous evaluation run
+      summary: Execute a synchronous evaluation run / 执行同步评测运行
       description: Runs a small evaluation workload synchronously. Recommended for
-        smoke checks, profile tuning, and low-cardinality datasets; larger
-        workloads should use `/v1/eval/jobs`.
+        smoke checks, profile tuning, and low-cardinality datasets; larger workloads
+        should use `/v1/eval/jobs`. / Runs a small evaluation workload synchronously.
+        Recommended for smoke checks, profile tuning, and low-cardinality datasets;
+        larger workloads should use `/v1/eval/jobs`.
       operationId: runEvaluationSync
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EvalSyncRequest"
-              description: "Unified evaluation request body. Required: `eval_type` and
-                `input`. `engine_id` defaults to `auto`."
+              $ref: '#/components/schemas/EvalSyncRequest'
+              description: 'Unified evaluation request body. Required: `eval_type`
+                and `input`. `engine_id` defaults to `auto`.'
             examples:
               rag_eval:
                 summary: RAG evaluation / RAG 评测
@@ -315,9 +323,9 @@ paths:
                       threshold: 0.75
               evalscope_perf_sync:
                 summary: EvalScope perf sync / EvalScope 性能同步评测
-                description: Long-prompt OpenAI-compatible performance request routed to
-                  EvalScope. Replace `api_key` with a real OpenRouter or compatible provider
-                  key.
+                description: Long-prompt OpenAI-compatible performance request routed
+                  to EvalScope. Replace `api_key` with a real OpenRouter or compatible
+                  provider key.
                 value:
                   name: swagger-perf-job
                   eval_type: perf
@@ -346,27 +354,29 @@ paths:
                     min_prompt_length: 1024
         required: true
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EvalRunResult"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/EvalRunResult'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
       security:
         - BearerAuth: []
   /v1/eval/jobs:
     post:
       tags:
         - Evaluation
-      summary: Submit an asynchronous evaluation job
+      summary: Submit an asynchronous evaluation job / 提交异步评测作业
       description: Queues a longer-running evaluation workload and returns a Cortex
-        job handle for polling, events, and result retrieval.
+        job handle for polling, events, and result retrieval. / Queues a longer-running
+        evaluation workload and returns a Cortex job handle for polling, events, and
+        result retrieval.
       operationId: createEvalJob
       security:
         - BearerAuth: []
@@ -377,7 +387,7 @@ paths:
           schema:
             anyOf:
               - type: string
-              - type: "null"
+              - type: 'null'
             description: Optional idempotency key for asynchronous evaluation job
               submission.
             examples:
@@ -389,9 +399,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EvalJobSubmitRequest"
-              description: Async evaluation job request. Use this for larger datasets, agent
-                regressions, or scheduled validation workloads.
+              $ref: '#/components/schemas/EvalJobSubmitRequest'
+              description: Async evaluation job request. Use this for larger datasets,
+                agent regressions, or scheduled validation workloads.
             examples:
               agent_eval_job:
                 summary: Agent evaluation job / Agent 评测作业
@@ -445,7 +455,8 @@ paths:
                     min_prompt_length: 1024
               deepeval_custom_job:
                 summary: DeepEval custom async job / DeepEval 异步自定义评测
-                description: Custom GEval-style quality check with a caller-provided criterion.
+                description: Custom GEval-style quality check with a caller-provided
+                  criterion.
                 value:
                   name: swagger-custom-quality-job
                   eval_type: custom
@@ -454,40 +465,43 @@ paths:
                     type: inline_test_cases
                     test_cases:
                       - user_input: Explain Cortex Parse in one sentence.
-                        actual_output: Cortex Parse converts web pages and files into Markdown with
-                          normalized metadata.
-                        expected_output: Cortex Parse should mention Markdown and standardized metadata.
+                        actual_output: Cortex Parse converts web pages and files into
+                          Markdown with normalized metadata.
+                        expected_output: Cortex Parse should mention Markdown and
+                          standardized metadata.
                   metrics:
                     - metric_key: quality.correctness
                       threshold: 0.8
                       params:
-                        criteria: Score whether the answer correctly explains the business purpose of
-                          Cortex Parse.
+                        criteria: Score whether the answer correctly explains the
+                          business purpose of Cortex Parse.
                   webhook:
                     url: https://example.com/hooks/cortex/eval
                     event_types:
                       - job.succeeded
                       - job.failed
       responses:
-        "202":
-          description: Successful Response
+        '202':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EvalJobAccepted"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/EvalJobAccepted'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/eval/jobs/{jobId}/result:
     get:
       tags:
         - Evaluation
-      summary: Get a completed evaluation result
-      description: Returns the completed evaluation result when the async job
-        succeeds, or a 409 job status payload while work is still in progress.
+      summary: Get a completed evaluation result / 获取已完成的评测结果
+      description: Returns the completed evaluation result when the async job succeeds,
+        or a 409 job status payload while work is still in progress. / Returns the
+        completed evaluation result when the async job succeeds, or a 409 job status
+        payload while work is still in progress.
       operationId: getEvalResult
       security:
         - BearerAuth: []
@@ -499,54 +513,55 @@ paths:
             type: string
             title: Jobid
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 anyOf:
-                  - $ref: "#/components/schemas/EvalRunResult"
-                  - $ref: "#/components/schemas/JobStatusDetail"
+                  - $ref: '#/components/schemas/EvalRunResult'
+                  - $ref: '#/components/schemas/JobStatusDetail'
                 title: Response Getevalresult
-        "409":
+        '409':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JobStatusDetail"
-          description: Conflict
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/JobStatusDetail'
+          description: Conflict / Conflict
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/knowledge/datasets:
     post:
       tags:
         - Knowledge
-      summary: Create a knowledge dataset
+      summary: Create a knowledge dataset / 创建知识数据集
       description: Create a dataset that Add, Cognify, Memify, and Search operations
+        will target. / Create a dataset that Add, Cognify, Memify, and Search operations
         will target.
       operationId: createKnowledgeDataset
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/KnowledgeDatasetCreateRequest"
-              description: Dataset creation request. `dataset_key` and `display_name` are
-                required; other fields are optional with documented defaults.
+              $ref: '#/components/schemas/KnowledgeDatasetCreateRequest'
+              description: Dataset creation request. `dataset_key` and `display_name`
+                are required; other fields are optional with documented defaults.
             examples:
               swagger_demo_dataset:
                 summary: Swagger demo dataset / Swagger 演示数据集
-                description: Creates a tenant-shared dataset used by the one-click Knowledge
-                  examples below. If this key already exists, change the suffix
-                  and reuse the same key in Add, Cognify, Memify, and Search
+                description: Creates a tenant-shared dataset used by the one-click
+                  Knowledge examples below. If this key already exists, change the
+                  suffix and reuse the same key in Add, Cognify, Memify, and Search
                   requests.
                 value:
                   dataset_key: swagger_knowledge_demo
                   display_name: Swagger Knowledge Demo
-                  description: Small Knowledge dataset for Swagger Try it out tests using inline
-                    text, public URIs, and uploaded storage objects.
+                  description: Small Knowledge dataset for Swagger Try it out tests
+                    using inline text, public URIs, and uploaded storage objects.
                   tags:
                     - swagger
                     - knowledge
@@ -571,12 +586,13 @@ paths:
                     constraints: {}
               product_docs_dataset:
                 summary: Product docs dataset / 产品文档数据集
-                description: Creates a tenant-shared dataset suitable for Parse -> Add -> Search
-                  workflows.
+                description: Creates a tenant-shared dataset suitable for Parse ->
+                  Add -> Search workflows.
                 value:
                   dataset_key: product_docs
                   display_name: Product Docs
-                  description: Primary product knowledge base for demos and regression tests.
+                  description: Primary product knowledge base for demos and regression
+                    tests.
                   tags:
                     - docs
                     - product
@@ -598,26 +614,27 @@ paths:
                     constraints: {}
         required: true
       responses:
-        "201":
-          description: Successful Response
+        '201':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/KnowledgeDataset"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/KnowledgeDataset'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
       security:
         - BearerAuth: []
   /v1/knowledge/datasets/{datasetId}:
     get:
       tags:
         - Knowledge
-      summary: Get dataset metadata and counters
+      summary: Get dataset metadata and counters / 获取数据集元数据和计数器
       description: Return one dataset including audit info, counters, and access policy.
+        / Return one dataset including audit info, counters, and access policy.
       operationId: getKnowledgeDataset
       security:
         - BearerAuth: []
@@ -633,25 +650,26 @@ paths:
             title: Datasetid
           description: Knowledge dataset identifier returned by `/v1/knowledge/datasets`.
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/KnowledgeDataset"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/KnowledgeDataset'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/knowledge/add/jobs:
     post:
       tags:
         - Knowledge
-      summary: Submit a Cognee Add job
-      description: Queue an Add job to ingest objects, documents, text, or URIs into a
-        knowledge dataset.
+      summary: Submit a Cognee Add job / 提交 Cognee Add 作业
+      description: Queue an Add job to ingest objects, documents, text, or URIs into
+        a knowledge dataset. / Queue an Add job to ingest objects, documents, text,
+        or URIs into a knowledge dataset.
       operationId: createAddJob
       security:
         - BearerAuth: []
@@ -662,41 +680,40 @@ paths:
           schema:
             anyOf:
               - type: string
-              - type: "null"
-            description: "Optional idempotency key for safely retrying Add job submission.
-              Best default: omit."
+              - type: 'null'
+            description: 'Optional idempotency key for safely retrying Add job submission.
+              Best default: omit.'
             examples:
               - parse-demo-001
             title: Idempotency-Key
-          description: "Optional idempotency key for safely retrying Add job submission.
-            Best default: omit."
+          description: 'Optional idempotency key for safely retrying Add job submission.
+            Best default: omit.'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AddJobRequest"
-              description: Add job request. Provide either `dataset_id` or `dataset_key`, then
-                list one or more `inputs`.
+              $ref: '#/components/schemas/AddJobRequest'
+              description: Add job request. Provide either `dataset_id` or `dataset_key`,
+                then list one or more `inputs`.
             examples:
               swagger_inline_text_ingest:
                 summary: Runnable inline text Add / 可直接运行的内联文本 Add
-                description: Use after creating `swagger_knowledge_demo`. This is the safest
-                  local Swagger smoke example because it does not require an
-                  existing Storage object or external network access.
+                description: Use after creating `swagger_knowledge_demo`. This is
+                  the safest local Swagger smoke example because it does not require
+                  an existing Storage object or external network access.
                 value:
                   dataset_key: swagger_knowledge_demo
                   inputs:
                     - input_type: text
-                      text: >-
-                        # Cortex API Demo Knowledge
+                      text: '# Cortex API Demo Knowledge
 
 
-                        Cortex provides Parse, Storage, Knowledge, Evaluation,
-                        and Synthesis APIs. Parse normalizes URLs and files into
-                        Markdown. Storage keeps source files in S3-compatible
-                        buckets. Knowledge uses Add, Cognify, Memify, and Search
-                        to build graph-aware retrieval workflows.
+                        Cortex provides Parse, Storage, Knowledge, Evaluation, and
+                        Synthesis APIs. Parse normalizes URLs and files into Markdown.
+                        Storage keeps source files in S3-compatible buckets. Knowledge
+                        uses Add, Cognify, Memify, and Search to build graph-aware
+                        retrieval workflows.'
                       label: Cortex API demo note
                       node_set:
                         - swagger_demo
@@ -712,8 +729,8 @@ paths:
                     persist_source_copy: false
               public_uri_ingest:
                 summary: Public URI Add / 公共 URI Add
-                description: Use when the Knowledge runtime can fetch public URLs. This keeps
-                  the request copy-pasteable while exercising the URI input
+                description: Use when the Knowledge runtime can fetch public URLs.
+                  This keeps the request copy-pasteable while exercising the URI input
                   path.
                 value:
                   dataset_key: swagger_knowledge_demo
@@ -736,9 +753,9 @@ paths:
                     persist_source_copy: true
               storage_object_ingest:
                 summary: Storage object Add / 存储对象 Add
-                description: Use after uploading a file with `POST /v1/storage/files`; replace
-                  `object_id` with the returned object id. This documents the
-                  Storage -> Knowledge path.
+                description: Use after uploading a file with `POST /v1/storage/files`;
+                  replace `object_id` with the returned object id. This documents
+                  the Storage -> Knowledge path.
                 value:
                   dataset_key: swagger_knowledge_demo
                   inputs:
@@ -759,8 +776,8 @@ paths:
                     persist_source_copy: true
               parsed_document_ingest:
                 summary: Parsed document Add / 解析文档 Add
-                description: Recommended Add request after a file has been uploaded and
-                  optionally parsed.
+                description: Recommended Add request after a file has been uploaded
+                  and optionally parsed.
                 value:
                   dataset_key: product_docs
                   inputs:
@@ -793,16 +810,16 @@ paths:
                       X-Consumer: knowledge-worker
               direct_text_ingest:
                 summary: Direct text ingest / 直接文本摄入
-                description: Useful for small snippets, notes, or quick operator tests without a
-                  prior upload.
+                description: Useful for small snippets, notes, or quick operator tests
+                  without a prior upload.
                 value:
                   dataset_key: product_docs
                   inputs:
                     - input_type: text
-                      text: |-
-                        # Cortex Notes
+                      text: '# Cortex Notes
 
-                        Cortex supports Parse, Storage, and Knowledge APIs.
+
+                        Cortex supports Parse, Storage, and Knowledge APIs.'
                       label: Quick note
                       node_set:
                         - notes
@@ -814,24 +831,25 @@ paths:
                     incremental: true
                     persist_source_copy: false
       responses:
-        "202":
-          description: Successful Response
+        '202':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JobAccepted"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/JobAccepted'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/knowledge/cognify/jobs:
     post:
       tags:
         - Knowledge
-      summary: Submit a Cognify job
+      summary: Submit a Cognify job / 提交 Cognify 作业
       description: Queue a Cognify job to derive graph structure from dataset content.
+        / Queue a Cognify job to derive graph structure from dataset content.
       operationId: createCognifyJob
       security:
         - BearerAuth: []
@@ -842,28 +860,28 @@ paths:
           schema:
             anyOf:
               - type: string
-              - type: "null"
-            description: "Optional idempotency key for safely retrying Cognify job
-              submission. Best default: omit."
+              - type: 'null'
+            description: 'Optional idempotency key for safely retrying Cognify job
+              submission. Best default: omit.'
             examples:
               - parse-demo-001
             title: Idempotency-Key
-          description: "Optional idempotency key for safely retrying Cognify job
-            submission. Best default: omit."
+          description: 'Optional idempotency key for safely retrying Cognify job submission.
+            Best default: omit.'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CognifyJobRequest"
+              $ref: '#/components/schemas/CognifyJobRequest'
               description: Cognify job request. Provide either `dataset_id` or `dataset_key`;
                 all other fields are optional.
             examples:
               swagger_demo_cognify:
                 summary: Runnable Cognify for demo dataset / 演示数据集 Cognify
-                description: Run after the `swagger_inline_text_ingest` Add job succeeds. It
-                  builds graph structure for the demo dataset with a small
-                  chunking budget.
+                description: Run after the `swagger_inline_text_ingest` Add job succeeds.
+                  It builds graph structure for the demo dataset with a small chunking
+                  budget.
                 value:
                   dataset_key: swagger_knowledge_demo
                   incremental_loading: true
@@ -876,8 +894,8 @@ paths:
                     max_chunks: 64
               recommended_cognify:
                 summary: Recommended Cognify request / 推荐 Cognify 请求
-                description: Builds or refreshes the dataset graph with the default prompt
-                  profile and semantic chunking.
+                description: Builds or refreshes the dataset graph with the default
+                  prompt profile and semantic chunking.
                 value:
                   dataset_key: product_docs
                   incremental_loading: true
@@ -896,24 +914,25 @@ paths:
                     headers:
                       X-Consumer: graph-sync
       responses:
-        "202":
-          description: Successful Response
+        '202':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JobAccepted"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/JobAccepted'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/knowledge/memify/jobs:
     post:
       tags:
         - Knowledge
-      summary: Submit a Memify job
-      description: Queue a Memify enrichment job over an existing dataset graph.
+      summary: Submit a Memify job / 提交 Memify 作业
+      description: Queue a Memify enrichment job over an existing dataset graph. /
+        Queue a Memify enrichment job over an existing dataset graph.
       operationId: createMemifyJob
       security:
         - BearerAuth: []
@@ -924,27 +943,27 @@ paths:
           schema:
             anyOf:
               - type: string
-              - type: "null"
-            description: "Optional idempotency key for safely retrying Memify job
-              submission. Best default: omit."
+              - type: 'null'
+            description: 'Optional idempotency key for safely retrying Memify job
+              submission. Best default: omit.'
             examples:
               - parse-demo-001
             title: Idempotency-Key
-          description: "Optional idempotency key for safely retrying Memify job
-            submission. Best default: omit."
+          description: 'Optional idempotency key for safely retrying Memify job submission.
+            Best default: omit.'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/MemifyJobRequest"
+              $ref: '#/components/schemas/MemifyJobRequest'
               description: Memify job request. Provide either `dataset_id` or `dataset_key`;
                 `pipeline` defaults to `coding_rules`.
             examples:
               swagger_triplet_memify:
                 summary: Runnable triplet Memify / 可运行的三元组 Memify
-                description: Run after Cognify. The Python Cognee adapter currently supports
-                  `triplet_embeddings` and `session_persistence` for live
+                description: Run after Cognify. The Python Cognee adapter currently
+                  supports `triplet_embeddings` and `session_persistence` for live
                   execution.
                 value:
                   dataset_key: swagger_knowledge_demo
@@ -954,8 +973,8 @@ paths:
                   session_ids: []
               recommended_memify:
                 summary: Recommended Memify request / 推荐 Memify 请求
-                description: Runs the default coding-rules enrichment pipeline over the selected
-                  dataset.
+                description: Runs the default coding-rules enrichment pipeline over
+                  the selected dataset.
                 value:
                   dataset_key: product_docs
                   pipeline: coding_rules
@@ -972,41 +991,44 @@ paths:
                     headers:
                       X-Consumer: knowledge-memify
       responses:
-        "202":
-          description: Successful Response
+        '202':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JobAccepted"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/JobAccepted'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/knowledge/search:
     post:
       tags:
         - Knowledge
-      summary: Search across datasets and knowledge graphs
+      summary: Search across datasets and knowledge graphs / 跨数据集和知识图谱搜索
       description: Search across one or more datasets using semantic, graph, or hybrid
-        retrieval. Use `recommended_graph_completion` for the most balanced
-        default behavior.
+        retrieval. Use `recommended_graph_completion` for the most balanced default
+        behavior. / Search across one or more datasets using semantic, graph, or hybrid
+        retrieval. Use `recommended_graph_completion` for the most balanced default
+        behavior.
       operationId: searchKnowledge
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SearchRequest"
-              description: Knowledge search request. `query_text` is required; dataset scope
-                and filters are optional.
+              $ref: '#/components/schemas/SearchRequest'
+              description: Knowledge search request. `query_text` is required; dataset
+                scope and filters are optional.
             examples:
               swagger_demo_search:
                 summary: Runnable demo search / 可运行的演示搜索
-                description: Run after Add and preferably after Cognify. Uses the demo dataset
-                  key from the Swagger dataset example.
+                description: Run after Add and preferably after Cognify. Uses the
+                  demo dataset key from the Swagger dataset example.
                 value:
-                  query_text: What Cortex APIs are available and what does Knowledge do?
+                  query_text: What Cortex APIs are available and what does Knowledge
+                    do?
                   dataset_keys:
                     - swagger_knowledge_demo
                   search_type: GRAPH_COMPLETION
@@ -1024,9 +1046,9 @@ paths:
                   timeout_seconds: 30
               storage_object_search:
                 summary: Search storage-backed knowledge / 搜索存储来源知识
-                description: Use after adding an uploaded Storage object. Replace the object id
-                  with the id returned by `/v1/storage/files` when you want to
-                  narrow results.
+                description: Use after adding an uploaded Storage object. Replace
+                  the object id with the id returned by `/v1/storage/files` when you
+                  want to narrow results.
                 value:
                   query_text: Summarize the uploaded README or PDF.
                   dataset_keys:
@@ -1047,8 +1069,8 @@ paths:
                   timeout_seconds: 15
               recommended_graph_completion:
                 summary: Recommended graph completion search / 推荐图谱补全搜索
-                description: A good default search request for answering a question with
-                  graph-aware context.
+                description: A good default search request for answering a question
+                  with graph-aware context.
                 value:
                   query_text: What does the documentation say about Cortex parse workflows?
                   dataset_keys:
@@ -1070,8 +1092,8 @@ paths:
                   timeout_seconds: 30
               chunk_search:
                 summary: Chunk-level retrieval / Chunk 级检索
-                description: Useful when you only want ranked context snippets without a
-                  synthesized answer.
+                description: Useful when you only want ranked context snippets without
+                  a synthesized answer.
                 value:
                   query_text: OpenTelemetry integration
                   dataset_keys:
@@ -1084,29 +1106,29 @@ paths:
                   timeout_seconds: 15
         required: true
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SearchResponse"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/SearchResponse'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
       security:
         - BearerAuth: []
   /metrics:
     get:
       tags:
         - Observability
-      summary: Prometheus scrape endpoint
+      summary: Prometheus scrape endpoint / Prometheus 抓取端点
       operationId: getMetrics
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema: {}
@@ -1114,60 +1136,66 @@ paths:
     get:
       tags:
         - Parse
-      summary: List available parse engines
-      description: Return the registered parser engines, supported source kinds,
-        default scene, supported scenes, and the default internal profile that
-        the Parse request compiler will bind for each engine.
+      summary: List available parse engines / 列出可用解析引擎
+      description: Return the registered parser engines, supported source kinds, default
+        scene, supported scenes, and the default internal profile that the Parse request
+        compiler will bind for each engine. / Return the registered parser engines,
+        supported source kinds, default scene, supported scenes, and the default internal
+        profile that the Parse request compiler will bind for each engine.
       operationId: listParseEngines
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ParseEngineList"
+                $ref: '#/components/schemas/ParseEngineList'
       security:
         - BearerAuth: []
   /v1/parse/profiles:
     get:
       tags:
         - Parse
-      summary: List parser profiles
+      summary: List parser profiles / 列出解析器配置文件
       description: Return the internal parser profiles available to operators and
-        debugging workflows. Most API callers should not need them because the
-        public Parse API compiles `source + engine_id (+ scene)` into these
-        profiles automatically.
+        debugging workflows. Most API callers should not need them because the public
+        Parse API compiles `source + engine_id (+ scene)` into these profiles automatically.
+        / Return the internal parser profiles available to operators and debugging
+        workflows. Most API callers should not need them because the public Parse
+        API compiles `source + engine_id (+ scene)` into these profiles automatically.
       operationId: listParserProfiles
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ParserProfileList"
+                $ref: '#/components/schemas/ParserProfileList'
       security:
         - BearerAuth: []
   /v1/parse/sync:
     post:
       tags:
         - Parse
-      summary: Parse content synchronously
+      summary: Parse content synchronously / 同步解析内容
       description: Synchronously parse one or more source locators into LLM-ready
-        Markdown. The public contract is centered on `sources`, `engine_id`, and
-        optional `scene`.
+        Markdown. The public contract is centered on `sources`, `engine_id`, and optional
+        `scene`. / Synchronously parse one or more source locators into LLM-ready
+        Markdown. The public contract is centered on `sources`, `engine_id`, and optional
+        `scene`.
       operationId: parseContentSync
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ParseSubmitRequest"
-              description: "Unified Parse request body. Required: `sources`. `engine_id`
-                defaults to `auto`, and `scene` is optional."
+              $ref: '#/components/schemas/ParseSubmitRequest'
+              description: 'Unified Parse request body. Required: `sources`. `engine_id`
+                defaults to `auto`, and `scene` is optional.'
             examples:
               auto_web_batch_parse:
                 summary: Auto-routed web batch parse / 自动路由网页批量解析
-                description: Submit one or more source locators and let Cortex pick the best
-                  active engine and scene automatically.
+                description: Submit one or more source locators and let Cortex pick
+                  the best active engine and scene automatically.
                 value:
                   sources:
                     - https://docs.cognee.ai/core-concepts/overview
@@ -1175,9 +1203,9 @@ paths:
                   engine_id: auto
               crawl4ai_deep_web:
                 summary: Crawl4AI deep-web parse / Crawl4AI 深度网页解析
-                description: Use Crawl4AI explicitly with the high-intensity `deep_web` scene.
-                  This keeps fallback disabled and always routes the request to
-                  Crawl4AI.
+                description: Use Crawl4AI explicitly with the high-intensity `deep_web`
+                  scene. This keeps fallback disabled and always routes the request
+                  to Crawl4AI.
                 value:
                   sources:
                     - https://docs.crawl4ai.com/advanced/advanced-features/
@@ -1185,9 +1213,9 @@ paths:
                   scene: deep_web
               minio_object_auto:
                 summary: MinIO/S3 object parse / MinIO/S3 对象解析
-                description: Parse a Cortex-managed object stored in MinIO/S3. The locator may
-                  be the storage object key, an `s3://bucket/key` URI, or
-                  `cortex://objects/{object_id}`; Cortex extracts the `obj_...`
+                description: Parse a Cortex-managed object stored in MinIO/S3. The
+                  locator may be the storage object key, an `s3://bucket/key` URI,
+                  or `cortex://objects/{object_id}`; Cortex extracts the `obj_...`
                   id, signs a download URL, and detects MIME type.
                 value:
                   sources:
@@ -1196,28 +1224,30 @@ paths:
                   scene: document_ai
         required: true
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ParseBatchResult"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/ParseBatchResult'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
       security:
         - BearerAuth: []
   /v1/parse/jobs:
     post:
       tags:
         - Parse
-      summary: Submit an asynchronous parse job
+      summary: Submit an asynchronous parse job / 提交异步解析作业
       description: Queue one async parse job per source using the same unified public
-        Parse contract. Add optional `priority` and `webhook` only when job
-        control is needed.
+        Parse contract. Add optional `priority` and `webhook` only when job control
+        is needed. / Queue one async parse job per source using the same unified public
+        Parse contract. Add optional `priority` and `webhook` only when job control
+        is needed.
       operationId: createParseJob
       security:
         - BearerAuth: []
@@ -1228,29 +1258,29 @@ paths:
           schema:
             anyOf:
               - type: string
-              - type: "null"
-            description: "Optional idempotency key for safely retrying asynchronous job
-              submission. Best default: omit unless a client may re-send the
-              same create request."
+              - type: 'null'
+            description: 'Optional idempotency key for safely retrying asynchronous
+              job submission. Best default: omit unless a client may re-send the same
+              create request.'
             examples:
               - parse-demo-001
             title: Idempotency-Key
-          description: "Optional idempotency key for safely retrying asynchronous job
-            submission. Best default: omit unless a client may re-send the same
-            create request."
+          description: 'Optional idempotency key for safely retrying asynchronous
+            job submission. Best default: omit unless a client may re-send the same
+            create request.'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ParseJobSubmitRequest"
-              description: Unified async Parse request. `sources` may contain one or more
-                locators; `engine_id` defaults to `auto`.
+              $ref: '#/components/schemas/ParseJobSubmitRequest'
+              description: Unified async Parse request. `sources` may contain one
+                or more locators; `engine_id` defaults to `auto`.
             examples:
               async_auto_batch_parse:
                 summary: Async auto-routed batch parse / 异步自动路由批量解析
-                description: Recommended when you want one async parse job per source with the
-                  same high-level routing contract.
+                description: Recommended when you want one async parse job per source
+                  with the same high-level routing contract.
                 value:
                   sources:
                     - https://docs.cognee.ai/core-concepts/overview
@@ -1267,10 +1297,9 @@ paths:
                       X-Consumer: knowledge-pipeline
               async_docling_minio_pdf:
                 summary: Docling async MinIO PDF parse / Docling 异步解析 MinIO PDF
-                description: Use this for PDFs uploaded through Cortex Storage. Start the
-                  `cortex-parse-worker-docling` worker/profile so the job is
-                  claimed by the Docling runtime worker instead of the slim
-                  parse worker.
+                description: Use this for PDFs uploaded through Cortex Storage. Start
+                  the `cortex-parse-worker-docling` worker/profile so the job is claimed
+                  by the Docling runtime worker instead of the slim parse worker.
                 value:
                   sources:
                     - s3://cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf
@@ -1278,9 +1307,10 @@ paths:
                   scene: document_ai
                   priority: 5
               async_llamaparse_minio_pdf:
-                summary: LlamaParse async MinIO PDF parse / LlamaParse 异步解析 MinIO PDF
-                description: Use this when the LlamaParse cloud API key is configured and the
-                  object should be parsed by the cloud document parser.
+                summary: LlamaParse async MinIO PDF parse / LlamaParse 异步解析 MinIO
+                  PDF
+                description: Use this when the LlamaParse cloud API key is configured
+                  and the object should be parsed by the cloud document parser.
                 value:
                   sources:
                     - cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf
@@ -1288,25 +1318,27 @@ paths:
                   scene: document_fidelity
                   priority: 5
       responses:
-        "202":
-          description: Successful Response
+        '202':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ParseBatchJobAccepted"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/ParseBatchJobAccepted'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/parse/jobs/{jobId}/result:
     get:
       tags:
         - Parse
-      summary: Get a completed parse result
-      description: Poll for the parse result. Returns `409` with job status until the
-        parse completes, then returns the final `ParseResult`.
+      summary: Get a completed parse result / 获取已完成的解析结果
+      description: Poll for the parse result. Returns `409` with job status until
+        the parse completes, then returns the final `ParseResult`. / Poll for the
+        parse result. Returns `409` with job status until the parse completes, then
+        returns the final `ParseResult`.
       operationId: getParseResult
       security:
         - BearerAuth: []
@@ -1322,51 +1354,54 @@ paths:
             title: Jobid
           description: Parse job identifier returned by `/v1/parse/jobs`.
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 anyOf:
-                  - $ref: "#/components/schemas/ParseResult"
-                  - $ref: "#/components/schemas/JobStatusDetail"
+                  - $ref: '#/components/schemas/ParseResult'
+                  - $ref: '#/components/schemas/JobStatusDetail'
                 title: Response Getparseresult
-        "409":
+        '409':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JobStatusDetail"
-          description: Conflict
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/JobStatusDetail'
+          description: Conflict / Conflict
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/storage/uploads:
     post:
       tags:
         - Storage
-      summary: Initiate an upload session
-      description: Create a signed upload session for a new object. The caller
-        supplies file identity plus business metadata, while Cortex infers
-        content type when possible and decides whether multipart is needed.
+      summary: Initiate an upload session / 启动上传会话
+      description: Create a signed upload session for a new object. The caller supplies
+        file identity plus business metadata, while Cortex infers content type when
+        possible and decides whether multipart is needed. / Create a signed upload
+        session for a new object. The caller supplies file identity plus business
+        metadata, while Cortex infers content type when possible and decides whether
+        multipart is needed.
       operationId: createUploadSession
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/StorageUploadCreateRequest"
-              description: Upload session creation request. `filename` is required. Cortex
-                infers `content_type` from `filename` when omitted, uses
-                `size_bytes` when available to decide single-part vs multipart,
-                and manages bucket/object-key routing internally.
+              $ref: '#/components/schemas/StorageUploadCreateRequest'
+              description: Upload session creation request. `filename` is required.
+                Cortex infers `content_type` from `filename` when omitted, uses `size_bytes`
+                when available to decide single-part vs multipart, and manages bucket/object-key
+                routing internally.
             examples:
               recommended_single_part:
                 summary: Recommended single-part upload
-                description: Best for small and medium files that fit in one signed PUT request.
-                  You can omit `size_bytes`; Cortex will finalize the actual
-                  object size when the upload is completed.
+                description: Best for small and medium files that fit in one signed
+                  PUT request. You can omit `size_bytes`; Cortex will finalize the
+                  actual object size when the upload is completed.
                 value:
                   filename: README.md
                   metadata:
@@ -1388,9 +1423,9 @@ paths:
                     - product
               multipart_large_file:
                 summary: Multipart upload for large files
-                description: Recommended when the client already knows the file is large enough
-                  that Cortex should initialize multipart upload and return part
-                  URLs.
+                description: Recommended when the client already knows the file is
+                  large enough that Cortex should initialize multipart upload and
+                  return part URLs.
                 value:
                   filename: quarterly-report.pdf
                   size_bytes: 67108864
@@ -1402,59 +1437,65 @@ paths:
                     - quarterly
         required: true
       responses:
-        "201":
-          description: Successful Response
+        '201':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StorageUploadSession"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/StorageUploadSession'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
       security:
         - BearerAuth: []
   /v1/storage/files:
     post:
       tags:
         - Storage
-      summary: Upload a small file
+      summary: Upload a small file / 上传小文件
       description: Upload a small file directly through the Cortex API. This endpoint
-        is optimized for Swagger UI, local testing, and small files; use upload
-        sessions for large files or production high-throughput transfers.
+        is optimized for Swagger UI, local testing, and small files; use upload sessions
+        for large files or production high-throughput transfers. / Upload a small
+        file directly through the Cortex API. This endpoint is optimized for Swagger
+        UI, local testing, and small files; use upload sessions for large files or
+        production high-throughput transfers.
       operationId: uploadSmallFile
       requestBody:
         content:
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/Body_uploadSmallFile"
+              $ref: '#/components/schemas/Body_uploadSmallFile'
         required: true
       responses:
-        "201":
-          description: Successful Response
+        '201':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StorageObject"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/StorageObject'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
       security:
         - BearerAuth: []
   /v1/storage/uploads/{uploadId}/complete:
     post:
       tags:
         - Storage
-      summary: Complete an upload session
-      description: Finalize a single-part or multipart upload session after the
-        object-store transfer has succeeded. This step is required because
-        Cortex must verify the uploaded object, recover provider metadata, and
-        commit the final object/version records.
+      summary: Complete an upload session / 完成上传会话
+      description: Finalize a single-part or multipart upload session after the object-store
+        transfer has succeeded. This step is required because Cortex must verify the
+        uploaded object, recover provider metadata, and commit the final object/version
+        records. / Finalize a single-part or multipart upload session after the object-store
+        transfer has succeeded. This step is required because Cortex must verify the
+        uploaded object, recover provider metadata, and commit the final object/version
+        records.
       operationId: completeUploadSession
       security:
         - BearerAuth: []
@@ -1474,21 +1515,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/StorageUploadCompleteRequest"
-              description: Upload completion request. Use the single-part example when no
-                multipart parts were issued.
+              $ref: '#/components/schemas/StorageUploadCompleteRequest'
+              description: Upload completion request. Use the single-part example
+                when no multipart parts were issued.
             examples:
               single_part_complete:
                 summary: Complete a single-part upload
-                description: Use this when the upload session returned `single_part` instead of
-                  `multipart_parts`.
+                description: Use this when the upload session returned `single_part`
+                  instead of `multipart_parts`.
                 value:
                   parts: []
                   checksum_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
               multipart_complete:
                 summary: Complete a multipart upload
-                description: Send the uploaded part numbers and provider ETags exactly as
-                  returned by the object store.
+                description: Send the uploaded part numbers and provider ETags exactly
+                  as returned by the object store.
                 value:
                   parts:
                     - part_number: 1
@@ -1501,25 +1542,26 @@ paths:
                       etag: '"part-4-etag"'
                   checksum_sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StorageObject"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/StorageObject'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/storage/objects/{objectId}:
     get:
       tags:
         - Storage
-      summary: Get object metadata
+      summary: Get object metadata / 获取对象元数据
       description: Return the stored metadata, current version reference, and access
-        policy for one object.
+        policy for one object. / Return the stored metadata, current version reference,
+        and access policy for one object.
       operationId: getStorageObject
       security:
         - BearerAuth: []
@@ -1535,24 +1577,25 @@ paths:
             title: Objectid
           description: Storage object identifier returned by upload or search flows.
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StorageObject"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/StorageObject'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/storage/objects/{objectId}/download-url:
     get:
       tags:
         - Storage
-      summary: Create a download URL for an object
-      description: Create a time-limited signed download URL for an object.
+      summary: Create a download URL for an object / 创建对象的下载 URL
+      description: Create a time-limited signed download URL for an object. / Create
+        a time-limited signed download URL for an object.
       operationId: createDownloadUrl
       security:
         - BearerAuth: []
@@ -1574,75 +1617,78 @@ paths:
             type: integer
             maximum: 86400
             minimum: 60
-            description: "Signed URL lifetime in seconds. Best default: 900 (15 minutes)."
+            description: 'Signed URL lifetime in seconds. Best default: 900 (15 minutes).'
             examples:
               - 900
             default: 900
             title: Ttl Seconds
-          description: "Signed URL lifetime in seconds. Best default: 900 (15 minutes)."
+          description: 'Signed URL lifetime in seconds. Best default: 900 (15 minutes).'
         - name: disposition
           in: query
           required: false
           schema:
-            $ref: "#/components/schemas/DownloadDisposition"
-            description: "Suggested content disposition. Best default: `attachment`; use
-              `inline` for browser preview."
+            $ref: '#/components/schemas/DownloadDisposition'
+            description: 'Suggested content disposition. Best default: `attachment`;
+              use `inline` for browser preview.'
             examples:
               - attachment
             default: attachment
-          description: "Suggested content disposition. Best default: `attachment`; use
-            `inline` for browser preview."
+          description: 'Suggested content disposition. Best default: `attachment`;
+            use `inline` for browser preview.'
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DownloadUrlResponse"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/DownloadUrlResponse'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/synthesis/engines:
     get:
       tags:
         - Synthesis
-      summary: List synthesis engines
-      description: Returns the currently registered synthesis engines, supported
-        synthesis types, supported source kinds, and output format hints.
+      summary: List synthesis engines / 列出合成引擎
+      description: Returns the currently registered synthesis engines, supported synthesis
+        types, supported source kinds, and output format hints. / Returns the currently
+        registered synthesis engines, supported synthesis types, supported source
+        kinds, and output format hints.
       operationId: listSynthesisEngines
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SynthesisEngineList"
+                $ref: '#/components/schemas/SynthesisEngineList'
       security:
         - BearerAuth: []
   /v1/synthesis/sync:
     post:
       tags:
         - Synthesis
-      summary: Execute a synchronous synthesis run
+      summary: Execute a synchronous synthesis run / 执行同步合成运行
       description: Runs a small synthesis workload synchronously. Recommended for
-        preview generation, quality-gate tuning, and low-cardinality source
-        samples.
+        preview generation, quality-gate tuning, and low-cardinality source samples.
+        / Runs a small synthesis workload synchronously. Recommended for preview generation,
+        quality-gate tuning, and low-cardinality source samples.
       operationId: runSynthesisSync
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SynthesisSyncRequest"
-              description: "Unified synthesis request body. Required: `synthesis_type` and
-                `source`. `engine_id` defaults to `auto`."
+              $ref: '#/components/schemas/SynthesisSyncRequest'
+              description: 'Unified synthesis request body. Required: `synthesis_type`
+                and `source`. `engine_id` defaults to `auto`.'
             examples:
               rag_goldens:
                 summary: RAG goldens synthesis / RAG 黄金集生成
-                description: Generate a small synchronous preview set of RAG golden samples from
-                  documents.
+                description: Generate a small synchronous preview set of RAG golden
+                  samples from documents.
                 value:
                   name: Support-RAG-Goldens
                   synthesis_type: rag_goldens
@@ -1650,8 +1696,8 @@ paths:
                   source:
                     type: documents
                     documents:
-                      - Cortex exposes Parse, Storage, Knowledge, Evaluation,
-                        and Synthesis APIs.
+                      - Cortex exposes Parse, Storage, Knowledge, Evaluation, and
+                        Synthesis APIs.
                   config:
                     sample_count: 5
                     quality_gates:
@@ -1661,8 +1707,8 @@ paths:
                     output_format: json
               sdv_single_table:
                 summary: SDV single-table sync / SDV 单表同步合成
-                description: Generate a small structured preview from inline records. Requires
-                  the SDV runtime dependency for synchronous execution.
+                description: Generate a small structured preview from inline records.
+                  Requires the SDV runtime dependency for synchronous execution.
                 value:
                   name: swagger-sdv-customers
                   synthesis_type: structured_single_table
@@ -1697,8 +1743,8 @@ paths:
                   source:
                     type: documents
                     documents:
-                      - Cortex Parse turns URLs and storage objects into
-                        LLM-ready Markdown.
+                      - Cortex Parse turns URLs and storage objects into LLM-ready
+                        Markdown.
                   config:
                     sample_count: 2
                     max_contexts_per_case: 1
@@ -1708,27 +1754,28 @@ paths:
                     include_preview: true
         required: true
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SynthesisRunResult"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/SynthesisRunResult'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
       security:
         - BearerAuth: []
   /v1/synthesis/jobs:
     post:
       tags:
         - Synthesis
-      summary: Submit an asynchronous synthesis job
-      description: Queues a longer-running synthesis workload and returns a Cortex job
-        handle for polling and result retrieval.
+      summary: Submit an asynchronous synthesis job / 提交异步合成作业
+      description: Queues a longer-running synthesis workload and returns a Cortex
+        job handle for polling and result retrieval. / Queues a longer-running synthesis
+        workload and returns a Cortex job handle for polling and result retrieval.
       operationId: createSynthesisJob
       security:
         - BearerAuth: []
@@ -1739,7 +1786,7 @@ paths:
           schema:
             anyOf:
               - type: string
-              - type: "null"
+              - type: 'null'
             description: Optional idempotency key for asynchronous synthesis job submission.
             examples:
               - parse-demo-001
@@ -1750,9 +1797,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SynthesisJobSubmitRequest"
-              description: Async synthesis job request. Use this for larger synthetic dataset
-                creation or batch enrichment workloads.
+              $ref: '#/components/schemas/SynthesisJobSubmitRequest'
+              description: Async synthesis job request. Use this for larger synthetic
+                dataset creation or batch enrichment workloads.
             examples:
               qa_pairs_job:
                 summary: QA pairs synthesis job / QA 对生成作业
@@ -1765,7 +1812,8 @@ paths:
                   source:
                     type: inline_records
                     inline_records:
-                      - document: Cortex supports pluggable evaluation and synthesis engines.
+                      - document: Cortex supports pluggable evaluation and synthesis
+                          engines.
                   config:
                     sample_count: 100
                     quality_gates:
@@ -1780,8 +1828,8 @@ paths:
                       - job.failed
               sdv_relational_job:
                 summary: SDV relational async job / SDV 关系型异步合成
-                description: Async relational synthesis from inline table samples. This example
-                  is designed for local Swagger testing with the runtime
+                description: Async relational synthesis from inline table samples.
+                  This example is designed for local Swagger testing with the runtime
                   synthesis worker.
                 value:
                   name: swagger-sdv-orders
@@ -1820,8 +1868,8 @@ paths:
                   source:
                     type: documents
                     documents:
-                      - Support agents should ask for the object_id before
-                        parsing a private file.
+                      - Support agents should ask for the object_id before parsing
+                        a private file.
                   config:
                     sample_count: 3
                     max_contexts_per_case: 1
@@ -1835,25 +1883,27 @@ paths:
                       - job.succeeded
                       - job.failed
       responses:
-        "202":
-          description: Successful Response
+        '202':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SynthesisJobAccepted"
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/SynthesisJobAccepted'
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/synthesis/jobs/{jobId}/result:
     get:
       tags:
         - Synthesis
-      summary: Get a completed synthesis result
+      summary: Get a completed synthesis result / 获取已完成的合成结果
       description: Returns the completed synthesis result when the async job succeeds,
-        or a 409 job status payload while work is still in progress.
+        or a 409 job status payload while work is still in progress. / Returns the
+        completed synthesis result when the async job succeeds, or a 409 job status
+        payload while work is still in progress.
       operationId: getSynthesisResult
       security:
         - BearerAuth: []
@@ -1865,51 +1915,51 @@ paths:
             type: string
             title: Jobid
       responses:
-        "200":
-          description: Successful Response
+        '200':
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 anyOf:
-                  - $ref: "#/components/schemas/SynthesisRunResult"
-                  - $ref: "#/components/schemas/JobStatusDetail"
+                  - $ref: '#/components/schemas/SynthesisRunResult'
+                  - $ref: '#/components/schemas/JobStatusDetail'
                 title: Response Getsynthesisresult
-        "409":
+        '409':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JobStatusDetail"
-          description: Conflict
-        "422":
-          description: Validation Error
+                $ref: '#/components/schemas/JobStatusDetail'
+          description: Conflict / Conflict
+        '422':
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/dev/auth/token:
     post:
       tags:
         - Dev Auth
       summary: Issue local development access token / 签发本地开发访问令牌
       description: Available only when `CORTEX_ENV=local` and `CORTEX_AUTH_MODE=dev`.
-        Issues a local `dev:` bearer token for Swagger UI, curl, and smoke
-        tests. This route is not mounted in non-local deployments. / 仅当
-        `CORTEX_ENV=local` 且 `CORTEX_AUTH_MODE=dev` 时才会暴露。该接口用于生成本地 `dev:`
-        Bearer token，便于 Swagger、curl 和冒烟测试使用；在非本地部署中不会挂载。
+        Issues a local `dev:` bearer token for Swagger UI, curl, and smoke tests.
+        This route is not mounted in non-local deployments. / 仅当 `CORTEX_ENV=local`
+        且 `CORTEX_AUTH_MODE=dev` 时才会暴露。该接口用于生成本地 `dev:` Bearer token，便于 Swagger、curl
+        和冒烟测试使用；在非本地部署中不会挂载。
       operationId: issueLocalDevAccessToken
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LocalDevTokenIssueRequest"
+              $ref: '#/components/schemas/LocalDevTokenIssueRequest'
               description: Local development token request. In the simplest case only
-                `subject` and `tenant_id` are required. / 本地开发令牌请求，最简单时只需要填写
-                `subject` 和 `tenant_id`。
+                `subject` and `tenant_id` are required. / 本地开发令牌请求，最简单时只需要填写 `subject`
+                和 `tenant_id`。
             examples:
               recommended_swagger_token:
                 summary: Recommended Swagger dev token / 推荐的 Swagger 开发令牌
-                description: Creates a local development bearer token that can be pasted
-                  directly into Swagger UI's `Authorize` dialog. / 生成一个可直接粘贴到
+                description: Creates a local development bearer token that can be
+                  pasted directly into Swagger UI's `Authorize` dialog. / 生成一个可直接粘贴到
                   Swagger UI `Authorize` 弹窗中的本地开发 Bearer token。
                 value:
                   subject: alice
@@ -1923,21 +1973,21 @@ paths:
                   expires_in: 3600
               minimal_local_token:
                 summary: Minimal local token request / 最小化本地令牌请求
-                description: Only `subject` and `tenant_id` are required. Cortex fills in the
-                  standard local developer scopes automatically. / 只需要 `subject`
+                description: Only `subject` and `tenant_id` are required. Cortex fills
+                  in the standard local developer scopes automatically. / 只需要 `subject`
                   和 `tenant_id`，其余标准本地开发 scope 由 Cortex 自动补齐。
                 value:
                   subject: smoke-test
                   tenant_id: tenant_demo
         required: true
       responses:
-        "200":
+        '200':
           description: Local development token issued. / 已签发本地开发令牌。
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/LocalDevTokenIssueResponse"
-        "422":
+                $ref: '#/components/schemas/LocalDevTokenIssueResponse'
+        '422':
           description: Validation error. / 请求体验证失败。
 components:
   schemas:
@@ -1953,19 +2003,19 @@ components:
       properties:
         access_level:
           anyOf:
-            - $ref: "#/components/schemas/AccessLevel"
-            - type: "null"
-          description: "Optional coarse-grained data access level. Best default: omit to
-            let the service apply the resource-type default."
+            - $ref: '#/components/schemas/AccessLevel'
+            - type: 'null'
+          description: 'Optional coarse-grained data access level. Best default: omit
+            to let the service apply the resource-type default.'
           examples:
             - tenant_shared
         owner_actor_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Owner Actor Id
-          description: "Optional resource owner actor ID. Best default: omit to let the
-            service infer ownership from the caller."
+          description: 'Optional resource owner actor ID. Best default: omit to let
+            the service infer ownership from the caller.'
           examples:
             - alice
         classification_labels:
@@ -1973,8 +2023,8 @@ components:
             type: string
           type: array
           title: Classification Labels
-          description: "Optional classification labels such as `internal` or `restricted`.
-            Best default: empty list."
+          description: 'Optional classification labels such as `internal` or `restricted`.
+            Best default: empty list.'
           examples:
             - - internal
               - docs
@@ -1983,8 +2033,8 @@ components:
             type: string
           type: array
           title: Allowed Role Keys
-          description: "Optional allow-list of roles that may access the resource. Best
-            default: empty list, meaning no extra allow-list constraint."
+          description: 'Optional allow-list of roles that may access the resource.
+            Best default: empty list, meaning no extra allow-list constraint.'
           examples:
             - - tenant_admin
               - analyst
@@ -1993,8 +2043,8 @@ components:
             type: string
           type: array
           title: Denied Role Keys
-          description: "Optional deny-list of roles that should be blocked even if other
-            checks pass. Best default: empty list."
+          description: 'Optional deny-list of roles that should be blocked even if
+            other checks pass. Best default: empty list.'
           examples:
             - - contractor
         purpose_tags:
@@ -2002,8 +2052,8 @@ components:
             type: string
           type: array
           title: Purpose Tags
-          description: "Optional intended-use tags for ABAC policy evaluation. Best
-            default: empty list."
+          description: 'Optional intended-use tags for ABAC policy evaluation. Best
+            default: empty list.'
           examples:
             - - knowledge_ingest
               - assistant
@@ -2011,8 +2061,8 @@ components:
           additionalProperties: true
           type: object
           title: Constraints
-          description: "Optional structured constraints for custom policy engines. Best
-            default: empty object."
+          description: 'Optional structured constraints for custom policy engines.
+            Best default: empty object.'
           examples:
             - region: cn-shanghai
       type: object
@@ -2022,7 +2072,7 @@ components:
         dataset_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Dataset Id
           description: Optional dataset ID. Provide either `dataset_id` or `dataset_key`.
           examples:
@@ -2030,29 +2080,29 @@ components:
         dataset_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Dataset Key
-          description: Optional dataset key. Recommended for human-authored requests when
-            stable keys are known.
+          description: Optional dataset key. Recommended for human-authored requests
+            when stable keys are known.
           examples:
             - product_docs
         inputs:
           items:
-            $ref: "#/components/schemas/KnowledgeInput"
+            $ref: '#/components/schemas/KnowledgeInput'
           type: array
           minItems: 1
           title: Inputs
           description: Required ingest inputs. At least one input is required.
         options:
-          $ref: "#/components/schemas/AddOptions"
-          description: "Optional ingest behavior flags. Best default: use the built-in
-            defaults."
+          $ref: '#/components/schemas/AddOptions'
+          description: 'Optional ingest behavior flags. Best default: use the built-in
+            defaults.'
         webhook:
           anyOf:
-            - $ref: "#/components/schemas/WebhookConfig"
-            - type: "null"
-          description: "Optional webhook callback for job lifecycle events. Best default:
-            omit."
+            - $ref: '#/components/schemas/WebhookConfig'
+            - type: 'null'
+          description: 'Optional webhook callback for job lifecycle events. Best default:
+            omit.'
       type: object
       required:
         - inputs
@@ -2062,25 +2112,25 @@ components:
         normalize_text:
           type: boolean
           title: Normalize Text
-          description: "Normalize raw text before ingestion. Best default: `true`."
+          description: 'Normalize raw text before ingestion. Best default: `true`.'
           default: true
         structured_ingest:
           type: boolean
           title: Structured Ingest
-          description: "Enable structured ingestion and field extraction. Best default:
-            `true`."
+          description: 'Enable structured ingestion and field extraction. Best default:
+            `true`.'
           default: true
         incremental:
           type: boolean
           title: Incremental
-          description: "Avoid reprocessing unchanged content when possible. Best default:
-            `true`."
+          description: 'Avoid reprocessing unchanged content when possible. Best default:
+            `true`.'
           default: true
         persist_source_copy:
           type: boolean
           title: Persist Source Copy
-          description: "Persist a copy of the source payload when supported. Best default:
-            `true`."
+          description: 'Persist a copy of the source payload when supported. Best
+            default: `true`.'
           default: true
       type: object
       title: AddOptions
@@ -2089,32 +2139,32 @@ components:
         engine_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Engine Key
         display_name:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Display Name
         engine_family:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Engine Family
         engine_version:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Engine Version
         profile_ref:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Profile Ref
         template_ref:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Template Ref
         fallback_used:
           type: boolean
@@ -2135,12 +2185,12 @@ components:
         created_by:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Created By
         updated_by:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Updated By
       type: object
       required:
@@ -2153,40 +2203,40 @@ components:
           type: string
           contentMediaType: application/octet-stream
           title: File
-          description: File content to upload. Cortex derives filename, content type, and
-            size from the multipart part.
+          description: File content to upload. Cortex derives filename, content type,
+            and size from the multipart part.
         metadata_json:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Metadata Json
-          description: "Optional JSON object string for object metadata. Best default:
-            `{}`."
+          description: 'Optional JSON object string for object metadata. Best default:
+            `{}`.'
           examples:
             - '{"source":"swagger-demo","document_type":"guide"}'
         access_policy_json:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Access Policy Json
-          description: "Optional JSON object string matching AccessPolicy. Best default:
-            omit for tenant_private."
+          description: 'Optional JSON object string matching AccessPolicy. Best default:
+            omit for tenant_private.'
           examples:
             - '{"access_level":"tenant_shared"}'
         tags:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Tags
-          description: "Optional comma-separated tags or JSON array string. Best default:
-            empty."
+          description: 'Optional comma-separated tags or JSON array string. Best default:
+            empty.'
           examples:
             - docs,product
         checksum_sha256:
           anyOf:
             - type: string
               pattern: ^[0-9a-f]{64}$
-            - type: "null"
+            - type: 'null'
           title: Checksum Sha256
           description: Optional lowercase SHA-256 checksum. Cortex verifies it before
             committing object metadata when provided.
@@ -2201,19 +2251,20 @@ components:
         enabled:
           type: boolean
           title: Enabled
-          description: "Whether Cortex should emit chunking hints or stored chunks. Best
-            default: `true`."
+          description: 'Whether Cortex should emit chunking hints or stored chunks.
+            Best default: `true`.'
           default: true
         strategy:
-          $ref: "#/components/schemas/ChunkingStrategy"
-          description: "Chunking strategy. Best default: `semantic` for LLM-ready content."
+          $ref: '#/components/schemas/ChunkingStrategy'
+          description: 'Chunking strategy. Best default: `semantic` for LLM-ready
+            content.'
           default: semantic
         target_tokens:
           type: integer
           maximum: 4096
           minimum: 64
           title: Target Tokens
-          description: "Target token count per chunk. Best default: 512."
+          description: 'Target token count per chunk. Best default: 512.'
           default: 512
           examples:
             - 512
@@ -2222,7 +2273,7 @@ components:
           maximum: 1024
           minimum: 0
           title: Overlap Tokens
-          description: "Token overlap between adjacent chunks. Best default: 64."
+          description: 'Token overlap between adjacent chunks. Best default: 64.'
           default: 64
           examples:
             - 64
@@ -2231,7 +2282,7 @@ components:
           maximum: 10000
           minimum: 1
           title: Max Chunks
-          description: "Maximum chunks emitted for one document. Best default: 256."
+          description: 'Maximum chunks emitted for one document. Best default: 256.'
           default: 256
           examples:
             - 256
@@ -2250,29 +2301,29 @@ components:
         source_url:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Source Url
         document_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Document Id
         chunk_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Chunk Id
         start_offset:
           anyOf:
             - type: integer
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: Start Offset
         end_offset:
           anyOf:
             - type: integer
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: End Offset
       type: object
       title: Citation
@@ -2281,7 +2332,7 @@ components:
         dataset_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Dataset Id
           description: Optional dataset ID. Provide either `dataset_id` or `dataset_key`.
           examples:
@@ -2289,29 +2340,30 @@ components:
         dataset_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Dataset Key
-          description: Optional dataset key. Recommended when stable dataset keys are known.
+          description: Optional dataset key. Recommended when stable dataset keys
+            are known.
           examples:
             - product_docs
         incremental_loading:
           type: boolean
           title: Incremental Loading
-          description: "Only process newly added or changed content when possible. Best
-            default: `true`."
+          description: 'Only process newly added or changed content when possible.
+            Best default: `true`.'
           default: true
         graph_prompt_profile:
-          $ref: "#/components/schemas/GraphPromptProfile"
-          description: "Prompt profile for graph extraction. Best default: `default`."
+          $ref: '#/components/schemas/GraphPromptProfile'
+          description: 'Prompt profile for graph extraction. Best default: `default`.'
           default: default
         chunking:
-          $ref: "#/components/schemas/ChunkingOptions"
+          $ref: '#/components/schemas/ChunkingOptions'
           description: Chunking controls used before graph creation.
         webhook:
           anyOf:
-            - $ref: "#/components/schemas/WebhookConfig"
-            - type: "null"
-          description: "Optional webhook callback. Best default: omit."
+            - $ref: '#/components/schemas/WebhookConfig'
+            - type: 'null'
+          description: 'Optional webhook callback. Best default: omit.'
       type: object
       title: CognifyJobRequest
     CompletedUploadPart:
@@ -2383,12 +2435,12 @@ components:
           anyOf:
             - type: integer
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: Latency Ms
         detail:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Detail
       type: object
       required:
@@ -2399,42 +2451,42 @@ components:
       properties:
         input_kind:
           anyOf:
-            - $ref: "#/components/schemas/ParseInputKind"
-            - type: "null"
+            - $ref: '#/components/schemas/ParseInputKind'
+            - type: 'null'
         fetched_at:
           anyOf:
             - type: string
               format: date-time
-            - type: "null"
+            - type: 'null'
           title: Fetched At
         final_url:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Final Url
         http_status:
           anyOf:
             - type: integer
               maximum: 599
               minimum: 100
-            - type: "null"
+            - type: 'null'
           title: Http Status
         content_length_bytes:
           anyOf:
             - type: integer
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: Content Length Bytes
         parser_version:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Parser Version
         content_hash_sha256:
           anyOf:
             - type: string
               pattern: ^[0-9a-f]{64}$
-            - type: "null"
+            - type: 'null'
           title: Content Hash Sha256
       type: object
       title: DocumentProvenance
@@ -2479,12 +2531,12 @@ components:
         native_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Native Key
         notes:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Notes
       type: object
       required:
@@ -2518,7 +2570,7 @@ components:
         provider:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Provider
         execution_modes:
           items:
@@ -2527,7 +2579,7 @@ components:
           title: Execution Modes
         supported_eval_types:
           items:
-            $ref: "#/components/schemas/EvalType"
+            $ref: '#/components/schemas/EvalType'
           type: array
           title: Supported Eval Types
         supported_metric_prefixes:
@@ -2543,7 +2595,7 @@ components:
         notes:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Notes
       type: object
       required:
@@ -2557,11 +2609,11 @@ components:
           anyOf:
             - type: string
               format: date-time
-            - type: "null"
+            - type: 'null'
           title: Generated At
         engines:
           items:
-            $ref: "#/components/schemas/EvalEngineDescriptor"
+            $ref: '#/components/schemas/EvalEngineDescriptor'
           type: array
           title: Engines
       type: object
@@ -2573,27 +2625,27 @@ components:
         user_input:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: User Input
         actual_output:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Actual Output
         expected_output:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Expected Output
         retrieval_contexts:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Retrieval Contexts
         conversation_turns:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Conversation Turns
       type: object
       title: EvalFieldMapping
@@ -2605,22 +2657,22 @@ components:
         dataset_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Dataset Id
         dataset_version:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Dataset Version
         builtin_dataset_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Builtin Dataset Key
         object_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Object Id
         object_ids:
           items:
@@ -2629,21 +2681,21 @@ components:
           title: Object Ids
         field_mapping:
           anyOf:
-            - $ref: "#/components/schemas/EvalFieldMapping"
-            - type: "null"
+            - $ref: '#/components/schemas/EvalFieldMapping'
+            - type: 'null'
         filters:
           additionalProperties: true
           type: object
           title: Filters
         test_cases:
           items:
-            $ref: "#/components/schemas/EvalTestCase"
+            $ref: '#/components/schemas/EvalTestCase'
           type: array
           title: Test Cases
         trace_session_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Trace Session Id
       type: object
       required:
@@ -2655,9 +2707,9 @@ components:
           type: string
           title: Job Id
         job_type:
-          $ref: "#/components/schemas/JobType"
+          $ref: '#/components/schemas/JobType'
         status:
-          $ref: "#/components/schemas/JobStatus"
+          $ref: '#/components/schemas/JobStatus'
         submitted_at:
           type: string
           format: date-time
@@ -2668,25 +2720,25 @@ components:
         result_url:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Result Url
         cancel_url:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Cancel Url
         telemetry:
           anyOf:
-            - $ref: "#/components/schemas/TelemetryContext"
-            - type: "null"
+            - $ref: '#/components/schemas/TelemetryContext'
+            - type: 'null'
         eval_type:
           anyOf:
-            - $ref: "#/components/schemas/EvalType"
-            - type: "null"
+            - $ref: '#/components/schemas/EvalType'
+            - type: 'null'
         engine_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Engine Id
       type: object
       required:
@@ -2699,13 +2751,13 @@ components:
     EvalJobSubmitRequest:
       properties:
         eval_type:
-          $ref: "#/components/schemas/EvalType"
+          $ref: '#/components/schemas/EvalType'
         input:
-          $ref: "#/components/schemas/EvalInput"
+          $ref: '#/components/schemas/EvalInput'
         name:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Name
         engine_id:
           type: string
@@ -2714,15 +2766,15 @@ components:
         profile_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Profile Key
         target:
           anyOf:
-            - $ref: "#/components/schemas/EvalTarget"
-            - type: "null"
+            - $ref: '#/components/schemas/EvalTarget'
+            - type: 'null'
         metrics:
           items:
-            $ref: "#/components/schemas/EvalMetricRequest"
+            $ref: '#/components/schemas/EvalMetricRequest'
           type: array
           title: Metrics
         engine_options:
@@ -2730,11 +2782,11 @@ components:
           type: object
           title: Engine Options
         output:
-          $ref: "#/components/schemas/EvalOutputOptions"
+          $ref: '#/components/schemas/EvalOutputOptions'
         webhook:
           anyOf:
-            - $ref: "#/components/schemas/WebhookConfig"
-            - type: "null"
+            - $ref: '#/components/schemas/WebhookConfig'
+            - type: 'null'
       type: object
       required:
         - eval_type
@@ -2746,11 +2798,11 @@ components:
           anyOf:
             - type: string
               format: date-time
-            - type: "null"
+            - type: 'null'
           title: Generated At
         metrics:
           items:
-            $ref: "#/components/schemas/EvalMetricDefinition"
+            $ref: '#/components/schemas/EvalMetricDefinition'
           type: array
           title: Metrics
       type: object
@@ -2767,28 +2819,28 @@ components:
           title: Display Name
         eval_types:
           items:
-            $ref: "#/components/schemas/EvalType"
+            $ref: '#/components/schemas/EvalType'
           type: array
           title: Eval Types
         engine_bindings:
           items:
-            $ref: "#/components/schemas/EngineMetricBinding"
+            $ref: '#/components/schemas/EngineMetricBinding'
           type: array
           title: Engine Bindings
         description:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Description
         category:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Category
         unit:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Unit
         score_direction:
           type: string
@@ -2797,7 +2849,7 @@ components:
         threshold_hint:
           anyOf:
             - type: number
-            - type: "null"
+            - type: 'null'
           title: Threshold Hint
         required_fields:
           items:
@@ -2817,12 +2869,12 @@ components:
         threshold:
           anyOf:
             - type: number
-            - type: "null"
+            - type: 'null'
           title: Threshold
         weight:
           anyOf:
             - type: number
-            - type: "null"
+            - type: 'null'
           title: Weight
         params:
           additionalProperties: true
@@ -2844,38 +2896,38 @@ components:
         display_name:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Display Name
         score:
           anyOf:
             - type: number
-            - type: "null"
+            - type: 'null'
           title: Score
         threshold:
           anyOf:
             - type: number
-            - type: "null"
+            - type: 'null'
           title: Threshold
         unit:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Unit
         engine_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Engine Id
         native_metric_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Native Metric Key
         sample_size:
           anyOf:
             - type: integer
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: Sample Size
         details:
           additionalProperties: true
@@ -2895,7 +2947,7 @@ components:
         persist_dataset_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Persist Dataset Key
         include_sample_results:
           type: boolean
@@ -2905,14 +2957,14 @@ components:
           anyOf:
             - type: integer
               minimum: 1
-            - type: "null"
+            - type: 'null'
           title: Max Failures Reported
       type: object
       title: EvalOutputOptions
     EvalRunResult:
       properties:
         eval_type:
-          $ref: "#/components/schemas/EvalType"
+          $ref: '#/components/schemas/EvalType'
         engine_id:
           type: string
           title: Engine Id
@@ -2921,31 +2973,31 @@ components:
           pattern: ^(succeeded|failed|partial)$
           title: Status
         summary:
-          $ref: "#/components/schemas/EvalScoreCard"
+          $ref: '#/components/schemas/EvalScoreCard'
         metrics:
           items:
-            $ref: "#/components/schemas/EvalMetricResult"
+            $ref: '#/components/schemas/EvalMetricResult'
           type: array
           title: Metrics
         eval_run_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Eval Run Id
         job_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Job Id
         name:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Name
         profile_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Profile Key
         source_summary:
           additionalProperties: true
@@ -2957,28 +3009,28 @@ components:
           title: Target Summary
         samples:
           anyOf:
-            - $ref: "#/components/schemas/EvalSampleCounters"
-            - type: "null"
+            - $ref: '#/components/schemas/EvalSampleCounters'
+            - type: 'null'
         artifacts:
           items:
-            $ref: "#/components/schemas/StoredArtifactRef"
+            $ref: '#/components/schemas/StoredArtifactRef'
           type: array
           title: Artifacts
         telemetry:
           anyOf:
-            - $ref: "#/components/schemas/TelemetryContext"
-            - type: "null"
+            - $ref: '#/components/schemas/TelemetryContext'
+            - type: 'null'
         started_at:
           anyOf:
             - type: string
               format: date-time
-            - type: "null"
+            - type: 'null'
           title: Started At
         completed_at:
           anyOf:
             - type: string
               format: date-time
-            - type: "null"
+            - type: 'null'
           title: Completed At
       type: object
       required:
@@ -2994,25 +3046,25 @@ components:
           anyOf:
             - type: integer
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: Total
         passed:
           anyOf:
             - type: integer
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: Passed
         failed:
           anyOf:
             - type: integer
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: Failed
         skipped:
           anyOf:
             - type: integer
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: Skipped
       type: object
       title: EvalSampleCounters
@@ -3024,7 +3076,7 @@ components:
         composite_score:
           anyOf:
             - type: number
-            - type: "null"
+            - type: 'null'
           title: Composite Score
         metric_count:
           type: integer
@@ -3053,13 +3105,13 @@ components:
     EvalSyncRequest:
       properties:
         eval_type:
-          $ref: "#/components/schemas/EvalType"
+          $ref: '#/components/schemas/EvalType'
         input:
-          $ref: "#/components/schemas/EvalInput"
+          $ref: '#/components/schemas/EvalInput'
         name:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Name
         engine_id:
           type: string
@@ -3068,15 +3120,15 @@ components:
         profile_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Profile Key
         target:
           anyOf:
-            - $ref: "#/components/schemas/EvalTarget"
-            - type: "null"
+            - $ref: '#/components/schemas/EvalTarget'
+            - type: 'null'
         metrics:
           items:
-            $ref: "#/components/schemas/EvalMetricRequest"
+            $ref: '#/components/schemas/EvalMetricRequest'
           type: array
           title: Metrics
         engine_options:
@@ -3084,11 +3136,11 @@ components:
           type: object
           title: Engine Options
         output:
-          $ref: "#/components/schemas/EvalOutputOptions"
+          $ref: '#/components/schemas/EvalOutputOptions'
         webhook:
           anyOf:
-            - $ref: "#/components/schemas/WebhookConfig"
-            - type: "null"
+            - $ref: '#/components/schemas/WebhookConfig'
+            - type: 'null'
       type: object
       required:
         - eval_type
@@ -3102,42 +3154,42 @@ components:
         protocol:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Protocol
         endpoint_url:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Endpoint Url
         auth_ref:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Auth Ref
         api_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Api Key
           description: Optional per-run API key for OpenAI-compatible performance
-            targets. The key is forwarded to the evaluation engine and redacted
-            from persisted target metadata and reports.
+            targets. The key is forwarded to the evaluation engine and redacted from
+            persisted target metadata and reports.
           writeOnly: true
         api_key_header:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Api Key Header
-          description: "Header name used when forwarding `api_key` to an HTTP target.
-            Best default: `Authorization`."
+          description: 'Header name used when forwarding `api_key` to an HTTP target.
+            Best default: `Authorization`.'
           default: Authorization
         api_key_prefix:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Api Key Prefix
-          description: "Optional prefix used for `api_key_header`. Best default for
-            OpenAI-compatible targets: `Bearer`."
+          description: 'Optional prefix used for `api_key_header`. Best default for
+            OpenAI-compatible targets: `Bearer`.'
           default: Bearer
         headers:
           additionalProperties:
@@ -3148,17 +3200,17 @@ components:
           anyOf:
             - type: integer
               minimum: 1
-            - type: "null"
+            - type: 'null'
           title: Timeout Seconds
         model_ref:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Model Ref
         provider:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Provider
         request_template:
           additionalProperties: true
@@ -3173,17 +3225,17 @@ components:
         user_input:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: User Input
         actual_output:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Actual Output
         expected_output:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Expected Output
         retrieval_contexts:
           items:
@@ -3192,7 +3244,7 @@ components:
           title: Retrieval Contexts
         conversation_turns:
           items:
-            $ref: "#/components/schemas/EvalConversationTurn"
+            $ref: '#/components/schemas/EvalConversationTurn'
           type: array
           title: Conversation Turns
         metadata:
@@ -3229,24 +3281,25 @@ components:
         enabled:
           type: boolean
           title: Enabled
-          description: Whether Cortex may try another parser engine after the preferred one.
+          description: Whether Cortex may try another parser engine after the preferred
+            one.
           default: true
         mode:
-          $ref: "#/components/schemas/FallbackMode"
-          description: "Fallback strategy. Best default: `ordered` for predictable adapter
-            order."
+          $ref: '#/components/schemas/FallbackMode'
+          description: 'Fallback strategy. Best default: `ordered` for predictable
+            adapter order.'
           default: ordered
         on_error:
-          $ref: "#/components/schemas/FallbackOnError"
-          description: "How to react when an engine fails. Best default: `try_next`."
+          $ref: '#/components/schemas/FallbackOnError'
+          description: 'How to react when an engine fails. Best default: `try_next`.'
           default: try_next
         max_engine_attempts:
           type: integer
           maximum: 10
           minimum: 1
           title: Max Engine Attempts
-          description: "Maximum number of engine attempts before the parse run fails. Best
-            default: 3."
+          description: 'Maximum number of engine attempts before the parse run fails.
+            Best default: 3.'
           default: 3
           examples:
             - 3
@@ -3280,7 +3333,7 @@ components:
       properties:
         detail:
           items:
-            $ref: "#/components/schemas/ValidationError"
+            $ref: '#/components/schemas/ValidationError'
           type: array
           title: Detail
       type: object
@@ -3305,7 +3358,7 @@ components:
           title: Timestamp
         checks:
           items:
-            $ref: "#/components/schemas/DependencyCheck"
+            $ref: '#/components/schemas/DependencyCheck'
           type: array
           title: Checks
       type: object
@@ -3322,9 +3375,9 @@ components:
           type: string
           title: Job Id
         job_type:
-          $ref: "#/components/schemas/JobType"
+          $ref: '#/components/schemas/JobType'
         status:
-          $ref: "#/components/schemas/JobStatus"
+          $ref: '#/components/schemas/JobStatus'
         submitted_at:
           type: string
           format: date-time
@@ -3335,17 +3388,17 @@ components:
         result_url:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Result Url
         cancel_url:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Cancel Url
         telemetry:
           anyOf:
-            - $ref: "#/components/schemas/TelemetryContext"
-            - type: "null"
+            - $ref: '#/components/schemas/TelemetryContext'
+            - type: 'null'
       type: object
       required:
         - job_id
@@ -3359,12 +3412,12 @@ components:
         code:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Code
         message:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Message
       type: object
       title: JobError
@@ -3387,7 +3440,7 @@ components:
         message:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Message
         details:
           additionalProperties: true
@@ -3395,8 +3448,8 @@ components:
           title: Details
         telemetry:
           anyOf:
-            - $ref: "#/components/schemas/TelemetryContext"
-            - type: "null"
+            - $ref: '#/components/schemas/TelemetryContext'
+            - type: 'null'
       type: object
       required:
         - sequence
@@ -3410,13 +3463,13 @@ components:
           anyOf:
             - type: integer
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: Queue Latency Ms
         run_latency_ms:
           anyOf:
             - type: integer
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: Run Latency Ms
       type: object
       title: JobMetrics
@@ -3435,9 +3488,9 @@ components:
           type: string
           title: Job Id
         job_type:
-          $ref: "#/components/schemas/JobType"
+          $ref: '#/components/schemas/JobType'
         status:
-          $ref: "#/components/schemas/JobStatus"
+          $ref: '#/components/schemas/JobStatus'
         operation_name:
           type: string
           title: Operation Name
@@ -3450,52 +3503,52 @@ components:
             - type: number
               maximum: 100
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: Progress Percent
         queue_name:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Queue Name
         target_type:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Target Type
         target_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Target Id
         correlation_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Correlation Id
         started_at:
           anyOf:
             - type: string
               format: date-time
-            - type: "null"
+            - type: 'null'
           title: Started At
         completed_at:
           anyOf:
             - type: string
               format: date-time
-            - type: "null"
+            - type: 'null'
           title: Completed At
         error:
           anyOf:
-            - $ref: "#/components/schemas/JobError"
-            - type: "null"
+            - $ref: '#/components/schemas/JobError'
+            - type: 'null'
         metrics:
           anyOf:
-            - $ref: "#/components/schemas/JobMetrics"
-            - type: "null"
+            - $ref: '#/components/schemas/JobMetrics'
+            - type: 'null'
         telemetry:
           anyOf:
-            - $ref: "#/components/schemas/TelemetryContext"
-            - type: "null"
+            - $ref: '#/components/schemas/TelemetryContext'
+            - type: 'null'
       type: object
       required:
         - job_id
@@ -3526,13 +3579,13 @@ components:
           type: string
           title: Display Name
         status:
-          $ref: "#/components/schemas/KnowledgeDatasetStatus"
+          $ref: '#/components/schemas/KnowledgeDatasetStatus'
         audit:
-          $ref: "#/components/schemas/AuditFields"
+          $ref: '#/components/schemas/AuditFields'
         description:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Description
         tags:
           items:
@@ -3540,7 +3593,7 @@ components:
           type: array
           title: Tags
         retention_class:
-          $ref: "#/components/schemas/DatasetRetentionClass"
+          $ref: '#/components/schemas/DatasetRetentionClass'
           default: standard
         metadata:
           additionalProperties: true
@@ -3548,10 +3601,10 @@ components:
           title: Metadata
         access_policy:
           anyOf:
-            - $ref: "#/components/schemas/AccessPolicy"
-            - type: "null"
+            - $ref: '#/components/schemas/AccessPolicy'
+            - type: 'null'
         counters:
-          $ref: "#/components/schemas/DatasetCounters"
+          $ref: '#/components/schemas/DatasetCounters'
       type: object
       required:
         - dataset_id
@@ -3579,9 +3632,9 @@ components:
         description:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Description
-          description: "Optional dataset description. Best default: omit."
+          description: 'Optional dataset description. Best default: omit.'
           examples:
             - Primary product knowledge base for demos and regression tests.
         tags:
@@ -3589,27 +3642,28 @@ components:
             type: string
           type: array
           title: Tags
-          description: "Optional dataset tags. Best default: empty list."
+          description: 'Optional dataset tags. Best default: empty list.'
           examples:
             - - docs
               - product
         retention_class:
-          $ref: "#/components/schemas/DatasetRetentionClass"
-          description: "Retention profile. Best default: `standard`."
+          $ref: '#/components/schemas/DatasetRetentionClass'
+          description: 'Retention profile. Best default: `standard`.'
           default: standard
         metadata:
           additionalProperties: true
           type: object
           title: Metadata
-          description: "Optional dataset metadata. Best default: empty object."
+          description: 'Optional dataset metadata. Best default: empty object.'
           examples:
             - domain: product
               owner_team: platform
         access_policy:
           anyOf:
-            - $ref: "#/components/schemas/AccessPolicy"
-            - type: "null"
-          description: "Optional access policy attached to the dataset. Best default: omit."
+            - $ref: '#/components/schemas/AccessPolicy'
+            - type: 'null'
+          description: 'Optional access policy attached to the dataset. Best default:
+            omit.'
       type: object
       required:
         - dataset_key
@@ -3625,53 +3679,55 @@ components:
     KnowledgeInput:
       properties:
         input_type:
-          $ref: "#/components/schemas/KnowledgeInputType"
-          description: Required input type. It determines which of `object_id`,
-            `document_id`, `text`, or `uri` must be set.
+          $ref: '#/components/schemas/KnowledgeInputType'
+          description: Required input type. It determines which of `object_id`, `document_id`,
+            `text`, or `uri` must be set.
           examples:
             - document_id
         object_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Object Id
-          description: "Storage object ID when `input_type=object_id`. Best default: omit."
+          description: 'Storage object ID when `input_type=object_id`. Best default:
+            omit.'
           examples:
             - obj_3f6c1d5e9b1646b5a4eabdbf8b417bd3
         document_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Document Id
-          description: "Parsed document ID when `input_type=document_id`. Best default:
-            omit."
+          description: 'Parsed document ID when `input_type=document_id`. Best default:
+            omit.'
           examples:
             - doc_71fe50adf1cb4981bb322f0d74f32598
         text:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Text
-          description: "Inline text when `input_type=text`. Best default: omit."
+          description: 'Inline text when `input_type=text`. Best default: omit.'
           examples:
-            - |-
-              # Cortex Notes
+            - '# Cortex Notes
 
-              Cortex supports Parse, Storage, and Knowledge APIs.
+
+              Cortex supports Parse, Storage, and Knowledge APIs.'
         uri:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Uri
-          description: "External URI when `input_type=uri`. Best default: omit."
+          description: 'External URI when `input_type=uri`. Best default: omit.'
           examples:
             - https://example.com/knowledge-source.md
         label:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Label
-          description: "Optional label for operators and observability. Best default: omit."
+          description: 'Optional label for operators and observability. Best default:
+            omit.'
           examples:
             - Normalized parsed document
         node_set:
@@ -3679,7 +3735,7 @@ components:
             type: string
           type: array
           title: Node Set
-          description: "Optional node-set grouping tags. Best default: empty list."
+          description: 'Optional node-set grouping tags. Best default: empty list.'
           examples:
             - - docs
               - parsed
@@ -3687,8 +3743,8 @@ components:
           additionalProperties: true
           type: object
           title: Metadata
-          description: "Optional input metadata copied into downstream processing. Best
-            default: empty object."
+          description: 'Optional input metadata copied into downstream processing.
+            Best default: empty object.'
           examples:
             - source: parse
       type: object
@@ -3710,8 +3766,8 @@ components:
           maxLength: 255
           minLength: 1
           title: Subject
-          description: Required subject identifier for the local development caller. /
-            本地开发调用方的必填主体标识。
+          description: Required subject identifier for the local development caller.
+            / 本地开发调用方的必填主体标识。
           examples:
             - alice
         tenant_id:
@@ -3728,11 +3784,11 @@ components:
             - type: string
               maxLength: 255
               minLength: 1
-            - type: "null"
+            - type: 'null'
           title: Actor Id
-          description: "Optional actor identifier when it differs from `subject`. Best
-            default: omit and let Cortex fall back to `subject`. / 可选 actor
-            标识；若与 `subject` 相同，最佳默认值为省略。"
+          description: 'Optional actor identifier when it differs from `subject`.
+            Best default: omit and let Cortex fall back to `subject`. / 可选 actor 标识；若与
+            `subject` 相同，最佳默认值为省略。'
           examples:
             - alice
         actor_ref:
@@ -3740,11 +3796,10 @@ components:
             - type: string
               maxLength: 320
               minLength: 1
-            - type: "null"
+            - type: 'null'
           title: Actor Ref
-          description: "Optional external reference such as email or employee number. Best
-            default: omit when no external directory reference exists. /
-            可选外部引用，如邮箱或工号；若不存在外部目录引用，最佳默认值为省略。"
+          description: 'Optional external reference such as email or employee number.
+            Best default: omit when no external directory reference exists. / 可选外部引用，如邮箱或工号；若不存在外部目录引用，最佳默认值为省略。'
           examples:
             - alice@example.com
         actor_type:
@@ -3752,8 +3807,8 @@ components:
           maxLength: 64
           minLength: 1
           title: Actor Type
-          description: "Optional actor category. Best default: `user`. / 可选 actor
-            类型，最佳默认值为 `user`。"
+          description: 'Optional actor category. Best default: `user`. / 可选 actor
+            类型，最佳默认值为 `user`。'
           default: user
           examples:
             - user
@@ -3762,10 +3817,10 @@ components:
           anyOf:
             - type: string
               maxLength: 255
-            - type: "null"
+            - type: 'null'
           title: Display Name
-          description: Optional human-friendly display name copied into the dev token. /
-            可选展示名，会复制到 dev token 中。
+          description: Optional human-friendly display name copied into the dev token.
+            / 可选展示名，会复制到 dev token 中。
           examples:
             - Alice
         client_id:
@@ -3773,7 +3828,7 @@ components:
             - type: string
               maxLength: 255
               minLength: 1
-            - type: "null"
+            - type: 'null'
           title: Client Id
           description: Optional client identifier for the local tool or UI issuing
             requests. / 可选本地工具或 UI 的 client 标识。
@@ -3784,9 +3839,9 @@ components:
             type: string
           type: array
           title: Scopes
-          description: "Optional scopes granted to the local dev token. Best default: omit
-            and let Cortex issue the standard local developer scope bundle. / 可选
-            scope 集合，最佳默认值为省略，让 Cortex 自动填入标准本地开发 scope 包。"
+          description: 'Optional scopes granted to the local dev token. Best default:
+            omit and let Cortex issue the standard local developer scope bundle. /
+            可选 scope 集合，最佳默认值为省略，让 Cortex 自动填入标准本地开发 scope 包。'
           examples:
             - - health:read
               - parse:write
@@ -3796,8 +3851,8 @@ components:
             type: string
           type: array
           title: Roles
-          description: "Optional role keys attached to the caller. Best default: empty
-            list. / 可选角色键集合，最佳默认值为空列表。"
+          description: 'Optional role keys attached to the caller. Best default: empty
+            list. / 可选角色键集合，最佳默认值为空列表。'
           examples:
             - - tenant_admin
         groups:
@@ -3805,8 +3860,8 @@ components:
             type: string
           type: array
           title: Groups
-          description: Optional group memberships used by downstream policy logic. /
-            可选分组信息，供下游策略判断使用。
+          description: Optional group memberships used by downstream policy logic.
+            / 可选分组信息，供下游策略判断使用。
           examples:
             - - platform-ops
         expires_in:
@@ -3814,9 +3869,8 @@ components:
           maximum: 604800
           minimum: 60
           title: Expires In
-          description: "Optional token TTL in seconds. Best default: `3600` for local
-            Swagger and smoke tests. / 可选令牌有效期，单位为秒；本地 Swagger 与冒烟测试的最佳默认值为
-            `3600`。"
+          description: 'Optional token TTL in seconds. Best default: `3600` for local
+            Swagger and smoke tests. / 可选令牌有效期，单位为秒；本地 Swagger 与冒烟测试的最佳默认值为 `3600`。'
           default: 3600
           examples:
             - 3600
@@ -3824,8 +3878,8 @@ components:
           additionalProperties: true
           type: object
           title: Additional Claims
-          description: Optional extra claims copied into the dev token payload. / 可选额外
-            claim，会复制到 dev token 载荷中。
+          description: Optional extra claims copied into the dev token payload. /
+            可选额外 claim，会复制到 dev token 载荷中。
           examples:
             - environment: local
       additionalProperties: false
@@ -3879,14 +3933,14 @@ components:
         swagger_authorize_value:
           type: string
           title: Swagger Authorize Value
-          description: Paste this exact value into Swagger UI's `Authorize` dialog. Do not
-            prepend `Bearer ` manually. / 将这个值原样粘贴到 Swagger UI 的 `Authorize`
+          description: Paste this exact value into Swagger UI's `Authorize` dialog.
+            Do not prepend `Bearer ` manually. / 将这个值原样粘贴到 Swagger UI 的 `Authorize`
             弹窗中，不要手动再加 `Bearer ` 前缀。
         authorization_header:
           type: string
           title: Authorization Header
-          description: Ready-to-use HTTP Authorization header value for curl, Postman, or
-            SDK tests. / 可直接用于 curl、Postman 或 SDK 测试的完整 Authorization 头。
+          description: Ready-to-use HTTP Authorization header value for curl, Postman,
+            or SDK tests. / 可直接用于 curl、Postman 或 SDK 测试的完整 Authorization 头。
       type: object
       required:
         - access_token
@@ -3906,7 +3960,7 @@ components:
         dataset_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Dataset Id
           description: Optional dataset ID. Provide either `dataset_id` or `dataset_key`.
           examples:
@@ -3914,21 +3968,21 @@ components:
         dataset_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Dataset Key
           description: Optional dataset key. Recommended for copy-paste requests.
           examples:
             - product_docs
         pipeline:
-          $ref: "#/components/schemas/MemifyPipeline"
-          description: "Memify enrichment pipeline. Best default: `coding_rules`."
+          $ref: '#/components/schemas/MemifyPipeline'
+          description: 'Memify enrichment pipeline. Best default: `coding_rules`.'
           default: coding_rules
         node_type:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Node Type
-          description: "Optional node type filter. Best default: omit."
+          description: 'Optional node type filter. Best default: omit.'
           examples:
             - document
         node_names:
@@ -3936,7 +3990,7 @@ components:
             type: string
           type: array
           title: Node Names
-          description: "Optional node-name filter. Best default: empty list."
+          description: 'Optional node-name filter. Best default: empty list.'
           examples:
             - - Cortex API Overview
         session_ids:
@@ -3944,33 +3998,33 @@ components:
             type: string
           type: array
           title: Session Ids
-          description: "Optional session filters for session-aware pipelines. Best
-            default: empty list."
+          description: 'Optional session filters for session-aware pipelines. Best
+            default: empty list.'
           examples:
             - - session_demo_001
         custom_extraction_profile:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Custom Extraction Profile
-          description: "Optional custom extraction profile for `pipeline=custom`. Best
-            default: omit."
+          description: 'Optional custom extraction profile for `pipeline=custom`.
+            Best default: omit.'
           examples:
             - custom/memify/extract-v1
         custom_enrichment_profile:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Custom Enrichment Profile
-          description: "Optional custom enrichment profile for `pipeline=custom`. Best
-            default: omit."
+          description: 'Optional custom enrichment profile for `pipeline=custom`.
+            Best default: omit.'
           examples:
             - custom/memify/enrich-v1
         webhook:
           anyOf:
-            - $ref: "#/components/schemas/WebhookConfig"
-            - type: "null"
-          description: "Optional webhook callback. Best default: omit."
+            - $ref: '#/components/schemas/WebhookConfig'
+            - type: 'null'
+          description: 'Optional webhook callback. Best default: omit.'
       type: object
       title: MemifyJobRequest
     MemifyPipeline:
@@ -4009,24 +4063,24 @@ components:
       properties:
         markdown_object:
           anyOf:
-            - $ref: "#/components/schemas/StorageObjectRef"
-            - type: "null"
+            - $ref: '#/components/schemas/StorageObjectRef'
+            - type: 'null'
         raw_html_object:
           anyOf:
-            - $ref: "#/components/schemas/StorageObjectRef"
-            - type: "null"
+            - $ref: '#/components/schemas/StorageObjectRef'
+            - type: 'null'
         screenshot_object:
           anyOf:
-            - $ref: "#/components/schemas/StorageObjectRef"
-            - type: "null"
+            - $ref: '#/components/schemas/StorageObjectRef'
+            - type: 'null'
         pdf_object:
           anyOf:
-            - $ref: "#/components/schemas/StorageObjectRef"
-            - type: "null"
+            - $ref: '#/components/schemas/StorageObjectRef'
+            - type: 'null'
         ssl_certificate:
           anyOf:
-            - $ref: "#/components/schemas/SslCertificateSummary"
-            - type: "null"
+            - $ref: '#/components/schemas/SslCertificateSummary'
+            - type: 'null'
       type: object
       title: ParseArtifacts
     ParseAttemptStatus:
@@ -4049,11 +4103,11 @@ components:
         scene:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Scene
         jobs:
           items:
-            $ref: "#/components/schemas/JobAccepted"
+            $ref: '#/components/schemas/JobAccepted'
           type: array
           title: Jobs
       type: object
@@ -4073,11 +4127,11 @@ components:
         scene:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Scene
         results:
           items:
-            $ref: "#/components/schemas/ParseResult"
+            $ref: '#/components/schemas/ParseResult'
           type: array
           title: Results
       type: object
@@ -4089,7 +4143,7 @@ components:
         selected_engine_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Selected Engine Key
         fallback_used:
           type: boolean
@@ -4097,7 +4151,7 @@ components:
           default: false
         engine_attempts:
           items:
-            $ref: "#/components/schemas/ParseEngineAttempt"
+            $ref: '#/components/schemas/ParseEngineAttempt'
           type: array
           title: Engine Attempts
         warnings:
@@ -4118,19 +4172,19 @@ components:
         anti_bot_strategy:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Anti Bot Strategy
         used_proxy:
           anyOf:
             - type: boolean
-            - type: "null"
+            - type: 'null'
           title: Used Proxy
         timings_ms:
-          $ref: "#/components/schemas/ParseTimingSummary"
+          $ref: '#/components/schemas/ParseTimingSummary'
         telemetry:
           anyOf:
-            - $ref: "#/components/schemas/TelemetryContext"
-            - type: "null"
+            - $ref: '#/components/schemas/TelemetryContext'
+            - type: 'null'
       type: object
       title: ParseDiagnostics
     ParseEngineAttempt:
@@ -4143,28 +4197,28 @@ components:
           type: string
           title: Engine Key
         status:
-          $ref: "#/components/schemas/ParseAttemptStatus"
+          $ref: '#/components/schemas/ParseAttemptStatus'
         started_at:
           anyOf:
             - type: string
               format: date-time
-            - type: "null"
+            - type: 'null'
           title: Started At
         completed_at:
           anyOf:
             - type: string
               format: date-time
-            - type: "null"
+            - type: 'null'
           title: Completed At
         error_code:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Error Code
         warning:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Warning
         diagnostics:
           additionalProperties: true
@@ -4195,9 +4249,9 @@ components:
           type: string
           title: Engine Family
         deployment_mode:
-          $ref: "#/components/schemas/ParseEngineDeploymentMode"
+          $ref: '#/components/schemas/ParseEngineDeploymentMode'
         status:
-          $ref: "#/components/schemas/ParseEngineStatus"
+          $ref: '#/components/schemas/ParseEngineStatus'
         supported_source_types:
           items:
             type: string
@@ -4216,7 +4270,7 @@ components:
         default_scene_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Default Scene Id
         supported_scene_ids:
           items:
@@ -4226,7 +4280,7 @@ components:
         default_profile_ref:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Default Profile Ref
       type: object
       required:
@@ -4240,7 +4294,7 @@ components:
       properties:
         engines:
           items:
-            $ref: "#/components/schemas/ParseEngineDescriptor"
+            $ref: '#/components/schemas/ParseEngineDescriptor'
           type: array
           title: Engines
       type: object
@@ -4267,12 +4321,11 @@ components:
           type: array
           minItems: 1
           title: Sources
-          description: Required source locators. Each item may be an HTTP(S) URL, `s3://`
-            URI, `file://` URI, raw Cortex storage object key such as
-            `cortex-local/tenant_demo/obj_.../file.pdf`, or
-            `cortex://objects/{object_id}` reference. For Cortex-managed
-            S3/MinIO keys, Cortex extracts the `obj_...` segment and resolves a
-            signed download URL automatically.
+          description: Required source locators. Each item may be an HTTP(S) URL,
+            `s3://` URI, `file://` URI, raw Cortex storage object key such as `cortex-local/tenant_demo/obj_.../file.pdf`,
+            or `cortex://objects/{object_id}` reference. For Cortex-managed S3/MinIO
+            keys, Cortex extracts the `obj_...` segment and resolves a signed download
+            URL automatically.
           examples:
             - - https://docs.cognee.ai/core-concepts/overview
               - s3://cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf
@@ -4281,21 +4334,20 @@ components:
           minLength: 1
           title: Engine Id
           description: Public parser engine identifier. Use `auto` to let Cortex choose
-            the best active engine and scene per source; otherwise use
-            `crawl4ai`, `jina_reader`, `llama_parse`, `markitdown`, or
-            `docling`.
+            the best active engine and scene per source; otherwise use `crawl4ai`,
+            `jina_reader`, `llama_parse`, `markitdown`, or `docling`.
           default: auto
           examples:
             - auto
         scene:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Scene
-          description: "Optional high-level parse scene. Best default: omit to let Cortex
-            select the engine's default scene. Typical values include
-            `balanced`, `deep_web`, `authenticated_web`, `fast_extract`,
-            `document_fidelity`, `document_ai`, or `lightweight`."
+          description: 'Optional high-level parse scene. Best default: omit to let
+            Cortex select the engine''s default scene. Typical values include `balanced`,
+            `deep_web`, `authenticated_web`, `fast_extract`, `document_fidelity`,
+            `document_ai`, or `lightweight`.'
           examples:
             - deep_web
         priority:
@@ -4303,15 +4355,16 @@ components:
           maximum: 10
           minimum: 1
           title: Priority
-          description: "Job priority where higher values are more urgent. Best default: 5."
+          description: 'Job priority where higher values are more urgent. Best default:
+            5.'
           default: 5
           examples:
             - 5
         webhook:
           anyOf:
-            - $ref: "#/components/schemas/WebhookConfig"
-            - type: "null"
-          description: "Optional webhook callback configuration. Best default: omit."
+            - $ref: '#/components/schemas/WebhookConfig'
+            - type: 'null'
+          description: 'Optional webhook callback configuration. Best default: omit.'
       type: object
       required:
         - sources
@@ -4321,57 +4374,58 @@ components:
         schema_version:
           type: string
           title: Schema Version
-          description: "Normalization schema version. Best default: `cortex.parse.v1`."
+          description: 'Normalization schema version. Best default: `cortex.parse.v1`.'
           default: cortex.parse.v1
         normalize_markdown:
           type: boolean
           title: Normalize Markdown
-          description: "Normalize headings, lists, whitespace, and block structure. Best
-            default: `true`."
+          description: 'Normalize headings, lists, whitespace, and block structure.
+            Best default: `true`.'
           default: true
         normalize_metadata:
           type: boolean
           title: Normalize Metadata
-          description: "Normalize metadata into Cortex's standard document metadata shape.
-            Best default: `true`."
+          description: 'Normalize metadata into Cortex''s standard document metadata
+            shape. Best default: `true`.'
           default: true
         metadata_schema_ref:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Metadata Schema Ref
-          description: "Optional metadata schema profile reference. Best default: omit."
+          description: 'Optional metadata schema profile reference. Best default:
+            omit.'
           examples:
             - metadata/default-web-page
         infer_title:
           type: boolean
           title: Infer Title
-          description: "Infer a title when the source does not provide one cleanly. Best
-            default: `true`."
+          description: 'Infer a title when the source does not provide one cleanly.
+            Best default: `true`.'
           default: true
         infer_language:
           type: boolean
           title: Infer Language
-          description: "Infer language when it is missing from the source. Best default:
-            `true`."
+          description: 'Infer language when it is missing from the source. Best default:
+            `true`.'
           default: true
         include_page_metadata:
           type: boolean
           title: Include Page Metadata
-          description: "Include page-level metadata such as URL, status, and fetch
-            diagnostics. Best default: `true`."
+          description: 'Include page-level metadata such as URL, status, and fetch
+            diagnostics. Best default: `true`.'
           default: true
         preserve_source_blocks:
           type: boolean
           title: Preserve Source Blocks
-          description: "Preserve raw source fragments in normalized output. Best default:
-            `false`."
+          description: 'Preserve raw source fragments in normalized output. Best default:
+            `false`.'
           default: false
         deduplicate_whitespace:
           type: boolean
           title: Deduplicate Whitespace
-          description: "Collapse redundant whitespace during normalization. Best default:
-            `true`."
+          description: 'Collapse redundant whitespace during normalization. Best default:
+            `true`.'
           default: true
       type: object
       title: ParseNormalizationOptions
@@ -4380,20 +4434,20 @@ components:
         job_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Job Id
         document:
-          $ref: "#/components/schemas/ParsedDocument"
+          $ref: '#/components/schemas/ParsedDocument'
         artifacts:
           anyOf:
-            - $ref: "#/components/schemas/ParseArtifacts"
-            - type: "null"
+            - $ref: '#/components/schemas/ParseArtifacts'
+            - type: 'null'
         diagnostics:
-          $ref: "#/components/schemas/ParseDiagnostics"
+          $ref: '#/components/schemas/ParseDiagnostics'
         telemetry:
           anyOf:
-            - $ref: "#/components/schemas/TelemetryContext"
-            - type: "null"
+            - $ref: '#/components/schemas/TelemetryContext'
+            - type: 'null'
       type: object
       required:
         - document
@@ -4407,12 +4461,11 @@ components:
           type: array
           minItems: 1
           title: Sources
-          description: Required source locators. Each item may be an HTTP(S) URL, `s3://`
-            URI, `file://` URI, raw Cortex storage object key such as
-            `cortex-local/tenant_demo/obj_.../file.pdf`, or
-            `cortex://objects/{object_id}` reference. For Cortex-managed
-            S3/MinIO keys, Cortex extracts the `obj_...` segment and resolves a
-            signed download URL automatically.
+          description: Required source locators. Each item may be an HTTP(S) URL,
+            `s3://` URI, `file://` URI, raw Cortex storage object key such as `cortex-local/tenant_demo/obj_.../file.pdf`,
+            or `cortex://objects/{object_id}` reference. For Cortex-managed S3/MinIO
+            keys, Cortex extracts the `obj_...` segment and resolves a signed download
+            URL automatically.
           examples:
             - - https://docs.cognee.ai/core-concepts/overview
               - s3://cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf
@@ -4421,21 +4474,20 @@ components:
           minLength: 1
           title: Engine Id
           description: Public parser engine identifier. Use `auto` to let Cortex choose
-            the best active engine and scene per source; otherwise use
-            `crawl4ai`, `jina_reader`, `llama_parse`, `markitdown`, or
-            `docling`.
+            the best active engine and scene per source; otherwise use `crawl4ai`,
+            `jina_reader`, `llama_parse`, `markitdown`, or `docling`.
           default: auto
           examples:
             - auto
         scene:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Scene
-          description: "Optional high-level parse scene. Best default: omit to let Cortex
-            select the engine's default scene. Typical values include
-            `balanced`, `deep_web`, `authenticated_web`, `fast_extract`,
-            `document_fidelity`, `document_ai`, or `lightweight`."
+          description: 'Optional high-level parse scene. Best default: omit to let
+            Cortex select the engine''s default scene. Typical values include `balanced`,
+            `deep_web`, `authenticated_web`, `fast_extract`, `document_fidelity`,
+            `document_ai`, or `lightweight`.'
           examples:
             - deep_web
       type: object
@@ -4448,19 +4500,19 @@ components:
           anyOf:
             - type: integer
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: Fetch
         render:
           anyOf:
             - type: integer
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: Render
         normalize:
           anyOf:
             - type: integer
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: Normalize
         total:
           type: integer
@@ -4475,7 +4527,7 @@ components:
           type: string
           title: Document Id
         source_type:
-          $ref: "#/components/schemas/ParseInputKind"
+          $ref: '#/components/schemas/ParseInputKind'
         source_format:
           type: string
           title: Source Format
@@ -4483,41 +4535,41 @@ components:
           type: string
           title: Markdown
         audit:
-          $ref: "#/components/schemas/AuditFields"
+          $ref: '#/components/schemas/AuditFields'
         source_url:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Source Url
         source_object_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Source Object Id
         source_uri:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Source Uri
         canonical_url:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Canonical Url
         title:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Title
         language_code:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Language Code
         detected_mime_type:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Detected Mime Type
         category_tags:
           items:
@@ -4531,24 +4583,24 @@ components:
           title: Labels
         access_policy:
           anyOf:
-            - $ref: "#/components/schemas/AccessPolicy"
-            - type: "null"
+            - $ref: '#/components/schemas/AccessPolicy'
+            - type: 'null'
         markdown_sha256:
           anyOf:
             - type: string
               pattern: ^[0-9a-f]{64}$
-            - type: "null"
+            - type: 'null'
           title: Markdown Sha256
         normalized_metadata:
-          $ref: "#/components/schemas/StandardMetadata"
+          $ref: '#/components/schemas/StandardMetadata'
         metadata:
           additionalProperties: true
           type: object
           title: Metadata
         parser:
-          $ref: "#/components/schemas/AppliedParseEngine"
+          $ref: '#/components/schemas/AppliedParseEngine'
         provenance:
-          $ref: "#/components/schemas/DocumentProvenance"
+          $ref: '#/components/schemas/DocumentProvenance'
       type: object
       required:
         - document_id
@@ -4568,17 +4620,17 @@ components:
         description:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Description
         routing_mode:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Routing Mode
         preferred_engine_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Preferred Engine Key
         allowed_engines:
           items:
@@ -4586,9 +4638,9 @@ components:
           type: array
           title: Allowed Engines
         normalization_defaults:
-          $ref: "#/components/schemas/ParseNormalizationOptions"
+          $ref: '#/components/schemas/ParseNormalizationOptions'
         fallback_policy:
-          $ref: "#/components/schemas/FallbackPolicy"
+          $ref: '#/components/schemas/FallbackPolicy'
       type: object
       required:
         - profile_ref
@@ -4598,7 +4650,7 @@ components:
       properties:
         profiles:
           items:
-            $ref: "#/components/schemas/ParserProfile"
+            $ref: '#/components/schemas/ParserProfile'
           type: array
           title: Profiles
       type: object
@@ -4628,7 +4680,7 @@ components:
             type: string
           type: array
           title: Document Ids
-          description: "Optional document allow-list. Best default: empty list."
+          description: 'Optional document allow-list. Best default: empty list.'
           examples:
             - - doc_71fe50adf1cb4981bb322f0d74f32598
         object_ids:
@@ -4636,7 +4688,7 @@ components:
             type: string
           type: array
           title: Object Ids
-          description: "Optional object allow-list. Best default: empty list."
+          description: 'Optional object allow-list. Best default: empty list.'
           examples:
             - - obj_3f6c1d5e9b1646b5a4eabdbf8b417bd3
         tags:
@@ -4644,7 +4696,7 @@ components:
             type: string
           type: array
           title: Tags
-          description: "Optional tag filter. Best default: empty list."
+          description: 'Optional tag filter. Best default: empty list.'
           examples:
             - - docs
         node_sets:
@@ -4652,14 +4704,15 @@ components:
             type: string
           type: array
           title: Node Sets
-          description: "Optional node-set filter. Best default: empty list."
+          description: 'Optional node-set filter. Best default: empty list.'
           examples:
             - - docs
         metadata:
           additionalProperties: true
           type: object
           title: Metadata
-          description: "Optional exact-match metadata filters. Best default: empty object."
+          description: 'Optional exact-match metadata filters. Best default: empty
+            object.'
           examples:
             - domain: product
       type: object
@@ -4671,39 +4724,39 @@ components:
           minimum: 1
           title: Rank
         hit_type:
-          $ref: "#/components/schemas/SearchHitType"
+          $ref: '#/components/schemas/SearchHitType'
         score:
           type: number
           title: Score
         source_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Source Id
         document_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Document Id
         object_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Object Id
         title:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Title
         snippet:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Snippet
         citation:
           anyOf:
-            - $ref: "#/components/schemas/Citation"
-            - type: "null"
+            - $ref: '#/components/schemas/Citation'
+            - type: 'null'
         metadata:
           additionalProperties: true
           type: object
@@ -4738,7 +4791,7 @@ components:
             type: string
           type: array
           title: Dataset Ids
-          description: "Optional dataset ID scope. Best default: empty list."
+          description: 'Optional dataset ID scope. Best default: empty list.'
           examples:
             - - dset_9558cfc9178444e4a4c60d5658db78f5
         dataset_keys:
@@ -4746,58 +4799,59 @@ components:
             type: string
           type: array
           title: Dataset Keys
-          description: "Optional dataset key scope. Recommended for human-authored
-            requests. Best default: empty list."
+          description: 'Optional dataset key scope. Recommended for human-authored
+            requests. Best default: empty list.'
           examples:
             - - product_docs
         search_type:
-          $ref: "#/components/schemas/SearchType"
-          description: "Search strategy. Best default: `GRAPH_COMPLETION`."
+          $ref: '#/components/schemas/SearchType'
+          description: 'Search strategy. Best default: `GRAPH_COMPLETION`.'
           default: GRAPH_COMPLETION
         top_k:
           type: integer
           maximum: 100
           minimum: 1
           title: Top K
-          description: "Maximum number of context hits to return. Best default: 10."
+          description: 'Maximum number of context hits to return. Best default: 10.'
           default: 10
           examples:
             - 10
         session_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Session Id
-          description: "Optional session scope for session-aware search. Best default:
-            omit."
+          description: 'Optional session scope for session-aware search. Best default:
+            omit.'
           examples:
             - session_demo_001
         filters:
-          $ref: "#/components/schemas/SearchFilters"
-          description: "Optional structured filters. Best default: empty filters."
+          $ref: '#/components/schemas/SearchFilters'
+          description: 'Optional structured filters. Best default: empty filters.'
         only_context:
           type: boolean
           title: Only Context
-          description: "Return context hits without an answer synthesis. Best default:
-            `false`."
+          description: 'Return context hits without an answer synthesis. Best default:
+            `false`.'
           default: false
         include_provenance:
           type: boolean
           title: Include Provenance
-          description: "Include citation/provenance metadata in hits. Best default: `true`."
+          description: 'Include citation/provenance metadata in hits. Best default:
+            `true`.'
           default: true
         include_graph_paths:
           type: boolean
           title: Include Graph Paths
-          description: "Include graph path explanations when supported. Best default:
-            `false`."
+          description: 'Include graph path explanations when supported. Best default:
+            `false`.'
           default: false
         timeout_seconds:
           type: integer
           maximum: 300
           minimum: 1
           title: Timeout Seconds
-          description: "Search timeout in seconds. Best default: 30."
+          description: 'Search timeout in seconds. Best default: 30.'
           default: 30
           examples:
             - 30
@@ -4811,10 +4865,10 @@ components:
           type: string
           title: Request Id
         search_type:
-          $ref: "#/components/schemas/SearchType"
+          $ref: '#/components/schemas/SearchType'
         context_items:
           items:
-            $ref: "#/components/schemas/SearchHit"
+            $ref: '#/components/schemas/SearchHit'
           type: array
           title: Context Items
         latency_ms:
@@ -4833,17 +4887,17 @@ components:
         answer:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Answer
         graph_paths:
           items:
-            $ref: "#/components/schemas/GraphPath"
+            $ref: '#/components/schemas/GraphPath'
           type: array
           title: Graph Paths
         telemetry:
           anyOf:
-            - $ref: "#/components/schemas/TelemetryContext"
-            - type: "null"
+            - $ref: '#/components/schemas/TelemetryContext'
+            - type: 'null'
       type: object
       required:
         - request_id
@@ -4874,24 +4928,24 @@ components:
         issuer_common_name:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Issuer Common Name
         valid_from:
           anyOf:
             - type: string
               format: date-time
-            - type: "null"
+            - type: 'null'
           title: Valid From
         valid_until:
           anyOf:
             - type: string
               format: date-time
-            - type: "null"
+            - type: 'null'
           title: Valid Until
         fingerprint:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Fingerprint
       type: object
       title: SslCertificateSummary
@@ -4900,33 +4954,33 @@ components:
         title:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Title
         author:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Author
         publish_date:
           anyOf:
             - type: string
               format: date-time
-            - type: "null"
+            - type: 'null'
           title: Publish Date
         language:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Language
         description:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Description
         summary:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Summary
         keywords:
           items:
@@ -4956,39 +5010,39 @@ components:
           minimum: 0
           title: Size Bytes
         status:
-          $ref: "#/components/schemas/StorageObjectStatus"
+          $ref: '#/components/schemas/StorageObjectStatus'
         audit:
-          $ref: "#/components/schemas/AuditFields"
+          $ref: '#/components/schemas/AuditFields'
         current_version_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Current Version Id
         bucket:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Bucket
         object_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Object Key
         checksum_sha256:
           anyOf:
             - type: string
               pattern: ^[0-9a-f]{64}$
-            - type: "null"
+            - type: 'null'
           title: Checksum Sha256
         etag:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Etag
         storage_class:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Storage Class
         metadata:
           additionalProperties:
@@ -5002,12 +5056,12 @@ components:
           title: Tags
         version:
           anyOf:
-            - $ref: "#/components/schemas/StorageObjectVersion"
-            - type: "null"
+            - $ref: '#/components/schemas/StorageObjectVersion'
+            - type: 'null'
         access_policy:
           anyOf:
-            - $ref: "#/components/schemas/AccessPolicy"
-            - type: "null"
+            - $ref: '#/components/schemas/AccessPolicy'
+            - type: 'null'
       type: object
       required:
         - object_id
@@ -5025,12 +5079,12 @@ components:
         version_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Version Id
         bucket:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Bucket
         object_key:
           type: string
@@ -5063,18 +5117,18 @@ components:
         provider_version_ref:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Provider Version Ref
         checksum_sha256:
           anyOf:
             - type: string
               pattern: ^[0-9a-f]{64}$
-            - type: "null"
+            - type: 'null'
           title: Checksum Sha256
         etag:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Etag
         is_latest:
           type: boolean
@@ -5084,7 +5138,7 @@ components:
           anyOf:
             - type: string
               format: date-time
-            - type: "null"
+            - type: 'null'
           title: Created At
       type: object
       required:
@@ -5096,11 +5150,11 @@ components:
       properties:
         parts:
           items:
-            $ref: "#/components/schemas/CompletedUploadPart"
+            $ref: '#/components/schemas/CompletedUploadPart'
           type: array
           title: Parts
-          description: "Multipart parts to finalize. Best default: empty list for
-            single-part uploads."
+          description: 'Multipart parts to finalize. Best default: empty list for
+            single-part uploads.'
           examples:
             - - etag: '"part-1-etag"'
                 part_number: 1
@@ -5108,10 +5162,10 @@ components:
           anyOf:
             - type: string
               pattern: ^[0-9a-f]{64}$
-            - type: "null"
+            - type: 'null'
           title: Checksum Sha256
-          description: "Optional final SHA-256 checksum. Best default: omit unless the
-            client validated the file digest."
+          description: 'Optional final SHA-256 checksum. Best default: omit unless
+            the client validated the file digest.'
           examples:
             - bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
       type: object
@@ -5128,33 +5182,32 @@ components:
         content_type:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Content Type
-          description: "Optional MIME type of the uploaded object. Best default: omit and
-            let Cortex infer it from `filename`, then reconcile it with the
-            object store during completion."
+          description: 'Optional MIME type of the uploaded object. Best default: omit
+            and let Cortex infer it from `filename`, then reconcile it with the object
+            store during completion.'
           examples:
             - text/markdown
         size_bytes:
           anyOf:
             - type: integer
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: Size Bytes
-          description: "Optional total size of the upload in bytes. Best default: omit
-            when unknown before upload; provide it when the client already knows
-            the file size so Cortex can choose single-part vs multipart more
-            accurately."
+          description: 'Optional total size of the upload in bytes. Best default:
+            omit when unknown before upload; provide it when the client already knows
+            the file size so Cortex can choose single-part vs multipart more accurately.'
           examples:
             - 20480
         checksum_sha256:
           anyOf:
             - type: string
               pattern: ^[0-9a-f]{64}$
-            - type: "null"
+            - type: 'null'
           title: Checksum Sha256
-          description: "Optional SHA-256 checksum for integrity verification. Best
-            default: omit if the client cannot compute it."
+          description: 'Optional SHA-256 checksum for integrity verification. Best
+            default: omit if the client cannot compute it.'
           examples:
             - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
         metadata:
@@ -5162,24 +5215,24 @@ components:
             type: string
           type: object
           title: Metadata
-          description: "Optional metadata stored alongside the object. Best default: empty
-            object."
+          description: 'Optional metadata stored alongside the object. Best default:
+            empty object.'
           examples:
             - document_type: guide
               source: swagger-demo
         access_policy:
           anyOf:
-            - $ref: "#/components/schemas/AccessPolicy"
-            - type: "null"
-          description: "Optional access policy attached to the stored object. Best
-            default: omit."
+            - $ref: '#/components/schemas/AccessPolicy'
+            - type: 'null'
+          description: 'Optional access policy attached to the stored object. Best
+            default: omit.'
         tags:
           items:
             type: string
           type: array
           title: Tags
-          description: "Optional tags used for filtering or governance. Best default:
-            empty list."
+          description: 'Optional tags used for filtering or governance. Best default:
+            empty list.'
           examples:
             - - docs
               - product
@@ -5196,18 +5249,18 @@ components:
           type: string
           title: Object Id
         status:
-          $ref: "#/components/schemas/UploadSessionStatus"
+          $ref: '#/components/schemas/UploadSessionStatus'
         upload_mode:
-          $ref: "#/components/schemas/UploadMode"
+          $ref: '#/components/schemas/UploadMode'
         bucket:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Bucket
         object_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Object Key
         expires_at:
           type: string
@@ -5216,15 +5269,15 @@ components:
         part_size_bytes:
           anyOf:
             - type: integer
-            - type: "null"
+            - type: 'null'
           title: Part Size Bytes
         single_part:
           anyOf:
-            - $ref: "#/components/schemas/PresignedRequestDescriptor"
-            - type: "null"
+            - $ref: '#/components/schemas/PresignedRequestDescriptor'
+            - type: 'null'
         multipart_parts:
           items:
-            $ref: "#/components/schemas/MultipartPartUpload"
+            $ref: '#/components/schemas/MultipartPartUpload'
           type: array
           title: Multipart Parts
       type: object
@@ -5246,22 +5299,22 @@ components:
         uri:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Uri
         content_type:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Content Type
         format:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Format
         description:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Description
       type: object
       required:
@@ -5274,7 +5327,7 @@ components:
           anyOf:
             - type: integer
               minimum: 1
-            - type: "null"
+            - type: 'null'
           title: Sample Count
         anonymize_pii:
           type: boolean
@@ -5283,17 +5336,17 @@ components:
         include_expected_output:
           anyOf:
             - type: boolean
-            - type: "null"
+            - type: 'null'
           title: Include Expected Output
         max_contexts_per_case:
           anyOf:
             - type: integer
               minimum: 1
-            - type: "null"
+            - type: 'null'
           title: Max Contexts Per Case
         quality_gates:
           items:
-            $ref: "#/components/schemas/SynthesisQualityGate"
+            $ref: '#/components/schemas/SynthesisQualityGate'
           type: array
           title: Quality Gates
         options:
@@ -5317,11 +5370,11 @@ components:
         provider:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Provider
         supported_synthesis_types:
           items:
-            $ref: "#/components/schemas/SynthesisType"
+            $ref: '#/components/schemas/SynthesisType'
           type: array
           title: Supported Synthesis Types
         supported_source_types:
@@ -5342,7 +5395,7 @@ components:
         notes:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Notes
       type: object
       required:
@@ -5356,11 +5409,11 @@ components:
           anyOf:
             - type: string
               format: date-time
-            - type: "null"
+            - type: 'null'
           title: Generated At
         engines:
           items:
-            $ref: "#/components/schemas/SynthesisEngineDescriptor"
+            $ref: '#/components/schemas/SynthesisEngineDescriptor'
           type: array
           title: Engines
       type: object
@@ -5373,9 +5426,9 @@ components:
           type: string
           title: Job Id
         job_type:
-          $ref: "#/components/schemas/JobType"
+          $ref: '#/components/schemas/JobType'
         status:
-          $ref: "#/components/schemas/JobStatus"
+          $ref: '#/components/schemas/JobStatus'
         submitted_at:
           type: string
           format: date-time
@@ -5386,25 +5439,25 @@ components:
         result_url:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Result Url
         cancel_url:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Cancel Url
         telemetry:
           anyOf:
-            - $ref: "#/components/schemas/TelemetryContext"
-            - type: "null"
+            - $ref: '#/components/schemas/TelemetryContext'
+            - type: 'null'
         synthesis_type:
           anyOf:
-            - $ref: "#/components/schemas/SynthesisType"
-            - type: "null"
+            - $ref: '#/components/schemas/SynthesisType'
+            - type: 'null'
         engine_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Engine Id
       type: object
       required:
@@ -5417,13 +5470,13 @@ components:
     SynthesisJobSubmitRequest:
       properties:
         synthesis_type:
-          $ref: "#/components/schemas/SynthesisType"
+          $ref: '#/components/schemas/SynthesisType'
         source:
-          $ref: "#/components/schemas/SynthesisSource"
+          $ref: '#/components/schemas/SynthesisSource'
         name:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Name
         engine_id:
           type: string
@@ -5432,16 +5485,16 @@ components:
         profile_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Profile Key
         config:
-          $ref: "#/components/schemas/SynthesisConfig"
+          $ref: '#/components/schemas/SynthesisConfig'
         output:
-          $ref: "#/components/schemas/SynthesisOutputOptions"
+          $ref: '#/components/schemas/SynthesisOutputOptions'
         webhook:
           anyOf:
-            - $ref: "#/components/schemas/WebhookConfig"
-            - type: "null"
+            - $ref: '#/components/schemas/WebhookConfig'
+            - type: 'null'
       type: object
       required:
         - synthesis_type
@@ -5452,17 +5505,17 @@ components:
         output_format:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Output Format
         persist_object_filename:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Persist Object Filename
         persist_dataset_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Persist Dataset Key
         include_preview:
           type: boolean
@@ -5478,7 +5531,7 @@ components:
         threshold:
           anyOf:
             - type: number
-            - type: "null"
+            - type: 'null'
           title: Threshold
         params:
           additionalProperties: true
@@ -5500,17 +5553,17 @@ components:
         threshold:
           anyOf:
             - type: number
-            - type: "null"
+            - type: 'null'
           title: Threshold
         score:
           anyOf:
             - type: number
-            - type: "null"
+            - type: 'null'
           title: Score
         unit:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Unit
         details:
           additionalProperties: true
@@ -5524,7 +5577,7 @@ components:
     SynthesisRunResult:
       properties:
         synthesis_type:
-          $ref: "#/components/schemas/SynthesisType"
+          $ref: '#/components/schemas/SynthesisType'
         engine_id:
           type: string
           title: Engine Id
@@ -5535,59 +5588,59 @@ components:
         synthesis_run_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Synthesis Run Id
         job_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Job Id
         name:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Name
         profile_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Profile Key
         source_summary:
           additionalProperties: true
           type: object
           title: Source Summary
         summary:
-          $ref: "#/components/schemas/SynthesisSummary"
+          $ref: '#/components/schemas/SynthesisSummary'
         quality_gates:
           items:
-            $ref: "#/components/schemas/SynthesisQualityResult"
+            $ref: '#/components/schemas/SynthesisQualityResult'
           type: array
           title: Quality Gates
         outputs:
           items:
-            $ref: "#/components/schemas/StoredArtifactRef"
+            $ref: '#/components/schemas/StoredArtifactRef'
           type: array
           title: Outputs
         output_dataset_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Output Dataset Id
         telemetry:
           anyOf:
-            - $ref: "#/components/schemas/TelemetryContext"
-            - type: "null"
+            - $ref: '#/components/schemas/TelemetryContext'
+            - type: 'null'
         started_at:
           anyOf:
             - type: string
               format: date-time
-            - type: "null"
+            - type: 'null'
           title: Started At
         completed_at:
           anyOf:
             - type: string
               format: date-time
-            - type: "null"
+            - type: 'null'
           title: Completed At
       type: object
       required:
@@ -5603,12 +5656,12 @@ components:
         dataset_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Dataset Id
         object_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Object Id
         object_ids:
           items:
@@ -5618,7 +5671,7 @@ components:
         metadata_object_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Metadata Object Id
         inline_records:
           items:
@@ -5650,23 +5703,23 @@ components:
           anyOf:
             - type: integer
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: Requested Sample Count
         output_sample_count:
           anyOf:
             - type: integer
               minimum: 0
-            - type: "null"
+            - type: 'null'
           title: Output Sample Count
         quality_score:
           anyOf:
             - type: number
-            - type: "null"
+            - type: 'null'
           title: Quality Score
         privacy_score:
           anyOf:
             - type: number
-            - type: "null"
+            - type: 'null'
           title: Privacy Score
         notes:
           items:
@@ -5678,13 +5731,13 @@ components:
     SynthesisSyncRequest:
       properties:
         synthesis_type:
-          $ref: "#/components/schemas/SynthesisType"
+          $ref: '#/components/schemas/SynthesisType'
         source:
-          $ref: "#/components/schemas/SynthesisSource"
+          $ref: '#/components/schemas/SynthesisSource'
         name:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Name
         engine_id:
           type: string
@@ -5693,16 +5746,16 @@ components:
         profile_key:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Profile Key
         config:
-          $ref: "#/components/schemas/SynthesisConfig"
+          $ref: '#/components/schemas/SynthesisConfig'
         output:
-          $ref: "#/components/schemas/SynthesisOutputOptions"
+          $ref: '#/components/schemas/SynthesisOutputOptions'
         webhook:
           anyOf:
-            - $ref: "#/components/schemas/WebhookConfig"
-            - type: "null"
+            - $ref: '#/components/schemas/WebhookConfig'
+            - type: 'null'
       type: object
       required:
         - synthesis_type
@@ -5724,27 +5777,27 @@ components:
         trace_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Trace Id
         span_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Span Id
         request_id:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Request Id
         deployment_ring:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Deployment Ring
         experiment_variant:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Experiment Variant
       type: object
       title: TelemetryContext
@@ -5796,10 +5849,10 @@ components:
         secret_ref:
           anyOf:
             - type: string
-            - type: "null"
+            - type: 'null'
           title: Secret Ref
-          description: "Optional secret reference used to sign or authenticate webhook
-            delivery. Best default: omit."
+          description: 'Optional secret reference used to sign or authenticate webhook
+            delivery. Best default: omit.'
           examples:
             - vault:cortex/webhooks/parse
         event_types:
@@ -5807,8 +5860,8 @@ components:
             type: string
           type: array
           title: Event Types
-          description: "Optional event types to send. Best default: empty list, which
-            means the service default set."
+          description: 'Optional event types to send. Best default: empty list, which
+            means the service default set.'
           examples:
             - - job.succeeded
               - job.failed
@@ -5817,8 +5870,8 @@ components:
             type: string
           type: object
           title: Headers
-          description: "Optional static headers sent with the webhook. Best default: empty
-            object."
+          description: 'Optional static headers sent with the webhook. Best default:
+            empty object.'
           examples:
             - X-Consumer: knowledge-pipeline
       type: object

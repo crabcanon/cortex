@@ -8,20 +8,20 @@ info:
     Job 体系、统一权限边界，以及基于 OpenTelemetry 的可观测能力。 / Cortex 通过统一契约暴露五类核心 API：Parse、Storage、Knowledge、Evaluation、Synthesis。各域共享厂商中立的数据模型、统一的
     Job 体系、统一权限边界，以及基于 OpenTelemetry 的可观测能力。
 servers:
-- url: 'https: /  / api.cortex.com'
+- url: https://api.cortex.com
   description: Production / 生产环境
-- url: ' https: /  / dev.cortex.com'
+- url: ' https://dev.cortex.com'
   description: Development / 测试环境
 tags:
 - name: Health
-  description: 运行存活与依赖就绪探针。 /  Runtime liveness and dependency readiness probes.
+  description: 运行存活与依赖就绪探针。 / Runtime liveness and dependency readiness probes.
 - name: Observability
-  description: 对齐 OpenTelemetry 的遥测与指标接口。 /  OpenTelemetry-aligned telemetry and metrics
+  description: 对齐 OpenTelemetry 的遥测与指标接口。 / OpenTelemetry-aligned telemetry and metrics
     endpoints.
 - name: Jobs
-  description: 通用长任务查询与控制。 /  Generic long-running job inspection and control.
+  description: 通用长任务查询与控制。 / Generic long-running job inspection and control.
 - name: Parse
-  description: 面向 URL 与文件的引擎无关解析、标准化与持久化。 /  Engine-agnostic parsing, normalization,
+  description: 面向 URL 与文件的引擎无关解析、标准化与持久化。 / Engine-agnostic parsing, normalization,
     and persistence for URLs and files.
 - name: Storage
   description: 上传、查询和下载 S3 后端对象。 / Upload, inspect, and download S3-backed objects.
@@ -29,46 +29,46 @@ tags:
   description: Dataset lifecycle plus Cognee-backed Add, Cognify, Memify, and Search
     operations. / 数据集生命周期与基于 Cognee 的 Add、Cognify、Memify、Search 操作。
 - name: Evaluation
-  description: AI 评测引擎、指标目录、同步校验与异步评测作业。 /  AI evaluation engines, metric catalogs,
+  description: AI 评测引擎、指标目录、同步校验与异步评测作业。 / AI evaluation engines, metric catalogs,
     synchronous checks, and asynchronous evaluation jobs.
 - name: Synthesis
-  description: 数据合成引擎以及同步、异步生成工作流。 /  Synthetic data engines plus synchronous and
-    asynchronous generation workflows.
+  description: 数据合成引擎以及同步、异步生成工作流。 / Synthetic data engines plus synchronous and asynchronous
+    generation workflows.
 - name: Dev Auth
-  description: 仅本地开发环境启用的 token 生成辅助接口。 /  Local-development-only token issuance helper.
+  description: 仅本地开发环境启用的 token 生成辅助接口。 / Local-development-only token issuance helper.
 paths:
   /v1/health/live:
     get:
       tags:
       - Health
-      summary: Liveness probe / Liveness probe
+      summary: Liveness probe / 存活探针
       operationId: getLiveness
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HealthResponse'
+                $ref: '#/components/schemas/HealthResponse'
   /v1/health/ready:
     get:
       tags:
       - Health
-      summary: Readiness probe / Readiness probe
+      summary: Readiness probe / 就绪探针
       operationId: getReadiness
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HealthResponse'
+                $ref: '#/components/schemas/HealthResponse'
         '503':
-          description: Service Unavailable / Service Unavailable
+          description: Service Unavailable / 服务不可用
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HealthResponse'
+                $ref: '#/components/schemas/HealthResponse'
       security:
       - BearerAuth: []
   /v1/jobs/{jobId}:
@@ -99,17 +99,17 @@ paths:
           such as Parse, Add, Cognify, or Memify.
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / JobStatusDetail'
+                $ref: '#/components/schemas/JobStatusDetail'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/jobs/{jobId}/events:
     get:
       tags:
@@ -151,20 +151,20 @@ paths:
           number of events to return. Best default: 100.'
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '# / components / schemas / JobEvent'
+                  $ref: '#/components/schemas/JobEvent'
                 title: Response Listjobevents
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/jobs/{jobId}/cancel:
     post:
       tags:
@@ -189,17 +189,17 @@ paths:
         description: Job identifier to cancel. / Job identifier to cancel.
       responses:
         '202':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / JobStatusDetail'
+                $ref: '#/components/schemas/JobStatusDetail'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/eval/engines:
     get:
       tags:
@@ -212,11 +212,11 @@ paths:
       operationId: listEvalEngines
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / EvalEngineList'
+                $ref: '#/components/schemas/EvalEngineList'
       security:
       - BearerAuth: []
   /v1/eval/metrics:
@@ -238,7 +238,7 @@ paths:
         required: false
         schema:
           anyOf:
-          - $ref: '# / components / schemas / EvalType'
+          - $ref: '#/components/schemas/EvalType'
           - type: 'null'
           title: Evaltype
       - name: engineId
@@ -251,17 +251,17 @@ paths:
           title: Engineid
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / EvalMetricCatalog'
+                $ref: '#/components/schemas/EvalMetricCatalog'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/eval/sync:
     post:
       tags:
@@ -270,13 +270,15 @@ paths:
         run
       description: Runs a small evaluation workload synchronously. Recommended for
         smoke checks, profile tuning, and low-cardinality datasets; larger workloads
-        should use ` / v1 / eval / jobs`.
+        should use `/v1/eval/jobs`. / Runs a small evaluation workload synchronously.
+        Recommended for smoke checks, profile tuning, and low-cardinality datasets;
+        larger workloads should use `/v1/eval/jobs`.
       operationId: runEvaluationSync
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '# / components / schemas / EvalSyncRequest'
+              $ref: '#/components/schemas/EvalSyncRequest'
               description: 'Unified evaluation request body. Required: `eval_type`
                 and `input`. `engine_id` defaults to `auto`. / Unified evaluation
                 request body. Required: `eval_type` and `input`. `engine_id` defaults
@@ -300,7 +302,7 @@ paths:
                       retrieval_contexts: contexts
                   target:
                     type: api
-                    endpoint_url: 'https: /  / ordix.internal / v1 / query'
+                    endpoint_url: https://ordix.internal/v1/query
                     timeout_seconds: 30
                   metrics:
                   - metric_key: rag.faithfulness
@@ -348,9 +350,9 @@ paths:
                   target:
                     type: api
                     protocol: openai_compatible
-                    endpoint_url: 'https: /  / openrouter.ai / api / v1 / chat / completions'
+                    endpoint_url: https://openrouter.ai/api/v1/chat/completions
                     api_key: sk-xxx
-                    model_ref: deepseek / deepseek-v4-flash
+                    model_ref: deepseek/deepseek-v4-flash
                     timeout_seconds: 60
                   engine_options:
                     parallel:
@@ -367,17 +369,17 @@ paths:
         required: true
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / EvalRunResult'
+                $ref: '#/components/schemas/EvalRunResult'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
       security:
       - BearerAuth: []
   /v1/eval/jobs:
@@ -413,7 +415,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '# / components / schemas / EvalJobSubmitRequest'
+              $ref: '#/components/schemas/EvalJobSubmitRequest'
               description: Async evaluation job request. Use this for larger datasets,
                 agent regressions, or scheduled validation workloads. / Async evaluation
                 job request. Use this for larger datasets, agent regressions, or scheduled
@@ -437,7 +439,7 @@ paths:
                   - metric_key: agent.tool_correctness
                     threshold: 0.8
                   webhook:
-                    url: 'https: /  / example.com / hooks / cortex / eval'
+                    url: https://example.com/hooks/cortex/eval
                     event_types:
                     - job.succeeded
                     - job.failed
@@ -455,9 +457,9 @@ paths:
                   target:
                     type: api
                     protocol: openai_compatible
-                    endpoint_url: 'https: /  / openrouter.ai / api / v1 / chat / completions'
+                    endpoint_url: https://openrouter.ai/api/v1/chat/completions
                     api_key: sk-xxx
-                    model_ref: deepseek / deepseek-v4-flash
+                    model_ref: deepseek/deepseek-v4-flash
                     timeout_seconds: 60
                   engine_options:
                     parallel:
@@ -495,23 +497,23 @@ paths:
                       criteria: Score whether the answer correctly explains the business
                         purpose of Cortex Parse.
                   webhook:
-                    url: 'https: /  / example.com / hooks / cortex / eval'
+                    url: https://example.com/hooks/cortex/eval
                     event_types:
                     - job.succeeded
                     - job.failed
       responses:
         '202':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / EvalJobAccepted'
+                $ref: '#/components/schemas/EvalJobAccepted'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/eval/jobs/{jobId}/result:
     get:
       tags:
@@ -533,26 +535,26 @@ paths:
           title: Jobid
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
                 anyOf:
-                - $ref: '# / components / schemas / EvalRunResult'
-                - $ref: '# / components / schemas / JobStatusDetail'
+                - $ref: '#/components/schemas/EvalRunResult'
+                - $ref: '#/components/schemas/JobStatusDetail'
                 title: Response Getevalresult
         '409':
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / JobStatusDetail'
+                $ref: '#/components/schemas/JobStatusDetail'
           description: Conflict / Conflict
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/knowledge/datasets:
     post:
       tags:
@@ -566,7 +568,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '# / components / schemas / KnowledgeDatasetCreateRequest'
+              $ref: '#/components/schemas/KnowledgeDatasetCreateRequest'
               description: Dataset creation request. `dataset_key` and `display_name`
                 are required; other fields are optional with documented defaults.
                 / Dataset creation request. `dataset_key` and `display_name` are required;
@@ -643,17 +645,17 @@ paths:
         required: true
       responses:
         '201':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / KnowledgeDataset'
+                $ref: '#/components/schemas/KnowledgeDataset'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
       security:
       - BearerAuth: []
   /v1/knowledge/datasets/{datasetId}:
@@ -672,26 +674,26 @@ paths:
         required: true
         schema:
           type: string
-          description: Knowledge dataset identifier returned by ` / v1 / knowledge
-            / datasets`.
+          description: Knowledge dataset identifier returned by `/v1/knowledge/datasets`.
+            / Knowledge dataset identifier returned by `/v1/knowledge/datasets`.
           examples:
           - dset_9558cfc9178444e4a4c60d5658db78f5
           title: Datasetid
-        description: Knowledge dataset identifier returned by ` / v1 / knowledge /
-          datasets`.
+        description: Knowledge dataset identifier returned by `/v1/knowledge/datasets`.
+          / Knowledge dataset identifier returned by `/v1/knowledge/datasets`.
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / KnowledgeDataset'
+                $ref: '#/components/schemas/KnowledgeDataset'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/knowledge/add/jobs:
     post:
       tags:
@@ -725,7 +727,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '# / components / schemas / AddJobRequest'
+              $ref: '#/components/schemas/AddJobRequest'
               description: Add job request. Provide either `dataset_id` or `dataset_key`,
                 then list one or more `inputs`. / Add job request. Provide either
                 `dataset_id` or `dataset_key`, then list one or more `inputs`.
@@ -774,8 +776,7 @@ paths:
                   dataset_key: swagger_knowledge_demo
                   inputs:
                   - input_type: uri
-                    uri: 'https: /  / raw.githubusercontent.com / crabcanon / cortex
-                      / main / README.md'
+                    uri: https://raw.githubusercontent.com/crabcanon/cortex/main/README.md
                     label: Cortex README from GitHub
                     node_set:
                     - swagger_demo
@@ -792,9 +793,11 @@ paths:
                     persist_source_copy: true
               storage_object_ingest:
                 summary: Storage object Add / 存储对象 Add
-                description: Use after uploading a file with `POST  / v1 / storage
-                  / files`; replace `object_id` with the returned object id. This
-                  documents the Storage -> Knowledge path.
+                description: Use after uploading a file with `POST /v1/storage/files`;
+                  replace `object_id` with the returned object id. This documents
+                  the Storage -> Knowledge path. / Use after uploading a file with
+                  `POST /v1/storage/files`; replace `object_id` with the returned
+                  object id. This documents the Storage -> Knowledge path.
                 value:
                   dataset_key: swagger_knowledge_demo
                   inputs:
@@ -807,7 +810,7 @@ paths:
                     metadata:
                       source: storage
                       bucket: cortex-local
-                      object_key: tenant_demo / obj_a3da967e3ca446cab3631bb7 / README.md
+                      object_key: tenant_demo/obj_a3da967e3ca446cab3631bb7/README.md
                   options:
                     normalize_text: true
                     structured_ingest: true
@@ -842,7 +845,7 @@ paths:
                     incremental: true
                     persist_source_copy: true
                   webhook:
-                    url: 'https: /  / example.com / hooks / cortex / knowledge-add'
+                    url: https://example.com/hooks/cortex/knowledge-add
                     event_types:
                     - job.succeeded
                     - job.failed
@@ -873,17 +876,17 @@ paths:
                     persist_source_copy: false
       responses:
         '202':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / JobAccepted'
+                $ref: '#/components/schemas/JobAccepted'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/knowledge/cognify/jobs:
     post:
       tags:
@@ -916,7 +919,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '# / components / schemas / CognifyJobRequest'
+              $ref: '#/components/schemas/CognifyJobRequest'
               description: Cognify job request. Provide either `dataset_id` or `dataset_key`;
                 all other fields are optional. / Cognify job request. Provide either
                 `dataset_id` or `dataset_key`; all other fields are optional.
@@ -954,7 +957,7 @@ paths:
                     overlap_tokens: 64
                     max_chunks: 256
                   webhook:
-                    url: 'https: /  / example.com / hooks / cortex / cognify'
+                    url: https://example.com/hooks/cortex/cognify
                     event_types:
                     - job.succeeded
                     - job.failed
@@ -962,17 +965,17 @@ paths:
                       X-Consumer: graph-sync
       responses:
         '202':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / JobAccepted'
+                $ref: '#/components/schemas/JobAccepted'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/knowledge/memify/jobs:
     post:
       tags:
@@ -1005,7 +1008,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '# / components / schemas / MemifyJobRequest'
+              $ref: '#/components/schemas/MemifyJobRequest'
               description: Memify job request. Provide either `dataset_id` or `dataset_key`;
                 `pipeline` defaults to `coding_rules`. / Memify job request. Provide
                 either `dataset_id` or `dataset_key`; `pipeline` defaults to `coding_rules`.
@@ -1037,7 +1040,7 @@ paths:
                   - Runtime Configuration Guide
                   session_ids: []
                   webhook:
-                    url: 'https: /  / example.com / hooks / cortex / memify'
+                    url: https://example.com/hooks/cortex/memify
                     event_types:
                     - job.succeeded
                     - job.failed
@@ -1045,17 +1048,17 @@ paths:
                       X-Consumer: knowledge-memify
       responses:
         '202':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / JobAccepted'
+                $ref: '#/components/schemas/JobAccepted'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/knowledge/search:
     post:
       tags:
@@ -1072,7 +1075,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '# / components / schemas / SearchRequest'
+              $ref: '#/components/schemas/SearchRequest'
               description: Knowledge search request. `query_text` is required; dataset
                 scope and filters are optional. / Knowledge search request. `query_text`
                 is required; dataset scope and filters are optional.
@@ -1104,7 +1107,9 @@ paths:
               storage_object_search:
                 summary: Search storage-backed knowledge / 搜索存储来源知识
                 description: Use after adding an uploaded Storage object. Replace
-                  the object id with the id returned by ` / v1 / storage / files`
+                  the object id with the id returned by `/v1/storage/files` when you
+                  want to narrow results. / Use after adding an uploaded Storage object.
+                  Replace the object id with the id returned by `/v1/storage/files`
                   when you want to narrow results.
                 value:
                   query_text: Summarize the uploaded README or PDF.
@@ -1166,17 +1171,17 @@ paths:
         required: true
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / SearchResponse'
+                $ref: '#/components/schemas/SearchResponse'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
       security:
       - BearerAuth: []
   /metrics:
@@ -1187,7 +1192,7 @@ paths:
       operationId: getMetrics
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema: {}
@@ -1204,11 +1209,11 @@ paths:
       operationId: listParseEngines
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / ParseEngineList'
+                $ref: '#/components/schemas/ParseEngineList'
       security:
       - BearerAuth: []
   /v1/parse/profiles:
@@ -1225,11 +1230,11 @@ paths:
       operationId: listParserProfiles
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / ParserProfileList'
+                $ref: '#/components/schemas/ParserProfileList'
       security:
       - BearerAuth: []
   /v1/parse/sync:
@@ -1247,7 +1252,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '# / components / schemas / ParseSubmitRequest'
+              $ref: '#/components/schemas/ParseSubmitRequest'
               description: 'Unified Parse request body. Required: `sources`. `engine_id`
                 defaults to `auto`, and `scene` is optional. / Unified Parse request
                 body. Required: `sources`. `engine_id` defaults to `auto`, and `scene`
@@ -1278,10 +1283,14 @@ paths:
                   scene: deep_web
               minio_object_auto:
                 summary: MinIO/S3 object parse / MinIO/S3 对象解析
-                description: 'Parse a Cortex-managed object stored in MinIO / S3.
-                  The locator may be the storage object key, an `s3: /  / bucket /
-                  key` URI, or `cortex: /  / objects / {object_id}`; Cortex extracts
-                  the `obj_...` id, signs a download URL, and detects MIME type.'
+                description: Parse a Cortex-managed object stored in MinIO/S3. The
+                  locator may be the storage object key, an `s3://bucket/key` URI,
+                  or `cortex://objects/{object_id}`; Cortex extracts the `obj_...`
+                  id, signs a download URL, and detects MIME type. / Parse a Cortex-managed
+                  object stored in MinIO/S3. The locator may be the storage object
+                  key, an `s3://bucket/key` URI, or `cortex://objects/{object_id}`;
+                  Cortex extracts the `obj_...` id, signs a download URL, and detects
+                  MIME type.
                 value:
                   sources:
                   - s3://cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf
@@ -1290,17 +1299,17 @@ paths:
         required: true
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / ParseBatchResult'
+                $ref: '#/components/schemas/ParseBatchResult'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
       security:
       - BearerAuth: []
   /v1/parse/jobs:
@@ -1342,7 +1351,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '# / components / schemas / ParseJobSubmitRequest'
+              $ref: '#/components/schemas/ParseJobSubmitRequest'
               description: Unified async Parse request. `sources` may contain one
                 or more locators; `engine_id` defaults to `auto`. / Unified async
                 Parse request. `sources` may contain one or more locators; `engine_id`
@@ -1361,8 +1370,8 @@ paths:
                   engine_id: auto
                   priority: 5
                   webhook:
-                    url: 'https: /  / example.com / hooks / cortex / parse'
-                    secret_ref: vault:cortex / webhooks / parse
+                    url: https://example.com/hooks/cortex/parse
+                    secret_ref: vault:cortex/webhooks/parse
                     event_types:
                     - job.succeeded
                     - job.failed
@@ -1371,9 +1380,11 @@ paths:
               async_docling_minio_pdf:
                 summary: Docling async MinIO PDF parse / Docling 异步解析 MinIO PDF
                 description: Use this for PDFs uploaded through Cortex Storage. Start
-                  the `cortex-parse-worker-docling` worker / profile so the job is
-                  claimed by the Docling runtime worker instead of the slim parse
-                  worker.
+                  the `cortex-parse-worker-docling` worker/profile so the job is claimed
+                  by the Docling runtime worker instead of the slim parse worker.
+                  / Use this for PDFs uploaded through Cortex Storage. Start the `cortex-parse-worker-docling`
+                  worker/profile so the job is claimed by the Docling runtime worker
+                  instead of the slim parse worker.
                 value:
                   sources:
                   - s3://cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf
@@ -1395,17 +1406,17 @@ paths:
                   priority: 5
       responses:
         '202':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / ParseBatchJobAccepted'
+                $ref: '#/components/schemas/ParseBatchJobAccepted'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/parse/jobs/{jobId}/result:
     get:
       tags:
@@ -1424,33 +1435,35 @@ paths:
         required: true
         schema:
           type: string
-          description: Parse job identifier returned by ` / v1 / parse / jobs`.
+          description: Parse job identifier returned by `/v1/parse/jobs`. / Parse
+            job identifier returned by `/v1/parse/jobs`.
           examples:
           - job_71fe50adf1cb4981bb322f0d74f32598
           title: Jobid
-        description: Parse job identifier returned by ` / v1 / parse / jobs`.
+        description: Parse job identifier returned by `/v1/parse/jobs`. / Parse job
+          identifier returned by `/v1/parse/jobs`.
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
                 anyOf:
-                - $ref: '# / components / schemas / ParseResult'
-                - $ref: '# / components / schemas / JobStatusDetail'
+                - $ref: '#/components/schemas/ParseResult'
+                - $ref: '#/components/schemas/JobStatusDetail'
                 title: Response Getparseresult
         '409':
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / JobStatusDetail'
+                $ref: '#/components/schemas/JobStatusDetail'
           description: Conflict / Conflict
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/storage/uploads:
     post:
       tags:
@@ -1467,11 +1480,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '# / components / schemas / StorageUploadCreateRequest'
+              $ref: '#/components/schemas/StorageUploadCreateRequest'
               description: Upload session creation request. `filename` is required.
                 Cortex infers `content_type` from `filename` when omitted, uses `size_bytes`
-                when available to decide single-part vs multipart, and manages bucket
-                / object-key routing internally.
+                when available to decide single-part vs multipart, and manages bucket/object-key
+                routing internally. / Upload session creation request. `filename`
+                is required. Cortex infers `content_type` from `filename` when omitted,
+                uses `size_bytes` when available to decide single-part vs multipart,
+                and manages bucket/object-key routing internally.
             examples:
               recommended_single_part:
                 summary: Recommended single-part upload / Recommended single-part
@@ -1521,17 +1537,17 @@ paths:
         required: true
       responses:
         '201':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / StorageUploadSession'
+                $ref: '#/components/schemas/StorageUploadSession'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
       security:
       - BearerAuth: []
   /v1/storage/files:
@@ -1550,21 +1566,21 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: '# / components / schemas / Body_uploadSmallFile'
+              $ref: '#/components/schemas/Body_uploadSmallFile'
         required: true
       responses:
         '201':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / StorageObject'
+                $ref: '#/components/schemas/StorageObject'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
       security:
       - BearerAuth: []
   /v1/storage/uploads/{uploadId}/complete:
@@ -1574,8 +1590,11 @@ paths:
       summary: Complete an upload session / Complete an upload session
       description: Finalize a single-part or multipart upload session after the object-store
         transfer has succeeded. This step is required because Cortex must verify the
-        uploaded object, recover provider metadata, and commit the final object /
-        version records.
+        uploaded object, recover provider metadata, and commit the final object/version
+        records. / Finalize a single-part or multipart upload session after the object-store
+        transfer has succeeded. This step is required because Cortex must verify the
+        uploaded object, recover provider metadata, and commit the final object/version
+        records.
       operationId: completeUploadSession
       security:
       - BearerAuth: []
@@ -1585,17 +1604,19 @@ paths:
         required: true
         schema:
           type: string
-          description: Upload session identifier returned by ` / v1 / storage / uploads`.
+          description: Upload session identifier returned by `/v1/storage/uploads`.
+            / Upload session identifier returned by `/v1/storage/uploads`.
           examples:
           - upl_9feeaad1935f4b478ff61d6347ee5562
           title: Uploadid
-        description: Upload session identifier returned by ` / v1 / storage / uploads`.
+        description: Upload session identifier returned by `/v1/storage/uploads`.
+          / Upload session identifier returned by `/v1/storage/uploads`.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '# / components / schemas / StorageUploadCompleteRequest'
+              $ref: '#/components/schemas/StorageUploadCompleteRequest'
               description: Upload completion request. Use the single-part example
                 when no multipart parts were issued. / Upload completion request.
                 Use the single-part example when no multipart parts were issued.
@@ -1626,17 +1647,17 @@ paths:
                   checksum_sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / StorageObject'
+                $ref: '#/components/schemas/StorageObject'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/storage/objects/{objectId}:
     get:
       tags:
@@ -1663,17 +1684,17 @@ paths:
           / Storage object identifier returned by upload or search flows.
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / StorageObject'
+                $ref: '#/components/schemas/StorageObject'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/storage/objects/{objectId}/download-url:
     get:
       tags:
@@ -1717,7 +1738,7 @@ paths:
         in: query
         required: false
         schema:
-          $ref: '# / components / schemas / DownloadDisposition'
+          $ref: '#/components/schemas/DownloadDisposition'
           description: 'Suggested content disposition. Best default: `attachment`;
             use `inline` for browser preview. / Suggested content disposition. Best
             default: `attachment`; use `inline` for browser preview.'
@@ -1729,17 +1750,17 @@ paths:
           `attachment`; use `inline` for browser preview.'
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / DownloadUrlResponse'
+                $ref: '#/components/schemas/DownloadUrlResponse'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/synthesis/engines:
     get:
       tags:
@@ -1752,11 +1773,11 @@ paths:
       operationId: listSynthesisEngines
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / SynthesisEngineList'
+                $ref: '#/components/schemas/SynthesisEngineList'
       security:
       - BearerAuth: []
   /v1/synthesis/sync:
@@ -1774,7 +1795,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '# / components / schemas / SynthesisSyncRequest'
+              $ref: '#/components/schemas/SynthesisSyncRequest'
               description: 'Unified synthesis request body. Required: `synthesis_type`
                 and `source`. `engine_id` defaults to `auto`. / Unified synthesis
                 request body. Required: `synthesis_type` and `source`. `engine_id`
@@ -1853,17 +1874,17 @@ paths:
         required: true
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / SynthesisRunResult'
+                $ref: '#/components/schemas/SynthesisRunResult'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
       security:
       - BearerAuth: []
   /v1/synthesis/jobs:
@@ -1898,7 +1919,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '# / components / schemas / SynthesisJobSubmitRequest'
+              $ref: '#/components/schemas/SynthesisJobSubmitRequest'
               description: Async synthesis job request. Use this for larger synthetic
                 dataset creation or batch enrichment workloads. / Async synthesis
                 job request. Use this for larger synthetic dataset creation or batch
@@ -1926,7 +1947,7 @@ paths:
                   output:
                     output_format: jsonl
                   webhook:
-                    url: 'https: /  / example.com / hooks / cortex / synthesis'
+                    url: https://example.com/hooks/cortex/synthesis
                     event_types:
                     - job.succeeded
                     - job.failed
@@ -1985,23 +2006,23 @@ paths:
                     output_format: jsonl
                     include_preview: true
                   webhook:
-                    url: 'https: /  / example.com / hooks / cortex / synthesis'
+                    url: https://example.com/hooks/cortex/synthesis
                     event_types:
                     - job.succeeded
                     - job.failed
       responses:
         '202':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / SynthesisJobAccepted'
+                $ref: '#/components/schemas/SynthesisJobAccepted'
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/synthesis/jobs/{jobId}/result:
     get:
       tags:
@@ -2023,26 +2044,26 @@ paths:
           title: Jobid
       responses:
         '200':
-          description: Successful Response / Successful Response
+          description: 成功响应 / Successful Response
           content:
             application/json:
               schema:
                 anyOf:
-                - $ref: '# / components / schemas / SynthesisRunResult'
-                - $ref: '# / components / schemas / JobStatusDetail'
+                - $ref: '#/components/schemas/SynthesisRunResult'
+                - $ref: '#/components/schemas/JobStatusDetail'
                 title: Response Getsynthesisresult
         '409':
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / JobStatusDetail'
+                $ref: '#/components/schemas/JobStatusDetail'
           description: Conflict / Conflict
         '422':
           description: Validation Error / Validation Error
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / HTTPValidationError'
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/dev/auth/token:
     post:
       tags:
@@ -2058,7 +2079,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '# / components / schemas / LocalDevTokenIssueRequest'
+              $ref: '#/components/schemas/LocalDevTokenIssueRequest'
               description: Local development token request. In the simplest case only
                 `subject` and `tenant_id` are required. / 本地开发令牌请求，最简单时只需要填写 `subject`
                 和 `tenant_id`。
@@ -2093,7 +2114,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '# / components / schemas / LocalDevTokenIssueResponse'
+                $ref: '#/components/schemas/LocalDevTokenIssueResponse'
         '422':
           description: Validation error. / 请求体验证失败。
 components:
@@ -2110,7 +2131,7 @@ components:
       properties:
         access_level:
           anyOf:
-          - $ref: '# / components / schemas / AccessLevel'
+          - $ref: '#/components/schemas/AccessLevel'
           - type: 'null'
           description: 'Optional coarse-grained data access level. Best default: omit
             to let the service apply the resource-type default. / Optional coarse-grained
@@ -2208,20 +2229,20 @@ components:
           - product_docs
         inputs:
           items:
-            $ref: '# / components / schemas / KnowledgeInput'
+            $ref: '#/components/schemas/KnowledgeInput'
           type: array
           minItems: 1
           title: Inputs
           description: Required ingest inputs. At least one input is required. / Required
             ingest inputs. At least one input is required.
         options:
-          $ref: '# / components / schemas / AddOptions'
+          $ref: '#/components/schemas/AddOptions'
           description: 'Optional ingest behavior flags. Best default: use the built-in
             defaults. / Optional ingest behavior flags. Best default: use the built-in
             defaults.'
         webhook:
           anyOf:
-          - $ref: '# / components / schemas / WebhookConfig'
+          - $ref: '#/components/schemas/WebhookConfig'
           - type: 'null'
           description: 'Optional webhook callback for job lifecycle events. Best default:
             omit. / Optional webhook callback for job lifecycle events. Best default:
@@ -2328,7 +2349,7 @@ components:
       properties:
         file:
           type: string
-          contentMediaType: application / octet-stream
+          contentMediaType: application/octet-stream
           title: File
           description: File content to upload. Cortex derives filename, content type,
             and size from the multipart part. / File content to upload. Cortex derives
@@ -2388,7 +2409,7 @@ components:
             chunks. Best default: `true`.'
           default: true
         strategy:
-          $ref: '# / components / schemas / ChunkingStrategy'
+          $ref: '#/components/schemas/ChunkingStrategy'
           description: 'Chunking strategy. Best default: `semantic` for LLM-ready
             content. / Chunking strategy. Best default: `semantic` for LLM-ready content.'
           default: semantic
@@ -2492,17 +2513,17 @@ components:
             possible. Best default: `true`.'
           default: true
         graph_prompt_profile:
-          $ref: '# / components / schemas / GraphPromptProfile'
+          $ref: '#/components/schemas/GraphPromptProfile'
           description: 'Prompt profile for graph extraction. Best default: `default`.
             / Prompt profile for graph extraction. Best default: `default`.'
           default: default
         chunking:
-          $ref: '# / components / schemas / ChunkingOptions'
+          $ref: '#/components/schemas/ChunkingOptions'
           description: Chunking controls used before graph creation. / Chunking controls
             used before graph creation.
         webhook:
           anyOf:
-          - $ref: '# / components / schemas / WebhookConfig'
+          - $ref: '#/components/schemas/WebhookConfig'
           - type: 'null'
           description: 'Optional webhook callback. Best default: omit. / Optional
             webhook callback. Best default: omit.'
@@ -2595,7 +2616,7 @@ components:
       properties:
         input_kind:
           anyOf:
-          - $ref: '# / components / schemas / ParseInputKind'
+          - $ref: '#/components/schemas/ParseInputKind'
           - type: 'null'
         fetched_at:
           anyOf:
@@ -2723,7 +2744,7 @@ components:
           title: Execution Modes
         supported_eval_types:
           items:
-            $ref: '# / components / schemas / EvalType'
+            $ref: '#/components/schemas/EvalType'
           type: array
           title: Supported Eval Types
         supported_metric_prefixes:
@@ -2757,7 +2778,7 @@ components:
           title: Generated At
         engines:
           items:
-            $ref: '# / components / schemas / EvalEngineDescriptor'
+            $ref: '#/components/schemas/EvalEngineDescriptor'
           type: array
           title: Engines
       type: object
@@ -2825,7 +2846,7 @@ components:
           title: Object Ids
         field_mapping:
           anyOf:
-          - $ref: '# / components / schemas / EvalFieldMapping'
+          - $ref: '#/components/schemas/EvalFieldMapping'
           - type: 'null'
         filters:
           additionalProperties: true
@@ -2833,7 +2854,7 @@ components:
           title: Filters
         test_cases:
           items:
-            $ref: '# / components / schemas / EvalTestCase'
+            $ref: '#/components/schemas/EvalTestCase'
           type: array
           title: Test Cases
         trace_session_id:
@@ -2851,9 +2872,9 @@ components:
           type: string
           title: Job Id
         job_type:
-          $ref: '# / components / schemas / JobType'
+          $ref: '#/components/schemas/JobType'
         status:
-          $ref: '# / components / schemas / JobStatus'
+          $ref: '#/components/schemas/JobStatus'
         submitted_at:
           type: string
           format: date-time
@@ -2873,11 +2894,11 @@ components:
           title: Cancel Url
         telemetry:
           anyOf:
-          - $ref: '# / components / schemas / TelemetryContext'
+          - $ref: '#/components/schemas/TelemetryContext'
           - type: 'null'
         eval_type:
           anyOf:
-          - $ref: '# / components / schemas / EvalType'
+          - $ref: '#/components/schemas/EvalType'
           - type: 'null'
         engine_id:
           anyOf:
@@ -2895,9 +2916,9 @@ components:
     EvalJobSubmitRequest:
       properties:
         eval_type:
-          $ref: '# / components / schemas / EvalType'
+          $ref: '#/components/schemas/EvalType'
         input:
-          $ref: '# / components / schemas / EvalInput'
+          $ref: '#/components/schemas/EvalInput'
         name:
           anyOf:
           - type: string
@@ -2914,11 +2935,11 @@ components:
           title: Profile Key
         target:
           anyOf:
-          - $ref: '# / components / schemas / EvalTarget'
+          - $ref: '#/components/schemas/EvalTarget'
           - type: 'null'
         metrics:
           items:
-            $ref: '# / components / schemas / EvalMetricRequest'
+            $ref: '#/components/schemas/EvalMetricRequest'
           type: array
           title: Metrics
         engine_options:
@@ -2926,10 +2947,10 @@ components:
           type: object
           title: Engine Options
         output:
-          $ref: '# / components / schemas / EvalOutputOptions'
+          $ref: '#/components/schemas/EvalOutputOptions'
         webhook:
           anyOf:
-          - $ref: '# / components / schemas / WebhookConfig'
+          - $ref: '#/components/schemas/WebhookConfig'
           - type: 'null'
       type: object
       required:
@@ -2946,7 +2967,7 @@ components:
           title: Generated At
         metrics:
           items:
-            $ref: '# / components / schemas / EvalMetricDefinition'
+            $ref: '#/components/schemas/EvalMetricDefinition'
           type: array
           title: Metrics
       type: object
@@ -2963,12 +2984,12 @@ components:
           title: Display Name
         eval_types:
           items:
-            $ref: '# / components / schemas / EvalType'
+            $ref: '#/components/schemas/EvalType'
           type: array
           title: Eval Types
         engine_bindings:
           items:
-            $ref: '# / components / schemas / EngineMetricBinding'
+            $ref: '#/components/schemas/EngineMetricBinding'
           type: array
           title: Engine Bindings
         description:
@@ -3108,7 +3129,7 @@ components:
     EvalRunResult:
       properties:
         eval_type:
-          $ref: '# / components / schemas / EvalType'
+          $ref: '#/components/schemas/EvalType'
         engine_id:
           type: string
           title: Engine Id
@@ -3117,10 +3138,10 @@ components:
           pattern: ^(succeeded|failed|partial)$
           title: Status
         summary:
-          $ref: '# / components / schemas / EvalScoreCard'
+          $ref: '#/components/schemas/EvalScoreCard'
         metrics:
           items:
-            $ref: '# / components / schemas / EvalMetricResult'
+            $ref: '#/components/schemas/EvalMetricResult'
           type: array
           title: Metrics
         eval_run_id:
@@ -3153,16 +3174,16 @@ components:
           title: Target Summary
         samples:
           anyOf:
-          - $ref: '# / components / schemas / EvalSampleCounters'
+          - $ref: '#/components/schemas/EvalSampleCounters'
           - type: 'null'
         artifacts:
           items:
-            $ref: '# / components / schemas / StoredArtifactRef'
+            $ref: '#/components/schemas/StoredArtifactRef'
           type: array
           title: Artifacts
         telemetry:
           anyOf:
-          - $ref: '# / components / schemas / TelemetryContext'
+          - $ref: '#/components/schemas/TelemetryContext'
           - type: 'null'
         started_at:
           anyOf:
@@ -3249,9 +3270,9 @@ components:
     EvalSyncRequest:
       properties:
         eval_type:
-          $ref: '# / components / schemas / EvalType'
+          $ref: '#/components/schemas/EvalType'
         input:
-          $ref: '# / components / schemas / EvalInput'
+          $ref: '#/components/schemas/EvalInput'
         name:
           anyOf:
           - type: string
@@ -3268,11 +3289,11 @@ components:
           title: Profile Key
         target:
           anyOf:
-          - $ref: '# / components / schemas / EvalTarget'
+          - $ref: '#/components/schemas/EvalTarget'
           - type: 'null'
         metrics:
           items:
-            $ref: '# / components / schemas / EvalMetricRequest'
+            $ref: '#/components/schemas/EvalMetricRequest'
           type: array
           title: Metrics
         engine_options:
@@ -3280,10 +3301,10 @@ components:
           type: object
           title: Engine Options
         output:
-          $ref: '# / components / schemas / EvalOutputOptions'
+          $ref: '#/components/schemas/EvalOutputOptions'
         webhook:
           anyOf:
-          - $ref: '# / components / schemas / WebhookConfig'
+          - $ref: '#/components/schemas/WebhookConfig'
           - type: 'null'
       type: object
       required:
@@ -3392,7 +3413,7 @@ components:
           title: Retrieval Contexts
         conversation_turns:
           items:
-            $ref: '# / components / schemas / EvalConversationTurn'
+            $ref: '#/components/schemas/EvalConversationTurn'
           type: array
           title: Conversation Turns
         metadata:
@@ -3434,13 +3455,13 @@ components:
             one.
           default: true
         mode:
-          $ref: '# / components / schemas / FallbackMode'
+          $ref: '#/components/schemas/FallbackMode'
           description: 'Fallback strategy. Best default: `ordered` for predictable
             adapter order. / Fallback strategy. Best default: `ordered` for predictable
             adapter order.'
           default: ordered
         on_error:
-          $ref: '# / components / schemas / FallbackOnError'
+          $ref: '#/components/schemas/FallbackOnError'
           description: 'How to react when an engine fails. Best default: `try_next`.
             / How to react when an engine fails. Best default: `try_next`.'
           default: try_next
@@ -3485,7 +3506,7 @@ components:
       properties:
         detail:
           items:
-            $ref: '# / components / schemas / ValidationError'
+            $ref: '#/components/schemas/ValidationError'
           type: array
           title: Detail
       type: object
@@ -3510,7 +3531,7 @@ components:
           title: Timestamp
         checks:
           items:
-            $ref: '# / components / schemas / DependencyCheck'
+            $ref: '#/components/schemas/DependencyCheck'
           type: array
           title: Checks
       type: object
@@ -3527,9 +3548,9 @@ components:
           type: string
           title: Job Id
         job_type:
-          $ref: '# / components / schemas / JobType'
+          $ref: '#/components/schemas/JobType'
         status:
-          $ref: '# / components / schemas / JobStatus'
+          $ref: '#/components/schemas/JobStatus'
         submitted_at:
           type: string
           format: date-time
@@ -3549,7 +3570,7 @@ components:
           title: Cancel Url
         telemetry:
           anyOf:
-          - $ref: '# / components / schemas / TelemetryContext'
+          - $ref: '#/components/schemas/TelemetryContext'
           - type: 'null'
       type: object
       required:
@@ -3600,7 +3621,7 @@ components:
           title: Details
         telemetry:
           anyOf:
-          - $ref: '# / components / schemas / TelemetryContext'
+          - $ref: '#/components/schemas/TelemetryContext'
           - type: 'null'
       type: object
       required:
@@ -3640,9 +3661,9 @@ components:
           type: string
           title: Job Id
         job_type:
-          $ref: '# / components / schemas / JobType'
+          $ref: '#/components/schemas/JobType'
         status:
-          $ref: '# / components / schemas / JobStatus'
+          $ref: '#/components/schemas/JobStatus'
         operation_name:
           type: string
           title: Operation Name
@@ -3691,15 +3712,15 @@ components:
           title: Completed At
         error:
           anyOf:
-          - $ref: '# / components / schemas / JobError'
+          - $ref: '#/components/schemas/JobError'
           - type: 'null'
         metrics:
           anyOf:
-          - $ref: '# / components / schemas / JobMetrics'
+          - $ref: '#/components/schemas/JobMetrics'
           - type: 'null'
         telemetry:
           anyOf:
-          - $ref: '# / components / schemas / TelemetryContext'
+          - $ref: '#/components/schemas/TelemetryContext'
           - type: 'null'
       type: object
       required:
@@ -3731,9 +3752,9 @@ components:
           type: string
           title: Display Name
         status:
-          $ref: '# / components / schemas / KnowledgeDatasetStatus'
+          $ref: '#/components/schemas/KnowledgeDatasetStatus'
         audit:
-          $ref: '# / components / schemas / AuditFields'
+          $ref: '#/components/schemas/AuditFields'
         description:
           anyOf:
           - type: string
@@ -3745,7 +3766,7 @@ components:
           type: array
           title: Tags
         retention_class:
-          $ref: '# / components / schemas / DatasetRetentionClass'
+          $ref: '#/components/schemas/DatasetRetentionClass'
           default: standard
         metadata:
           additionalProperties: true
@@ -3753,10 +3774,10 @@ components:
           title: Metadata
         access_policy:
           anyOf:
-          - $ref: '# / components / schemas / AccessPolicy'
+          - $ref: '#/components/schemas/AccessPolicy'
           - type: 'null'
         counters:
-          $ref: '# / components / schemas / DatasetCounters'
+          $ref: '#/components/schemas/DatasetCounters'
       type: object
       required:
       - dataset_id
@@ -3803,7 +3824,7 @@ components:
           - - docs
             - product
         retention_class:
-          $ref: '# / components / schemas / DatasetRetentionClass'
+          $ref: '#/components/schemas/DatasetRetentionClass'
           description: 'Retention profile. Best default: `standard`. / Retention profile.
             Best default: `standard`.'
           default: standard
@@ -3818,7 +3839,7 @@ components:
             owner_team: platform
         access_policy:
           anyOf:
-          - $ref: '# / components / schemas / AccessPolicy'
+          - $ref: '#/components/schemas/AccessPolicy'
           - type: 'null'
           description: 'Optional access policy attached to the dataset. Best default:
             omit. / Optional access policy attached to the dataset. Best default:
@@ -3838,7 +3859,7 @@ components:
     KnowledgeInput:
       properties:
         input_type:
-          $ref: '# / components / schemas / KnowledgeInputType'
+          $ref: '#/components/schemas/KnowledgeInputType'
           description: Required input type. It determines which of `object_id`, `document_id`,
             `text`, or `uri` must be set. / Required input type. It determines which
             of `object_id`, `document_id`, `text`, or `uri` must be set.
@@ -4142,7 +4163,7 @@ components:
           examples:
           - product_docs
         pipeline:
-          $ref: '# / components / schemas / MemifyPipeline'
+          $ref: '#/components/schemas/MemifyPipeline'
           description: 'Memify enrichment pipeline. Best default: `coding_rules`.
             / Memify enrichment pipeline. Best default: `coding_rules`.'
           default: coding_rules
@@ -4196,7 +4217,7 @@ components:
           - custom/memify/enrich-v1
         webhook:
           anyOf:
-          - $ref: '# / components / schemas / WebhookConfig'
+          - $ref: '#/components/schemas/WebhookConfig'
           - type: 'null'
           description: 'Optional webhook callback. Best default: omit. / Optional
             webhook callback. Best default: omit.'
@@ -4238,23 +4259,23 @@ components:
       properties:
         markdown_object:
           anyOf:
-          - $ref: '# / components / schemas / StorageObjectRef'
+          - $ref: '#/components/schemas/StorageObjectRef'
           - type: 'null'
         raw_html_object:
           anyOf:
-          - $ref: '# / components / schemas / StorageObjectRef'
+          - $ref: '#/components/schemas/StorageObjectRef'
           - type: 'null'
         screenshot_object:
           anyOf:
-          - $ref: '# / components / schemas / StorageObjectRef'
+          - $ref: '#/components/schemas/StorageObjectRef'
           - type: 'null'
         pdf_object:
           anyOf:
-          - $ref: '# / components / schemas / StorageObjectRef'
+          - $ref: '#/components/schemas/StorageObjectRef'
           - type: 'null'
         ssl_certificate:
           anyOf:
-          - $ref: '# / components / schemas / SslCertificateSummary'
+          - $ref: '#/components/schemas/SslCertificateSummary'
           - type: 'null'
       type: object
       title: ParseArtifacts
@@ -4282,7 +4303,7 @@ components:
           title: Scene
         jobs:
           items:
-            $ref: '# / components / schemas / JobAccepted'
+            $ref: '#/components/schemas/JobAccepted'
           type: array
           title: Jobs
       type: object
@@ -4306,7 +4327,7 @@ components:
           title: Scene
         results:
           items:
-            $ref: '# / components / schemas / ParseResult'
+            $ref: '#/components/schemas/ParseResult'
           type: array
           title: Results
       type: object
@@ -4326,7 +4347,7 @@ components:
           default: false
         engine_attempts:
           items:
-            $ref: '# / components / schemas / ParseEngineAttempt'
+            $ref: '#/components/schemas/ParseEngineAttempt'
           type: array
           title: Engine Attempts
         warnings:
@@ -4355,10 +4376,10 @@ components:
           - type: 'null'
           title: Used Proxy
         timings_ms:
-          $ref: '# / components / schemas / ParseTimingSummary'
+          $ref: '#/components/schemas/ParseTimingSummary'
         telemetry:
           anyOf:
-          - $ref: '# / components / schemas / TelemetryContext'
+          - $ref: '#/components/schemas/TelemetryContext'
           - type: 'null'
       type: object
       title: ParseDiagnostics
@@ -4372,7 +4393,7 @@ components:
           type: string
           title: Engine Key
         status:
-          $ref: '# / components / schemas / ParseAttemptStatus'
+          $ref: '#/components/schemas/ParseAttemptStatus'
         started_at:
           anyOf:
           - type: string
@@ -4424,9 +4445,9 @@ components:
           type: string
           title: Engine Family
         deployment_mode:
-          $ref: '# / components / schemas / ParseEngineDeploymentMode'
+          $ref: '#/components/schemas/ParseEngineDeploymentMode'
         status:
-          $ref: '# / components / schemas / ParseEngineStatus'
+          $ref: '#/components/schemas/ParseEngineStatus'
         supported_source_types:
           items:
             type: string
@@ -4469,7 +4490,7 @@ components:
       properties:
         engines:
           items:
-            $ref: '# / components / schemas / ParseEngineDescriptor'
+            $ref: '#/components/schemas/ParseEngineDescriptor'
           type: array
           title: Engines
       type: object
@@ -4496,12 +4517,15 @@ components:
           type: array
           minItems: 1
           title: Sources
-          description: 'Required source locators. Each item may be an HTTP(S) URL,
-            `s3: /  / ` URI, `file: /  / ` URI, raw Cortex storage object key such
-            as `cortex-local / tenant_demo / obj_... / file.pdf`, or `cortex: /  /
-            objects / {object_id}` reference. For Cortex-managed S3 / MinIO keys,
-            Cortex extracts the `obj_...` segment and resolves a signed download URL
-            automatically.'
+          description: Required source locators. Each item may be an HTTP(S) URL,
+            `s3://` URI, `file://` URI, raw Cortex storage object key such as `cortex-local/tenant_demo/obj_.../file.pdf`,
+            or `cortex://objects/{object_id}` reference. For Cortex-managed S3/MinIO
+            keys, Cortex extracts the `obj_...` segment and resolves a signed download
+            URL automatically. / Required source locators. Each item may be an HTTP(S)
+            URL, `s3://` URI, `file://` URI, raw Cortex storage object key such as
+            `cortex-local/tenant_demo/obj_.../file.pdf`, or `cortex://objects/{object_id}`
+            reference. For Cortex-managed S3/MinIO keys, Cortex extracts the `obj_...`
+            segment and resolves a signed download URL automatically.
           examples:
           - - https://docs.cognee.ai/core-concepts/overview
             - s3://cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf
@@ -4544,7 +4568,7 @@ components:
           - 5
         webhook:
           anyOf:
-          - $ref: '# / components / schemas / WebhookConfig'
+          - $ref: '#/components/schemas/WebhookConfig'
           - type: 'null'
           description: 'Optional webhook callback configuration. Best default: omit.
             / Optional webhook callback configuration. Best default: omit.'
@@ -4628,16 +4652,16 @@ components:
           - type: 'null'
           title: Job Id
         document:
-          $ref: '# / components / schemas / ParsedDocument'
+          $ref: '#/components/schemas/ParsedDocument'
         artifacts:
           anyOf:
-          - $ref: '# / components / schemas / ParseArtifacts'
+          - $ref: '#/components/schemas/ParseArtifacts'
           - type: 'null'
         diagnostics:
-          $ref: '# / components / schemas / ParseDiagnostics'
+          $ref: '#/components/schemas/ParseDiagnostics'
         telemetry:
           anyOf:
-          - $ref: '# / components / schemas / TelemetryContext'
+          - $ref: '#/components/schemas/TelemetryContext'
           - type: 'null'
       type: object
       required:
@@ -4652,12 +4676,15 @@ components:
           type: array
           minItems: 1
           title: Sources
-          description: 'Required source locators. Each item may be an HTTP(S) URL,
-            `s3: /  / ` URI, `file: /  / ` URI, raw Cortex storage object key such
-            as `cortex-local / tenant_demo / obj_... / file.pdf`, or `cortex: /  /
-            objects / {object_id}` reference. For Cortex-managed S3 / MinIO keys,
-            Cortex extracts the `obj_...` segment and resolves a signed download URL
-            automatically.'
+          description: Required source locators. Each item may be an HTTP(S) URL,
+            `s3://` URI, `file://` URI, raw Cortex storage object key such as `cortex-local/tenant_demo/obj_.../file.pdf`,
+            or `cortex://objects/{object_id}` reference. For Cortex-managed S3/MinIO
+            keys, Cortex extracts the `obj_...` segment and resolves a signed download
+            URL automatically. / Required source locators. Each item may be an HTTP(S)
+            URL, `s3://` URI, `file://` URI, raw Cortex storage object key such as
+            `cortex-local/tenant_demo/obj_.../file.pdf`, or `cortex://objects/{object_id}`
+            reference. For Cortex-managed S3/MinIO keys, Cortex extracts the `obj_...`
+            segment and resolves a signed download URL automatically.
           examples:
           - - https://docs.cognee.ai/core-concepts/overview
             - s3://cortex-local/tenant_demo/obj_a3da967e3ca446cab3631bb7/bofa_note.pdf
@@ -4725,7 +4752,7 @@ components:
           type: string
           title: Document Id
         source_type:
-          $ref: '# / components / schemas / ParseInputKind'
+          $ref: '#/components/schemas/ParseInputKind'
         source_format:
           type: string
           title: Source Format
@@ -4733,7 +4760,7 @@ components:
           type: string
           title: Markdown
         audit:
-          $ref: '# / components / schemas / AuditFields'
+          $ref: '#/components/schemas/AuditFields'
         source_url:
           anyOf:
           - type: string
@@ -4781,7 +4808,7 @@ components:
           title: Labels
         access_policy:
           anyOf:
-          - $ref: '# / components / schemas / AccessPolicy'
+          - $ref: '#/components/schemas/AccessPolicy'
           - type: 'null'
         markdown_sha256:
           anyOf:
@@ -4790,15 +4817,15 @@ components:
           - type: 'null'
           title: Markdown Sha256
         normalized_metadata:
-          $ref: '# / components / schemas / StandardMetadata'
+          $ref: '#/components/schemas/StandardMetadata'
         metadata:
           additionalProperties: true
           type: object
           title: Metadata
         parser:
-          $ref: '# / components / schemas / AppliedParseEngine'
+          $ref: '#/components/schemas/AppliedParseEngine'
         provenance:
-          $ref: '# / components / schemas / DocumentProvenance'
+          $ref: '#/components/schemas/DocumentProvenance'
       type: object
       required:
       - document_id
@@ -4836,9 +4863,9 @@ components:
           type: array
           title: Allowed Engines
         normalization_defaults:
-          $ref: '# / components / schemas / ParseNormalizationOptions'
+          $ref: '#/components/schemas/ParseNormalizationOptions'
         fallback_policy:
-          $ref: '# / components / schemas / FallbackPolicy'
+          $ref: '#/components/schemas/FallbackPolicy'
       type: object
       required:
       - profile_ref
@@ -4848,7 +4875,7 @@ components:
       properties:
         profiles:
           items:
-            $ref: '# / components / schemas / ParserProfile'
+            $ref: '#/components/schemas/ParserProfile'
           type: array
           title: Profiles
       type: object
@@ -4926,7 +4953,7 @@ components:
           minimum: 1
           title: Rank
         hit_type:
-          $ref: '# / components / schemas / SearchHitType'
+          $ref: '#/components/schemas/SearchHitType'
         score:
           type: number
           title: Score
@@ -4957,7 +4984,7 @@ components:
           title: Snippet
         citation:
           anyOf:
-          - $ref: '# / components / schemas / Citation'
+          - $ref: '#/components/schemas/Citation'
           - type: 'null'
         metadata:
           additionalProperties: true
@@ -5009,7 +5036,7 @@ components:
           examples:
           - - product_docs
         search_type:
-          $ref: '# / components / schemas / SearchType'
+          $ref: '#/components/schemas/SearchType'
           description: 'Search strategy. Best default: `GRAPH_COMPLETION`. / Search
             strategy. Best default: `GRAPH_COMPLETION`.'
           default: GRAPH_COMPLETION
@@ -5034,7 +5061,7 @@ components:
           examples:
           - session_demo_001
         filters:
-          $ref: '# / components / schemas / SearchFilters'
+          $ref: '#/components/schemas/SearchFilters'
           description: 'Optional structured filters. Best default: empty filters.
             / Optional structured filters. Best default: empty filters.'
         only_context:
@@ -5047,7 +5074,8 @@ components:
         include_provenance:
           type: boolean
           title: Include Provenance
-          description: 'Include citation / provenance metadata in hits. Best default:
+          description: 'Include citation/provenance metadata in hits. Best default:
+            `true`. / Include citation/provenance metadata in hits. Best default:
             `true`.'
           default: true
         include_graph_paths:
@@ -5077,10 +5105,10 @@ components:
           type: string
           title: Request Id
         search_type:
-          $ref: '# / components / schemas / SearchType'
+          $ref: '#/components/schemas/SearchType'
         context_items:
           items:
-            $ref: '# / components / schemas / SearchHit'
+            $ref: '#/components/schemas/SearchHit'
           type: array
           title: Context Items
         latency_ms:
@@ -5103,12 +5131,12 @@ components:
           title: Answer
         graph_paths:
           items:
-            $ref: '# / components / schemas / GraphPath'
+            $ref: '#/components/schemas/GraphPath'
           type: array
           title: Graph Paths
         telemetry:
           anyOf:
-          - $ref: '# / components / schemas / TelemetryContext'
+          - $ref: '#/components/schemas/TelemetryContext'
           - type: 'null'
       type: object
       required:
@@ -5222,9 +5250,9 @@ components:
           minimum: 0
           title: Size Bytes
         status:
-          $ref: '# / components / schemas / StorageObjectStatus'
+          $ref: '#/components/schemas/StorageObjectStatus'
         audit:
-          $ref: '# / components / schemas / AuditFields'
+          $ref: '#/components/schemas/AuditFields'
         current_version_id:
           anyOf:
           - type: string
@@ -5268,11 +5296,11 @@ components:
           title: Tags
         version:
           anyOf:
-          - $ref: '# / components / schemas / StorageObjectVersion'
+          - $ref: '#/components/schemas/StorageObjectVersion'
           - type: 'null'
         access_policy:
           anyOf:
-          - $ref: '# / components / schemas / AccessPolicy'
+          - $ref: '#/components/schemas/AccessPolicy'
           - type: 'null'
       type: object
       required:
@@ -5362,7 +5390,7 @@ components:
       properties:
         parts:
           items:
-            $ref: '# / components / schemas / CompletedUploadPart'
+            $ref: '#/components/schemas/CompletedUploadPart'
           type: array
           title: Parts
           description: 'Multipart parts to finalize. Best default: empty list for
@@ -5445,7 +5473,7 @@ components:
             source: swagger-demo
         access_policy:
           anyOf:
-          - $ref: '# / components / schemas / AccessPolicy'
+          - $ref: '#/components/schemas/AccessPolicy'
           - type: 'null'
           description: 'Optional access policy attached to the stored object. Best
             default: omit. / Optional access policy attached to the stored object.
@@ -5474,9 +5502,9 @@ components:
           type: string
           title: Object Id
         status:
-          $ref: '# / components / schemas / UploadSessionStatus'
+          $ref: '#/components/schemas/UploadSessionStatus'
         upload_mode:
-          $ref: '# / components / schemas / UploadMode'
+          $ref: '#/components/schemas/UploadMode'
         bucket:
           anyOf:
           - type: string
@@ -5498,11 +5526,11 @@ components:
           title: Part Size Bytes
         single_part:
           anyOf:
-          - $ref: '# / components / schemas / PresignedRequestDescriptor'
+          - $ref: '#/components/schemas/PresignedRequestDescriptor'
           - type: 'null'
         multipart_parts:
           items:
-            $ref: '# / components / schemas / MultipartPartUpload'
+            $ref: '#/components/schemas/MultipartPartUpload'
           type: array
           title: Multipart Parts
       type: object
@@ -5571,7 +5599,7 @@ components:
           title: Max Contexts Per Case
         quality_gates:
           items:
-            $ref: '# / components / schemas / SynthesisQualityGate'
+            $ref: '#/components/schemas/SynthesisQualityGate'
           type: array
           title: Quality Gates
         options:
@@ -5599,7 +5627,7 @@ components:
           title: Provider
         supported_synthesis_types:
           items:
-            $ref: '# / components / schemas / SynthesisType'
+            $ref: '#/components/schemas/SynthesisType'
           type: array
           title: Supported Synthesis Types
         supported_source_types:
@@ -5638,7 +5666,7 @@ components:
           title: Generated At
         engines:
           items:
-            $ref: '# / components / schemas / SynthesisEngineDescriptor'
+            $ref: '#/components/schemas/SynthesisEngineDescriptor'
           type: array
           title: Engines
       type: object
@@ -5651,9 +5679,9 @@ components:
           type: string
           title: Job Id
         job_type:
-          $ref: '# / components / schemas / JobType'
+          $ref: '#/components/schemas/JobType'
         status:
-          $ref: '# / components / schemas / JobStatus'
+          $ref: '#/components/schemas/JobStatus'
         submitted_at:
           type: string
           format: date-time
@@ -5673,11 +5701,11 @@ components:
           title: Cancel Url
         telemetry:
           anyOf:
-          - $ref: '# / components / schemas / TelemetryContext'
+          - $ref: '#/components/schemas/TelemetryContext'
           - type: 'null'
         synthesis_type:
           anyOf:
-          - $ref: '# / components / schemas / SynthesisType'
+          - $ref: '#/components/schemas/SynthesisType'
           - type: 'null'
         engine_id:
           anyOf:
@@ -5695,9 +5723,9 @@ components:
     SynthesisJobSubmitRequest:
       properties:
         synthesis_type:
-          $ref: '# / components / schemas / SynthesisType'
+          $ref: '#/components/schemas/SynthesisType'
         source:
-          $ref: '# / components / schemas / SynthesisSource'
+          $ref: '#/components/schemas/SynthesisSource'
         name:
           anyOf:
           - type: string
@@ -5713,12 +5741,12 @@ components:
           - type: 'null'
           title: Profile Key
         config:
-          $ref: '# / components / schemas / SynthesisConfig'
+          $ref: '#/components/schemas/SynthesisConfig'
         output:
-          $ref: '# / components / schemas / SynthesisOutputOptions'
+          $ref: '#/components/schemas/SynthesisOutputOptions'
         webhook:
           anyOf:
-          - $ref: '# / components / schemas / WebhookConfig'
+          - $ref: '#/components/schemas/WebhookConfig'
           - type: 'null'
       type: object
       required:
@@ -5802,7 +5830,7 @@ components:
     SynthesisRunResult:
       properties:
         synthesis_type:
-          $ref: '# / components / schemas / SynthesisType'
+          $ref: '#/components/schemas/SynthesisType'
         engine_id:
           type: string
           title: Engine Id
@@ -5835,15 +5863,15 @@ components:
           type: object
           title: Source Summary
         summary:
-          $ref: '# / components / schemas / SynthesisSummary'
+          $ref: '#/components/schemas/SynthesisSummary'
         quality_gates:
           items:
-            $ref: '# / components / schemas / SynthesisQualityResult'
+            $ref: '#/components/schemas/SynthesisQualityResult'
           type: array
           title: Quality Gates
         outputs:
           items:
-            $ref: '# / components / schemas / StoredArtifactRef'
+            $ref: '#/components/schemas/StoredArtifactRef'
           type: array
           title: Outputs
         output_dataset_id:
@@ -5853,7 +5881,7 @@ components:
           title: Output Dataset Id
         telemetry:
           anyOf:
-          - $ref: '# / components / schemas / TelemetryContext'
+          - $ref: '#/components/schemas/TelemetryContext'
           - type: 'null'
         started_at:
           anyOf:
@@ -5956,9 +5984,9 @@ components:
     SynthesisSyncRequest:
       properties:
         synthesis_type:
-          $ref: '# / components / schemas / SynthesisType'
+          $ref: '#/components/schemas/SynthesisType'
         source:
-          $ref: '# / components / schemas / SynthesisSource'
+          $ref: '#/components/schemas/SynthesisSource'
         name:
           anyOf:
           - type: string
@@ -5974,12 +6002,12 @@ components:
           - type: 'null'
           title: Profile Key
         config:
-          $ref: '# / components / schemas / SynthesisConfig'
+          $ref: '#/components/schemas/SynthesisConfig'
         output:
-          $ref: '# / components / schemas / SynthesisOutputOptions'
+          $ref: '#/components/schemas/SynthesisOutputOptions'
         webhook:
           anyOf:
-          - $ref: '# / components / schemas / WebhookConfig'
+          - $ref: '#/components/schemas/WebhookConfig'
           - type: 'null'
       type: object
       required:

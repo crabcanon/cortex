@@ -1,0 +1,3 @@
+## 2024-05-24 - Efficient Next Sequence Number Calculation
+**Learning:** Using `list_for_job(job_id, limit=1000)` and accessing the last element `[-1]` to get the next sequence number loads up to 1000 event records into memory when we only need the maximum sequence number. This is an N+1 query-like inefficiency, specifically documented as an anti-pattern in memory.
+**Action:** Use an optimized direct SQLAlchemy aggregation query `select(func.coalesce(func.max(JobEventModel.sequence_no), 0))` within a new `get_max_sequence_no` repository method to achieve O(1) efficiency and avoid unnecessary record loading.

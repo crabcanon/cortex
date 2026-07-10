@@ -2,8 +2,6 @@
 
 from cortex_evaluation import (
     EvaluationStorageCaller as WorkerStorageCaller,
-)
-from cortex_evaluation import (
     persist_evaluation_report,
 )
 

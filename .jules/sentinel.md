@@ -1,0 +1,4 @@
+## 2025-02-26 - Added Global Security Headers to API Middleware
+**Vulnerability:** Missing standard security headers (`Strict-Transport-Security`, `X-Frame-Options`, `X-Content-Type-Options`) on API responses, leaving endpoints vulnerable to MIME-sniffing, clickjacking, and man-in-the-middle downgrade attacks.
+**Learning:** These headers were absent because there was no dedicated security middleware, and the existing request correlation middleware (`request_context_middleware`) was only managing tracing and request IDs. This is a common gap when initial development focuses on observability over security.
+**Prevention:** Integrate standard HTTP security headers (HSTS, frame options, content-type options) into the global response middleware early in the project lifecycle, and consider using a dedicated security middleware package for broader coverage.

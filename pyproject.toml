@@ -80,6 +80,7 @@ select = ["B", "E", "F", "I", "UP"]
 
 [tool.pyright]
 include = ["apps", "packages", "workers", "tests"]
+ignore = ["packages/evaluation/src/cortex_evaluation/adapters/utils/deepeval_helper.py"]
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
 venvPath = "."

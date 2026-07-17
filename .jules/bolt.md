@@ -1,3 +1,0 @@
-## 2024-06-25 - Replace N+1 array indexing with direct SQL aggregation
-**Learning:** In repository methods, fetching a list of items just to determine a max value using python array indexing (e.g., `list_for_job(limit=1000)[-1].sequence_no`) creates unnecessary overhead and an N+1 query-like inefficiency by loading potentially large amounts of unneeded records into memory.
-**Action:** Always use direct SQL aggregation (e.g., `select(func.coalesce(func.max(Model.field), 0))`) in a dedicated repository method to determine max values instead of retrieving the objects. This is an O(1) operation instead of O(N) memory allocation and transfer cost.

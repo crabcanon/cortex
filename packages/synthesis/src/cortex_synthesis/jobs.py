@@ -401,8 +401,8 @@ class SynthesisJobControlService:
         message: str,
         details: dict[str, Any] | None = None,
     ) -> None:
-        max_seq = await uow.job_events.get_max_sequence_no(job.job_id)
-        next_sequence = max_seq + 1
+        existing_events = await uow.job_events.list_for_job(job.job_id, limit=1000)
+        next_sequence = existing_events[-1].sequence_no + 1 if existing_events else 1
         await uow.job_events.add(
             JobEventRecord(
                 job_id=job.job_id,

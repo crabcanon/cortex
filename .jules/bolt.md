@@ -1,0 +1,3 @@
+## 2024-07-18 - Prevent O(N) memory loading for sequence calculation
+**Learning:** Found an anti-pattern where calculating the next sequence number for a job event loaded up to 1000 events into memory via `list_for_job(...)[-1]` just to inspect the final sequence number, causing unnecessary memory consumption and query overhead.
+**Action:** Replaced array indexing on list results with direct O(1) SQL aggregation (`func.max(sequence_no)`) via a new `get_max_sequence_no` repository method. Always use database aggregation instead of loading entities into application memory just to compute aggregates.

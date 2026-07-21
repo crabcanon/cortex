@@ -49,7 +49,7 @@ from cortex_domain import (
     SynthesisType,
     TenantRecord,
 )
-from sqlalchemy import desc, or_, select, update
+from sqlalchemy import desc, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import (
@@ -1636,6 +1636,17 @@ class JobEventRepository:
         await self._session.flush()
         await self._session.refresh(model)
         return _job_event_from_model(model)
+
+    async def get_max_sequence_no(self, job_id: str) -> int:
+        # ⚡ Bolt: Fetch max sequence directly via SQL aggregation to avoid loading
+        # all prior events into memory. Reduces memory overhead from O(N) to O(1)
+        # for highly active jobs and prevents N+1 query-like inefficiencies.
+        result = await self._session.execute(
+            select(func.coalesce(func.max(JobEventModel.sequence_no), 0)).where(
+                JobEventModel.job_id == job_id
+            )
+        )
+        return result.scalar_one()
 
     async def list_for_job(
         self,

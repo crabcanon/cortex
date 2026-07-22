@@ -99,9 +99,11 @@ def _dev_bearer_token(*, tenant_id: str, actor_id: str, scopes: list[str]) -> st
         "actor_ref": f"{actor_id}@example.com",
         "scope": " ".join(scopes),
     }
-    encoded = base64.urlsafe_b64encode(
-        json.dumps(claims, separators=(",", ":")).encode("utf-8")
-    ).decode("ascii").rstrip("=")
+    encoded = (
+        base64.urlsafe_b64encode(json.dumps(claims, separators=(",", ":")).encode("utf-8"))
+        .decode("ascii")
+        .rstrip("=")
+    )
     return f"Bearer dev:{encoded}"
 
 
@@ -206,7 +208,7 @@ class _FakeObjectStoreClient:
         object_key: str,
         disposition: str,
         expires_in: int,
-        ) -> PresignedRequestDescriptor:
+    ) -> PresignedRequestDescriptor:
         return PresignedRequestDescriptor(
             method="GET",
             url=(

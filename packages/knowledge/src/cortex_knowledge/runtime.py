@@ -643,13 +643,13 @@ def _cognee_stable_data_id(
     source_parts = [
         str(dataset),
         input_type,
-        _strip_optional_string(raw_input.get("label")) or "",
-        _strip_optional_string(metadata.get("source_url")) or "",
-        _strip_optional_string(metadata.get("source_name")) or "",
-        _strip_optional_string(metadata.get("engine_id")) or "",
-        _strip_optional_string(metadata.get("object_id")) or "",
-        _strip_optional_string(metadata.get("document_id")) or "",
-        _strip_optional_string(metadata.get("markdown_sha256")) or "",
+        _strip_optional_string(raw_input.get("label") if raw_input else None) or "",
+        _strip_optional_string(metadata.get("source_url") if metadata else None) or "",
+        _strip_optional_string(metadata.get("source_name") if metadata else None) or "",
+        _strip_optional_string(metadata.get("engine_id") if metadata else None) or "",
+        _strip_optional_string(metadata.get("object_id") if metadata else None) or "",
+        _strip_optional_string(metadata.get("document_id") if metadata else None) or "",
+        _strip_optional_string(metadata.get("markdown_sha256") if metadata else None) or "",
         hashlib.sha256(value.encode("utf-8")).hexdigest(),
     ]
     return uuid5(NAMESPACE_URL, "cortex:cognee-data:" + "\x1f".join(source_parts))
@@ -801,7 +801,7 @@ def _patch_cognee_tiktoken_unknown_model_fallback() -> None:
                 self,
                 model=model,
                 max_completion_tokens=max_completion_tokens,
-            )
+            ) # type: ignore[call-overload]
         except Exception as exc:
             if not _is_tiktoken_unknown_model_error(exc):
                 raise
@@ -811,7 +811,7 @@ def _patch_cognee_tiktoken_unknown_model_fallback() -> None:
                 str(_COGNEE_EMBEDDING_TOKENIZER_OPTIONS.get("encoding") or "cl100k_base")
             )
 
-    tokenizer_class.__init__ = _init_with_fallback
+    tokenizer_class.__init__ = _init_with_fallback # type: ignore[method-assign]
     tokenizer_class._cortex_unknown_model_fallback = True
 
 

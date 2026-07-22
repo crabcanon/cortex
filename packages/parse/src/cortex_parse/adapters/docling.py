@@ -57,7 +57,9 @@ class DoclingParseEngine(ParseEngineProtocol):
             display_name="Docling",
             engine_family="document_local",
             deployment_mode=ParseEngineDeploymentMode.LOCAL,
-            status=ParseEngineStatus.ACTIVE if enabled else ParseEngineStatus.DISABLED,
+            status=ParseEngineStatus.ACTIVE
+            if (enabled and self._local_available)
+            else ParseEngineStatus.DISABLED,
             supported_source_types=[
                 ParseInputKind.URI.value,
                 ParseInputKind.URL.value,

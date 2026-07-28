@@ -174,9 +174,9 @@ class EvalScopePerfMetricCleaner:
         else:
             numbers = []
         if len(numbers) >= 3 and all(number is not None for number in numbers[:3]):
-            output["perf.total_requests"] = float(numbers[0])
-            output["perf.success_requests"] = float(numbers[1])
-            output["perf.failed_requests"] = float(numbers[2])
+            output["perf.total_requests"] = float(numbers[0] if numbers[0] is not None else 0.0)
+            output["perf.success_requests"] = float(numbers[1] if numbers[1] is not None else 0.0)
+            output["perf.failed_requests"] = float(numbers[2] if numbers[2] is not None else 0.0)
 
     def _collect_percentile_row(
         self,

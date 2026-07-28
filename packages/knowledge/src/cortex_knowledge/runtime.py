@@ -640,6 +640,8 @@ def _cognee_stable_data_id(
     value: str,
 ) -> UUID:
     metadata = raw_input.get("metadata") if isinstance(raw_input.get("metadata"), dict) else {}
+    if metadata is None:
+        metadata = {}
     source_parts = [
         str(dataset),
         input_type,
@@ -801,7 +803,7 @@ def _patch_cognee_tiktoken_unknown_model_fallback() -> None:
                 self,
                 model=model,
                 max_completion_tokens=max_completion_tokens,
-            )
+            )  # type: ignore
         except Exception as exc:
             if not _is_tiktoken_unknown_model_error(exc):
                 raise
@@ -811,7 +813,7 @@ def _patch_cognee_tiktoken_unknown_model_fallback() -> None:
                 str(_COGNEE_EMBEDDING_TOKENIZER_OPTIONS.get("encoding") or "cl100k_base")
             )
 
-    tokenizer_class.__init__ = _init_with_fallback
+    tokenizer_class.__init__ = _init_with_fallback  # type: ignore[method-assign]
     tokenizer_class._cortex_unknown_model_fallback = True
 
 

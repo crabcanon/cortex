@@ -1,0 +1,3 @@
+## 2024-05-24 - Efficient Next Sequence Number Generation in Job Event Repositories
+**Learning:** Found an N+1 like query inefficiency when fetching job events to compute the next sequence number by loading a list of up to 1000 events into memory (`list_for_job(job_id, limit=1000)[-1]`). This causes unnecessary large data transfer and allocation when only the max sequence number is needed.
+**Action:** Replaced the in-memory array access with an optimized database aggregation method `get_max_sequence_no` (`select(func.coalesce(func.max(JobEventModel.sequence_no), 0))`) in the repository and updated the usages. This guarantees O(1) performance in Python.

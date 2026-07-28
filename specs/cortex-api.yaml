@@ -14,14 +14,14 @@ servers:
     description: Development / 测试环境
 tags:
   - name: Health
-    description: 运行存活与依赖就绪探针。/ Runtime liveness and dependency readiness probes.
+    description: 运行存活与依赖就绪探针。 / Runtime liveness and dependency readiness probes.
   - name: Observability
-    description: 对齐 OpenTelemetry 的遥测与指标接口。/ OpenTelemetry-aligned telemetry and
+    description: 对齐 OpenTelemetry 的遥测与指标接口。 / OpenTelemetry-aligned telemetry and
       metrics endpoints.
   - name: Jobs
-    description: 通用长任务查询与控制。/ Generic long-running job inspection and control.
+    description: 通用长任务查询与控制。 / Generic long-running job inspection and control.
   - name: Parse
-    description: 面向 URL 与文件的引擎无关解析、标准化与持久化。/ Engine-agnostic parsing, normalization,
+    description: 面向 URL 与文件的引擎无关解析、标准化与持久化。 / Engine-agnostic parsing, normalization,
       and persistence for URLs and files.
   - name: Storage
     description: 上传、查询和下载 S3 后端对象。 / Upload, inspect, and download S3-backed objects.
@@ -29,23 +29,23 @@ tags:
     description: Dataset lifecycle plus Cognee-backed Add, Cognify, Memify, and
       Search operations. / 数据集生命周期与基于 Cognee 的 Add、Cognify、Memify、Search 操作。
   - name: Evaluation
-    description: AI 评测引擎、指标目录、同步校验与异步评测作业。/ AI evaluation engines, metric catalogs,
+    description: AI 评测引擎、指标目录、同步校验与异步评测作业。 / AI evaluation engines, metric catalogs,
       synchronous checks, and asynchronous evaluation jobs.
   - name: Synthesis
-    description: 数据合成引擎以及同步、异步生成工作流。/ Synthetic data engines plus synchronous and
+    description: 数据合成引擎以及同步、异步生成工作流。 / Synthetic data engines plus synchronous and
       asynchronous generation workflows.
   - name: Dev Auth
-    description: 仅本地开发环境启用的 token 生成辅助接口。/ Local-development-only token issuance helper.
+    description: 仅本地开发环境启用的 token 生成辅助接口。 / Local-development-only token issuance helper.
 paths:
   /v1/health/live:
     get:
       tags:
         - Health
-      summary: Liveness probe
+      summary: Liveness probe / 存活探针
       operationId: getLiveness
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -54,17 +54,17 @@ paths:
     get:
       tags:
         - Health
-      summary: Readiness probe
+      summary: Readiness probe / 就绪探针
       operationId: getReadiness
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthResponse"
         "503":
-          description: Service Unavailable
+          description: Service Unavailable / 服务不可用
           content:
             application/json:
               schema:
@@ -75,7 +75,7 @@ paths:
     get:
       tags:
         - Jobs
-      summary: Get job status
+      summary: Get job status / 获取任务状态
       description: Return the current state, timestamps, and telemetry context for one
         long-running job.
       operationId: getJob
@@ -96,13 +96,13 @@ paths:
             Add, Cognify, or Memify.
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobStatusDetail"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -111,7 +111,7 @@ paths:
     get:
       tags:
         - Jobs
-      summary: List job events
+      summary: List job events / 获取任务事件
       description: Return the ordered event stream for one job, newest first according
         to the service implementation.
       operationId: listJobEvents
@@ -143,7 +143,7 @@ paths:
           description: "Maximum number of events to return. Best default: 100."
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -152,7 +152,7 @@ paths:
                   $ref: "#/components/schemas/JobEvent"
                 title: Response Listjobevents
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -161,7 +161,7 @@ paths:
     post:
       tags:
         - Jobs
-      summary: Cancel a queued or running job
+      summary: Cancel a queued or running job / 取消排队或运行中的任务
       description: Request cancellation of a queued or running job and return the
         updated status snapshot.
       operationId: cancelJob
@@ -180,13 +180,13 @@ paths:
           description: Job identifier to cancel.
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobStatusDetail"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -201,7 +201,7 @@ paths:
       operationId: listEvalEngines
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -238,13 +238,13 @@ paths:
             title: Engineid
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/EvalMetricCatalog"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -347,13 +347,13 @@ paths:
         required: true
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/EvalRunResult"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -470,13 +470,13 @@ paths:
                       - job.failed
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/EvalJobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -500,7 +500,7 @@ paths:
             title: Jobid
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -513,9 +513,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobStatusDetail"
-          description: Conflict
+          description: Conflict / 冲突
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -599,13 +599,13 @@ paths:
         required: true
       responses:
         "201":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/KnowledgeDataset"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -634,13 +634,13 @@ paths:
           description: Knowledge dataset identifier returned by `/v1/knowledge/datasets`.
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/KnowledgeDataset"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -815,13 +815,13 @@ paths:
                     persist_source_copy: false
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -897,13 +897,13 @@ paths:
                       X-Consumer: graph-sync
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -973,13 +973,13 @@ paths:
                       X-Consumer: knowledge-memify
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1085,13 +1085,13 @@ paths:
         required: true
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SearchResponse"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1106,7 +1106,7 @@ paths:
       operationId: getMetrics
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema: {}
@@ -1121,7 +1121,7 @@ paths:
       operationId: listParseEngines
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -1140,7 +1140,7 @@ paths:
       operationId: listParserProfiles
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -1197,13 +1197,13 @@ paths:
         required: true
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ParseBatchResult"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1289,13 +1289,13 @@ paths:
                   priority: 5
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ParseBatchJobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1323,7 +1323,7 @@ paths:
           description: Parse job identifier returned by `/v1/parse/jobs`.
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -1336,9 +1336,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobStatusDetail"
-          description: Conflict
+          description: Conflict / 冲突
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1403,13 +1403,13 @@ paths:
         required: true
       responses:
         "201":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/StorageUploadSession"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1433,13 +1433,13 @@ paths:
         required: true
       responses:
         "201":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/StorageObject"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1502,13 +1502,13 @@ paths:
                   checksum_sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/StorageObject"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1536,13 +1536,13 @@ paths:
           description: Storage object identifier returned by upload or search flows.
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/StorageObject"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1594,13 +1594,13 @@ paths:
             `inline` for browser preview."
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/DownloadUrlResponse"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1615,7 +1615,7 @@ paths:
       operationId: listSynthesisEngines
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -1709,13 +1709,13 @@ paths:
         required: true
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SynthesisRunResult"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1836,13 +1836,13 @@ paths:
                       - job.failed
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SynthesisJobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1866,7 +1866,7 @@ paths:
             title: Jobid
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -1879,9 +1879,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobStatusDetail"
-          description: Conflict
+          description: Conflict / 冲突
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:

@@ -1,0 +1,3 @@
+## 2024-05-15 - Use SQL aggregation instead of list loading for maximum sequence calculation
+**Learning:** It's an anti-pattern to use `list_for_job(limit=1000)[-1]` to determine the maximum sequence number. Loading a large list of events into memory only to read the last element creates N+1 query-like inefficiencies and takes O(N) time and memory overhead.
+**Action:** Implemented and utilized `JobEventRepository.get_max_sequence_no(job_id)` which uses direct SQLAlchemy aggregation (`select(func.coalesce(func.max(Model.field), 0))`) in the database, reducing the operation to O(1) efficiency and saving significant application memory.

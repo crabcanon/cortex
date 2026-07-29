@@ -1640,8 +1640,9 @@ class JobEventRepository:
     async def get_max_sequence_no(self, job_id: str) -> int:
         # Use database aggregation instead of loading events into memory for O(1) efficiency.
         result = await self._session.execute(
-            select(func.coalesce(func.max(JobEventModel.sequence_no), 0))
-            .where(JobEventModel.job_id == job_id)
+            select(func.coalesce(func.max(JobEventModel.sequence_no), 0)).where(
+                JobEventModel.job_id == job_id
+            )
         )
         return result.scalar_one()
 

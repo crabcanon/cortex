@@ -50,9 +50,7 @@ def main() -> None:
         "--cortex-eval-mode",
         choices=("sync", "async"),
         default=None,
-        help=(
-            "Use Cortex /v1/eval/sync or /v1/eval/jobs when Cortex Eval submission is enabled."
-        ),
+        help=("Use Cortex /v1/eval/sync or /v1/eval/jobs when Cortex Eval submission is enabled."),
     )
     run_parser.add_argument("--skip-knowledge-jobs", action="store_true")
     run_parser.add_argument(
@@ -145,8 +143,7 @@ def main() -> None:
             else settings.submit_cortex_eval,
             mode=args.cortex_eval_mode or settings.cortex_eval_mode,
             eval_types=_csv_arg(args.cortex_eval_types) or list(settings.cortex_eval_types),
-            metric_profile=args.cortex_eval_metric_profile
-            or settings.cortex_eval_metric_profile,
+            metric_profile=args.cortex_eval_metric_profile or settings.cortex_eval_metric_profile,
         )
         if (
             args.submit_cortex_eval is not None

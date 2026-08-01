@@ -184,8 +184,7 @@ async def test_docling_adapter_uses_optional_converter(monkeypatch: pytest.Monke
                     uri="file:///tmp/slides.pptx",
                     filename="slides.pptx",
                     expected_content_type=(
-                        "application/vnd.openxmlformats-officedocument."
-                        "presentationml.presentation"
+                        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
                     ),
                 )
             ),
@@ -194,8 +193,7 @@ async def test_docling_adapter_uses_optional_converter(monkeypatch: pytest.Monke
                 uri="file:///tmp/slides.pptx",
                 filename="slides.pptx",
                 expected_content_type=(
-                    "application/vnd.openxmlformats-officedocument."
-                    "presentationml.presentation"
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
                 ),
             ),
             engine_options={

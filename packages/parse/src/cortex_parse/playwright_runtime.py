@@ -123,8 +123,7 @@ def probe_playwright_browser(runtime: Crawl4AIPlaywrightRuntime) -> None:
             f"Configured browser `{runtime.browser_name}` under "
             f"`{runtime.browsers_path}` could not launch. "
             f"Install or repair it with `{install_command}` and ensure the host permits "
-            "Playwright child-process startup."
-            + (f" | Output: {output}" if output else "")
+            "Playwright child-process startup." + (f" | Output: {output}" if output else "")
         )
 
 

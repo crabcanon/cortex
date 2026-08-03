@@ -1,0 +1,3 @@
+## YYYY-MM-DD - Optimize `JobEventRepository.list_for_job` for Sequence Number Generation
+**Learning:** In the `JobEventRepository`, calculating the next sequence number by fetching all job events using `list_for_job(..., limit=1000)` creates significant overhead by loading up to 1000 records into memory when only the maximum `sequence_no` is needed.
+**Action:** Implemented a new `get_max_sequence_no` method in `JobEventRepository` to fetch only the maximum sequence number using a highly optimized database query (`func.coalesce(func.max(JobEventModel.sequence_no), 0)`). This prevents unnecessary data loading, drastically reducing execution time and memory footprint, especially on large job event lists.

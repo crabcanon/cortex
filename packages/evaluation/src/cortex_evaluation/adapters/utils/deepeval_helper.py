@@ -21,7 +21,9 @@ from ..manifests.metrics import (
 )
 
 try:  # pragma: no cover - depends on optional runtime extra
-    from deepeval.models import DeepEvalBaseLLM as _DeepEvalBaseLLM
+    from deepeval.models import (  # type: ignore
+        DeepEvalBaseLLM as _DeepEvalBaseLLM,  # type: ignore
+    )
 except Exception:  # pragma: no cover - light API image does not install DeepEval
     _DeepEvalBaseLLM = object
 

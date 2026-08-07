@@ -229,8 +229,7 @@ async def get_knowledge_dataset(
     operation_id="createAddJob",
     summary="Submit a Cognee Add job",
     description=(
-        "Queue an Add job to ingest objects, documents, text, "
-        "or URIs into a knowledge dataset."
+        "Queue an Add job to ingest objects, documents, text, or URIs into a knowledge dataset."
     ),
 )
 async def create_add_job(

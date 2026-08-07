@@ -364,8 +364,7 @@ class Boto3ObjectStoreClient:
         raise CortexError(
             code="storage_provider_error",
             detail=(
-                f"S3-compatible storage request `{action}` "
-                f"failed with `{error_code}`: {message}"
+                f"S3-compatible storage request `{action}` failed with `{error_code}`: {message}"
             ),
             status_code=502,
             extra={"provider_error_code": error_code},

@@ -378,11 +378,7 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
             dumped = value.model_dump(mode="json")
             return dumped if isinstance(dumped, dict) else {}
         if hasattr(value, "__dict__"):
-            return {
-                key: val
-                for key, val in vars(value).items()
-                if not key.startswith("_")
-            }
+            return {key: val for key, val in vars(value).items() if not key.startswith("_")}
         return {}
 
     async def _build_memify_kwargs(
@@ -639,7 +635,9 @@ def _cognee_stable_data_id(
     raw_input: dict[str, Any],
     value: str,
 ) -> UUID:
-    metadata = raw_input.get("metadata") if isinstance(raw_input.get("metadata"), dict) else {}
+    metadata: dict[str, Any] = (
+        raw_input["metadata"] if isinstance(raw_input.get("metadata"), dict) else {}
+    )
     source_parts = [
         str(dataset),
         input_type,
@@ -734,9 +732,7 @@ def _patch_cognee_litellm_embedding_tokenizer() -> None:
             ).lower()
             if fallback in {"approximate", "none", "word"}:
                 return _CortexApproximateTokenizer(
-                    max_completion_tokens=int(
-                        getattr(self, "max_completion_tokens", 8191) or 8191
-                    )
+                    max_completion_tokens=int(getattr(self, "max_completion_tokens", 8191) or 8191)
                 )
             return _CortexTiktokenEncodingTokenizer(
                 encoding_name=str(
@@ -797,11 +793,7 @@ def _patch_cognee_tiktoken_unknown_model_fallback() -> None:
         max_completion_tokens: int = 8191,
     ) -> None:
         try:
-            original_init(
-                self,
-                model=model,
-                max_completion_tokens=max_completion_tokens,
-            )
+            original_init(self, model=model, max_completion_tokens=max_completion_tokens)  # type: ignore[call-arg]
         except Exception as exc:
             if not _is_tiktoken_unknown_model_error(exc):
                 raise
@@ -811,15 +803,14 @@ def _patch_cognee_tiktoken_unknown_model_fallback() -> None:
                 str(_COGNEE_EMBEDDING_TOKENIZER_OPTIONS.get("encoding") or "cl100k_base")
             )
 
-    tokenizer_class.__init__ = _init_with_fallback
+    tokenizer_class.__init__ = _init_with_fallback  # type: ignore[method-assign]
     tokenizer_class._cortex_unknown_model_fallback = True
 
 
 def _is_tiktoken_unknown_model_error(exc: Exception) -> bool:
     message = str(exc).lower()
-    return (
-        "could not automatically map" in message
-        and ("tokeniser" in message or "tokenizer" in message)
+    return "could not automatically map" in message and (
+        "tokeniser" in message or "tokenizer" in message
     )
 
 
@@ -954,9 +945,7 @@ def _translate_db_url(db_url: str, *, provider: str, migration: bool) -> dict[st
     scheme = provider or parsed.scheme.split("+", 1)[0].lower()
     if scheme in {"sqlite"}:
         raw_path = (
-            db_url.split("sqlite:///", 1)[1]
-            if db_url.startswith("sqlite:///")
-            else parsed.path
+            db_url.split("sqlite:///", 1)[1] if db_url.startswith("sqlite:///") else parsed.path
         )
         path = Path(unquote(raw_path))
         if not path.is_absolute():

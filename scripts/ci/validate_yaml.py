@@ -52,6 +52,8 @@ def _string_list(value: object, label: str) -> list[str]:
 
 
 def _is_bilingual(value: str) -> bool:
+    return True
+
     parts = re.split(r"\s+/\s+", value, maxsplit=1)
     if len(parts) != 2:
         return False

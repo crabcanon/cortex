@@ -644,12 +644,12 @@ def _cognee_stable_data_id(
         str(dataset),
         input_type,
         _strip_optional_string(raw_input.get("label")) or "",
-        _strip_optional_string(metadata.get("source_url")) or "",
-        _strip_optional_string(metadata.get("source_name")) or "",
-        _strip_optional_string(metadata.get("engine_id")) or "",
-        _strip_optional_string(metadata.get("object_id")) or "",
-        _strip_optional_string(metadata.get("document_id")) or "",
-        _strip_optional_string(metadata.get("markdown_sha256")) or "",
+        _strip_optional_string((metadata or {}).get("source_url")) or "",
+        _strip_optional_string((metadata or {}).get("source_name")) or "",
+        _strip_optional_string((metadata or {}).get("engine_id")) or "",
+        _strip_optional_string((metadata or {}).get("object_id")) or "",
+        _strip_optional_string((metadata or {}).get("document_id")) or "",
+        _strip_optional_string((metadata or {}).get("markdown_sha256")) or "",
         hashlib.sha256(value.encode("utf-8")).hexdigest(),
     ]
     return uuid5(NAMESPACE_URL, "cortex:cognee-data:" + "\x1f".join(source_parts))
@@ -797,7 +797,8 @@ def _patch_cognee_tiktoken_unknown_model_fallback() -> None:
         max_completion_tokens: int = 8191,
     ) -> None:
         try:
-            original_init(
+            original_init(  # type: ignore[call-arg]
+
                 self,
                 model=model,
                 max_completion_tokens=max_completion_tokens,
@@ -811,7 +812,7 @@ def _patch_cognee_tiktoken_unknown_model_fallback() -> None:
                 str(_COGNEE_EMBEDDING_TOKENIZER_OPTIONS.get("encoding") or "cl100k_base")
             )
 
-    tokenizer_class.__init__ = _init_with_fallback
+    tokenizer_class.__init__ = _init_with_fallback  # type: ignore[method-assign]
     tokenizer_class._cortex_unknown_model_fallback = True
 
 

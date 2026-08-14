@@ -49,7 +49,7 @@ from cortex_domain import (
     SynthesisType,
     TenantRecord,
 )
-from sqlalchemy import desc, or_, select, update, func
+from sqlalchemy import desc, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import (

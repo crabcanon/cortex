@@ -1,0 +1,3 @@
+## YYYY-MM-DD - [Optimize next sequence number calculation for job events]
+**Learning:** Using `list_for_job(limit=1000)[-1]` to determine the maximum sequence number for job events loads unnecessary records into memory, which causes N+1 query-like inefficiencies and scales poorly.
+**Action:** Implemented an optimized `get_max_sequence_no(job_id)` method in `JobEventRepository` using direct SQL aggregation (`select(func.coalesce(func.max(Model.field), 0))`) to calculate the next sequence number with O(1) efficiency. Replaced `list_for_job` where we fetch existing events just to get the next sequence number across multiple job service files.

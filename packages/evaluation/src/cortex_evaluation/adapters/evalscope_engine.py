@@ -75,8 +75,7 @@ class EvalScopeEvaluationEngine:
             response = await client.post(endpoint, json=payload)
         if response.status_code >= 400:
             message = (
-                "EvalScope request failed with status "
-                f"{response.status_code}: {response.text}"
+                f"EvalScope request failed with status {response.status_code}: {response.text}"
             )
             raise CortexError(
                 code="evalscope_request_failed",

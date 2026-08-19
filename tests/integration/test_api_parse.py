@@ -64,9 +64,11 @@ def _dev_bearer_token(*, tenant_id: str, actor_id: str, scopes: list[str]) -> st
         "actor_ref": f"{actor_id}@example.com",
         "scope": " ".join(scopes),
     }
-    encoded = base64.urlsafe_b64encode(
-        json.dumps(claims, separators=(",", ":")).encode("utf-8")
-    ).decode("ascii").rstrip("=")
+    encoded = (
+        base64.urlsafe_b64encode(json.dumps(claims, separators=(",", ":")).encode("utf-8"))
+        .decode("ascii")
+        .rstrip("=")
+    )
     return f"Bearer dev:{encoded}"
 
 
@@ -279,8 +281,7 @@ def test_parse_api_lists_catalog_and_runs_sync_parse(monkeypatch: pytest.MonkeyP
     assert sync_response.json()["engine_id"] == "auto"
     assert sync_response.json()["results"][0]["document"]["title"] == "API Parse"
     assert (
-        sync_response.json()["results"][0]["document"]["parser"]["engine_key"]
-        == "api_test_engine"
+        sync_response.json()["results"][0]["document"]["parser"]["engine_key"] == "api_test_engine"
     )
     assert (
         sync_response.json()["results"][0]["diagnostics"]["selected_engine_key"]
@@ -836,6 +837,4 @@ def test_parse_worker_recovers_stale_lease(monkeypatch: pytest.MonkeyPatch) -> N
     assert claimed_job_id == job_id
     assert worker_status == "succeeded"
     assert completed_result.status_code == 200
-    assert "parse.job.lease_recovered" in [
-        event["event_type"] for event in events_response.json()
-    ]
+    assert "parse.job.lease_recovered" in [event["event_type"] for event in events_response.json()]

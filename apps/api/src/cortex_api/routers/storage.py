@@ -189,8 +189,7 @@ async def upload_small_file(
         str | None,
         Form(
             description=(
-                "Optional comma-separated tags or JSON array string. "
-                "Best default: empty."
+                "Optional comma-separated tags or JSON array string. Best default: empty."
             ),
             examples=["docs,product"],
         ),
@@ -286,8 +285,7 @@ async def complete_upload_session(
     operation_id="getStorageObject",
     summary="Get object metadata",
     description=(
-        "Return the stored metadata, current version reference, "
-        "and access policy for one object."
+        "Return the stored metadata, current version reference, and access policy for one object."
     ),
 )
 async def get_storage_object(

@@ -1,0 +1,3 @@
+## 2024-05-24 - Efficient Event Sequence Generation
+**Learning:** The previous approach of calling `list_for_job` (which loads up to 1000 records from the database into application memory) simply to calculate the maximum sequence number is highly inefficient and creates an O(N) memory overhead resembling the N+1 query problem. This becomes a major bottleneck for large jobs.
+**Action:** Always prefer direct SQL aggregation (like `func.max()`) when you only need computed values (such as finding the next ID or max value). The implementation in `JobEventRepository.get_max_sequence_no()` using `func.coalesce` evaluates purely at the database level in O(1) space, avoiding all Python object instantiation overhead.

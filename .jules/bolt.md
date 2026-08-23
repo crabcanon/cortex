@@ -1,0 +1,3 @@
+## 2025-02-28 - Avoid array indexing for max sequence calculation
+**Learning:** Codebase anti-pattern: Avoid using array indexing on repository list methods (e.g., `list_for_job(limit=1000)[-1]`) to determine maximum sequence numbers, as it loads unnecessary records into memory causing N+1 query-like inefficiencies. Use direct SQLAlchemy aggregation queries (e.g., `select(func.coalesce(func.max(Model.field), 0))`) in the repository methods for O(1) efficiency.
+**Action:** When working on sequence generation or pagination that requires a maximum value, implement and use a dedicated `get_max_*` method in the repository using SQL aggregation rather than loading lists into memory.

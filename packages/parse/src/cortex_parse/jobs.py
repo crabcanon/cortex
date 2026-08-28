@@ -33,9 +33,7 @@ class ParseJobControlService:
         idempotency_key: str | None = None,
         request_id: str | None = None,
     ) -> JobAccepted:
-        normalized_key = (
-            normalize_idempotency_key(idempotency_key) if idempotency_key else None
-        )
+        normalized_key = normalize_idempotency_key(idempotency_key) if idempotency_key else None
         if normalized_key is not None:
             existing = await uow.jobs.get_by_idempotency(
                 caller.tenant_id,
@@ -412,8 +410,8 @@ class ParseJobControlService:
         message: str,
         details: dict[str, Any] | None = None,
     ) -> None:
-        existing_events = await uow.job_events.list_for_job(job.job_id, limit=1000)
-        next_sequence = existing_events[-1].sequence_no + 1 if existing_events else 1
+        max_sequence = await uow.job_events.get_max_sequence_no(job.job_id)
+        next_sequence = (max_sequence or 0) + 1
         await uow.job_events.add(
             JobEventRecord(
                 job_id=job.job_id,

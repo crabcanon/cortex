@@ -110,8 +110,8 @@ async def cancel_job(uow: CortexUnitOfWork, job_id: str) -> JobStatusDetail:
     if updated is None:  # pragma: no cover - defensive
         raise NotFoundError(f"Job `{job_id}` was not found.")
 
-    existing_events = await uow.job_events.list_for_job(job_id, limit=1000)
-    next_sequence = existing_events[-1].sequence_no + 1 if existing_events else 1
+    max_sequence = await uow.job_events.get_max_sequence_no(job_id)
+    next_sequence = (max_sequence or 0) + 1
     await uow.job_events.add(
         JobEventRecord(
             job_id=job_id,

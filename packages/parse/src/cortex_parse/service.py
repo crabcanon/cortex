@@ -258,31 +258,37 @@ class ParsePersistenceService:
                 created_by=caller.actor_id or caller.subject,
             )
         )
-        for tag in list(dict.fromkeys([*document.category_tags, *document.labels])):
-            await uow.document_tags.add(DocumentTagRecord(document_id=created.document_id, tag=tag))
-        for chunk in normalization.chunks:
-            checksum = hashlib.sha256(chunk.text.encode("utf-8")).hexdigest()
-            await uow.document_chunks.add(
-                DocumentChunkRecord(
-                    chunk_id=new_prefixed_id("chunk"),
-                    document_id=created.document_id,
-                    chunk_index=chunk.chunk_index,
-                    chunk_text=chunk.text,
-                    heading_path=chunk.heading_path,
-                    token_count=chunk.token_count,
-                    char_count=chunk.char_count,
-                    checksum_sha256=checksum,
-                    metadata=chunk.metadata,
-                )
+        tags = [
+            DocumentTagRecord(document_id=created.document_id, tag=tag)
+            for tag in list(dict.fromkeys([*document.category_tags, *document.labels]))
+        ]
+        await uow.document_tags.add_many(tags)
+
+        chunks = [
+            DocumentChunkRecord(
+                chunk_id=new_prefixed_id("chunk"),
+                document_id=created.document_id,
+                chunk_index=chunk.chunk_index,
+                chunk_text=chunk.text,
+                heading_path=chunk.heading_path,
+                token_count=chunk.token_count,
+                char_count=chunk.char_count,
+                checksum_sha256=hashlib.sha256(chunk.text.encode("utf-8")).hexdigest(),
+                metadata=chunk.metadata,
             )
+            for chunk in normalization.chunks
+        ]
+        await uow.document_chunks.add_many(chunks)
+
         if request.persistence.persist_artifacts and result.artifacts is not None:
+            artifacts = []
             for artifact_type, object_id, artifact_ref, metadata in self._artifact_records(result):
                 if (
                     request.persistence.storage_policy is ParseStoragePolicy.METADATA_ONLY
                     and object_id
                 ):
                     continue
-                await uow.document_artifacts.add(
+                artifacts.append(
                     DocumentArtifactRecord(
                         document_id=created.document_id,
                         artifact_type=artifact_type,
@@ -291,6 +297,7 @@ class ParsePersistenceService:
                         metadata=metadata,
                     )
                 )
+            await uow.document_artifacts.add_many(artifacts)
         return created.document_id
 
     @staticmethod

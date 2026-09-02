@@ -112,9 +112,7 @@ class ParsePersistenceService:
                 crawl_profile=request.crawl.model_dump(mode="json"),
                 normalization=request.normalization.model_dump(mode="json"),
                 output_profile=request.output.model_dump(mode="json"),
-                fallback_chain=[
-                    snapshot.attempt.engine_key for snapshot in attempt_snapshots
-                ],
+                fallback_chain=[snapshot.attempt.engine_key for snapshot in attempt_snapshots],
                 diagnostics=normalization.result.diagnostics.model_dump(mode="json"),
                 telemetry_context=normalization.result.telemetry.model_dump(mode="json")
                 if normalization.result.telemetry
@@ -212,7 +210,9 @@ class ParsePersistenceService:
                 normalization=selection.profile.descriptor.normalization_defaults.model_dump(
                     mode="json"
                 ),
-                fallback_policy=selection.profile.descriptor.fallback_policy.model_dump(mode="json"),
+                fallback_policy=selection.profile.descriptor.fallback_policy.model_dump(
+                    mode="json"
+                ),
                 engine_overrides=dict(selection.profile.engine_overrides),
                 source_constraints=dict(selection.profile.source_constraints),
                 created_by=created_by,
@@ -258,39 +258,50 @@ class ParsePersistenceService:
                 created_by=caller.actor_id or caller.subject,
             )
         )
-        for tag in list(dict.fromkeys([*document.category_tags, *document.labels])):
-            await uow.document_tags.add(DocumentTagRecord(document_id=created.document_id, tag=tag))
-        for chunk in normalization.chunks:
-            checksum = hashlib.sha256(chunk.text.encode("utf-8")).hexdigest()
-            await uow.document_chunks.add(
-                DocumentChunkRecord(
-                    chunk_id=new_prefixed_id("chunk"),
-                    document_id=created.document_id,
-                    chunk_index=chunk.chunk_index,
-                    chunk_text=chunk.text,
-                    heading_path=chunk.heading_path,
-                    token_count=chunk.token_count,
-                    char_count=chunk.char_count,
-                    checksum_sha256=checksum,
-                    metadata=chunk.metadata,
-                )
+        tag_records = [
+            DocumentTagRecord(document_id=created.document_id, tag=tag)
+            for tag in list(dict.fromkeys([*document.category_tags, *document.labels]))
+        ]
+        if tag_records:
+            # OPTIMIZATION: Use add_many to batch insert tags avoiding N+1 overhead
+            await uow.document_tags.add_many(tag_records)
+        chunk_records = [
+            DocumentChunkRecord(
+                chunk_id=new_prefixed_id("chunk"),
+                document_id=created.document_id,
+                chunk_index=chunk.chunk_index,
+                chunk_text=chunk.text,
+                heading_path=chunk.heading_path,
+                token_count=chunk.token_count,
+                char_count=chunk.char_count,
+                checksum_sha256=hashlib.sha256(chunk.text.encode("utf-8")).hexdigest(),
+                metadata=chunk.metadata,
             )
+            for chunk in normalization.chunks
+        ]
+        if chunk_records:
+            # OPTIMIZATION: Use add_many to batch insert chunks avoiding N+1 overhead
+            await uow.document_chunks.add_many(chunk_records)
         if request.persistence.persist_artifacts and result.artifacts is not None:
-            for artifact_type, object_id, artifact_ref, metadata in self._artifact_records(result):
-                if (
+            artifact_records = [
+                DocumentArtifactRecord(
+                    document_id=created.document_id,
+                    artifact_type=artifact_type,
+                    object_id=object_id,
+                    artifact_ref=artifact_ref,
+                    metadata=metadata,
+                )
+                for artifact_type, object_id, artifact_ref, metadata in self._artifact_records(
+                    result
+                )
+                if not (
                     request.persistence.storage_policy is ParseStoragePolicy.METADATA_ONLY
                     and object_id
-                ):
-                    continue
-                await uow.document_artifacts.add(
-                    DocumentArtifactRecord(
-                        document_id=created.document_id,
-                        artifact_type=artifact_type,
-                        object_id=object_id,
-                        artifact_ref=artifact_ref,
-                        metadata=metadata,
-                    )
                 )
+            ]
+            if artifact_records:
+                # OPTIMIZATION: Use add_many to batch insert artifacts avoiding N+1 overhead
+                await uow.document_artifacts.add_many(artifact_records)
         return created.document_id
 
     @staticmethod
@@ -466,9 +477,7 @@ class ParseService:
                     )
                 except Exception as exc:
                     error_code = (
-                        exc.code
-                        if isinstance(exc, CortexError)
-                        else "engine_execution_failed"
+                        exc.code if isinstance(exc, CortexError) else "engine_execution_failed"
                     )
                     attempt = ParseEngineAttempt(
                         attempt_no=attempt_no,
@@ -570,8 +579,7 @@ class ParseService:
             if len(warning) > 240:
                 warning = f"{warning[:237]}..."
             detail = (
-                f"{snapshot.attempt.engine_key}:"
-                f"{snapshot.attempt.error_code or 'unknown_error'}"
+                f"{snapshot.attempt.engine_key}:{snapshot.attempt.error_code or 'unknown_error'}"
             )
             if warning:
                 detail = f"{detail} ({warning})"

@@ -112,9 +112,7 @@ class ParsePersistenceService:
                 crawl_profile=request.crawl.model_dump(mode="json"),
                 normalization=request.normalization.model_dump(mode="json"),
                 output_profile=request.output.model_dump(mode="json"),
-                fallback_chain=[
-                    snapshot.attempt.engine_key for snapshot in attempt_snapshots
-                ],
+                fallback_chain=[snapshot.attempt.engine_key for snapshot in attempt_snapshots],
                 diagnostics=normalization.result.diagnostics.model_dump(mode="json"),
                 telemetry_context=normalization.result.telemetry.model_dump(mode="json")
                 if normalization.result.telemetry
@@ -123,9 +121,10 @@ class ParsePersistenceService:
                 experiment_context={},
             )
         )
+        parse_run_attempts_records = []
         for snapshot in attempt_snapshots:
             engine_record = engine_records[snapshot.attempt.engine_key]
-            await uow.parse_run_attempts.add(
+            parse_run_attempts_records.append(
                 ParseRunAttemptRecord(
                     parse_run_id=parse_run.parse_run_id,
                     attempt_no=snapshot.attempt.attempt_no,
@@ -147,6 +146,8 @@ class ParsePersistenceService:
                     error_message=snapshot.attempt.warning,
                 )
             )
+        if parse_run_attempts_records:
+            await uow.parse_run_attempts.add_many(parse_run_attempts_records)
 
         normalization.result.job_id = job.job_id
         return normalization.result
@@ -212,7 +213,9 @@ class ParsePersistenceService:
                 normalization=selection.profile.descriptor.normalization_defaults.model_dump(
                     mode="json"
                 ),
-                fallback_policy=selection.profile.descriptor.fallback_policy.model_dump(mode="json"),
+                fallback_policy=selection.profile.descriptor.fallback_policy.model_dump(
+                    mode="json"
+                ),
                 engine_overrides=dict(selection.profile.engine_overrides),
                 source_constraints=dict(selection.profile.source_constraints),
                 created_by=created_by,
@@ -258,11 +261,18 @@ class ParsePersistenceService:
                 created_by=caller.actor_id or caller.subject,
             )
         )
+        document_tags_records = []
         for tag in list(dict.fromkeys([*document.category_tags, *document.labels])):
-            await uow.document_tags.add(DocumentTagRecord(document_id=created.document_id, tag=tag))
+            document_tags_records.append(
+                DocumentTagRecord(document_id=created.document_id, tag=tag)
+            )
+        if document_tags_records:
+            await uow.document_tags.add_many(document_tags_records)
+
+        document_chunks_records = []
         for chunk in normalization.chunks:
             checksum = hashlib.sha256(chunk.text.encode("utf-8")).hexdigest()
-            await uow.document_chunks.add(
+            document_chunks_records.append(
                 DocumentChunkRecord(
                     chunk_id=new_prefixed_id("chunk"),
                     document_id=created.document_id,
@@ -275,14 +285,18 @@ class ParsePersistenceService:
                     metadata=chunk.metadata,
                 )
             )
+        if document_chunks_records:
+            await uow.document_chunks.add_many(document_chunks_records)
+
         if request.persistence.persist_artifacts and result.artifacts is not None:
+            document_artifacts_records = []
             for artifact_type, object_id, artifact_ref, metadata in self._artifact_records(result):
                 if (
                     request.persistence.storage_policy is ParseStoragePolicy.METADATA_ONLY
                     and object_id
                 ):
                     continue
-                await uow.document_artifacts.add(
+                document_artifacts_records.append(
                     DocumentArtifactRecord(
                         document_id=created.document_id,
                         artifact_type=artifact_type,
@@ -291,6 +305,8 @@ class ParsePersistenceService:
                         metadata=metadata,
                     )
                 )
+            if document_artifacts_records:
+                await uow.document_artifacts.add_many(document_artifacts_records)
         return created.document_id
 
     @staticmethod
@@ -466,9 +482,7 @@ class ParseService:
                     )
                 except Exception as exc:
                     error_code = (
-                        exc.code
-                        if isinstance(exc, CortexError)
-                        else "engine_execution_failed"
+                        exc.code if isinstance(exc, CortexError) else "engine_execution_failed"
                     )
                     attempt = ParseEngineAttempt(
                         attempt_no=attempt_no,
@@ -570,8 +584,7 @@ class ParseService:
             if len(warning) > 240:
                 warning = f"{warning[:237]}..."
             detail = (
-                f"{snapshot.attempt.engine_key}:"
-                f"{snapshot.attempt.error_code or 'unknown_error'}"
+                f"{snapshot.attempt.engine_key}:{snapshot.attempt.error_code or 'unknown_error'}"
             )
             if warning:
                 detail = f"{detail} ({warning})"

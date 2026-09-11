@@ -14,38 +14,34 @@ servers:
     description: Development / 测试环境
 tags:
   - name: Health
-    description: 运行存活与依赖就绪探针。/ Runtime liveness and dependency readiness probes.
+    description: 运行存活与依赖就绪探针。 / Runtime liveness and dependency readiness probes.
   - name: Observability
-    description: 对齐 OpenTelemetry 的遥测与指标接口。/ OpenTelemetry-aligned telemetry and
-      metrics endpoints.
+    description: 对齐 OpenTelemetry 的遥测与指标接口。 / OpenTelemetry-aligned telemetry and metrics endpoints.
   - name: Jobs
-    description: 通用长任务查询与控制。/ Generic long-running job inspection and control.
+    description: 通用长任务查询与控制。 / Generic long-running job inspection and control.
   - name: Parse
-    description: 面向 URL 与文件的引擎无关解析、标准化与持久化。/ Engine-agnostic parsing, normalization,
-      and persistence for URLs and files.
+    description: 面向 URL 与文件的引擎无关解析、标准化与持久化。 / Engine-agnostic parsing, normalization, and persistence for URLs and files.
   - name: Storage
     description: 上传、查询和下载 S3 后端对象。 / Upload, inspect, and download S3-backed objects.
   - name: Knowledge
     description: Dataset lifecycle plus Cognee-backed Add, Cognify, Memify, and
       Search operations. / 数据集生命周期与基于 Cognee 的 Add、Cognify、Memify、Search 操作。
   - name: Evaluation
-    description: AI 评测引擎、指标目录、同步校验与异步评测作业。/ AI evaluation engines, metric catalogs,
-      synchronous checks, and asynchronous evaluation jobs.
+    description: AI 评测引擎、指标目录、同步校验与异步评测作业。 / AI evaluation engines, metric catalogs, synchronous checks, and asynchronous evaluation jobs.
   - name: Synthesis
-    description: 数据合成引擎以及同步、异步生成工作流。/ Synthetic data engines plus synchronous and
-      asynchronous generation workflows.
+    description: 数据合成引擎以及同步、异步生成工作流。 / Synthetic data engines plus synchronous and asynchronous generation workflows.
   - name: Dev Auth
-    description: 仅本地开发环境启用的 token 生成辅助接口。/ Local-development-only token issuance helper.
+    description: 仅本地开发环境启用的 token 生成辅助接口。 / Local-development-only token issuance helper.
 paths:
   /v1/health/live:
     get:
       tags:
         - Health
-      summary: Liveness probe
+      summary: Liveness probe / 存活探针
       operationId: getLiveness
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -54,17 +50,17 @@ paths:
     get:
       tags:
         - Health
-      summary: Readiness probe
+      summary: Readiness probe / 就绪探针
       operationId: getReadiness
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthResponse"
         "503":
-          description: Service Unavailable
+          description: Service Unavailable / 服务不可用
           content:
             application/json:
               schema:
@@ -75,9 +71,8 @@ paths:
     get:
       tags:
         - Jobs
-      summary: Get job status
-      description: Return the current state, timestamps, and telemetry context for one
-        long-running job.
+      summary: Get job status / 获取任务状态
+      description: Return the current state, timestamps, and telemetry context for one long-running job. / 返回长期运行任务的当前状态、时间戳和遥测上下文。
       operationId: getJob
       security:
         - BearerAuth: []
@@ -96,13 +91,13 @@ paths:
             Add, Cognify, or Memify.
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobStatusDetail"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -111,9 +106,8 @@ paths:
     get:
       tags:
         - Jobs
-      summary: List job events
-      description: Return the ordered event stream for one job, newest first according
-        to the service implementation.
+      summary: List job events / 获取任务事件列表
+      description: Return the ordered event stream for one job, newest first according to the service implementation. / 返回任务的有序事件流，按照服务实现的定义，最新的事件排在前面。
       operationId: listJobEvents
       security:
         - BearerAuth: []
@@ -143,7 +137,7 @@ paths:
           description: "Maximum number of events to return. Best default: 100."
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -152,7 +146,7 @@ paths:
                   $ref: "#/components/schemas/JobEvent"
                 title: Response Listjobevents
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -161,9 +155,8 @@ paths:
     post:
       tags:
         - Jobs
-      summary: Cancel a queued or running job
-      description: Request cancellation of a queued or running job and return the
-        updated status snapshot.
+      summary: Cancel a queued or running job / 取消排队中或运行中的任务
+      description: Request cancellation of a queued or running job and return the updated status snapshot. / 请求取消排队中或运行中的任务，并返回更新后的状态快照。
       operationId: cancelJob
       security:
         - BearerAuth: []
@@ -180,13 +173,13 @@ paths:
           description: Job identifier to cancel.
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobStatusDetail"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -195,13 +188,12 @@ paths:
     get:
       tags:
         - Evaluation
-      summary: List evaluation engines
-      description: Returns the currently registered evaluation engines, supported
-        evaluation types, execution modes, and default profile hints.
+      summary: List evaluation engines / 获取评测引擎列表
+      description: Returns the currently registered evaluation engines, supported evaluation types, execution modes, and default profile hints. / 返回当前注册的评测引擎、支持的评测类型、执行模式和默认配置提示。
       operationId: listEvalEngines
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -212,10 +204,8 @@ paths:
     get:
       tags:
         - Evaluation
-      summary: List normalized evaluation metrics
-      description: Returns the normalized Cortex metric catalog that maps
-        business-facing metric keys to engine-native implementations across
-        DeepEval, EvalScope, and future adapters.
+      summary: List normalized evaluation metrics / 获取标准化的评测指标列表
+      description: Returns the normalized Cortex metric catalog that maps business-facing metric keys to engine-native implementations across DeepEval, EvalScope, and future adapters. / 返回标准化的 Cortex 指标目录，该目录将业务层面的指标键映射到 DeepEval、EvalScope 以及未来适配器的原生实现。
       operationId: listEvalMetrics
       security:
         - BearerAuth: []
@@ -238,13 +228,13 @@ paths:
             title: Engineid
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/EvalMetricCatalog"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -253,10 +243,8 @@ paths:
     post:
       tags:
         - Evaluation
-      summary: Execute a synchronous evaluation run
-      description: Runs a small evaluation workload synchronously. Recommended for
-        smoke checks, profile tuning, and low-cardinality datasets; larger
-        workloads should use `/v1/eval/jobs`.
+      summary: Execute a synchronous evaluation run / 执行同步评测
+      description: Runs a small evaluation workload synchronously. Recommended for smoke checks, profile tuning, and low-cardinality datasets; larger workloads should use `/v1/eval/jobs`. / 同步运行小规模的评测工作负载。推荐用于冒烟测试、配置调优和低基数数据集；较大的工作负载应使用 `/v1/eval/jobs`。
       operationId: runEvaluationSync
       requestBody:
         content:
@@ -347,13 +335,13 @@ paths:
         required: true
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/EvalRunResult"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -364,9 +352,8 @@ paths:
     post:
       tags:
         - Evaluation
-      summary: Submit an asynchronous evaluation job
-      description: Queues a longer-running evaluation workload and returns a Cortex
-        job handle for polling, events, and result retrieval.
+      summary: Submit an asynchronous evaluation job / 提交异步评测任务
+      description: Queues a longer-running evaluation workload and returns a Cortex job handle for polling, events, and result retrieval. / 排队等待执行较长时间的评测工作负载，并返回 Cortex 任务句柄，用于轮询、事件获取和结果提取。
       operationId: createEvalJob
       security:
         - BearerAuth: []
@@ -470,13 +457,13 @@ paths:
                       - job.failed
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/EvalJobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -485,9 +472,8 @@ paths:
     get:
       tags:
         - Evaluation
-      summary: Get a completed evaluation result
-      description: Returns the completed evaluation result when the async job
-        succeeds, or a 409 job status payload while work is still in progress.
+      summary: Get a completed evaluation result / 获取已完成的评测结果
+      description: Returns the completed evaluation result when the async job succeeds, or a 409 job status payload while work is still in progress. / 当异步任务成功时返回已完成的评测结果，或者在工作仍在进行时返回 409 状态负载。
       operationId: getEvalResult
       security:
         - BearerAuth: []
@@ -500,7 +486,7 @@ paths:
             title: Jobid
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -513,9 +499,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobStatusDetail"
-          description: Conflict
+          description: Conflict / 冲突
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -524,9 +510,9 @@ paths:
     post:
       tags:
         - Knowledge
-      summary: Create a knowledge dataset
+      summary: Create a knowledge dataset / 创建知识数据集
       description: Create a dataset that Add, Cognify, Memify, and Search operations
-        will target.
+        will target. / 创建供 Add、Cognify、Memify 和 Search 操作作为目标的数据集。
       operationId: createKnowledgeDataset
       requestBody:
         content:
@@ -599,13 +585,13 @@ paths:
         required: true
       responses:
         "201":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/KnowledgeDataset"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -616,8 +602,8 @@ paths:
     get:
       tags:
         - Knowledge
-      summary: Get dataset metadata and counters
-      description: Return one dataset including audit info, counters, and access policy.
+      summary: Get dataset metadata and counters / 获取数据集元数据和计数器
+      description: Return one dataset including audit info, counters, and access policy. / 返回包含审计信息、计数器和访问策略的一个数据集。
       operationId: getKnowledgeDataset
       security:
         - BearerAuth: []
@@ -634,13 +620,13 @@ paths:
           description: Knowledge dataset identifier returned by `/v1/knowledge/datasets`.
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/KnowledgeDataset"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -649,9 +635,9 @@ paths:
     post:
       tags:
         - Knowledge
-      summary: Submit a Cognee Add job
+      summary: Submit a Cognee Add job / 提交 Cognee Add 任务
       description: Queue an Add job to ingest objects, documents, text, or URIs into a
-        knowledge dataset.
+        knowledge dataset. / 排队执行 Add 任务，以将对象、文档、文本或 URI 导入知识数据集。
       operationId: createAddJob
       security:
         - BearerAuth: []
@@ -815,13 +801,13 @@ paths:
                     persist_source_copy: false
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -830,8 +816,8 @@ paths:
     post:
       tags:
         - Knowledge
-      summary: Submit a Cognify job
-      description: Queue a Cognify job to derive graph structure from dataset content.
+      summary: Submit a Cognify job / 提交 Cognify 任务
+      description: Queue a Cognify job to derive graph structure from dataset content. / 排队执行 Cognify 任务，以从数据集内容中派生出图结构。
       operationId: createCognifyJob
       security:
         - BearerAuth: []
@@ -897,13 +883,13 @@ paths:
                       X-Consumer: graph-sync
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -912,8 +898,8 @@ paths:
     post:
       tags:
         - Knowledge
-      summary: Submit a Memify job
-      description: Queue a Memify enrichment job over an existing dataset graph.
+      summary: Submit a Memify job / 提交 Memify 任务
+      description: Queue a Memify enrichment job over an existing dataset graph. / 排队对现有数据集图执行 Memify 丰富任务。
       operationId: createMemifyJob
       security:
         - BearerAuth: []
@@ -973,13 +959,13 @@ paths:
                       X-Consumer: knowledge-memify
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -988,10 +974,10 @@ paths:
     post:
       tags:
         - Knowledge
-      summary: Search across datasets and knowledge graphs
+      summary: Search across datasets and knowledge graphs / 跨数据集和知识图谱搜索
       description: Search across one or more datasets using semantic, graph, or hybrid
         retrieval. Use `recommended_graph_completion` for the most balanced
-        default behavior.
+        default behavior. / 使用语义、图或混合检索跨一个或多个数据集进行搜索。为了获得最平衡的默认行为，请使用 `recommended_graph_completion`。
       operationId: searchKnowledge
       requestBody:
         content:
@@ -1085,13 +1071,13 @@ paths:
         required: true
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SearchResponse"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1102,11 +1088,11 @@ paths:
     get:
       tags:
         - Observability
-      summary: Prometheus scrape endpoint
+      summary: Prometheus scrape endpoint / Prometheus 抓取端点
       operationId: getMetrics
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema: {}
@@ -1114,14 +1100,14 @@ paths:
     get:
       tags:
         - Parse
-      summary: List available parse engines
+      summary: List available parse engines / 列出可用的解析引擎
       description: Return the registered parser engines, supported source kinds,
         default scene, supported scenes, and the default internal profile that
-        the Parse request compiler will bind for each engine.
+        the Parse request compiler will bind for each engine. / 返回已注册的解析器引擎、支持的源类型、默认场景、支持的场景，以及 Parse 请求编译器将为每个引擎绑定的默认内部配置文件。
       operationId: listParseEngines
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -1132,15 +1118,15 @@ paths:
     get:
       tags:
         - Parse
-      summary: List parser profiles
+      summary: List parser profiles / 列出解析器配置文件
       description: Return the internal parser profiles available to operators and
         debugging workflows. Most API callers should not need them because the
         public Parse API compiles `source + engine_id (+ scene)` into these
-        profiles automatically.
+        profiles automatically. / 返回可供操作员和调试工作流使用的内部解析器配置文件。大多数 API 调用者应该不需要它们，因为公共 Parse API 会自动将 `source + engine_id (+ scene)` 编译为这些配置文件。
       operationId: listParserProfiles
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -1151,10 +1137,10 @@ paths:
     post:
       tags:
         - Parse
-      summary: Parse content synchronously
+      summary: Parse content synchronously / 同步解析内容
       description: Synchronously parse one or more source locators into LLM-ready
         Markdown. The public contract is centered on `sources`, `engine_id`, and
-        optional `scene`.
+        optional `scene`. / 同步将一个或多个源定位器解析为 LLM 就绪的 Markdown。公共契约以 `sources`、`engine_id` 和可选的 `scene` 为中心。
       operationId: parseContentSync
       requestBody:
         content:
@@ -1197,13 +1183,13 @@ paths:
         required: true
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ParseBatchResult"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1214,10 +1200,10 @@ paths:
     post:
       tags:
         - Parse
-      summary: Submit an asynchronous parse job
+      summary: Submit an asynchronous parse job / 提交异步解析任务
       description: Queue one async parse job per source using the same unified public
         Parse contract. Add optional `priority` and `webhook` only when job
-        control is needed.
+        control is needed. / 为每个源排队一个异步解析任务，使用相同的统一公共 Parse 契约。仅当需要任务控制时才添加可选的 `priority` 和 `webhook`。
       operationId: createParseJob
       security:
         - BearerAuth: []
@@ -1289,13 +1275,13 @@ paths:
                   priority: 5
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ParseBatchJobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1304,9 +1290,9 @@ paths:
     get:
       tags:
         - Parse
-      summary: Get a completed parse result
+      summary: Get a completed parse result / 获取已完成的解析结果
       description: Poll for the parse result. Returns `409` with job status until the
-        parse completes, then returns the final `ParseResult`.
+        parse completes, then returns the final `ParseResult`. / 轮询解析结果。在解析完成之前返回带有任务状态的 `409`，然后返回最终的 `ParseResult`。
       operationId: getParseResult
       security:
         - BearerAuth: []
@@ -1323,7 +1309,7 @@ paths:
           description: Parse job identifier returned by `/v1/parse/jobs`.
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -1336,9 +1322,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobStatusDetail"
-          description: Conflict
+          description: Conflict / 冲突
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1347,10 +1333,10 @@ paths:
     post:
       tags:
         - Storage
-      summary: Initiate an upload session
+      summary: Initiate an upload session / 启动上传会话
       description: Create a signed upload session for a new object. The caller
         supplies file identity plus business metadata, while Cortex infers
-        content type when possible and decides whether multipart is needed.
+        content type when possible and decides whether multipart is needed. / 为新对象创建一个已签名的上传会话。调用者提供文件身份标识加上业务元数据，同时 Cortex 尽可能推断内容类型并决定是否需要分片上传。
       operationId: createUploadSession
       requestBody:
         content:
@@ -1403,13 +1389,13 @@ paths:
         required: true
       responses:
         "201":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/StorageUploadSession"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1420,10 +1406,10 @@ paths:
     post:
       tags:
         - Storage
-      summary: Upload a small file
+      summary: Upload a small file / 上传小文件
       description: Upload a small file directly through the Cortex API. This endpoint
         is optimized for Swagger UI, local testing, and small files; use upload
-        sessions for large files or production high-throughput transfers.
+        sessions for large files or production high-throughput transfers. / 通过 Cortex API 直接上传一个小文件。此端点针对 Swagger UI、本地测试和小文件进行了优化；对于大文件或生产环境中的高吞吐量传输，请使用上传会话。
       operationId: uploadSmallFile
       requestBody:
         content:
@@ -1433,13 +1419,13 @@ paths:
         required: true
       responses:
         "201":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/StorageObject"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1450,11 +1436,11 @@ paths:
     post:
       tags:
         - Storage
-      summary: Complete an upload session
+      summary: Complete an upload session / 完成上传会话
       description: Finalize a single-part or multipart upload session after the
         object-store transfer has succeeded. This step is required because
         Cortex must verify the uploaded object, recover provider metadata, and
-        commit the final object/version records.
+        commit the final object/version records. / 在对象存储传输成功后，完成单片或分片上传会话。此步骤是必需的，因为 Cortex 必须验证已上传的对象，恢复提供者元数据，并提交最终对象/版本记录。
       operationId: completeUploadSession
       security:
         - BearerAuth: []
@@ -1502,13 +1488,13 @@ paths:
                   checksum_sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/StorageObject"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1517,9 +1503,9 @@ paths:
     get:
       tags:
         - Storage
-      summary: Get object metadata
+      summary: Get object metadata / 获取对象元数据
       description: Return the stored metadata, current version reference, and access
-        policy for one object.
+        policy for one object. / 返回一个对象的存储元数据、当前版本引用和访问策略。
       operationId: getStorageObject
       security:
         - BearerAuth: []
@@ -1536,13 +1522,13 @@ paths:
           description: Storage object identifier returned by upload or search flows.
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/StorageObject"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1551,8 +1537,8 @@ paths:
     get:
       tags:
         - Storage
-      summary: Create a download URL for an object
-      description: Create a time-limited signed download URL for an object.
+      summary: Create a download URL for an object / 为对象创建下载 URL
+      description: Create a time-limited signed download URL for an object. / 为对象创建一个有时限的已签名下载 URL。
       operationId: createDownloadUrl
       security:
         - BearerAuth: []
@@ -1594,13 +1580,13 @@ paths:
             `inline` for browser preview."
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/DownloadUrlResponse"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1609,13 +1595,13 @@ paths:
     get:
       tags:
         - Synthesis
-      summary: List synthesis engines
+      summary: List synthesis engines / 获取合成引擎列表
       description: Returns the currently registered synthesis engines, supported
-        synthesis types, supported source kinds, and output format hints.
+        synthesis types, supported source kinds, and output format hints. / 返回当前注册的合成引擎、支持的合成类型、支持的源类型以及输出格式提示。
       operationId: listSynthesisEngines
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -1626,10 +1612,10 @@ paths:
     post:
       tags:
         - Synthesis
-      summary: Execute a synchronous synthesis run
+      summary: Execute a synchronous synthesis run / 执行同步合成
       description: Runs a small synthesis workload synchronously. Recommended for
         preview generation, quality-gate tuning, and low-cardinality source
-        samples.
+        samples. / 同步运行小型合成工作负载。推荐用于预览生成、质量门限调整和低基数源样本。
       operationId: runSynthesisSync
       requestBody:
         content:
@@ -1709,13 +1695,13 @@ paths:
         required: true
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SynthesisRunResult"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1726,9 +1712,9 @@ paths:
     post:
       tags:
         - Synthesis
-      summary: Submit an asynchronous synthesis job
+      summary: Submit an asynchronous synthesis job / 提交异步合成任务
       description: Queues a longer-running synthesis workload and returns a Cortex job
-        handle for polling and result retrieval.
+        handle for polling and result retrieval. / 排队执行较长的合成工作负载，并返回用于轮询和结果检索的 Cortex 任务句柄。
       operationId: createSynthesisJob
       security:
         - BearerAuth: []
@@ -1836,13 +1822,13 @@ paths:
                       - job.failed
       responses:
         "202":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SynthesisJobAccepted"
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:
@@ -1851,9 +1837,9 @@ paths:
     get:
       tags:
         - Synthesis
-      summary: Get a completed synthesis result
+      summary: Get a completed synthesis result / 获取已完成的合成结果
       description: Returns the completed synthesis result when the async job succeeds,
-        or a 409 job status payload while work is still in progress.
+        or a 409 job status payload while work is still in progress. / 当异步任务成功时返回已完成的合成结果，或者在工作仍在进行时返回 409 状态负载。
       operationId: getSynthesisResult
       security:
         - BearerAuth: []
@@ -1866,7 +1852,7 @@ paths:
             title: Jobid
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response / 成功响应
           content:
             application/json:
               schema:
@@ -1879,9 +1865,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobStatusDetail"
-          description: Conflict
+          description: Conflict / 冲突
         "422":
-          description: Validation Error
+          description: Validation Error / 验证错误
           content:
             application/json:
               schema:

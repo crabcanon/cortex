@@ -16,9 +16,7 @@ def latest_run_id() -> str | None:
     if not ARTIFACTS_DIR.exists():
         return None
     candidates = [
-        path
-        for path in ARTIFACTS_DIR.iterdir()
-        if path.is_dir() and path.name.startswith("tzcx_")
+        path for path in ARTIFACTS_DIR.iterdir() if path.is_dir() and path.name.startswith("tzcx_")
     ]
     if not candidates:
         return None

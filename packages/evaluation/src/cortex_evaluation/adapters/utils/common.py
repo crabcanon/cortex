@@ -43,11 +43,7 @@ def namespace_scores(metrics: list[EvalMetricResult]) -> dict[str, float]:
             continue
         namespace = metric.metric_key.split(".", maxsplit=1)[0]
         grouped.setdefault(namespace, []).append(metric.score)
-    return {
-        namespace: sum(scores) / len(scores)
-        for namespace, scores in grouped.items()
-        if scores
-    }
+    return {namespace: sum(scores) / len(scores) for namespace, scores in grouped.items() if scores}
 
 
 def perf_metric_unit(metric_key: str) -> str | None:

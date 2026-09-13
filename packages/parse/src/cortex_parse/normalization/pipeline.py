@@ -86,9 +86,7 @@ class ParseNormalizationPipeline:
                 source_object_id=request.source.object_id,
                 source_uri=request.source.uri or request.source.url,
                 canonical_url=(
-                    execution.final_url
-                    or request.source.canonical_url
-                    or request.source.url
+                    execution.final_url or request.source.canonical_url or request.source.url
                 ),
                 title=self._resolve_title(execution, markdown, request),
                 language_code=self._resolve_language(execution, request),

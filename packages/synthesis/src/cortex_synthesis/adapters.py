@@ -370,8 +370,7 @@ class DeepEvalSynthesisEngine:
             )
             if status == "degraded"
             else (
-                "Enable DeepEval Synthesizer in runtime config and install the optional "
-                "dependency."
+                "Enable DeepEval Synthesizer in runtime config and install the optional dependency."
             )
         )
         self._model = model
@@ -651,11 +650,7 @@ def _coerce_preview_row(golden: Any) -> dict[str, Any]:
     if isinstance(golden, dict):
         return {str(key): value for key, value in golden.items()}
     if hasattr(golden, "__dict__"):
-        return {
-            str(key): value
-            for key, value in vars(golden).items()
-            if not key.startswith("_")
-        }
+        return {str(key): value for key, value in vars(golden).items() if not key.startswith("_")}
     return {"value": str(golden)}
 
 
@@ -901,11 +896,7 @@ def _texts_from_jsonish(value: Any, *, preferred_key: str) -> list[str]:
 
 def _texts_from_plain_content(content: str) -> list[str]:
     stripped = _strip_markdown_fence(content)
-    lines = [
-        _clean_text_item(line)
-        for line in stripped.splitlines()
-        if _clean_text_item(line)
-    ]
+    lines = [_clean_text_item(line) for line in stripped.splitlines() if _clean_text_item(line)]
     if lines:
         return lines
     cleaned = _clean_text_item(stripped)

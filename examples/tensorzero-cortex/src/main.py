@@ -220,7 +220,7 @@ def cortex_status() -> dict[str, object]:
 def run_experiment(
     request: Annotated[
         ExperimentRequest,
-        Body(openapi_examples=EXPERIMENT_RUN_EXAMPLES), # type: ignore
+        Body(openapi_examples=EXPERIMENT_RUN_EXAMPLES),  # type: ignore
     ],
 ) -> ExperimentReport:
     settings = load_settings()

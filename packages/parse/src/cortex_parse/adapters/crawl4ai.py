@@ -236,8 +236,7 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
             not in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)
         }
         accepts_kwargs = any(
-            parameter.kind is inspect.Parameter.VAR_KEYWORD
-            for parameter in parameters.values()
+            parameter.kind is inspect.Parameter.VAR_KEYWORD for parameter in parameters.values()
         )
         if accepts_kwargs:
             return normalized
@@ -255,11 +254,7 @@ class Crawl4AIParseEngine(ParseEngineProtocol):
         if "use_undetected_browser" not in accepted_names:
             normalized.pop("use_undetected_browser", None)
 
-        return {
-            key: value
-            for key, value in normalized.items()
-            if key in accepted_names
-        }
+        return {key: value for key, value in normalized.items() if key in accepted_names}
 
     def _ensure_base_directory(self) -> str:
         configured = self._string_value(self._config.get("base_directory"))

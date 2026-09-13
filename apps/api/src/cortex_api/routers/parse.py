@@ -93,9 +93,7 @@ async def list_parse_engines(
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     parse_service: Annotated[ParseService, Depends(get_parse_service)],
-    parse_request_compiler: Annotated[
-        ParseRequestCompiler, Depends(get_parse_request_compiler)
-    ],
+    parse_request_compiler: Annotated[ParseRequestCompiler, Depends(get_parse_request_compiler)],
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
 ) -> ParseEngineList:
     await auth_service.authorize(
@@ -159,9 +157,7 @@ async def parse_content_sync(
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     parse_service: Annotated[ParseService, Depends(get_parse_service)],
-    parse_request_compiler: Annotated[
-        ParseRequestCompiler, Depends(get_parse_request_compiler)
-    ],
+    parse_request_compiler: Annotated[ParseRequestCompiler, Depends(get_parse_request_compiler)],
     storage_service: Annotated[StorageService, Depends(get_storage_service)],
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
 ) -> ParseBatchResult:
@@ -218,9 +214,7 @@ async def create_parse_job(
     caller: Annotated[CallerContext, Depends(get_current_caller)],
     auth_service: Annotated[AuthorizationService, Depends(get_auth_service)],
     parse_job_service: Annotated[ParseJobControlService, Depends(get_parse_job_service)],
-    parse_request_compiler: Annotated[
-        ParseRequestCompiler, Depends(get_parse_request_compiler)
-    ],
+    parse_request_compiler: Annotated[ParseRequestCompiler, Depends(get_parse_request_compiler)],
     storage_service: Annotated[StorageService, Depends(get_storage_service)],
     uow: Annotated[CortexUnitOfWork, Depends(get_uow)],
     idempotency_key: Annotated[

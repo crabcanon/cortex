@@ -37,9 +37,11 @@ def _dev_bearer_token(*, tenant_id: str, actor_id: str, scopes: list[str]) -> st
         "actor_ref": f"{actor_id}@example.com",
         "scope": " ".join(scopes),
     }
-    encoded = base64.urlsafe_b64encode(
-        json.dumps(claims, separators=(",", ":")).encode("utf-8")
-    ).decode("ascii").rstrip("=")
+    encoded = (
+        base64.urlsafe_b64encode(json.dumps(claims, separators=(",", ":")).encode("utf-8"))
+        .decode("ascii")
+        .rstrip("=")
+    )
     return f"Bearer dev:{encoded}"
 
 
@@ -131,11 +133,7 @@ def _wait_for_metric_name(
     deadline = time.time() + timeout_seconds
     while time.time() < deadline:
         metrics_text = httpx.get("http://127.0.0.1:8889/metrics", timeout=10).text
-        matching_lines = [
-            line
-            for line in metrics_text.splitlines()
-            if substring in line.lower()
-        ]
+        matching_lines = [line for line in metrics_text.splitlines() if substring in line.lower()]
         if matching_lines:
             return metrics_text, matching_lines
         time.sleep(1)

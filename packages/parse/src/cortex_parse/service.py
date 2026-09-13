@@ -112,9 +112,7 @@ class ParsePersistenceService:
                 crawl_profile=request.crawl.model_dump(mode="json"),
                 normalization=request.normalization.model_dump(mode="json"),
                 output_profile=request.output.model_dump(mode="json"),
-                fallback_chain=[
-                    snapshot.attempt.engine_key for snapshot in attempt_snapshots
-                ],
+                fallback_chain=[snapshot.attempt.engine_key for snapshot in attempt_snapshots],
                 diagnostics=normalization.result.diagnostics.model_dump(mode="json"),
                 telemetry_context=normalization.result.telemetry.model_dump(mode="json")
                 if normalization.result.telemetry
@@ -212,7 +210,9 @@ class ParsePersistenceService:
                 normalization=selection.profile.descriptor.normalization_defaults.model_dump(
                     mode="json"
                 ),
-                fallback_policy=selection.profile.descriptor.fallback_policy.model_dump(mode="json"),
+                fallback_policy=selection.profile.descriptor.fallback_policy.model_dump(
+                    mode="json"
+                ),
                 engine_overrides=dict(selection.profile.engine_overrides),
                 source_constraints=dict(selection.profile.source_constraints),
                 created_by=created_by,
@@ -466,9 +466,7 @@ class ParseService:
                     )
                 except Exception as exc:
                     error_code = (
-                        exc.code
-                        if isinstance(exc, CortexError)
-                        else "engine_execution_failed"
+                        exc.code if isinstance(exc, CortexError) else "engine_execution_failed"
                     )
                     attempt = ParseEngineAttempt(
                         attempt_no=attempt_no,
@@ -570,8 +568,7 @@ class ParseService:
             if len(warning) > 240:
                 warning = f"{warning[:237]}..."
             detail = (
-                f"{snapshot.attempt.engine_key}:"
-                f"{snapshot.attempt.error_code or 'unknown_error'}"
+                f"{snapshot.attempt.engine_key}:{snapshot.attempt.error_code or 'unknown_error'}"
             )
             if warning:
                 detail = f"{detail} ({warning})"

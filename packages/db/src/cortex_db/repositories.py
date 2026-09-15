@@ -1237,6 +1237,21 @@ class DocumentArtifactRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    async def add_many(self, records: Sequence[DocumentArtifactRecord]) -> None:
+        models = [
+            DocumentArtifactModel(
+                document_id=record.document_id,
+                artifact_type=record.artifact_type,
+                object_id=record.object_id,
+                artifact_ref=record.artifact_ref,
+                metadata_json=_json_object(record.metadata),
+                created_at=record.created_at or utc_now(),
+            )
+            for record in records
+        ]
+        self._session.add_all(models)
+        await self._session.flush()
+
     async def add(self, record: DocumentArtifactRecord) -> DocumentArtifactRecord:
         model = DocumentArtifactModel(
             document_id=record.document_id,
@@ -1264,6 +1279,18 @@ class DocumentTagRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    async def add_many(self, records: Sequence[DocumentTagRecord]) -> None:
+        models = [
+            DocumentTagModel(
+                document_id=record.document_id,
+                tag=record.tag,
+                created_at=record.created_at or utc_now(),
+            )
+            for record in records
+        ]
+        self._session.add_all(models)
+        await self._session.flush()
+
     async def add(self, record: DocumentTagRecord) -> DocumentTagRecord:
         model = DocumentTagModel(
             document_id=record.document_id,
@@ -1287,6 +1314,25 @@ class DocumentTagRepository:
 class DocumentChunkRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+
+    async def add_many(self, records: Sequence[DocumentChunkRecord]) -> None:
+        models = [
+            DocumentChunkModel(
+                chunk_id=record.chunk_id,
+                document_id=record.document_id,
+                chunk_index=record.chunk_index,
+                heading_path=record.heading_path,
+                token_count=record.token_count,
+                char_count=record.char_count,
+                checksum_sha256=record.checksum_sha256,
+                chunk_text=record.chunk_text,
+                metadata_json=_json_object(record.metadata),
+                created_at=record.created_at or utc_now(),
+            )
+            for record in records
+        ]
+        self._session.add_all(models)
+        await self._session.flush()
 
     async def add(self, record: DocumentChunkRecord) -> DocumentChunkRecord:
         model = DocumentChunkModel(
@@ -1698,6 +1744,28 @@ class ParseRunRepository:
 class ParseRunAttemptRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+
+    async def add_many(self, records: Sequence[ParseRunAttemptRecord]) -> None:
+        models = [
+            ParseRunAttemptModel(
+                parse_run_id=record.parse_run_id,
+                attempt_no=record.attempt_no,
+                engine_id=record.engine_id,
+                status=record.status.value,
+                trace_id=record.trace_id,
+                span_id=record.span_id,
+                engine_request_json=_json_object(record.engine_request),
+                engine_result_json=_json_object(record.engine_result),
+                diagnostics_json=_json_object(record.diagnostics),
+                started_at=record.started_at,
+                completed_at=record.completed_at,
+                error_code=record.error_code,
+                error_message=record.error_message,
+            )
+            for record in records
+        ]
+        self._session.add_all(models)
+        await self._session.flush()
 
     async def add(self, record: ParseRunAttemptRecord) -> ParseRunAttemptRecord:
         model = ParseRunAttemptModel(

@@ -1,0 +1,3 @@
+## 2024-03-24 - Bulk Insert Optimization
+**Learning:** Found N+1 query patterns during bulk insertions in `DocumentTagRepository`, `DocumentChunkRepository`, `DocumentArtifactRepository`, and `ParseRunAttemptRepository`. These repositories only had `add()` methods which trigger `session.refresh()` per record.
+**Action:** When performing bulk insertions, add `add_many()` methods that use `session.add_all()` to insert models efficiently without triggering per-record `session.refresh()` queries. The service layer already generates prefixed IDs using `cortex_common.new_prefixed_id`, allowing these methods to return `None` and skip `refresh()`.

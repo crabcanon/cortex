@@ -56,7 +56,9 @@ class JinaReaderParseEngine(ParseEngineProtocol):
             raise ValidationError("Jina Reader can only parse publicly reachable HTTP(S) URLs.")
 
         base_url = str(
-            context.engine_options.get("base_url", self._config.get("base_url", "https://r.jina.ai"))
+            context.engine_options.get(
+                "base_url", self._config.get("base_url", "https://r.jina.ai")
+            )
         ).rstrip("/")
         reader_url = f"{base_url}/{target_url}"
         headers = self._headers(context)

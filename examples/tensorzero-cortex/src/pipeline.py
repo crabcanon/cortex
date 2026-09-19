@@ -181,9 +181,7 @@ class ExperimentPipeline:
         )
         eval_dataset_path = run_dir / "tensorzero_eval_dataset.jsonl"
         eval_dataset_path.write_text(
-            "\n".join(
-                json.dumps(case.model_dump(), ensure_ascii=False) for case in eval_cases
-            )
+            "\n".join(json.dumps(case.model_dump(), ensure_ascii=False) for case in eval_cases)
             + ("\n" if eval_cases else ""),
             encoding="utf-8",
         )
@@ -275,7 +273,7 @@ class ExperimentPipeline:
         artifacts: list[ParseArtifact] = []
         for source in urls:
             url = str(source["url"])
-            expected_keywords = [str(item) for item in source.get("expected_keywords", [])] # type: ignore
+            expected_keywords = [str(item) for item in source.get("expected_keywords", [])]  # type: ignore
             for engine_id in engines:
                 engine_mode = _mode_for_engine(
                     engine_id,
@@ -357,8 +355,7 @@ class ExperimentPipeline:
             dataset_key=dataset_key,
             display_name=f"TensorZero Cortex {dataset_key}",
             description=(
-                "Parsed financial and macroeconomic Markdown for TensorZero "
-                "adaptive A/B testing."
+                "Parsed financial and macroeconomic Markdown for TensorZero adaptive A/B testing."
             ),
         )
         documents = [
@@ -491,9 +488,7 @@ class ExperimentPipeline:
                     answer_text = _answer_text(output)
                     answer_score = score_answer(output, expected_keywords)
                     e2e_pass = (
-                        parse_score >= 0.45
-                        and group.context_score >= 0.35
-                        and answer_score >= 0.45
+                        parse_score >= 0.45 and group.context_score >= 0.35 and answer_score >= 0.45
                     )
                     record.inference_id = result.get("inference_id")
                     record.episode_id = result.get("episode_id")
@@ -639,8 +634,7 @@ def _context_groups(
     normalized = grouping.strip().lower()
     if normalized not in {"combined", "by_parse_engine", "knowledge_or_parse"}:
         raise ValueError(
-            "tensorzero.context_grouping must be combined, by_parse_engine, "
-            "or knowledge_or_parse."
+            "tensorzero.context_grouping must be combined, by_parse_engine, or knowledge_or_parse."
         )
 
     groups: list[ContextGroup] = []
@@ -869,9 +863,7 @@ def _resolve_evaluation_options(
         )
     update: dict[str, Any] = {
         "enabled": (
-            request.evaluation.enabled
-            if request.evaluation.enabled is not None
-            else enabled
+            request.evaluation.enabled if request.evaluation.enabled is not None else enabled
         ),
         "mode": request.evaluation.mode or request.cortex_eval_mode or settings.cortex_eval_mode,
     }
@@ -972,10 +964,7 @@ def _metrics_for_eval_type(
     options: EvaluationOptions,
 ) -> list[dict[str, Any]]:
     if options.metrics_by_type and eval_type in options.metrics_by_type:
-        return [
-            _metric_to_payload(metric)
-            for metric in options.metrics_by_type[eval_type]
-        ]
+        return [_metric_to_payload(metric) for metric in options.metrics_by_type[eval_type]]
 
     profile = options.metric_profile.strip().lower()
     if profile == "deepeval_local_smoke":
@@ -1031,7 +1020,7 @@ def _metric_to_payload(metric: MetricConfig) -> dict[str, Any]:
 def _expected_keywords(urls: list[dict[str, object]]) -> list[str]:
     keywords: list[str] = []
     for source in urls:
-        keywords.extend(str(item) for item in source.get("expected_keywords", [])) # type: ignore
+        keywords.extend(str(item) for item in source.get("expected_keywords", []))  # type: ignore
     deduped = list(dict.fromkeys(keyword.lower() for keyword in keywords))
     return deduped[:30]
 
@@ -1156,7 +1145,7 @@ def _render_markdown_report(report: ExperimentReport) -> str:
 ## Artifacts
 
 - Eval dataset JSONL: `{report.eval_dataset_jsonl_path}`
-- Knowledge graph HTML: `{report.knowledge_graph_html_path or 'not generated'}`
+- Knowledge graph HTML: `{report.knowledge_graph_html_path or "not generated"}`
 - JSON report: `{report.report_json_path}`
 """
 

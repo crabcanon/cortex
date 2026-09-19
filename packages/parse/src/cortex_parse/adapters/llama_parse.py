@@ -211,15 +211,9 @@ class LlamaParseEngine(ParseEngineProtocol):
         suffix = Path(urlparse(source_ref).path or source_ref).suffix.lower()
         return {
             ".pdf": "application/pdf",
-            ".docx": (
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            ),
-            ".pptx": (
-                "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-            ),
-            ".xlsx": (
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            ),
+            ".docx": ("application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+            ".pptx": ("application/vnd.openxmlformats-officedocument.presentationml.presentation"),
+            ".xlsx": ("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
             ".html": "text/html",
             ".htm": "text/html",
             ".jpg": "image/jpeg",

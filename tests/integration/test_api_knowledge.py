@@ -74,9 +74,11 @@ def _dev_bearer_token(*, tenant_id: str, actor_id: str, scopes: list[str]) -> st
         "actor_ref": f"{actor_id}@example.com",
         "scope": " ".join(scopes),
     }
-    encoded = base64.urlsafe_b64encode(
-        json.dumps(claims, separators=(",", ":")).encode("utf-8")
-    ).decode("ascii").rstrip("=")
+    encoded = (
+        base64.urlsafe_b64encode(json.dumps(claims, separators=(",", ":")).encode("utf-8"))
+        .decode("ascii")
+        .rstrip("=")
+    )
     return f"Bearer dev:{encoded}"
 
 
@@ -157,9 +159,7 @@ class _FakeKnowledgeRuntime:
                         {"id": "node_1", "label": "Product"},
                         {"id": "node_2", "label": "Rule"},
                     ],
-                    "edges": [
-                        {"source": "node_1", "target": "node_2", "type": "related_to"}
-                    ],
+                    "edges": [{"source": "node_1", "target": "node_2", "type": "related_to"}],
                 }
             ],
         }

@@ -44,9 +44,7 @@ class ParseRouter:
             if allowed:
                 allowed_set = set(allowed)
                 descriptors = [
-                    descriptor
-                    for descriptor in descriptors
-                    if descriptor.engine_key in allowed_set
+                    descriptor for descriptor in descriptors if descriptor.engine_key in allowed_set
                 ]
             preferred = request.parser.preferred_engine_key or (
                 profile.descriptor.preferred_engine_key if profile else None

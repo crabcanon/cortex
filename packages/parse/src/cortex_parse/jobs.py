@@ -33,9 +33,7 @@ class ParseJobControlService:
         idempotency_key: str | None = None,
         request_id: str | None = None,
     ) -> JobAccepted:
-        normalized_key = (
-            normalize_idempotency_key(idempotency_key) if idempotency_key else None
-        )
+        normalized_key = normalize_idempotency_key(idempotency_key) if idempotency_key else None
         if normalized_key is not None:
             existing = await uow.jobs.get_by_idempotency(
                 caller.tenant_id,

@@ -133,8 +133,7 @@ class ParseWorker:
                         raise CortexError(
                             code="parse_worker_timeout",
                             detail=(
-                                "Parse job exceeded timeout budget of "
-                                f"{timeout_seconds} seconds."
+                                f"Parse job exceeded timeout budget of {timeout_seconds} seconds."
                             ),
                             status_code=504,
                         ) from exc

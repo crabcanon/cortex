@@ -52,8 +52,7 @@ async def _authorize_job(
     operation_id="getJob",
     summary="Get job status",
     description=(
-        "Return the current state, timestamps, and telemetry "
-        "context for one long-running job."
+        "Return the current state, timestamps, and telemetry context for one long-running job."
     ),
 )
 async def get_job(
@@ -132,8 +131,7 @@ async def get_job_events(
     operation_id="cancelJob",
     summary="Cancel a queued or running job",
     description=(
-        "Request cancellation of a queued or running job and "
-        "return the updated status snapshot."
+        "Request cancellation of a queued or running job and return the updated status snapshot."
     ),
 )
 async def post_job_cancel(

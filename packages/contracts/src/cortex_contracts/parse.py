@@ -146,8 +146,10 @@ class ParseSourceInput(BaseModel):
             raise ValueError("`source.kind=object` requires `source.object_id`.")
         if self.kind in {ParseInputKind.URL, ParseInputKind.URI} and not self.uri:
             raise ValueError("`source.kind=url|uri` requires `source.uri`.")
-        if self.kind is ParseInputKind.URL and self.uri and not self.uri.startswith(
-            ("http://", "https://")
+        if (
+            self.kind is ParseInputKind.URL
+            and self.uri
+            and not self.uri.startswith(("http://", "https://"))
         ):
             raise ValueError("`source.kind=url` requires an HTTP(S) `source.uri`.")
         return self
@@ -171,8 +173,7 @@ class FallbackPolicy(BaseModel):
         ge=1,
         le=10,
         description=(
-            "Maximum number of engine attempts before the "
-            "parse run fails. Best default: 3."
+            "Maximum number of engine attempts before the parse run fails. Best default: 3."
         ),
         examples=[3],
     )
@@ -243,8 +244,7 @@ class BrowserProfile(BaseModel):
     timezone_id: str | None = Field(
         default=None,
         description=(
-            "Optional browser timezone. Best default: omit "
-            "unless rendering depends on timezone."
+            "Optional browser timezone. Best default: omit unless rendering depends on timezone."
         ),
         examples=["Asia/Shanghai"],
     )
@@ -342,8 +342,7 @@ class CaptureOptions(BaseModel):
     flatten_shadow_dom: bool = Field(
         default=False,
         description=(
-            "Flatten shadow DOM content before extraction "
-            "when supported. Best default: `false`."
+            "Flatten shadow DOM content before extraction when supported. Best default: `false`."
         ),
     )
 
@@ -413,15 +412,13 @@ class CrawlOptions(BaseModel):
     remove_overlay_elements: bool = Field(
         default=True,
         description=(
-            "Remove cookie banners and similar overlays when "
-            "supported. Best default: `true`."
+            "Remove cookie banners and similar overlays when supported. Best default: `true`."
         ),
     )
     cache_mode: str = Field(
         default="bypass",
         description=(
-            "Adapter cache mode. Best default: `bypass` for "
-            "fresh fetches in tests and demos."
+            "Adapter cache mode. Best default: `bypass` for fresh fetches in tests and demos."
         ),
         examples=["bypass"],
     )
@@ -450,8 +447,7 @@ class ParseNormalizationOptions(BaseModel):
     normalize_markdown: bool = Field(
         default=True,
         description=(
-            "Normalize headings, lists, whitespace, and block "
-            "structure. Best default: `true`."
+            "Normalize headings, lists, whitespace, and block structure. Best default: `true`."
         ),
     )
     normalize_metadata: bool = Field(
@@ -469,8 +465,7 @@ class ParseNormalizationOptions(BaseModel):
     infer_title: bool = Field(
         default=True,
         description=(
-            "Infer a title when the source does not provide "
-            "one cleanly. Best default: `true`."
+            "Infer a title when the source does not provide one cleanly. Best default: `true`."
         ),
     )
     infer_language: bool = Field(
@@ -498,8 +493,7 @@ class ChunkingOptions(BaseModel):
     enabled: bool = Field(
         default=True,
         description=(
-            "Whether Cortex should emit chunking hints or "
-            "stored chunks. Best default: `true`."
+            "Whether Cortex should emit chunking hints or stored chunks. Best default: `true`."
         ),
     )
     strategy: ChunkingStrategy = Field(
@@ -572,8 +566,7 @@ class ParsePersistenceOptions(BaseModel):
     persist_document: bool = Field(
         default=True,
         description=(
-            "Persist the normalized document into Cortex "
-            "metadata storage. Best default: `true`."
+            "Persist the normalized document into Cortex metadata storage. Best default: `true`."
         ),
     )
     persist_artifacts: bool = Field(
@@ -590,16 +583,14 @@ class ParsePersistenceOptions(BaseModel):
     dataset_id: str | None = Field(
         default=None,
         description=(
-            "Optional dataset to associate with the persisted "
-            "document. Best default: omit."
+            "Optional dataset to associate with the persisted document. Best default: omit."
         ),
         examples=["dset_9558cfc9178444e4a4c60d5658db78f5"],
     )
     object_prefix: str | None = Field(
         default=None,
         description=(
-            "Optional object storage prefix for persisted "
-            "parse artifacts. Best default: omit."
+            "Optional object storage prefix for persisted parse artifacts. Best default: omit."
         ),
         examples=["parsed/demo/"],
     )
@@ -698,10 +689,7 @@ class ParseSubmitRequest(BaseModel):
             normalized["sources"] = [normalized["sources"]]
         raw_sources = normalized.get("sources")
         if isinstance(raw_sources, list):
-            normalized["sources"] = [
-                cls._normalize_source_locator(item)
-                for item in raw_sources
-            ]
+            normalized["sources"] = [cls._normalize_source_locator(item) for item in raw_sources]
         return normalized
 
     @staticmethod

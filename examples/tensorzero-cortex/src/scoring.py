@@ -10,16 +10,19 @@ def score_markdown(markdown: str, expected_keywords: Iterable[str]) -> float:
     if not markdown.strip():
         return 0.0
     length_score = min(len(markdown) / 8000, 1.0) * 0.35
-    structure_score = min(
-        (
-            markdown.count("#")
-            + markdown.count("|")
-            + markdown.lower().count("table")
-            + markdown.lower().count("figure")
+    structure_score = (
+        min(
+            (
+                markdown.count("#")
+                + markdown.count("|")
+                + markdown.lower().count("table")
+                + markdown.lower().count("figure")
+            )
+            / 30,
+            1.0,
         )
-        / 30,
-        1.0,
-    ) * 0.25
+        * 0.25
+    )
     keyword_score = _keyword_ratio(markdown, expected_keywords) * 0.4
     return round(length_score + structure_score + keyword_score, 4)
 

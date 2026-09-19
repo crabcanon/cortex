@@ -76,9 +76,7 @@ async def build_readiness(
             name="queue-config",
             status="ok" if settings.queue.url else "degraded",
             detail=(
-                "Queue endpoint configured."
-                if settings.queue.url
-                else "Queue endpoint missing."
+                "Queue endpoint configured." if settings.queue.url else "Queue endpoint missing."
             ),
         )
     )

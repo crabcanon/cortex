@@ -378,11 +378,7 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
             dumped = value.model_dump(mode="json")
             return dumped if isinstance(dumped, dict) else {}
         if hasattr(value, "__dict__"):
-            return {
-                key: val
-                for key, val in vars(value).items()
-                if not key.startswith("_")
-            }
+            return {key: val for key, val in vars(value).items() if not key.startswith("_")}
         return {}
 
     async def _build_memify_kwargs(
@@ -734,9 +730,7 @@ def _patch_cognee_litellm_embedding_tokenizer() -> None:
             ).lower()
             if fallback in {"approximate", "none", "word"}:
                 return _CortexApproximateTokenizer(
-                    max_completion_tokens=int(
-                        getattr(self, "max_completion_tokens", 8191) or 8191
-                    )
+                    max_completion_tokens=int(getattr(self, "max_completion_tokens", 8191) or 8191)
                 )
             return _CortexTiktokenEncodingTokenizer(
                 encoding_name=str(
@@ -817,9 +811,8 @@ def _patch_cognee_tiktoken_unknown_model_fallback() -> None:
 
 def _is_tiktoken_unknown_model_error(exc: Exception) -> bool:
     message = str(exc).lower()
-    return (
-        "could not automatically map" in message
-        and ("tokeniser" in message or "tokenizer" in message)
+    return "could not automatically map" in message and (
+        "tokeniser" in message or "tokenizer" in message
     )
 
 
@@ -954,9 +947,7 @@ def _translate_db_url(db_url: str, *, provider: str, migration: bool) -> dict[st
     scheme = provider or parsed.scheme.split("+", 1)[0].lower()
     if scheme in {"sqlite"}:
         raw_path = (
-            db_url.split("sqlite:///", 1)[1]
-            if db_url.startswith("sqlite:///")
-            else parsed.path
+            db_url.split("sqlite:///", 1)[1] if db_url.startswith("sqlite:///") else parsed.path
         )
         path = Path(unquote(raw_path))
         if not path.is_absolute():

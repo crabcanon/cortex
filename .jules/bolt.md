@@ -1,0 +1,3 @@
+## 2025-01-20 - Optimize N+1 database queries during parse runs
+**Learning:** During parse runs, the application was individually adding multiple models (tags, chunks, artifacts, run attempts) to the session inside loops, triggering multiple implicit database interactions and flush/refresh queries (the N+1 query problem) which severely degraded bulk insertion performance.
+**Action:** Avoid N+1 query patterns during bulk insertions by utilizing `add_many()` repository methods which leverage `session.add_all()` to insert models efficiently without triggering per-record `session.refresh()` queries. Ensure the upstream service layer correctly batches models into a sequence before calling these optimized repository methods.

@@ -1,0 +1,3 @@
+## YYYY-MM-DD - Bulk Inserts via SQLAlchemy add_all
+**Learning:** N+1 query patterns during bulk insertions significantly degrade performance. Using `session.add_all()` (via repository `add_many` methods) instead of looping over single inserts avoids triggering per-record `session.refresh()` queries and reduces database roundtrips.
+**Action:** Always utilize `add_many()` repository methods (e.g., in `DocumentTagRepository`, `DocumentChunkRepository`, `DocumentArtifactRepository`, `ParseRunAttemptRepository`) for bulk insertions and ensure the upstream service layer correctly aggregates records into lists before calling these methods.

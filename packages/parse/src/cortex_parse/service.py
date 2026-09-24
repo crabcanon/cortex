@@ -123,30 +123,33 @@ class ParsePersistenceService:
                 experiment_context={},
             )
         )
-        for snapshot in attempt_snapshots:
-            engine_record = engine_records[snapshot.attempt.engine_key]
-            await uow.parse_run_attempts.add(
-                ParseRunAttemptRecord(
-                    parse_run_id=parse_run.parse_run_id,
-                    attempt_no=snapshot.attempt.attempt_no,
-                    engine_id=engine_record.engine_id,
-                    status=DomainParseAttemptStatus(snapshot.attempt.status.value),
-                    trace_id=job.trace_id,
-                    span_id=normalization.result.telemetry.span_id
-                    if normalization.result.telemetry
-                    else None,
-                    engine_request={
-                        "source": request.source.model_dump(mode="json"),
-                        "engine_options": snapshot.engine_options,
-                    },
-                    engine_result=snapshot.engine_result,
-                    diagnostics=snapshot.attempt.diagnostics,
-                    started_at=snapshot.attempt.started_at,
-                    completed_at=snapshot.attempt.completed_at,
-                    error_code=snapshot.attempt.error_code,
-                    error_message=snapshot.attempt.warning,
+        if attempt_snapshots:
+            attempt_records = []
+            for snapshot in attempt_snapshots:
+                engine_record = engine_records[snapshot.attempt.engine_key]
+                attempt_records.append(
+                    ParseRunAttemptRecord(
+                        parse_run_id=parse_run.parse_run_id,
+                        attempt_no=snapshot.attempt.attempt_no,
+                        engine_id=engine_record.engine_id,
+                        status=DomainParseAttemptStatus(snapshot.attempt.status.value),
+                        trace_id=job.trace_id,
+                        span_id=normalization.result.telemetry.span_id
+                        if normalization.result.telemetry
+                        else None,
+                        engine_request={
+                            "source": request.source.model_dump(mode="json"),
+                            "engine_options": snapshot.engine_options,
+                        },
+                        engine_result=snapshot.engine_result,
+                        diagnostics=snapshot.attempt.diagnostics,
+                        started_at=snapshot.attempt.started_at,
+                        completed_at=snapshot.attempt.completed_at,
+                        error_code=snapshot.attempt.error_code,
+                        error_message=snapshot.attempt.warning,
+                    )
                 )
-            )
+            await uow.parse_run_attempts.add_many(attempt_records)
 
         normalization.result.job_id = job.job_id
         return normalization.result
@@ -258,31 +261,38 @@ class ParsePersistenceService:
                 created_by=caller.actor_id or caller.subject,
             )
         )
-        for tag in list(dict.fromkeys([*document.category_tags, *document.labels])):
-            await uow.document_tags.add(DocumentTagRecord(document_id=created.document_id, tag=tag))
-        for chunk in normalization.chunks:
-            checksum = hashlib.sha256(chunk.text.encode("utf-8")).hexdigest()
-            await uow.document_chunks.add(
-                DocumentChunkRecord(
-                    chunk_id=new_prefixed_id("chunk"),
-                    document_id=created.document_id,
-                    chunk_index=chunk.chunk_index,
-                    chunk_text=chunk.text,
-                    heading_path=chunk.heading_path,
-                    token_count=chunk.token_count,
-                    char_count=chunk.char_count,
-                    checksum_sha256=checksum,
-                    metadata=chunk.metadata,
-                )
+        tags = list(dict.fromkeys([*document.category_tags, *document.labels]))
+        if tags:
+            await uow.document_tags.add_many(
+                [DocumentTagRecord(document_id=created.document_id, tag=tag) for tag in tags]
             )
+        if normalization.chunks:
+            chunk_records = []
+            for chunk in normalization.chunks:
+                checksum = hashlib.sha256(chunk.text.encode('utf-8')).hexdigest()
+                chunk_records.append(
+                    DocumentChunkRecord(
+                        chunk_id=new_prefixed_id('chunk'),
+                        document_id=created.document_id,
+                        chunk_index=chunk.chunk_index,
+                        chunk_text=chunk.text,
+                        heading_path=chunk.heading_path,
+                        token_count=chunk.token_count,
+                        char_count=chunk.char_count,
+                        checksum_sha256=checksum,
+                        metadata=chunk.metadata,
+                    )
+                )
+            await uow.document_chunks.add_many(chunk_records)
         if request.persistence.persist_artifacts and result.artifacts is not None:
+            artifact_records = []
             for artifact_type, object_id, artifact_ref, metadata in self._artifact_records(result):
                 if (
                     request.persistence.storage_policy is ParseStoragePolicy.METADATA_ONLY
                     and object_id
                 ):
                     continue
-                await uow.document_artifacts.add(
+                artifact_records.append(
                     DocumentArtifactRecord(
                         document_id=created.document_id,
                         artifact_type=artifact_type,
@@ -291,6 +301,8 @@ class ParsePersistenceService:
                         metadata=metadata,
                     )
                 )
+            if artifact_records:
+                await uow.document_artifacts.add_many(artifact_records)
         return created.document_id
 
     @staticmethod

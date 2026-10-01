@@ -123,9 +123,10 @@ class ParsePersistenceService:
                 experiment_context={},
             )
         )
+        attempts_to_add = []
         for snapshot in attempt_snapshots:
             engine_record = engine_records[snapshot.attempt.engine_key]
-            await uow.parse_run_attempts.add(
+            attempts_to_add.append(
                 ParseRunAttemptRecord(
                     parse_run_id=parse_run.parse_run_id,
                     attempt_no=snapshot.attempt.attempt_no,
@@ -147,6 +148,8 @@ class ParsePersistenceService:
                     error_message=snapshot.attempt.warning,
                 )
             )
+        if attempts_to_add:
+            await uow.parse_run_attempts.add_many(attempts_to_add)
 
         normalization.result.job_id = job.job_id
         return normalization.result
@@ -258,11 +261,17 @@ class ParsePersistenceService:
                 created_by=caller.actor_id or caller.subject,
             )
         )
-        for tag in list(dict.fromkeys([*document.category_tags, *document.labels])):
-            await uow.document_tags.add(DocumentTagRecord(document_id=created.document_id, tag=tag))
+        tags_to_add = [
+            DocumentTagRecord(document_id=created.document_id, tag=tag)
+            for tag in list(dict.fromkeys([*document.category_tags, *document.labels]))
+        ]
+        if tags_to_add:
+            await uow.document_tags.add_many(tags_to_add)
+
+        chunks_to_add = []
         for chunk in normalization.chunks:
             checksum = hashlib.sha256(chunk.text.encode("utf-8")).hexdigest()
-            await uow.document_chunks.add(
+            chunks_to_add.append(
                 DocumentChunkRecord(
                     chunk_id=new_prefixed_id("chunk"),
                     document_id=created.document_id,
@@ -275,14 +284,18 @@ class ParsePersistenceService:
                     metadata=chunk.metadata,
                 )
             )
+        if chunks_to_add:
+            await uow.document_chunks.add_many(chunks_to_add)
+
         if request.persistence.persist_artifacts and result.artifacts is not None:
+            artifacts_to_add = []
             for artifact_type, object_id, artifact_ref, metadata in self._artifact_records(result):
                 if (
                     request.persistence.storage_policy is ParseStoragePolicy.METADATA_ONLY
                     and object_id
                 ):
                     continue
-                await uow.document_artifacts.add(
+                artifacts_to_add.append(
                     DocumentArtifactRecord(
                         document_id=created.document_id,
                         artifact_type=artifact_type,
@@ -291,6 +304,8 @@ class ParsePersistenceService:
                         metadata=metadata,
                     )
                 )
+            if artifacts_to_add:
+                await uow.document_artifacts.add_many(artifacts_to_add)
         return created.document_id
 
     @staticmethod

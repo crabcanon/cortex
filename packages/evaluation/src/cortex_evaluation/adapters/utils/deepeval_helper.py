@@ -21,9 +21,11 @@ from ..manifests.metrics import (
 )
 
 try:  # pragma: no cover - depends on optional runtime extra
-    from deepeval.models import DeepEvalBaseLLM as _DeepEvalBaseLLM
+    from deepeval.models import (  # type: ignore[import-not-found,import-untyped,reportMissingImports]
+        DeepEvalBaseLLM as _DeepEvalBaseLLM,
+    )
 except Exception:  # pragma: no cover - light API image does not install DeepEval
-    _DeepEvalBaseLLM = object
+    _DeepEvalBaseLLM = object # type: ignore[assignment]
 
 
 @dataclass(frozen=True)

@@ -2159,6 +2159,28 @@ class SearchHitRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    async def add_many(self, records: Sequence[SearchHitRecord]) -> None:
+        if not records:
+            return
+        models = [
+            SearchHitModel(
+                request_id=record.request_id,
+                hit_index=record.hit_index,
+                hit_type=record.hit_type,
+                source_id=record.source_id,
+                document_id=record.document_id,
+                object_id=record.object_id,
+                score=record.score,
+                title=record.title,
+                snippet=record.snippet,
+                citation_json=_json_object(record.citation),
+                metadata_json=_json_object(record.metadata),
+            )
+            for record in records
+        ]
+        self._session.add_all(models)
+        await self._session.flush()
+
     async def add(self, record: SearchHitRecord) -> SearchHitRecord:
         model = SearchHitModel(
             request_id=record.request_id,

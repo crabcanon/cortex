@@ -1306,6 +1306,27 @@ class DocumentChunkRepository:
         await self._session.refresh(model)
         return _document_chunk_from_model(model)
 
+    async def add_many(self, records: Sequence[DocumentChunkRecord]) -> None:
+        if not records:
+            return
+        self._session.add_all(
+            [
+                DocumentChunkModel(
+                    chunk_id=record.chunk_id,
+                    document_id=record.document_id,
+                    chunk_index=record.chunk_index,
+                    heading_path=record.heading_path,
+                    token_count=record.token_count,
+                    char_count=record.char_count,
+                    checksum_sha256=record.checksum_sha256,
+                    chunk_text=record.chunk_text,
+                    metadata_json=_json_object(record.metadata),
+                    created_at=record.created_at or utc_now(),
+                )
+                for record in records
+            ]
+        )
+
     async def list_for_document(self, document_id: str) -> list[DocumentChunkRecord]:
         result = await self._session.execute(
             select(DocumentChunkModel)

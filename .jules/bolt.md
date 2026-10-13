@@ -1,0 +1,3 @@
+## YYYY-MM-DD - Optimize bulk database inserts
+**Learning:** Calling session.add() and awaiting session.flush() inside a loop is extremely inefficient. The N+1 query patterns during bulk insertions should be avoided by utilizing add_many() repository methods. Replacing session.add() with session.add_all() is not enough since both defer SQL execution until flush(). The true bottleneck occurs when calling await repo.add() in a loop (which triggers per-record flush() and refresh()).
+**Action:** Use add_many() repository method to build a list of models, execute a single await session.flush(), and skip session.refresh().

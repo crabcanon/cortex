@@ -1409,6 +1409,26 @@ class DatasetItemRepository:
         await self._session.refresh(model)
         return _dataset_item_from_model(model)
 
+    async def add_many(self, records: Sequence[DatasetItemRecord]) -> list[DatasetItemRecord]:
+        if not records:
+            return []
+
+        models = [
+            DatasetItemModel(
+                dataset_id=record.dataset_id,
+                item_type=record.item_type,
+                item_id=record.item_id,
+                source_stage=record.source_stage,
+                label=record.label,
+                metadata_json=_json_object(record.metadata),
+                created_at=record.created_at or utc_now(),
+            )
+            for record in records
+        ]
+        self._session.add_all(models)
+        await self._session.flush()
+        return [_dataset_item_from_model(model) for model in models]
+
     async def get(
         self,
         dataset_id: str,
@@ -2177,6 +2197,30 @@ class SearchHitRepository:
         await self._session.flush()
         await self._session.refresh(model)
         return _search_hit_from_model(model)
+
+    async def add_many(self, records: Sequence[SearchHitRecord]) -> list[SearchHitRecord]:
+        if not records:
+            return []
+
+        models = [
+            SearchHitModel(
+                request_id=record.request_id,
+                hit_index=record.hit_index,
+                hit_type=record.hit_type,
+                source_id=record.source_id,
+                document_id=record.document_id,
+                object_id=record.object_id,
+                score=record.score,
+                title=record.title,
+                snippet=record.snippet,
+                citation_json=_json_object(record.citation),
+                metadata_json=_json_object(record.metadata),
+            )
+            for record in records
+        ]
+        self._session.add_all(models)
+        await self._session.flush()
+        return [_search_hit_from_model(model) for model in models]
 
     async def list_for_request(self, request_id: str) -> list[SearchHitRecord]:
         result = await self._session.execute(

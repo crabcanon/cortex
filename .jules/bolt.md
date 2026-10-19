@@ -1,0 +1,3 @@
+## YYYY-MM-DD - [Optimizing Database Inserts via Bulk Additions]
+**Learning:** During bulk knowledge ingestion and search hit retrieval, using a loop to `await session.add()` individually calls `flush()` and `refresh()` per record, causing major N+1 query bottlenecks. Simply wrapping with `session.add_all()` does not solve the N+1 `refresh()` calls in the existing `.add()` repository pattern.
+**Action:** Created dedicated `add_many()` repository methods that accept a `Sequence` of records, use `session.add_all()`, run a single `session.flush()`, and skip the costly `session.refresh()` step since these records don't need immediate database-generated fields mapped back in bulk inserts.

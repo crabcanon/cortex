@@ -435,22 +435,24 @@ class KnowledgeSearchService:
                     created_at=response.created_at,
                 )
             )
-            for hit in response.context_items:
-                await uow.search_hits.add(
-                    SearchHitRecord(
-                        request_id=response.request_id,
-                        hit_index=hit.rank,
-                        hit_type=hit.hit_type.value,
-                        source_id=(hit.source_id or "")[:36] or None,
-                        document_id=hit.document_id,
-                        object_id=hit.object_id,
-                        score=hit.score,
-                        title=hit.title,
-                        snippet=hit.snippet,
-                        citation=hit.citation.model_dump(mode="json") if hit.citation else {},
-                        metadata=hit.metadata,
-                    )
+            search_hits = [
+                SearchHitRecord(
+                    request_id=response.request_id,
+                    hit_index=hit.rank,
+                    hit_type=hit.hit_type.value,
+                    source_id=(hit.source_id or "")[:36] or None,
+                    document_id=hit.document_id,
+                    object_id=hit.object_id,
+                    score=hit.score,
+                    title=hit.title,
+                    snippet=hit.snippet,
+                    citation=hit.citation.model_dump(mode="json") if hit.citation else {},
+                    metadata=hit.metadata,
                 )
+                for hit in response.context_items
+            ]
+            if search_hits:
+                await uow.search_hits.add_many(search_hits)
             span.set_attribute("cortex.knowledge.search_type", request.search_type.value)
             span.set_attribute("cortex.dataset.count", len(dataset_ids))
             self._metrics.histogram(

@@ -1275,6 +1275,21 @@ class DocumentTagRepository:
         await self._session.refresh(model)
         return _document_tag_from_model(model)
 
+    async def add_many(self, records: list[DocumentTagRecord]) -> list[DocumentTagRecord]:
+        if not records:
+            return []
+        models = [
+            DocumentTagModel(
+                document_id=record.document_id,
+                tag=record.tag,
+                created_at=record.created_at or utc_now(),
+            )
+            for record in records
+        ]
+        self._session.add_all(models)
+        await self._session.flush()
+        return [_document_tag_from_model(model) for model in models]
+
     async def list_for_document(self, document_id: str) -> list[DocumentTagRecord]:
         result = await self._session.execute(
             select(DocumentTagModel)
@@ -1305,6 +1320,28 @@ class DocumentChunkRepository:
         await self._session.flush()
         await self._session.refresh(model)
         return _document_chunk_from_model(model)
+
+    async def add_many(self, records: list[DocumentChunkRecord]) -> list[DocumentChunkRecord]:
+        if not records:
+            return []
+        models = [
+            DocumentChunkModel(
+                chunk_id=record.chunk_id,
+                document_id=record.document_id,
+                chunk_index=record.chunk_index,
+                heading_path=record.heading_path,
+                token_count=record.token_count,
+                char_count=record.char_count,
+                checksum_sha256=record.checksum_sha256,
+                chunk_text=record.chunk_text,
+                metadata_json=_json_object(record.metadata),
+                created_at=record.created_at or utc_now(),
+            )
+            for record in records
+        ]
+        self._session.add_all(models)
+        await self._session.flush()
+        return [_document_chunk_from_model(model) for model in models]
 
     async def list_for_document(self, document_id: str) -> list[DocumentChunkRecord]:
         result = await self._session.execute(
@@ -1719,6 +1756,31 @@ class ParseRunAttemptRepository:
         await self._session.flush()
         await self._session.refresh(model)
         return _parse_run_attempt_from_model(model)
+
+    async def add_many(self, records: list[ParseRunAttemptRecord]) -> list[ParseRunAttemptRecord]:
+        if not records:
+            return []
+        models = [
+            ParseRunAttemptModel(
+                parse_run_id=record.parse_run_id,
+                attempt_no=record.attempt_no,
+                engine_id=record.engine_id,
+                status=record.status.value,
+                trace_id=record.trace_id,
+                span_id=record.span_id,
+                engine_request_json=_json_object(record.engine_request),
+                engine_result_json=_json_object(record.engine_result),
+                diagnostics_json=_json_object(record.diagnostics),
+                started_at=record.started_at,
+                completed_at=record.completed_at,
+                error_code=record.error_code,
+                error_message=record.error_message,
+            )
+            for record in records
+        ]
+        self._session.add_all(models)
+        await self._session.flush()
+        return [_parse_run_attempt_from_model(model) for model in models]
 
     async def list_for_run(self, parse_run_id: str) -> list[ParseRunAttemptRecord]:
         result = await self._session.execute(
@@ -2177,6 +2239,29 @@ class SearchHitRepository:
         await self._session.flush()
         await self._session.refresh(model)
         return _search_hit_from_model(model)
+
+    async def add_many(self, records: list[SearchHitRecord]) -> list[SearchHitRecord]:
+        if not records:
+            return []
+        models = [
+            SearchHitModel(
+                request_id=record.request_id,
+                hit_index=record.hit_index,
+                hit_type=record.hit_type,
+                source_id=record.source_id,
+                document_id=record.document_id,
+                object_id=record.object_id,
+                score=record.score,
+                title=record.title,
+                snippet=record.snippet,
+                citation_json=_json_object(record.citation),
+                metadata_json=_json_object(record.metadata),
+            )
+            for record in records
+        ]
+        self._session.add_all(models)
+        await self._session.flush()
+        return [_search_hit_from_model(model) for model in models]
 
     async def list_for_request(self, request_id: str) -> list[SearchHitRecord]:
         result = await self._session.execute(

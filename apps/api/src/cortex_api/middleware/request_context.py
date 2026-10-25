@@ -40,4 +40,13 @@ async def request_context_middleware(
         response.headers[X_REQUEST_ID_HEADER] = request_id
         if trace_context["trace_id"]:
             response.headers[X_TRACE_ID_HEADER] = str(trace_context["trace_id"])
+
+        # Security headers for defense in depth
+        # Prevent MIME-type sniffing
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        # Prevent clickjacking
+        response.headers["X-Frame-Options"] = "DENY"
+        # Enforce HTTPS connections
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
         return response

@@ -1394,6 +1394,23 @@ class DatasetItemRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    async def add_many(self, records: Sequence[DatasetItemRecord]) -> list[DatasetItemRecord]:
+        models = [
+            DatasetItemModel(
+                dataset_id=record.dataset_id,
+                item_type=record.item_type,
+                item_id=record.item_id,
+                source_stage=record.source_stage,
+                label=record.label,
+                metadata_json=_json_object(record.metadata),
+                created_at=record.created_at or utc_now(),
+            )
+            for record in records
+        ]
+        self._session.add_all(models)
+        await self._session.flush()
+        return [_dataset_item_from_model(model) for model in models]
+
     async def add(self, record: DatasetItemRecord) -> DatasetItemRecord:
         model = DatasetItemModel(
             dataset_id=record.dataset_id,

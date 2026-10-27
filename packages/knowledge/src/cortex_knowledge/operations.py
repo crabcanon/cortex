@@ -224,7 +224,7 @@ class KnowledgeOperationService:
         dataset: DatasetRecord,
         inputs: list[KnowledgeInput],
     ) -> list[DatasetItemRecord]:
-        added: list[DatasetItemRecord] = []
+        records_to_add: list[DatasetItemRecord] = []
         for item in inputs:
             item_type = self._dataset_item_type(item)
             item_id = self._dataset_item_id(item)
@@ -235,7 +235,7 @@ class KnowledgeOperationService:
             )
             if existing is not None:
                 continue
-            record = await uow.dataset_items.add(
+            records_to_add.append(
                 DatasetItemRecord(
                     dataset_id=dataset.dataset_id,
                     item_type=item_type,
@@ -245,8 +245,11 @@ class KnowledgeOperationService:
                     metadata=self._dataset_item_metadata(item),
                 )
             )
-            added.append(record)
-        return added
+
+        if not records_to_add:
+            return []
+
+        return await uow.dataset_items.add_many(records_to_add)
 
     async def _update_dataset_counters(
         self,
@@ -531,11 +534,7 @@ class KnowledgeSearchService:
             dumped = value.model_dump(mode="json")
             return dumped if isinstance(dumped, dict) else {}
         if hasattr(value, "__dict__"):
-            return {
-                key: val
-                for key, val in vars(value).items()
-                if not key.startswith("_")
-            }
+            return {key: val for key, val in vars(value).items() if not key.startswith("_")}
         return {}
 
 

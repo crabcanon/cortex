@@ -1,0 +1,3 @@
+## 2024-05-18 - Avoid N+1 query patterns during bulk insertions
+**Learning:** During bulk insertions, utilizing `add_many()` repository methods significantly avoids N+1 query patterns. `session.add_all()` is a convenience wrapper around `session.add()` and both defer SQL execution until `flush()`, but calling `await repo.add()` in a loop triggers per-record `flush()` and `refresh()`. `add_many()` fixes this by building a list of models, executing a single `await session.flush()`, and skipping `session.refresh()`.
+**Action:** Always check if a bulk insertion can be optimized by using an `add_many()` method on repositories to avoid per-record flushing and refreshing in loops.

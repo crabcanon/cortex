@@ -1,0 +1,3 @@
+## 2024-10-31 - [Bulk Insert Optimization]
+**Learning:** Found N+1 query loops in `ParsePersistenceService.persist_document_async` where `DocumentTagRecord`, `DocumentChunkRecord`, and `DocumentArtifactRecord` were inserted one by one inside loops (`await uow.document_tags.add()`, etc). In SQLAlchemy with unit-of-work patterns, this results in significant performance overhead due to per-record `flush()` and `refresh()` calls.
+**Action:** Replaced looped single inserts with bulk insert methods (`add_many()`) using `session.add_all()` to drastically reduce the number of queries and flush operations to the database during document parsing persistence.

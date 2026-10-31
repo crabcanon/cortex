@@ -305,8 +305,9 @@ class PythonCogneeRuntime(CogneeRuntimeProtocol):
             except KeyError:
                 try:
                     kwargs["query_type"] = search_type_enum(search_type_name)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    import logging
+                    logging.getLogger(__name__).warning("Failed to parse search_type_name %s: %s", search_type_name, exc)
         return kwargs
 
     @staticmethod

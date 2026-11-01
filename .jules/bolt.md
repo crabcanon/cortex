@@ -1,0 +1,3 @@
+## YYYY-MM-DD - Optimize bulk database inserts
+**Learning:** Avoid N+1 query patterns during bulk insertions by utilizing `add_many()` repository methods instead of looping and calling `add()`. `add()` executes a SQL query on each call (via flush/refresh), while `add_many()` creates all models, executes a single `session.flush()`, and skips `refresh()`.
+**Action:** When inserting multiple records, explicitly define an `add_many(self, records: Sequence[RecordType]) -> Sequence[RecordType]` method in the respective Repository in `cortex_db/repositories.py` and implement it efficiently. Then, refactor the application services (e.g. `cortex_parse/service.py`) to build lists of records and call `add_many()` rather than repeatedly awaiting `add()`.

@@ -235,7 +235,7 @@ class KnowledgeOperationService:
             )
             if existing is not None:
                 continue
-            record = await uow.dataset_items.add(
+            added.append(
                 DatasetItemRecord(
                     dataset_id=dataset.dataset_id,
                     item_type=item_type,
@@ -245,7 +245,8 @@ class KnowledgeOperationService:
                     metadata=self._dataset_item_metadata(item),
                 )
             )
-            added.append(record)
+        if added:
+            await uow.dataset_items.add_many(added)
         return added
 
     async def _update_dataset_counters(
@@ -435,8 +436,9 @@ class KnowledgeSearchService:
                     created_at=response.created_at,
                 )
             )
+            hit_records = []
             for hit in response.context_items:
-                await uow.search_hits.add(
+                hit_records.append(
                     SearchHitRecord(
                         request_id=response.request_id,
                         hit_index=hit.rank,
@@ -451,6 +453,8 @@ class KnowledgeSearchService:
                         metadata=hit.metadata,
                     )
                 )
+            if hit_records:
+                await uow.search_hits.add_many(hit_records)
             span.set_attribute("cortex.knowledge.search_type", request.search_type.value)
             span.set_attribute("cortex.dataset.count", len(dataset_ids))
             self._metrics.histogram(
@@ -531,11 +535,7 @@ class KnowledgeSearchService:
             dumped = value.model_dump(mode="json")
             return dumped if isinstance(dumped, dict) else {}
         if hasattr(value, "__dict__"):
-            return {
-                key: val
-                for key, val in vars(value).items()
-                if not key.startswith("_")
-            }
+            return {key: val for key, val in vars(value).items() if not key.startswith("_")}
         return {}
 
 
